@@ -89,14 +89,25 @@ export function WhatsAppTemplatesManager({ companyId }: TemplatesManagerProps) {
         body: { company_id: companyId, action: 'list', sync }
       });
 
-      if (fnError) {
-        const errorMsg = result?.error || fnError.message || 'Erro ao carregar templates';
-        if (errorMsg.includes('não configurada') || errorMsg.includes('not configured')) {
+      // Edge function retorna 400 com JSON — extrair mensagem de erro do body
+      const errorMsg = result?.error || fnError?.message || '';
+      if (fnError || (result && result.error)) {
+        const msg = errorMsg || 'Erro ao carregar templates';
+        if (msg.includes('não configurada') || msg.includes('not configured')) {
           setMetaNotConfigured(true);
           setTemplates([]);
           return;
         }
-        throw new Error(errorMsg);
+        if (msg.includes('Invalid OAuth') || msg.includes('access token') || msg.includes('Credenciais Meta')) {
+          toast({
+            variant: "destructive",
+            title: "Token Meta inválido",
+            description: "O Access Token da Meta API está inválido ou expirado. Vá em Configurações → Meta API e atualize o token com um token permanente (EAA...)."
+          });
+          setTemplates([]);
+          return;
+        }
+        throw new Error(msg);
       }
 
       if (sync) {
