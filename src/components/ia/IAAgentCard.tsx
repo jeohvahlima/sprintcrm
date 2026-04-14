@@ -281,6 +281,14 @@ export function IAAgentCard({
           .select('id, nome, funil_id');
           
         if (etapas) setAvailableStages(etapas);
+
+        // Carregar tags da empresa
+        const { data: companyTags } = await supabase
+          .from('company_tags')
+          .select('tag_name')
+          .eq('company_id', userRole.company_id);
+        
+        if (companyTags) setAvailableCompanyTags(companyTags.map(t => t.tag_name));
         
         // Carregar agendas de profissionais (para IA de Agendamento)
         const { data: agendas } = await supabase
