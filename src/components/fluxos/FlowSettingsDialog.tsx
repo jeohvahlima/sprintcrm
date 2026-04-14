@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -10,10 +10,11 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
-import { Checkbox } from '@/components/ui/checkbox';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Clock, Calendar, Filter, Gauge, Shield } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Clock, Filter, Gauge, Shield, X, Calendar } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 
 interface FlowSettings {
   schedule?: {
@@ -65,6 +66,40 @@ export function FlowSettingsDialog({
   onSave,
 }: FlowSettingsDialogProps) {
   const [localSettings, setLocalSettings] = useState<FlowSettings>(settings);
+  const [availableTags, setAvailableTags] = useState<string[]>([]);
+  const [availableFunnels, setAvailableFunnels] = useState<{ id: string; nome: string }[]>([]);
+  const [availableStages, setAvailableStages] = useState<{ id: string; nome: string; funil_id: string }[]>([]);
+
+  useEffect(() => {
+    if (open) {
+      setLocalSettings(settings);
+      loadTagsAndFunnels();
+    }
+  }, [open]);
+
+  const loadTagsAndFunnels = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) return;
+
+    const { data: userRole } = await supabase
+      .from('user_roles' as any)
+      .select('company_id')
+      .eq('user_id', session.user.id)
+      .maybeSingle();
+
+    const companyId = (userRole as any)?.company_id;
+    if (!companyId) return;
+
+    const [tagsRes, funisRes, etapasRes] = await Promise.all([
+      supabase.from('company_tags').select('tag_name').eq('company_id', companyId),
+      supabase.from('funis').select('id, nome').eq('company_id', companyId).order('nome'),
+      supabase.from('etapas').select('id, nome, funil_id').eq('company_id', companyId).order('posicao'),
+    ]);
+
+    if (tagsRes.data) setAvailableTags(tagsRes.data.map(t => t.tag_name));
+    if (funisRes.data) setAvailableFunnels(funisRes.data);
+    if (etapasRes.data) setAvailableStages(etapasRes.data);
+  };
 
   const updateSchedule = (key: string, value: any) => {
     setLocalSettings((prev) => ({
@@ -90,22 +125,18 @@ export function FlowSettingsDialog({
   const updateLimits = (key: string, value: any) => {
     setLocalSettings((prev) => ({
       ...prev,
-      limits: {
-        ...prev.limits,
-        [key]: value,
-      },
+      limits: { ...prev.limits, [key]: value },
     }));
   };
 
-  const updateFilters = (key: string, value: string) => {
-    const values = value.split(',').map((v) => v.trim()).filter(Boolean);
-    setLocalSettings((prev) => ({
-      ...prev,
-      filters: {
-        ...prev.filters,
-        [key]: values,
-      },
-    }));
+  const toggleFilterItem = (filterKey: 'tags' | 'excludeTags' | 'funnels' | 'stages', item: string) => {
+    setLocalSettings((prev) => {
+      const current = prev.filters?.[filterKey] || [];
+      const newValues = current.includes(item)
+        ? current.filter((v) => v !== item)
+        : [...current, item];
+      return { ...prev, filters: { ...prev.filters, [filterKey]: newValues } };
+    });
   };
 
   const updateNotifications = (key: string, value: any) => {
@@ -119,6 +150,11 @@ export function FlowSettingsDialog({
       },
     }));
   };
+
+  const selectedTags = localSettings.filters?.tags || [];
+  const selectedExcludeTags = localSettings.filters?.excludeTags || [];
+  const selectedFunnels = localSettings.filters?.funnels || [];
+  const selectedStages = localSettings.filters?.stages || [];
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -150,15 +186,14 @@ export function FlowSettingsDialog({
             </TabsTrigger>
           </TabsList>
 
+          {/* SCHEDULE TAB */}
           <TabsContent value="schedule" className="mt-4 space-y-4">
             <Card>
               <CardHeader className="pb-3">
                 <div className="flex items-center justify-between">
                   <div>
                     <CardTitle className="text-base">Horário de Funcionamento</CardTitle>
-                    <CardDescription>
-                      Defina quando o fluxo pode ser executado
-                    </CardDescription>
+                    <CardDescription>Defina quando o fluxo pode ser executado</CardDescription>
                   </div>
                   <Switch
                     checked={localSettings.schedule?.enabled || false}
@@ -166,7 +201,6 @@ export function FlowSettingsDialog({
                   />
                 </div>
               </CardHeader>
-              
               {localSettings.schedule?.enabled && (
                 <CardContent className="space-y-4">
                   <div className="space-y-2">
@@ -186,7 +220,6 @@ export function FlowSettingsDialog({
                       ))}
                     </div>
                   </div>
-
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label>Hora de Início</Label>
@@ -205,82 +238,146 @@ export function FlowSettingsDialog({
                       />
                     </div>
                   </div>
-
                   <div className="space-y-2">
                     <Label>Mensagem fora do horário</Label>
                     <Input
-                      placeholder="Olá! Nosso horário de atendimento é de segunda a sexta, das 09h às 18h. Retornaremos em breve!"
+                      placeholder="Olá! Nosso horário de atendimento é de segunda a sexta, das 09h às 18h."
                       value={localSettings.schedule?.outOfHoursMessage || ''}
                       onChange={(e) => updateSchedule('outOfHoursMessage', e.target.value)}
                     />
                     <p className="text-xs text-muted-foreground">
-                      📩 Esta mensagem será enviada automaticamente quando alguém entrar em contato fora do horário
+                      📩 Esta mensagem será enviada automaticamente fora do horário
                     </p>
                   </div>
-
-                  <p className="text-xs text-muted-foreground">
-                    ⚠️ Fora destes horários, o fluxo não será executado automaticamente
-                  </p>
                 </CardContent>
               )}
             </Card>
           </TabsContent>
 
+          {/* FILTERS TAB */}
           <TabsContent value="filters" className="mt-4 space-y-4">
             <Card>
               <CardHeader className="pb-3">
                 <CardTitle className="text-base">Filtros de Execução</CardTitle>
-                <CardDescription>
-                  Defina quais leads/conversas podem acionar este fluxo
-                </CardDescription>
+                <CardDescription>Defina quais leads/conversas podem acionar este fluxo</CardDescription>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className="space-y-6">
+                {/* Tags para incluir */}
                 <div className="space-y-2">
-                  <Label>Apenas leads com estas tags (separar por vírgula)</Label>
-                  <Input
-                    placeholder="VIP, cliente, interessado"
-                    value={localSettings.filters?.tags?.join(', ') || ''}
-                    onChange={(e) => updateFilters('tags', e.target.value)}
-                  />
+                  <Label className="text-sm font-medium">Apenas leads com estas tags</Label>
+                  <p className="text-xs text-muted-foreground">A URA só responderá leads que possuem essas tags</p>
+                  {availableTags.length > 0 ? (
+                    <div className="flex flex-wrap gap-2 p-3 border rounded-md bg-muted/30 max-h-32 overflow-y-auto">
+                      {availableTags.map((tag) => (
+                        <Badge
+                          key={tag}
+                          variant={selectedTags.includes(tag) ? 'default' : 'outline'}
+                          className="cursor-pointer select-none transition-colors"
+                          onClick={() => toggleFilterItem('tags', tag)}
+                        >
+                          {tag}
+                          {selectedTags.includes(tag) && <X className="ml-1 h-3 w-3" />}
+                        </Badge>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-xs text-muted-foreground italic">Nenhuma tag cadastrada</p>
+                  )}
+                  {selectedTags.length > 0 && (
+                    <p className="text-xs text-primary">✅ {selectedTags.length} tag(s) selecionada(s)</p>
+                  )}
                 </div>
 
+                {/* Tags para excluir */}
                 <div className="space-y-2">
-                  <Label>Excluir leads com estas tags</Label>
-                  <Input
-                    placeholder="bloqueado, spam, não-perturbe"
-                    value={localSettings.filters?.excludeTags?.join(', ') || ''}
-                    onChange={(e) => updateFilters('excludeTags', e.target.value)}
-                  />
+                  <Label className="text-sm font-medium">Excluir leads com estas tags</Label>
+                  <p className="text-xs text-muted-foreground">A URA NÃO responderá leads que possuem essas tags</p>
+                  {availableTags.length > 0 ? (
+                    <div className="flex flex-wrap gap-2 p-3 border rounded-md bg-muted/30 max-h-32 overflow-y-auto">
+                      {availableTags.map((tag) => (
+                        <Badge
+                          key={tag}
+                          variant={selectedExcludeTags.includes(tag) ? 'destructive' : 'outline'}
+                          className="cursor-pointer select-none transition-colors"
+                          onClick={() => toggleFilterItem('excludeTags', tag)}
+                        >
+                          {tag}
+                          {selectedExcludeTags.includes(tag) && <X className="ml-1 h-3 w-3" />}
+                        </Badge>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-xs text-muted-foreground italic">Nenhuma tag cadastrada</p>
+                  )}
+                  {selectedExcludeTags.length > 0 && (
+                    <p className="text-xs text-destructive">🚫 {selectedExcludeTags.length} tag(s) excluída(s)</p>
+                  )}
                 </div>
 
+                {/* Funis */}
                 <div className="space-y-2">
-                  <Label>Apenas leads nos funis (IDs separados por vírgula)</Label>
-                  <Input
-                    placeholder="ID do funil 1, ID do funil 2"
-                    value={localSettings.filters?.funnels?.join(', ') || ''}
-                    onChange={(e) => updateFilters('funnels', e.target.value)}
-                  />
+                  <Label className="text-sm font-medium">Apenas leads nestes funis</Label>
+                  <p className="text-xs text-muted-foreground">A URA só ativará para leads que estão nesses funis</p>
+                  {availableFunnels.length > 0 ? (
+                    <div className="flex flex-wrap gap-2 p-3 border rounded-md bg-muted/30 max-h-32 overflow-y-auto">
+                      {availableFunnels.map((funil) => (
+                        <Badge
+                          key={funil.id}
+                          variant={selectedFunnels.includes(funil.id) ? 'default' : 'outline'}
+                          className="cursor-pointer select-none transition-colors"
+                          onClick={() => toggleFilterItem('funnels', funil.id)}
+                        >
+                          {funil.nome}
+                          {selectedFunnels.includes(funil.id) && <X className="ml-1 h-3 w-3" />}
+                        </Badge>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-xs text-muted-foreground italic">Nenhum funil cadastrado</p>
+                  )}
+                  {selectedFunnels.length > 0 && (
+                    <p className="text-xs text-primary">✅ {selectedFunnels.length} funil(is) selecionado(s)</p>
+                  )}
                 </div>
 
+                {/* Etapas */}
                 <div className="space-y-2">
-                  <Label>Apenas leads nas etapas (IDs separados por vírgula)</Label>
-                  <Input
-                    placeholder="ID da etapa 1, ID da etapa 2"
-                    value={localSettings.filters?.stages?.join(', ') || ''}
-                    onChange={(e) => updateFilters('stages', e.target.value)}
-                  />
+                  <Label className="text-sm font-medium">Apenas leads nestas etapas</Label>
+                  <p className="text-xs text-muted-foreground">Filtre por etapas específicas dos funis</p>
+                  {availableStages.length > 0 ? (
+                    <div className="flex flex-wrap gap-2 p-3 border rounded-md bg-muted/30 max-h-40 overflow-y-auto">
+                      {availableStages.map((etapa) => {
+                        const funil = availableFunnels.find(f => f.id === etapa.funil_id);
+                        return (
+                          <Badge
+                            key={etapa.id}
+                            variant={selectedStages.includes(etapa.id) ? 'default' : 'outline'}
+                            className="cursor-pointer select-none transition-colors"
+                            onClick={() => toggleFilterItem('stages', etapa.id)}
+                          >
+                            {funil ? `${funil.nome} → ` : ''}{etapa.nome}
+                            {selectedStages.includes(etapa.id) && <X className="ml-1 h-3 w-3" />}
+                          </Badge>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <p className="text-xs text-muted-foreground italic">Nenhuma etapa cadastrada</p>
+                  )}
+                  {selectedStages.length > 0 && (
+                    <p className="text-xs text-primary">✅ {selectedStages.length} etapa(s) selecionada(s)</p>
+                  )}
                 </div>
               </CardContent>
             </Card>
           </TabsContent>
 
+          {/* LIMITS TAB */}
           <TabsContent value="limits" className="mt-4 space-y-4">
             <Card>
               <CardHeader className="pb-3">
                 <CardTitle className="text-base">Limites de Execução</CardTitle>
-                <CardDescription>
-                  Evite execuções excessivas e spam
-                </CardDescription>
+                <CardDescription>Evite execuções excessivas e spam</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
@@ -291,11 +388,8 @@ export function FlowSettingsDialog({
                     value={localSettings.limits?.maxExecutionsPerDay || ''}
                     onChange={(e) => updateLimits('maxExecutionsPerDay', parseInt(e.target.value) || undefined)}
                   />
-                  <p className="text-xs text-muted-foreground">
-                    Deixe vazio para ilimitado
-                  </p>
+                  <p className="text-xs text-muted-foreground">Deixe vazio para ilimitado</p>
                 </div>
-
                 <div className="space-y-2">
                   <Label>Máximo de execuções por lead</Label>
                   <Input
@@ -304,11 +398,8 @@ export function FlowSettingsDialog({
                     value={localSettings.limits?.maxExecutionsPerLead || ''}
                     onChange={(e) => updateLimits('maxExecutionsPerLead', parseInt(e.target.value) || undefined)}
                   />
-                  <p className="text-xs text-muted-foreground">
-                    Quantas vezes este fluxo pode rodar para o mesmo lead
-                  </p>
+                  <p className="text-xs text-muted-foreground">Quantas vezes este fluxo pode rodar para o mesmo lead</p>
                 </div>
-
                 <div className="space-y-2">
                   <Label>Intervalo mínimo entre execuções (minutos)</Label>
                   <Input
@@ -317,49 +408,40 @@ export function FlowSettingsDialog({
                     value={localSettings.limits?.cooldownMinutes || ''}
                     onChange={(e) => updateLimits('cooldownMinutes', parseInt(e.target.value) || undefined)}
                   />
-                  <p className="text-xs text-muted-foreground">
-                    Tempo mínimo de espera antes de executar novamente para o mesmo lead
-                  </p>
+                  <p className="text-xs text-muted-foreground">Tempo mínimo antes de executar novamente para o mesmo lead</p>
                 </div>
               </CardContent>
             </Card>
           </TabsContent>
 
+          {/* NOTIFICATIONS TAB */}
           <TabsContent value="notifications" className="mt-4 space-y-4">
             <Card>
               <CardHeader className="pb-3">
                 <CardTitle className="text-base">Notificações</CardTitle>
-                <CardDescription>
-                  Receba alertas sobre a execução do fluxo
-                </CardDescription>
+                <CardDescription>Receba alertas sobre a execução do fluxo</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex items-center justify-between">
                   <div>
                     <Label>Notificar em caso de erro</Label>
-                    <p className="text-xs text-muted-foreground">
-                      Receba um alerta quando o fluxo falhar
-                    </p>
+                    <p className="text-xs text-muted-foreground">Receba um alerta quando o fluxo falhar</p>
                   </div>
                   <Switch
                     checked={localSettings.notifications?.onError || false}
                     onCheckedChange={(v) => updateNotifications('onError', v)}
                   />
                 </div>
-
                 <div className="flex items-center justify-between">
                   <div>
                     <Label>Notificar ao completar</Label>
-                    <p className="text-xs text-muted-foreground">
-                      Receba um resumo diário das execuções
-                    </p>
+                    <p className="text-xs text-muted-foreground">Receba um resumo diário das execuções</p>
                   </div>
                   <Switch
                     checked={localSettings.notifications?.onComplete || false}
                     onCheckedChange={(v) => updateNotifications('onComplete', v)}
                   />
                 </div>
-
                 {(localSettings.notifications?.onError || localSettings.notifications?.onComplete) && (
                   <div className="space-y-2">
                     <Label>Email para notificações</Label>
