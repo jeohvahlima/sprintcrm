@@ -657,21 +657,37 @@ serve(async (req) => {
               const conversationUpdate = mapMetaDeliveryStatusToConversationUpdate(deliveryStatus);
               const errorInfo = deliveryStatus?.errors?.[0];
 
-              const { data: updatedRows, error: updateError } = await supabase
-                .from('conversas')
-                .update(conversationUpdate)
-                .eq('whatsapp_message_id', deliveryStatus.id)
-                .select('id');
+              // Retry logic to handle race condition: webhook may arrive before DB insert completes
+              let updatedRows: any[] | null = null;
+              let updateError: any = null;
+              const maxRetries = 3;
+              for (let attempt = 0; attempt < maxRetries; attempt++) {
+                const result = await supabase
+                  .from('conversas')
+                  .update(conversationUpdate)
+                  .eq('whatsapp_message_id', deliveryStatus.id)
+                  .select('id');
+                
+                updatedRows = result.data;
+                updateError = result.error;
 
-              if (updateError) {
-                console.error('❌ [META-STATUS] Erro ao atualizar conversa pelo status:', updateError);
-                continue;
-              }
+                if (updateError) {
+                  console.error('❌ [META-STATUS] Erro ao atualizar conversa pelo status:', updateError);
+                  break;
+                }
 
-              if (!updatedRows?.length) {
-                console.warn('⚠️ [META-STATUS] Conversa não encontrada para o whatsapp_message_id:', deliveryStatus.id);
-              } else {
-                console.log(`✅ [META-STATUS] Conversa atualizada para status ${deliveryStatus.status}:`, deliveryStatus.id);
+                if (updatedRows?.length) {
+                  console.log(`✅ [META-STATUS] Conversa atualizada para status ${deliveryStatus.status}:`, deliveryStatus.id, attempt > 0 ? `(tentativa ${attempt + 1})` : '');
+                  break;
+                }
+
+                // Record not found - wait and retry (race condition with DB insert)
+                if (attempt < maxRetries - 1) {
+                  console.log(`⏳ [META-STATUS] Registro não encontrado, aguardando retry ${attempt + 2}/${maxRetries} para:`, deliveryStatus.id);
+                  await new Promise(resolve => setTimeout(resolve, 2000));
+                } else {
+                  console.warn('⚠️ [META-STATUS] Conversa não encontrada após retries para whatsapp_message_id:', deliveryStatus.id);
+                }
               }
 
               if (String(deliveryStatus?.status || '').toLowerCase() === 'failed') {
