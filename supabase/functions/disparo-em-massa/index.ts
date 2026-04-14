@@ -249,7 +249,32 @@ serve(async (req) => {
 
           let mensagemConteudo = campaign.message_content || '';
           if (campaign.message_type === 'template') {
-            mensagemConteudo = `[Template: ${campaign.template_name}]`;
+            // Fetch actual template body text from DB
+            const { data: templateData } = await supabase
+              .from('whatsapp_templates')
+              .select('components')
+              .eq('name', campaign.template_name)
+              .eq('company_id', campaign.company_id)
+              .limit(1)
+              .maybeSingle();
+
+            const bodyComponent = templateData?.components?.find?.((c: any) => c.type === 'BODY');
+            const footerComponent = templateData?.components?.find?.((c: any) => c.type === 'FOOTER');
+            const buttonsComponent = templateData?.components?.find?.((c: any) => c.type === 'BUTTONS');
+
+            if (bodyComponent?.text) {
+              mensagemConteudo = bodyComponent.text;
+              if (footerComponent?.text) {
+                mensagemConteudo += `\n\n_${footerComponent.text}_`;
+              }
+              if (buttonsComponent?.buttons?.length) {
+                for (const btn of buttonsComponent.buttons) {
+                  mensagemConteudo += `\n↪ ${btn.text}`;
+                }
+              }
+            } else {
+              mensagemConteudo = `[Template: ${campaign.template_name}]`;
+            }
           } else if (campaign.message_type === 'image' && !mensagemConteudo) {
             mensagemConteudo = '[Imagem]';
           } else if (campaign.message_type === 'video' && !mensagemConteudo) {
