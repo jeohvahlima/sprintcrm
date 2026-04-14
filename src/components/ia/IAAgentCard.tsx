@@ -122,6 +122,7 @@ export function IAAgentCard({
   const [blockByTags, setBlockByTags] = useState(false);
   const [blockedTags, setBlockedTags] = useState<string[]>([]);
   const [newBlockedTag, setNewBlockedTag] = useState("");
+  const [availableCompanyTags, setAvailableCompanyTags] = useState<string[]>([]);
   
   // Estados para leitura de histórico
   const [readConversationHistory, setReadConversationHistory] = useState(true);
@@ -280,6 +281,14 @@ export function IAAgentCard({
           .select('id, nome, funil_id');
           
         if (etapas) setAvailableStages(etapas);
+
+        // Carregar tags da empresa
+        const { data: companyTags } = await supabase
+          .from('company_tags')
+          .select('tag_name')
+          .eq('company_id', userRole.company_id);
+        
+        if (companyTags) setAvailableCompanyTags(companyTags.map(t => t.tag_name));
         
         // Carregar agendas de profissionais (para IA de Agendamento)
         const { data: agendas } = await supabase
@@ -1103,9 +1112,39 @@ export function IAAgentCard({
                           
                           {blockByTags && (
                             <div className="space-y-3 pt-3 border-t">
+                              {/* Tags disponíveis para selecionar */}
+                              {availableCompanyTags.length > 0 ? (
+                                <div className="space-y-2">
+                                  <Label className="text-sm">Clique nas tags para bloquear:</Label>
+                                  <div className="flex flex-wrap gap-2 p-3 border rounded-md bg-muted/30 max-h-36 overflow-y-auto">
+                                    {availableCompanyTags.filter(t => !blockedTags.includes(t)).map(tag => (
+                                      <Badge 
+                                        key={tag} 
+                                        variant="outline" 
+                                        className="cursor-pointer select-none hover:bg-destructive hover:text-destructive-foreground transition-colors"
+                                        onClick={() => {
+                                          if (!blockedTags.includes(tag)) {
+                                            setBlockedTags([...blockedTags, tag]);
+                                          }
+                                        }}
+                                      >
+                                        <Plus className="h-3 w-3 mr-1" />
+                                        {tag}
+                                      </Badge>
+                                    ))}
+                                    {availableCompanyTags.filter(t => !blockedTags.includes(t)).length === 0 && (
+                                      <p className="text-xs text-muted-foreground">Todas as tags já foram adicionadas</p>
+                                    )}
+                                  </div>
+                                </div>
+                              ) : (
+                                <p className="text-xs text-muted-foreground italic">Nenhuma tag cadastrada na empresa</p>
+                              )}
+
+                              {/* Adicionar tag manual também */}
                               <div className="flex gap-2">
                                 <Input
-                                  placeholder="Digite a tag para bloquear..."
+                                  placeholder="Ou digite uma tag manualmente..."
                                   value={newBlockedTag}
                                   onChange={(e) => setNewBlockedTag(e.target.value)}
                                   onKeyDown={(e) => e.key === 'Enter' && handleAddBlockedTag()}
@@ -1117,20 +1156,23 @@ export function IAAgentCard({
                               </div>
                               
                               {blockedTags.length > 0 ? (
-                                <div className="flex flex-wrap gap-2">
-                                  {blockedTags.map(tag => (
-                                    <Badge key={tag} variant="destructive" className="flex items-center gap-1">
-                                      <Ban className="h-3 w-3" />
-                                      {tag}
-                                      <button onClick={() => handleRemoveBlockedTag(tag)} className="ml-1 hover:text-white/80">
-                                        <X className="h-3 w-3" />
-                                      </button>
-                                    </Badge>
-                                  ))}
+                                <div className="space-y-2">
+                                  <Label className="text-sm font-medium">Tags bloqueadas:</Label>
+                                  <div className="flex flex-wrap gap-2">
+                                    {blockedTags.map(tag => (
+                                      <Badge key={tag} variant="destructive" className="flex items-center gap-1">
+                                        <Ban className="h-3 w-3" />
+                                        {tag}
+                                        <button onClick={() => handleRemoveBlockedTag(tag)} className="ml-1 hover:text-white/80">
+                                          <X className="h-3 w-3" />
+                                        </button>
+                                      </Badge>
+                                    ))}
+                                  </div>
                                 </div>
                               ) : (
                                 <p className="text-xs text-muted-foreground">
-                                  Nenhuma tag bloqueada. Adicione tags acima.
+                                  Nenhuma tag bloqueada. Selecione tags acima.
                                 </p>
                               )}
                               
