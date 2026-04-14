@@ -166,7 +166,7 @@ serve(async (req) => {
       });
     }
 
-    const accessToken = connection.instagram_access_token || connection.meta_access_token;
+    const accessToken = connection.meta_access_token || connection.instagram_access_token;
     const igAccountId = connection.instagram_account_id;
     let resolvedName: string | null = null;
 

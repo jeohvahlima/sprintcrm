@@ -2,6 +2,20 @@ import { useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Conversation, Message } from './useConversationsCache';
 
+function isInstagramPlaceholderName(value?: string | null): boolean {
+  const name = String(value ?? '').trim();
+  if (!name) return true;
+  if (/^Contato\s+Instagram$/i.test(name)) return true;
+  if (/^Instagram\s+\d+$/i.test(name)) return true;
+  if (/^\d{10,}$/.test(name.replace(/^ig_/, ''))) return true;
+  return false;
+}
+
+function getInstagramFallbackName(value?: string | null): string {
+  const digits = String(value ?? '').replace(/^ig_/, '').replace(/[^0-9]/g, '');
+  return digits ? `Instagram ${digits.slice(-6)}` : 'Instagram';
+}
+
 /**
  * Hook para busca de conversas diretamente no banco de dados
  * ✅ MELHORADO: Busca em conversas E leads para garantir que sempre encontre o contato
@@ -157,7 +171,6 @@ export const useConversationSearch = (companyId: string | null) => {
           };
         });
 
-        const contactName = mensagens.find(m => m.nome_contato)?.nome_contato || telefone;
         const ultimaMensagem = messagensFormatadas[messagensFormatadas.length - 1];
 
         let statusConversa: "waiting" | "answered" | "resolved" = "waiting";
@@ -175,6 +188,16 @@ export const useConversationSearch = (companyId: string | null) => {
           const digits = String(m.telefone_formatado || m.numero || '').replace(/[^0-9]/g, '');
           return m.origem === 'Instagram' || (m.origem_api === 'meta' && digits.length >= 15);
         });
+        const bestNamedMessage = isInstagramConversation
+          ? mensagens.find(m => {
+              const name = String(m.nome_contato ?? '').trim();
+              return name && !isInstagramPlaceholderName(name);
+            })
+          : mensagens.find(m => String(m.nome_contato ?? '').trim());
+        const fallbackNamedMessage = mensagens.find(m => String(m.nome_contato ?? '').trim());
+        const contactName = bestNamedMessage?.nome_contato
+          || (isInstagramConversation ? getInstagramFallbackName(telefone) : fallbackNamedMessage?.nome_contato)
+          || telefone;
 
         return {
           id: telefone,
@@ -277,6 +300,7 @@ export const loadAllUniqueConversations = async (companyId: string): Promise<Con
 
     // Agrupar por telefone - pegar apenas a PRIMEIRA (mais recente) de cada
     const conversasMap = new Map<string, any>();
+    const bestNamesMap = new Map<string, string>();
     validConversas.forEach(conv => {
       const isGroup = conv.is_group || /@g\.us$/.test(conv.numero || '');
       const normalizedDigits = String(conv.telefone_formatado || conv.numero || '').replace(/[^0-9]/g, '');
@@ -289,6 +313,14 @@ export const loadAllUniqueConversations = async (companyId: string): Promise<Con
           : (normalizedDigits || '');
 
       if (!key) return;
+
+      const candidateName = String(conv.nome_contato || '').trim();
+      if (candidateName) {
+        const canUseName = !isInstagram || !isInstagramPlaceholderName(candidateName);
+        if (canUseName && !bestNamesMap.has(key)) {
+          bestNamesMap.set(key, candidateName);
+        }
+      }
 
       // Só adicionar se ainda não existe (primeiro = mais recente porque ordenamos DESC)
       if (!conversasMap.has(key)) {
@@ -366,7 +398,11 @@ export const loadAllUniqueConversations = async (companyId: string): Promise<Con
         sentBy: conv.sent_by || undefined,
       };
 
-      const contactName = conv.nome_contato || telefone;
+      const rawContactName = String(conv.nome_contato || '').trim();
+      const contactName = bestNamesMap.get(telefone)
+        || (isInstagramConversation
+          ? (!isInstagramPlaceholderName(rawContactName) ? rawContactName : getInstagramFallbackName(telefone))
+          : rawContactName || telefone);
 
       let statusConversa: "waiting" | "answered" | "resolved" = "waiting";
       if (conv.status === 'Resolvida' || conv.status === 'Finalizada') {

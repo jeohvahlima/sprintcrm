@@ -912,7 +912,7 @@ serve(async (req) => {
             // Solução: usar /{ig-page-id}/conversations?user_id={igsid}&platform=instagram
             let instagramUsername = instagramUserId; // Default: ID numérico
             let instagramProfilePic: string | null = null;
-            const igAccessToken = connection.instagram_access_token || connection.meta_access_token;
+            const igAccessToken = connection.meta_access_token || connection.instagram_access_token;
             const igAccountId = connection.instagram_account_id || msg.instagram_account_id;
             
             // Método 0 (CACHE): Buscar nome de conversa anterior no banco
