@@ -929,7 +929,7 @@ serve(async (req) => {
                 .single();
               
               if (prevConv?.nome_contato) {
-                const isFallbackName = /^Instagram\s+\d+$/i.test(prevConv.nome_contato);
+                const isFallbackName = /^Instagram\s+\d+$/i.test(prevConv.nome_contato) || /^Contato\s+Instagram$/i.test(prevConv.nome_contato);
                 if (!isFallbackName) {
                   instagramUsername = prevConv.nome_contato;
                   console.log('📸 [INSTAGRAM] Nome encontrado no cache (conversa anterior):', instagramUsername);
@@ -1022,7 +1022,7 @@ serve(async (req) => {
             if (leadId && existingLead?.name && instagramUsername !== instagramUserId) {
               const existingName = existingLead.name.trim();
               const isNumericName = /^\d{10,}$/.test(existingName);
-              const isFallbackName = /^Instagram\s+\d+$/i.test(existingName);
+              const isFallbackName = /^Instagram\s+\d+$/i.test(existingName) || /^Contato\s+Instagram$/i.test(existingName);
               if ((isNumericName || isFallbackName) && existingName !== instagramUsername) {
                 try {
                   await supabase
@@ -1086,20 +1086,54 @@ serve(async (req) => {
               }
             }
 
+            // Helper: verificar se nome é genérico/ruim
+            const isBadName = (n: string | null | undefined): boolean => {
+              if (!n) return true;
+              const t = n.trim();
+              if (!t) return true;
+              if (/^\d{10,}$/.test(t)) return true;
+              if (/^Instagram\s+\d+$/i.test(t)) return true;
+              if (/^Contato\s+Instagram$/i.test(t)) return true;
+              if (t === instagramUserId) return true;
+              return false;
+            };
+
+            // ⚡ Se ainda não temos um nome real, tentar resolve-instagram-name como último recurso
+            if (isBadName(instagramUsername) && isBadName(leadName)) {
+              try {
+                const resolveUrl = `${Deno.env.get('SUPABASE_URL')}/functions/v1/resolve-instagram-name`;
+                const resolveRes = await fetch(resolveUrl, {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`,
+                  },
+                  body: JSON.stringify({ company_id, instagram_user_id: instagramUserId }),
+                });
+                if (resolveRes.ok) {
+                  const resolveData = await resolveRes.json();
+                  if (resolveData.name && !isBadName(resolveData.name)) {
+                    instagramUsername = resolveData.name;
+                    leadName = resolveData.name;
+                    console.log('📸 [INSTAGRAM] Nome resolvido via resolve-instagram-name:', resolveData.name);
+                    // Atualizar lead se existir
+                    if (leadId) {
+                      await supabase.from('leads').update({ name: resolveData.name }).eq('id', leadId);
+                    }
+                  }
+                }
+              } catch (e) {
+                console.warn('⚠️ [INSTAGRAM] resolve-instagram-name falhou:', e);
+              }
+            }
+
             // ⚡ Garantir que nome_contato NUNCA seja o ID numérico ou fallback quando temos um nome real
             const finalContactName = (() => {
-              // Verificar se o nome do lead é real (não numérico, não fallback)
-              if (existingLead?.name && !/^\d{10,}$/.test(existingLead.name) && !/^Instagram\s+\d+$/i.test(existingLead.name)) {
-                return existingLead.name;
-              }
-              // Usar leadName atualizado (pode ter sido corrigido acima)
-              if (leadName && leadName !== instagramUserId && !/^\d{10,}$/.test(leadName) && !/^Instagram\s+\d+$/i.test(leadName)) {
-                return leadName;
-              }
-              if (instagramUsername && instagramUsername !== instagramUserId && !/^Instagram\s+\d+$/i.test(instagramUsername)) {
-                return instagramUsername;
-              }
-              return instagramUserId;
+              if (!isBadName(existingLead?.name)) return existingLead!.name;
+              if (!isBadName(leadName)) return leadName;
+              if (!isBadName(instagramUsername)) return instagramUsername;
+              // Último fallback: usar "Contato Instagram" temporário
+              return `Contato Instagram`;
             })();
 
             const conversaData = {
