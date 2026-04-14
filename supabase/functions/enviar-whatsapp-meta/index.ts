@@ -255,10 +255,11 @@ serve(async (req) => {
     const errorMessage = error instanceof Error ? error.message : 'Erro interno ao enviar mensagem';
     return new Response(
       JSON.stringify({ 
+        success: false,
         error: errorMessage,
         provider: 'meta'
       }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
 });
