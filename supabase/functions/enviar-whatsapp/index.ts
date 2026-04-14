@@ -527,8 +527,6 @@ async function sendMetaTemplateMessage(
 
       resolvedTemplateName = resolvedTemplate.name;
       resolvedLanguage = resolvedTemplate.language;
-    } else {
-      resolvedLanguage = await lookupTemplateLanguage(wabaId as string, accessToken, templateName, language).catch(() => language);
     }
     
     // Sanitize components to prevent Meta API errors
