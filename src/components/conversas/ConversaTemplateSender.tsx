@@ -114,9 +114,14 @@ export function ConversaTemplateSender({
 
       const { data: sendResult, error } = await supabase.functions.invoke("enviar-whatsapp", { body: payload });
 
-      if (error || !sendResult?.success) {
-        console.error("❌ Erro ao enviar template:", error || sendResult);
-        throw new Error(error?.message || sendResult?.error || "Falha ao enviar template via WhatsApp");
+      if (error) {
+        console.error("❌ Erro ao invocar função:", error);
+        throw new Error(error.message || "Falha ao chamar função de envio");
+      }
+      
+      if (!sendResult?.success) {
+        console.error("❌ Erro ao enviar template:", sendResult);
+        throw new Error(sendResult?.error || "Falha ao enviar template via WhatsApp");
       }
 
       const whatsappMessageId = sendResult?.message_id || sendResult?.data?.messages?.[0]?.id || null;

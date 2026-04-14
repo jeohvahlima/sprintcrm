@@ -377,6 +377,43 @@ async function ensureTemplateHeaderMediaIds(
   return updatedComponents;
 }
 
+// Lookup the correct template language from Meta API (auto-correction)
+async function lookupTemplateLanguage(
+  wabaId: string,
+  accessToken: string,
+  templateName: string,
+  fallbackLanguage: string
+): Promise<string> {
+  try {
+    const url = `${META_API_BASE_URL}/${META_API_VERSION}/${wabaId}/message_templates?name=${encodeURIComponent(templateName)}&limit=10`;
+    const response = await fetch(url, {
+      headers: { 'Authorization': `Bearer ${accessToken}` },
+    });
+    if (!response.ok) {
+      console.warn("⚠️ Não foi possível buscar idioma do template:", response.status);
+      return fallbackLanguage;
+    }
+    const data = await response.json();
+    const templates = data.data || [];
+    if (templates.length === 0) {
+      console.warn(`⚠️ Template '${templateName}' não encontrado na Meta API`);
+      return fallbackLanguage;
+    }
+    // Try exact match first, then first approved, then first available
+    const exactMatch = templates.find((t: any) => t.language === fallbackLanguage && t.status === 'APPROVED');
+    if (exactMatch) return exactMatch.language;
+    const approvedMatch = templates.find((t: any) => t.status === 'APPROVED');
+    if (approvedMatch) {
+      console.log(`🔄 Auto-corrigindo idioma do template '${templateName}': ${fallbackLanguage} → ${approvedMatch.language}`);
+      return approvedMatch.language;
+    }
+    return templates[0]?.language || fallbackLanguage;
+  } catch (e) {
+    console.warn("⚠️ Erro ao buscar idioma do template:", e);
+    return fallbackLanguage;
+  }
+}
+
 // Send template message via Meta API
 async function sendMetaTemplateMessage(
   phoneNumberId: string,
@@ -389,6 +426,12 @@ async function sendMetaTemplateMessage(
 ): Promise<{ success: boolean; provider: string; data?: any; error?: string }> {
   try {
     const url = `${META_API_BASE_URL}/${META_API_VERSION}/${phoneNumberId}/messages`;
+
+    // Auto-correct language if WABA ID is available
+    let resolvedLanguage = language;
+    if (wabaId) {
+      resolvedLanguage = await lookupTemplateLanguage(wabaId, accessToken, templateName, language);
+    }
     
     // Sanitize components to prevent Meta API errors
     let sanitizedComponents = sanitizeTemplateComponents(components);
@@ -419,7 +462,7 @@ async function sendMetaTemplateMessage(
     
     const templatePayload: any = {
       name: templateName,
-      language: { code: language },
+      language: { code: resolvedLanguage },
     };
     
     if (sanitizedComponents && sanitizedComponents.length > 0) {
@@ -1673,16 +1716,17 @@ serve(async (req) => {
     } else {
       const errorText = result.error || "Falha ao enviar mensagem";
       const isDisconnected = /Instância desconectada|Reconecte via QR Code/i.test(errorText);
-      const statusCode = isDisconnected ? 503 : 500;
       const errorCode = isDisconnected ? "INSTANCE_DISCONNECTED" : "SEND_FAILED";
 
+      // Return 200 with success:false to prevent frontend FunctionsHttpError crash
       return new Response(
         JSON.stringify({ 
+          success: false,
           error: errorText,
           provider: result.provider,
           code: errorCode
         }),
-        { status: statusCode, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
