@@ -375,10 +375,14 @@ function MessageItemComponent({
               </div>
               {!mediaMessageType && (
                 <div className="max-w-full">
-                  {message.content ? (
+                  {message.content && !/^\[Template:\s*.+\]$/.test(message.content.trim()) ? (
                     <TextWithLinks text={message.content} />
                   ) : (
-                    <span className="text-muted-foreground italic">[Mensagem de template enviada]</span>
+                    <span className="text-muted-foreground italic">
+                      {message.content?.match(/^\[Template:\s*(.+)\]$/)?.[1]
+                        ? `Mensagem de template "${message.content.match(/^\[Template:\s*(.+)\]$/)?.[1]}" enviada`
+                        : '[Mensagem de template enviada]'}
+                    </span>
                   )}
                 </div>
               )}
