@@ -462,7 +462,7 @@ async function sendMetaTemplateMessage(
     
     const templatePayload: any = {
       name: templateName,
-      language: { code: language },
+      language: { code: resolvedLanguage },
     };
     
     if (sanitizedComponents && sanitizedComponents.length > 0) {
