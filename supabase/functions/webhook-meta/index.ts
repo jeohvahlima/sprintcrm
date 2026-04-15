@@ -1238,7 +1238,191 @@ serve(async (req) => {
       
       // Processar Page (Facebook Messenger - para futuro)
       else if (body.object === 'page') {
-        console.log('📘 Processando mensagens Facebook Messenger (não implementado ainda)...');
+        console.log('📘 Processando mensagens Facebook Messenger...');
+        
+        for (const entry of body.entry || []) {
+          const pageId = entry.id;
+          console.log('📘 [MESSENGER] Entry page_id:', pageId);
+          
+          // Buscar conexão pela tabela tenant_integrations usando messenger_page_id
+          const { data: tenantConn } = await supabase
+            .from('tenant_integrations')
+            .select('company_id, messenger_page_id, messenger_page_access_token')
+            .eq('messenger_page_id', pageId)
+            .single();
+          
+          if (!tenantConn) {
+            console.warn('❌ [MESSENGER] Conexão não encontrada para page_id:', pageId);
+            continue;
+          }
+          
+          const company_id = tenantConn.company_id;
+          const pageAccessToken = tenantConn.messenger_page_access_token;
+          console.log('📘 [MESSENGER] Company encontrada:', company_id);
+          
+          // Processar mensagens do Messenger
+          for (const messagingEvent of entry.messaging || []) {
+            const senderId = messagingEvent.sender?.id;
+            const recipientId = messagingEvent.recipient?.id;
+            const messageData = messagingEvent.message;
+            const timestamp = messagingEvent.timestamp;
+            
+            console.log('📘 [MESSENGER] Evento:', JSON.stringify({ senderId, recipientId, hasMessage: !!messageData }));
+            
+            // Ignorar se não tem mensagem (pode ser delivery, read receipt, etc.)
+            if (!messageData) {
+              console.log('📘 [MESSENGER] Evento sem mensagem (delivery/read), ignorando');
+              continue;
+            }
+            
+            // Detectar se é echo (mensagem enviada pela própria página)
+            const isEcho = messageData.is_echo === true || senderId === pageId;
+            
+            let messageType = 'text';
+            let messageContent = '';
+            let mediaUrl = '';
+            let arquivoNome = '';
+            
+            // Texto
+            if (messageData.text) {
+              messageType = 'text';
+              messageContent = messageData.text;
+            }
+            
+            // Anexos (imagem, vídeo, áudio, arquivo)
+            if (messageData.attachments && messageData.attachments.length > 0) {
+              for (const attachment of messageData.attachments) {
+                const type = attachment.type;
+                const payloadUrl = attachment.payload?.url;
+                
+                if (type === 'image') {
+                  messageType = 'image';
+                  mediaUrl = payloadUrl || '';
+                } else if (type === 'video') {
+                  messageType = 'video';
+                  mediaUrl = payloadUrl || '';
+                } else if (type === 'audio') {
+                  messageType = 'audio';
+                  mediaUrl = payloadUrl || '';
+                } else if (type === 'file') {
+                  messageType = 'document';
+                  mediaUrl = payloadUrl || '';
+                  arquivoNome = attachment.payload?.title || 'arquivo';
+                } else {
+                  messageType = type || 'text';
+                  mediaUrl = payloadUrl || '';
+                }
+                
+                if (!messageContent && payloadUrl) {
+                  messageContent = `[${type || 'anexo'}]`;
+                }
+              }
+            }
+            
+            // Sticker
+            if (messageData.sticker_id) {
+              messageType = 'sticker';
+              messageContent = messageContent || '[Sticker]';
+            }
+            
+            // Contato do Messenger: usar o sender ID (PSID)
+            const messengerUserId = isEcho ? recipientId : senderId;
+            
+            // Tentar buscar nome do contato via Graph API
+            let contactName = '';
+            if (pageAccessToken && messengerUserId) {
+              try {
+                const profileUrl = `https://graph.facebook.com/v23.0/${messengerUserId}?fields=first_name,last_name,name,profile_pic&access_token=${pageAccessToken}`;
+                const profileResponse = await fetch(profileUrl);
+                if (profileResponse.ok) {
+                  const profileData = await profileResponse.json();
+                  contactName = profileData.name || `${profileData.first_name || ''} ${profileData.last_name || ''}`.trim();
+                  console.log('📘 [MESSENGER] Nome do contato:', contactName);
+                } else {
+                  console.warn('📘 [MESSENGER] Erro ao buscar perfil:', await profileResponse.text());
+                }
+              } catch (e) {
+                console.warn('📘 [MESSENGER] Erro ao buscar perfil:', e);
+              }
+            }
+            
+            if (!contactName) {
+              contactName = `Messenger ${messengerUserId}`;
+            }
+            
+            // Verificar duplicata pelo mid (message ID)
+            const messageId = messageData.mid;
+            if (messageId) {
+              const { data: existingMsg } = await supabase
+                .from('conversas')
+                .select('id')
+                .eq('whatsapp_message_id', messageId)
+                .single();
+              
+              if (existingMsg) {
+                console.log('📘 [MESSENGER] Mensagem duplicada, ignorando:', messageId);
+                continue;
+              }
+            }
+            
+            // Salvar mensagem na tabela conversas
+            const conversaData = {
+              numero: messengerUserId,
+              telefone_formatado: messengerUserId,
+              mensagem: messageContent || '[mídia]',
+              tipo_mensagem: messageType,
+              midia_url: mediaUrl || null,
+              arquivo_nome: arquivoNome || null,
+              fromme: isEcho,
+              status: isEcho ? 'sent' : 'received',
+              origem: 'Messenger',
+              origem_api: 'meta',
+              nome_contato: contactName,
+              company_id: company_id,
+              whatsapp_message_id: messageId || null,
+              read: isEcho,
+              delivered: isEcho,
+            };
+            
+            console.log('📘 [MESSENGER] Salvando mensagem:', JSON.stringify({ 
+              from: messengerUserId, 
+              isEcho, 
+              type: messageType, 
+              content: messageContent?.substring(0, 50) 
+            }));
+            
+            const { data: inserted, error: insertError } = await supabase
+              .from('conversas')
+              .insert(conversaData)
+              .select('id')
+              .single();
+            
+            if (insertError) {
+              console.error('❌ [MESSENGER] Erro ao salvar mensagem:', insertError);
+            } else {
+              console.log('✅ [MESSENGER] Mensagem salva:', inserted.id);
+              
+              // Vincular a lead se existir
+              if (!isEcho && messengerUserId) {
+                const { data: existingLead } = await supabase
+                  .from('leads')
+                  .select('id')
+                  .eq('company_id', company_id)
+                  .or(`telefone.eq.${messengerUserId},phone.eq.${messengerUserId}`)
+                  .limit(1)
+                  .single();
+                
+                if (existingLead) {
+                  await supabase
+                    .from('conversas')
+                    .update({ lead_id: existingLead.id })
+                    .eq('id', inserted.id);
+                  console.log('📘 [MESSENGER] Vinculado ao lead:', existingLead.id);
+                }
+              }
+            }
+          }
+        }
       }
       
       else {
