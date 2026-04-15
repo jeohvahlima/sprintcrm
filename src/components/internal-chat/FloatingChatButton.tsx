@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
-import { MessageCircle, X, ArrowLeft, Plus, Phone, Users, User, Send, Paperclip, Loader2, Mic, Image, FileText, StopCircle } from 'lucide-react';
+import { MessageCircle, X, ArrowLeft, Plus, Phone, Users, User, Send, Paperclip, Loader2, Mic, Image, FileText, StopCircle, Share2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -268,6 +268,7 @@ interface ChatPopupWindowProps {
 const ChatPopupWindow = ({ conversation, currentUserId }: ChatPopupWindowProps) => {
   const [message, setMessage] = useState('');
   const [sending, setSending] = useState(false);
+  const [showShareDialog, setShowShareDialog] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
   const [recordingTime, setRecordingTime] = useState(0);
   const scrollRef = useRef<HTMLDivElement>(null);
