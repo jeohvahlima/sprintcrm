@@ -13,6 +13,9 @@ import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Plus, Search, Send, Paperclip, Image as ImageIcon, File as FileIcon, Share2, Users, MoreVertical, ArrowLeft, Video, Mic, Square, Loader2, X, Settings, Phone, VideoIcon, Clock, Link2, MessagesSquare } from 'lucide-react';
+import { useFloatingButtonsVisibility } from '@/hooks/useFloatingButtonsVisibility';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 import { NewConversationDialog } from '@/components/internal-chat/NewConversationDialog';
 import { ShareItemDialog } from '@/components/internal-chat/ShareItemDialog';
 import { EditGroupDialog } from '@/components/internal-chat/EditGroupDialog';
@@ -28,6 +31,7 @@ import { toast } from 'sonner';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 export default function ChatInterno() {
+  const { chatVisible, toggleChat } = useFloatingButtonsVisibility();
   const [selectedConversation, setSelectedConversation] = useState<InternalConversation | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [newConversationOpen, setNewConversationOpen] = useState(false);
@@ -352,6 +356,10 @@ export default function ChatInterno() {
           <div className="flex items-center justify-between mb-3">
             <h2 className="text-lg font-bold text-foreground">Bate-papo Interno</h2>
             <div className="flex gap-1">
+              <div className="flex items-center gap-1 mr-1">
+                <Switch id="chat-float" checked={chatVisible} onCheckedChange={toggleChat} className="scale-75" />
+                <Label htmlFor="chat-float" className="text-[10px] text-muted-foreground cursor-pointer">Popup</Label>
+              </div>
               <Button size="icon" variant="ghost" onClick={() => setShowStartCallDialog(true)} title="Nova Chamada">
                 <Phone className="h-4 w-4" />
               </Button>

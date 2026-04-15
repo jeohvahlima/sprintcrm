@@ -10,11 +10,13 @@ import { SystemUpdatesModal } from "@/components/updates/SystemUpdatesModal";
 import { useSystemUpdates } from "@/hooks/useSystemUpdates";
 import { FloatingChatButton } from "@/components/internal-chat";
 import { FloatingDialerButton } from "@/components/discador/FloatingDialerButton";
+import { useFloatingButtonsVisibility } from "@/hooks/useFloatingButtonsVisibility";
 
 export function MainLayout() {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const isMobile = useIsMobile();
+  const { chatVisible, dialerVisible } = useFloatingButtonsVisibility();
   const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
   const supabaseKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
   const isSupabaseConfigured = supabaseUrl && supabaseKey && 
@@ -225,10 +227,10 @@ export function MainLayout() {
       />
       
       {/* Botão flutuante do chat interno */}
-      <FloatingChatButton />
+      {chatVisible && <FloatingChatButton />}
       
       {/* Botão flutuante do discador */}
-      <FloatingDialerButton />
+      {dialerVisible && <FloatingDialerButton />}
     </div>
   );
 }

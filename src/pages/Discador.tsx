@@ -10,6 +10,9 @@ import { CallHistory } from '@/components/discador/CallHistory';
 import { SDRDashboard } from '@/components/discador/SDRDashboard';
 import { StartCallFromLeadDialog } from '@/components/discador/StartCallFromLeadDialog';
 import { supabase } from '@/integrations/supabase/client';
+import { useFloatingButtonsVisibility } from '@/hooks/useFloatingButtonsVisibility';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 const Discador = () => {
   const [activeTab, setActiveTab] = useState('fazer-ligacao');
   const [showCallDialog, setShowCallDialog] = useState(false);
@@ -25,6 +28,7 @@ const Discador = () => {
     loadCallHistory,
     getSDRMetrics
   } = useCallCenter();
+  const { dialerVisible, toggleDialer } = useFloatingButtonsVisibility();
   useEffect(() => {
     loadCallHistory();
   }, [loadCallHistory]);
@@ -68,6 +72,10 @@ const Discador = () => {
             <p className="text-muted-foreground mt-1">
               Central de ligações Faça e Receba na  Waze Platform  
             </p>
+          </div>
+          <div className="flex items-center gap-2">
+            <Switch id="dialer-float" checked={dialerVisible} onCheckedChange={toggleDialer} />
+            <Label htmlFor="dialer-float" className="text-sm cursor-pointer">Webphone flutuante</Label>
           </div>
         </div>
 
