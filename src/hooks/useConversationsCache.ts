@@ -375,7 +375,14 @@ export const useConversationsCache = (companyId: string | null) => {
             })
           : mensagens.find(m => String(m.nome_contato ?? '').trim());
 
-        const contactName = bestNamedMessage?.nome_contato
+        // ⚡ CORREÇÃO: Priorizar nome do lead cadastrado no CRM
+        const lookupKey = telefone.replace(/^ig_/, '').replace(/[^0-9]/g, '');
+        const leadData = leadsMap.get(lookupKey) || leadsMap.get(telefone);
+        const leadName = leadData?.name;
+        const hasGoodLeadName = leadName && !isInstagramPlaceholderName(leadName) && !/^\d{10,}$/.test(leadName.trim());
+        
+        const contactName = (hasGoodLeadName ? leadName : null)
+          || bestNamedMessage?.nome_contato
           || (isInstagramConversation ? 'Contato Instagram' : telefone);
          
         const ultimaMensagem = messagensFormatadas[messagensFormatadas.length - 1];
