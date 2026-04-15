@@ -260,6 +260,23 @@ export const FloatingChatButton = () => {
           hostUserName=""
         />
       )}
+
+      {activeCall && currentUserId && (
+        <VideoCallModalV2
+          open={true}
+          onClose={() => setActiveCall(null)}
+          meetingId={activeCall.meetingId}
+          localUserId={currentUserId}
+          remoteUserId={activeCall.remoteUserId}
+          remoteUserName={activeCall.remoteUserName}
+          callType={activeCall.callType}
+          isCaller={true}
+          onCallEnded={() => {
+            if (activeCall) endMeeting(activeCall.meetingId);
+            setActiveCall(null);
+          }}
+        />
+      )}
     </>
   );
 };
