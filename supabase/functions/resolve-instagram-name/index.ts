@@ -172,14 +172,14 @@ serve(async (req) => {
 
     // Method 1: Conversations API
     try {
-      const convUrl = `https://graph.facebook.com/v23.0/${igAccountId}/conversations?user_id=${instagram_user_id}&platform=instagram&fields=participants,name&access_token=${accessToken}`;
+      const convUrl = `https://graph.facebook.com/v23.0/${igAccountId}/conversations?user_id=${instagram_user_id}&platform=instagram&fields=participants{id,username,name,profile_pic},name&access_token=${accessToken}`;
       const convRes = await fetch(convUrl);
       if (convRes.ok) {
         const convData = await convRes.json();
         if (convData.data?.length > 0) {
           const conversation = convData.data[0];
-          const participants = conversation.participants?.data || [];
-          const other = participants.find((p: any) => p.id !== igAccountId);
+          const participants = conversation.participants?.data || conversation.participants || [];
+          const other = participants.find((p: any) => String(p.id) !== String(igAccountId));
           if (other?.username) resolvedName = other.username;
           else if (other?.name) resolvedName = other.name;
           else if (conversation.name) resolvedName = conversation.name;

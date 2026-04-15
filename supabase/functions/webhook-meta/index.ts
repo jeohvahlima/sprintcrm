@@ -976,7 +976,7 @@ serve(async (req) => {
                 console.log('📸 [INSTAGRAM] Buscando nome para IGSID:', instagramUserId);
                 
                 // Método 1: Buscar via conversations API do Instagram
-                const convUrl = `https://graph.facebook.com/v23.0/${igAccountId}/conversations?user_id=${instagramUserId}&platform=instagram&fields=participants,name&access_token=${igAccessToken}`;
+                const convUrl = `https://graph.facebook.com/v23.0/${igAccountId}/conversations?user_id=${instagramUserId}&platform=instagram&fields=participants{id,username,name,profile_pic},name&access_token=${igAccessToken}`;
                 console.log('📸 [INSTAGRAM] Conversations URL:', convUrl.replace(igAccessToken, '***'));
                 const convRes = await fetch(convUrl);
                 
@@ -986,10 +986,13 @@ serve(async (req) => {
                   
                   if (convData.data && convData.data.length > 0) {
                     const conversation = convData.data[0];
-                    const participants = conversation.participants?.data || [];
-                    const otherParticipant = participants.find((p: any) => p.id !== igAccountId);
+                    const participants = conversation.participants?.data || conversation.participants || [];
+                    const otherParticipant = participants.find((p: any) => String(p.id) !== String(igAccountId));
                     if (otherParticipant) {
                       instagramUsername = otherParticipant.username || otherParticipant.name || instagramUserId;
+                      if (otherParticipant.profile_pic && !instagramProfilePic) {
+                        instagramProfilePic = otherParticipant.profile_pic;
+                      }
                       console.log('📸 [INSTAGRAM] Nome encontrado via conversations:', instagramUsername);
                     }
                     if (instagramUsername === instagramUserId && conversation.name) {

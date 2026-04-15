@@ -353,11 +353,33 @@ export const useConversationsCache = (companyId: string | null) => {
             };
           });
 
-        // ⚡ Pegar primeiro nome_contato disponível (já está garantido pelo trigger)
-        const contactName = mensagens.find(m => m.nome_contato)?.nome_contato || telefone;
-        
+        const isGroup = mensagens[0]?.is_group || /@g\.us$/.test(telefone);
+        const isInstagramConversation = telefone.startsWith('ig_') || mensagens.some(m => {
+          const digits = String(m.telefone_formatado || m.numero || '').replace(/[^0-9]/g, '');
+          return m.origem === 'Instagram' || (m.origem_api === 'meta' && digits.length >= 15);
+        });
+
+        const isInstagramPlaceholderName = (value?: string | null): boolean => {
+          const name = String(value ?? '').trim();
+          if (!name) return true;
+          if (/^Contato\s+Instagram$/i.test(name)) return true;
+          if (/^Instagram\s+\d+$/i.test(name)) return true;
+          if (/^\d{10,}$/.test(name.replace(/^ig_/, ''))) return true;
+          return false;
+        };
+
+        const bestNamedMessage = isInstagramConversation
+          ? mensagens.find(m => {
+              const name = String(m.nome_contato ?? '').trim();
+              return name && !isInstagramPlaceholderName(name);
+            })
+          : mensagens.find(m => String(m.nome_contato ?? '').trim());
+
+        const contactName = bestNamedMessage?.nome_contato
+          || (isInstagramConversation ? 'Contato Instagram' : telefone);
+         
         const ultimaMensagem = messagensFormatadas[messagensFormatadas.length - 1];
-        
+         
         let statusConversa: "waiting" | "answered" | "resolved" = "waiting";
         const temMensagemResolvida = mensagens.some(m => m.status === 'Resolvida' || m.status === 'Finalizada');
         if (temMensagemResolvida) {
@@ -392,12 +414,6 @@ export const useConversationsCache = (companyId: string | null) => {
             statusConversa = "waiting"; // Sem resposta do usuário
           }
         }
-
-        const isGroup = mensagens[0]?.is_group || /@g\.us$/.test(telefone);
-        const isInstagramConversation = telefone.startsWith('ig_') || mensagens.some(m => {
-          const digits = String(m.telefone_formatado || m.numero || '').replace(/[^0-9]/g, '');
-          return m.origem === 'Instagram' || (m.origem_api === 'meta' && digits.length >= 15);
-        });
 
         // ⚡ Avatar - usar foto do lead se disponível, senão placeholder
         const normalizedPhoneForAvatar = telefone.replace(/^ig_/, '').replace(/[^0-9]/g, '');

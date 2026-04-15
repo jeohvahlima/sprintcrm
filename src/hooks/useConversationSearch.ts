@@ -11,9 +11,8 @@ function isInstagramPlaceholderName(value?: string | null): boolean {
   return false;
 }
 
-function getInstagramFallbackName(value?: string | null): string {
-  const digits = String(value ?? '').replace(/^ig_/, '').replace(/[^0-9]/g, '');
-  return digits ? `Instagram ${digits.slice(-6)}` : 'Instagram';
+function getInstagramFallbackName(_value?: string | null): string {
+  return 'Contato Instagram';
 }
 
 /**
