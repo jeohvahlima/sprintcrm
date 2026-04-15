@@ -236,26 +236,45 @@ export const useConversationsLoader = () => {
       // Criar conversas - ⚡ CORREÇÃO DEFINITIVA: Priorizar nome do lead e unificar nomes variantes
       const novasConversas: Conversation[] = Array.from(conversasMap.entries())
         .map(([telefone, mensagens]) => {
-          const leadInfo = leadsMap.get(telefone);
+          // Para Instagram, buscar lead pelo ID sem prefixo ig_
+          const lookupKey = telefone.replace(/^ig_/, '').replace(/[^0-9]/g, '');
+          const leadInfo = leadsMap.get(lookupKey) || leadsMap.get(telefone);
           const isGroup = mensagens[0]?.is_group || /@g\.us$/.test(telefone);
           const isInstagramConversation = telefone.startsWith('ig_') || mensagens.some(m => {
             const digits = String(m.telefone_formatado || m.numero || '').replace(/[^0-9]/g, '');
             return m.origem === 'Instagram' || (m.origem_api === 'meta' && digits.length >= 15);
           });
+          
+          // Helper: verificar se nome é um placeholder numérico do Instagram
+          const isBadInstagramName = (name: string | undefined | null): boolean => {
+            if (!name || name.trim() === '') return true;
+            const n = name.trim();
+            if (/^\d{10,}$/.test(n)) return true; // Apenas dígitos (ID numérico)
+            if (/^ig_\d+$/.test(n)) return true;
+            if (/^Contato\s+Instagram$/i.test(n)) return true;
+            if (/^Instagram\s+\d+$/i.test(n)) return true;
+            if (n === telefone || n === lookupKey) return true;
+            return false;
+          };
+          
           // ⚡ PRIORIDADE 1: Nome do lead cadastrado no CRM (mais confiável)
           let contactName = leadInfo?.name;
           
-          // Se não tem lead ou nome é igual ao telefone, buscar melhor nome nas mensagens
+          // Se nome do lead é um placeholder numérico, ignorar
+          if (isInstagramConversation && isBadInstagramName(contactName)) {
+            contactName = undefined;
+          }
+          
+          // Se não tem lead ou nome é inválido, buscar melhor nome nas mensagens
           if (!contactName || contactName === telefone || contactName.trim() === '') {
-            // ⚡ PRIORIDADE 2: Buscar o nome mais completo nas mensagens (ignorando variações)
+            // ⚡ PRIORIDADE 2: Buscar o nome mais completo nas mensagens
             const nomesEncontrados = mensagens
               .map(m => m.nome_contato?.trim())
               .filter(nome => {
                 if (!nome || nome === telefone) return false;
-                const nomeLower = nome.toLowerCase();
-                // Ignorar nomes genéricos ou variações de teste
-                const nomesInvalidos = ['jeohvah', 'jeo', 'test', 'teste', 'user'];
-                return !nomesInvalidos.some(invalido => nomeLower.includes(invalido));
+                // Para Instagram, filtrar nomes numéricos
+                if (isInstagramConversation && isBadInstagramName(nome)) return false;
+                return true;
               });
             
             // Pegar o nome mais longo (geralmente é o mais completo)
@@ -266,13 +285,13 @@ export const useConversationsLoader = () => {
             }
           }
           
-          // ⚡ CORREÇÃO CRÍTICA: Fallback CORRETO baseado no tipo da conversa
+          // ⚡ Fallback baseado no tipo da conversa
           if (!contactName || contactName.trim() === '') {
-            // Se é grupo e não tem nome, usar "Grupo"
             if (isGroup) {
               contactName = 'Grupo';
+            } else if (isInstagramConversation) {
+              contactName = `Contato Instagram`; // Placeholder legível em vez de número
             } else {
-              // Se é conversa individual, usar o telefone
               contactName = telefone;
             }
           }
