@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
-import { MessageCircle, X, ArrowLeft, Plus, Phone, Users, User, Send, Paperclip, Loader2, Mic, Image, FileText, StopCircle } from 'lucide-react';
+import { MessageCircle, X, ArrowLeft, Plus, Phone, Users, User, Send, Paperclip, Loader2, Mic, Image, FileText, StopCircle, Share2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,6 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { useInternalChat, InternalConversation } from '@/hooks/useInternalChat';
 import { useInternalMessages, InternalMessage } from '@/hooks/useInternalMessages';
 import { NewConversationDialog } from './NewConversationDialog';
+import { ShareItemDialog } from './ShareItemDialog';
 import { MessageItem } from './MessageItem';
 import { format, isToday, isYesterday } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -268,6 +269,7 @@ interface ChatPopupWindowProps {
 const ChatPopupWindow = ({ conversation, currentUserId }: ChatPopupWindowProps) => {
   const [message, setMessage] = useState('');
   const [sending, setSending] = useState(false);
+  const [showShareDialog, setShowShareDialog] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
   const [recordingTime, setRecordingTime] = useState(0);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -290,6 +292,13 @@ const ChatPopupWindow = ({ conversation, currentUserId }: ChatPopupWindowProps) 
     const success = await sendMessage(message.trim());
     if (success) setMessage('');
     setSending(false);
+  };
+
+  const handleShareItem = async (itemType: string, itemId: string, itemName: string) => {
+    setSending(true);
+    await sendMessage(`📌 ${itemName}`, 'shared_item', undefined, undefined, itemType, itemId);
+    setSending(false);
+    setShowShareDialog(false);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -429,6 +438,13 @@ const ChatPopupWindow = ({ conversation, currentUserId }: ChatPopupWindowProps) 
         >
           <Paperclip className="h-4 w-4 text-muted-foreground" />
         </button>
+        <button
+          onClick={() => setShowShareDialog(true)}
+          className="h-8 w-8 rounded-full flex items-center justify-center shrink-0 hover:bg-muted transition-colors"
+          title="Compartilhar item do CRM"
+        >
+          <Share2 className="h-4 w-4 text-muted-foreground" />
+        </button>
 
         {isRecording ? (
           <div className="flex-1 flex items-center gap-2 px-2">
@@ -472,6 +488,12 @@ const ChatPopupWindow = ({ conversation, currentUserId }: ChatPopupWindowProps) 
           </button>
         )}
       </div>
+
+      <ShareItemDialog
+        open={showShareDialog}
+        onOpenChange={setShowShareDialog}
+        onShare={handleShareItem}
+      />
     </div>
   );
 };
