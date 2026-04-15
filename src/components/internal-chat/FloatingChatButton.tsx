@@ -437,6 +437,13 @@ const ChatPopupWindow = ({ conversation, currentUserId }: ChatPopupWindowProps) 
         >
           <Paperclip className="h-4 w-4 text-muted-foreground" />
         </button>
+        <button
+          onClick={() => setShowShareDialog(true)}
+          className="h-8 w-8 rounded-full flex items-center justify-center shrink-0 hover:bg-muted transition-colors"
+          title="Compartilhar item do CRM"
+        >
+          <Share2 className="h-4 w-4 text-muted-foreground" />
+        </button>
 
         {isRecording ? (
           <div className="flex-1 flex items-center gap-2 px-2">
@@ -480,6 +487,12 @@ const ChatPopupWindow = ({ conversation, currentUserId }: ChatPopupWindowProps) 
           </button>
         )}
       </div>
+
+      <ShareItemDialog
+        open={showShareDialog}
+        onOpenChange={setShowShareDialog}
+        onShare={handleShareItem}
+      />
     </div>
   );
 };
