@@ -9,6 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { useInternalChat, InternalConversation } from '@/hooks/useInternalChat';
 import { useInternalMessages, InternalMessage } from '@/hooks/useInternalMessages';
 import { NewConversationDialog } from './NewConversationDialog';
+import { ShareItemDialog } from './ShareItemDialog';
 import { MessageItem } from './MessageItem';
 import { format, isToday, isYesterday } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
