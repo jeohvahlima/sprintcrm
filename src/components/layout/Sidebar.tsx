@@ -53,12 +53,6 @@ const navigation = [{
   icon: Bot,
   menuKey: "automacao"
 }, {
-  name: "Bate-papo Interno",
-  href: "/chat-equipe",
-  icon: MessagesSquare,
-  menuKey: "chat-equipe",
-  showBadge: true
-}, {
   name: "Discador",
   href: "/discador",
   icon: PhoneCall,
@@ -269,7 +263,7 @@ export function Sidebar({
                           {isLocked && !effectiveCollapsed &&
                         <Lock className="h-3 w-3 absolute -top-1 -right-1 text-muted-foreground" />
                         }
-                          {item.showBadge && totalUnread > 0 && effectiveCollapsed && !isLocked &&
+                          {false &&
                         <Badge className="absolute -top-2 -right-2 h-4 min-w-4 flex items-center justify-center p-0 text-[10px] bg-destructive text-destructive-foreground">
                               {totalUnread > 99 ? '99+' : totalUnread}
                             </Badge>
@@ -301,7 +295,7 @@ export function Sidebar({
                             {isLocked &&
                         <Lock className="h-3 w-3 text-muted-foreground" />
                         }
-                            {item.showBadge && totalUnread > 0 && !isLocked &&
+                            {false &&
                         <Badge variant="destructive" className="ml-2 text-xs">
                                 {totalUnread > 99 ? '99+' : totalUnread}
                               </Badge>
@@ -335,7 +329,7 @@ export function Sidebar({
                 </TooltipTrigger>
                 {effectiveCollapsed &&
                 <TooltipContent side="right" className="font-medium">
-                    {item.name} {isLocked ? "(Bloqueado)" : item.showBadge && totalUnread > 0 ? `(${totalUnread})` : item.showConversasBadge && conversasUnread > 0 ? `(${conversasUnread})` : item.showAgendaBadge && agendaToday > 0 ? `(${agendaToday})` : item.showTarefasBadge && tarefasAlert > 0 ? `(${tarefasAlert})` : item.showAIBadge && aiInsightsCount > 0 ? `(${aiInsightsCount} IA)` : ""}
+                    {item.name} {isLocked ? "(Bloqueado)" : item.showConversasBadge && conversasUnread > 0 ? `(${conversasUnread})` : item.showAgendaBadge && agendaToday > 0 ? `(${agendaToday})` : item.showTarefasBadge && tarefasAlert > 0 ? `(${tarefasAlert})` : item.showAIBadge && aiInsightsCount > 0 ? `(${aiInsightsCount} IA)` : ""}
                   </TooltipContent>
                 }
               </Tooltip>);
