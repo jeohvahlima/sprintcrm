@@ -141,7 +141,7 @@ export const FloatingSupportButton = () => {
             right: `${position.x}px`,
             top: `${position.y + 64}px`,
             width: '416px',
-            maxHeight: '576px',
+            height: '576px',
           }}
         >
           {/* Header */}
