@@ -191,9 +191,14 @@ export const FloatingChatButton = () => {
                 </>
               )}
               {!selectedConversation && (
-                <button onClick={() => setShowNewDialog(true)} className="p-1 rounded hover:bg-white/20 transition-colors" title="Nova Conversa">
-                  <Plus className="h-4 w-4 text-white" />
-                </button>
+                <>
+                  <button onClick={() => setShowCreateGroupCall(true)} className="p-1 rounded hover:bg-white/20 transition-colors" title="Chamada de vídeo em grupo">
+                    <UsersRound className="h-4 w-4 text-white" />
+                  </button>
+                  <button onClick={() => setShowNewDialog(true)} className="p-1 rounded hover:bg-white/20 transition-colors" title="Nova Conversa">
+                    <Plus className="h-4 w-4 text-white" />
+                  </button>
+                </>
               )}
               <button onClick={() => setIsOpen(false)} className="p-1 rounded hover:bg-white/20 transition-colors">
                 <X className="h-4 w-4 text-white" />
