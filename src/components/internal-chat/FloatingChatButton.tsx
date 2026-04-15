@@ -51,6 +51,8 @@ export const FloatingChatButton = () => {
 
   const totalUnread = getTotalUnread();
 
+  const { createMeeting, endMeeting } = useMeetings();
+
   // Draggable
   const [position, setPosition] = useState({ x: 24, y: 24 });
   const [isDragging, setIsDragging] = useState(false);
