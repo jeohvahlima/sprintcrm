@@ -454,7 +454,7 @@ const ChatPopupWindow = ({ conversation, currentUserId }: ChatPopupWindowProps) 
           onOpenChange={setConversaPopupOpen}
           leadId={selectedLeadForChat.id}
           leadName={selectedLeadForChat.name}
-          telefone={selectedLeadForChat.telefone || ''}
+          leadPhone={selectedLeadForChat.telefone || ''}
         />
       )}
     </div>
