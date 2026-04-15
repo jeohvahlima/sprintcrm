@@ -5700,8 +5700,8 @@ function Conversas() {
                 numero: numeroOriginal,
                 telefone_formatado: numeroNormalizado,
                 mensagem: messageContent,
-                origem: conversationSnapshot.channel === 'instagram' ? 'Instagram' : 'WhatsApp',
-                origem_api: conversationSnapshot.channel === 'instagram' ? 'meta' : (conversationSnapshot.origemApi || undefined),
+                origem: conversationSnapshot.channel === 'instagram' ? 'Instagram' : conversationSnapshot.channel === 'facebook' ? 'Messenger' : 'WhatsApp',
+                origem_api: conversationSnapshot.channel === 'instagram' || conversationSnapshot.channel === 'facebook' ? 'meta' : (conversationSnapshot.origemApi || undefined),
                 status: 'Enviada',
                 tipo_mensagem: type,
                 nome_contato: conversationSnapshot.contactName?.replace(/^ig_/, '') || conversationSnapshot.contactName,
@@ -5746,6 +5746,20 @@ function Conversas() {
                 recipient_id: instagramId,
                 mensagem: messageContent,
                 company_id: companyId,
+              }
+            });
+            data = res.data;
+            error = res.error || (res.data && !res.data.success ? { message: res.data.error || 'Erro ao enviar' } : null);
+          } else if (conversationSnapshot.channel === 'facebook') {
+            console.log('📘 [ENVIO-MESSENGER] Enviando via Messenger API...');
+            const companyId = await getCompanyId();
+            const messengerRecipientId = (conversationSnapshot.phoneNumber || conversationSnapshot.id).replace(/[^0-9]/g, '');
+            const res = await supabase.functions.invoke('enviar-messenger', {
+              body: {
+                to: messengerRecipientId,
+                message: messageContent,
+                company_id: companyId,
+                media_type: type !== 'text' ? type : undefined,
               }
             });
             data = res.data;
