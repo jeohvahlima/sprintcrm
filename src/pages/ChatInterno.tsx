@@ -356,6 +356,10 @@ export default function ChatInterno() {
           <div className="flex items-center justify-between mb-3">
             <h2 className="text-lg font-bold text-foreground">Bate-papo Interno</h2>
             <div className="flex gap-1">
+              <div className="flex items-center gap-1 mr-1">
+                <Switch id="chat-float" checked={chatVisible} onCheckedChange={toggleChat} className="scale-75" />
+                <Label htmlFor="chat-float" className="text-[10px] text-muted-foreground cursor-pointer">Popup</Label>
+              </div>
               <Button size="icon" variant="ghost" onClick={() => setShowStartCallDialog(true)} title="Nova Chamada">
                 <Phone className="h-4 w-4" />
               </Button>
