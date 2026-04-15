@@ -13,6 +13,8 @@ import { InlineSharePanel } from './InlineSharePanel';
 import { ConversaPopup } from '@/components/leads/ConversaPopup';
 import { CreatePublicMeetingDialog } from '@/components/meetings/CreatePublicMeetingDialog';
 import { GroupCallModal } from '@/components/meetings/GroupCallModal';
+import { VideoCallModalV2 } from '@/components/meetings/VideoCallModalV2';
+import { useMeetings } from '@/hooks/useMeetings';
 import { MessageItem } from './MessageItem';
 import { format, isToday, isYesterday } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -35,6 +37,12 @@ export const FloatingChatButton = () => {
   const [popupSize, setPopupSize] = useState({ width: DEFAULT_WIDTH, height: DEFAULT_HEIGHT });
   const [showCreateGroupCall, setShowCreateGroupCall] = useState(false);
   const [activeGroupCall, setActiveGroupCall] = useState<{ meetingId: string } | null>(null);
+  const [activeCall, setActiveCall] = useState<{
+    meetingId: string;
+    remoteUserId: string;
+    remoteUserName: string;
+    callType: 'audio' | 'video';
+  } | null>(null);
   const navigate = useNavigate();
 
   const {
@@ -42,6 +50,8 @@ export const FloatingChatButton = () => {
   } = useInternalChat();
 
   const totalUnread = getTotalUnread();
+
+  const { createMeeting, endMeeting } = useMeetings();
 
   // Draggable
   const [position, setPosition] = useState({ x: 24, y: 24 });
@@ -104,7 +114,21 @@ export const FloatingChatButton = () => {
     if (newConvo) { setSelectedConversation(newConvo); markAsRead(conversationId); }
   };
 
-  const handleCallUser = () => { navigate('/chat-interno'); setIsOpen(false); toast.info('Use o módulo Bate-papo Interno para chamadas de vídeo/voz'); };
+  const handleCallUser = async (callType: 'audio' | 'video') => {
+    if (!selectedConversation || !currentUserId) return;
+    const otherParticipant = selectedConversation.participants.find(p => p.user_id !== currentUserId);
+    if (!otherParticipant) { toast.error('Participante não encontrado'); return; }
+    const userName = otherParticipant.profile?.full_name || otherParticipant.profile?.email || 'Usuário';
+    const meeting = await createMeeting(callType, otherParticipant.user_id, userName);
+    if (meeting) {
+      setActiveCall({
+        meetingId: meeting.id,
+        remoteUserId: otherParticipant.user_id,
+        remoteUserName: userName,
+        callType,
+      });
+    }
+  };
 
   const formatTime = (dateStr: string) => {
     const date = new Date(dateStr);
@@ -182,10 +206,10 @@ export const FloatingChatButton = () => {
             <div className="flex items-center gap-1">
               {selectedConversation && (
                 <>
-                  <button onClick={handleCallUser} className="p-1 rounded hover:bg-white/20 transition-colors" title="Chamada de áudio">
+                  <button onClick={() => handleCallUser('audio')} className="p-1 rounded hover:bg-white/20 transition-colors" title="Chamada de áudio">
                     <Phone className="h-4 w-4 text-white" />
                   </button>
-                  <button onClick={handleCallUser} className="p-1 rounded hover:bg-white/20 transition-colors" title="Chamada de vídeo">
+                  <button onClick={() => handleCallUser('video')} className="p-1 rounded hover:bg-white/20 transition-colors" title="Chamada de vídeo">
                     <Video className="h-4 w-4 text-white" />
                   </button>
                 </>
@@ -234,6 +258,23 @@ export const FloatingChatButton = () => {
           meetingId={activeGroupCall.meetingId}
           hostUserId={currentUserId}
           hostUserName=""
+        />
+      )}
+
+      {activeCall && currentUserId && (
+        <VideoCallModalV2
+          open={true}
+          onClose={() => setActiveCall(null)}
+          meetingId={activeCall.meetingId}
+          localUserId={currentUserId}
+          remoteUserId={activeCall.remoteUserId}
+          remoteUserName={activeCall.remoteUserName}
+          callType={activeCall.callType}
+          isCaller={true}
+          onCallEnded={() => {
+            if (activeCall) endMeeting(activeCall.meetingId);
+            setActiveCall(null);
+          }}
         />
       )}
     </>
