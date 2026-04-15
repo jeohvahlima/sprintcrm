@@ -28,6 +28,7 @@ const Discador = () => {
     loadCallHistory,
     getSDRMetrics
   } = useCallCenter();
+  const { dialerVisible, toggleDialer } = useFloatingButtonsVisibility();
   useEffect(() => {
     loadCallHistory();
   }, [loadCallHistory]);
