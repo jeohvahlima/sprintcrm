@@ -206,15 +206,16 @@ const SupportConversationList = ({ conversations, loading, isMasterAccount, onSe
 
   if (conversations.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
-        <Headset className="h-8 w-8 mb-2 opacity-50" />
-        <p className="text-xs">{isMasterAccount ? 'Nenhuma conversa de suporte' : 'Iniciando suporte...'}</p>
+      <div className="flex-1 flex flex-col items-center justify-center py-12 text-muted-foreground">
+        <Headset className="h-10 w-10 mb-3 opacity-30" />
+        <p className="text-sm font-medium">{isMasterAccount ? 'Nenhuma conversa de suporte' : 'Iniciando suporte...'}</p>
+        <p className="text-xs mt-1 opacity-70">{isMasterAccount ? 'As subcontas podem iniciar conversas aqui' : 'Aguarde enquanto conectamos ao suporte'}</p>
       </div>
     );
   }
 
   return (
-    <ScrollArea className="flex-1" style={{ maxHeight: '496px' }}>
+    <ScrollArea className="flex-1">
       <div className="divide-y">
         {conversations.map(conv => (
           <button
