@@ -438,7 +438,7 @@ function Conversas() {
 
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [selectedConv, setSelectedConv] = useState<Conversation | null>(null);
-  const [filter, setFilter] = useState<"all" | "waiting" | "answered" | "resolved" | "group" | "responsible" | "transferred" | "instagram">("all");
+  const [filter, setFilter] = useState<"all" | "waiting" | "answered" | "resolved" | "group" | "responsible" | "transferred" | "instagram" | "messenger">("all");
   const [advancedFilters, setAdvancedFilters] = useState<AdvancedFilters>(defaultFilters);
   const [searchTerm, setSearchTerm] = useState("");
   // MELHORIA: Estado para busca debounced (otimização de performance)
@@ -1210,6 +1210,9 @@ function Conversas() {
     } else if (filter === "instagram") {
       // ✅ Filtro "Instagram": Mostrar APENAS conversas do Instagram Direct
       filtered = filtered.filter(conv => conv.channel === 'instagram');
+    } else if (filter === "messenger") {
+      // ✅ Filtro "Messenger": Mostrar APENAS conversas do Facebook Messenger
+      filtered = filtered.filter(conv => conv.channel === 'facebook');
     }
     console.log('📊 [DEBUG] Após filtro de status:', filtered.length);
 
@@ -8897,12 +8900,18 @@ function Conversas() {
                 <span className="text-xs">Grupos</span>
               </Button>
             )}
-            <Button variant={filter === "instagram" ? "default" : "ghost"} size="sm" onClick={() => setFilter("instagram")} className="relative flex flex-col items-center gap-0.5 h-auto py-1 px-2">
-              <Badge variant="secondary" className="bg-pink-500 hover:bg-pink-600 text-white min-w-[20px] h-5 px-1.5 flex items-center justify-center text-xs">
-                {conversations.filter(c => c.channel === 'instagram').length}
-              </Badge>
-              <span className="text-xs flex items-center gap-0.5"><Instagram className="h-3 w-3" />Instagram</span>
-            </Button>
+             <Button variant={filter === "instagram" ? "default" : "ghost"} size="sm" onClick={() => setFilter("instagram")} className="relative flex flex-col items-center gap-0.5 h-auto py-1 px-2">
+               <Badge variant="secondary" className="bg-pink-500 hover:bg-pink-600 text-white min-w-[20px] h-5 px-1.5 flex items-center justify-center text-xs">
+                 {conversations.filter(c => c.channel === 'instagram').length}
+               </Badge>
+               <span className="text-xs flex items-center gap-0.5"><Instagram className="h-3 w-3" />Instagram</span>
+             </Button>
+             <Button variant={filter === "messenger" ? "default" : "ghost"} size="sm" onClick={() => setFilter("messenger")} className="relative flex flex-col items-center gap-0.5 h-auto py-1 px-2">
+               <Badge variant="secondary" className="bg-blue-600 hover:bg-blue-700 text-white min-w-[20px] h-5 px-1.5 flex items-center justify-center text-xs">
+                 {conversations.filter(c => c.channel === 'facebook').length}
+               </Badge>
+               <span className="text-xs flex items-center gap-0.5"><Facebook className="h-3 w-3" />Messenger</span>
+             </Button>
             <Button variant={filter === "responsible" ? "default" : "ghost"} size="sm" onClick={() => setFilter("responsible")} className="relative flex flex-col items-center gap-0.5 h-auto py-1 px-2">
               <Badge variant="secondary" className="bg-green-500 hover:bg-green-600 text-white min-w-[20px] h-5 px-1.5 flex items-center justify-center text-xs">
                 {responsibleCount}
