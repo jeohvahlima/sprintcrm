@@ -347,10 +347,39 @@ const ChatPopupWindow = ({ conversation, currentUserId }: ChatPopupWindowProps) 
 
   const formatRecTime = (s: number) => `${Math.floor(s / 60).toString().padStart(2, '0')}:${(s % 60).toString().padStart(2, '0')}`;
 
+  const openLeadConversation = async (msg: InternalMessage) => {
+    if (msg.shared_item_type === 'lead' && msg.shared_item_id) {
+      try {
+        const { data } = await (await import('@/integrations/supabase/client')).supabase
+          .from('leads')
+          .select('id, name, telefone, phone')
+          .eq('id', msg.shared_item_id)
+          .maybeSingle();
+        if (data) {
+          setSelectedLeadForChat({ id: data.id, name: data.name, telefone: data.telefone || data.phone || '' });
+          setConversaPopupOpen(true);
+        }
+      } catch (err) { console.error('Error fetching lead:', err); }
+    }
+  };
+
   const renderMessageContent = (msg: InternalMessage) => {
     if (msg.message_type === 'image' && msg.media_url) return <img src={msg.media_url} alt="img" className="rounded max-w-full max-h-[160px] cursor-pointer" onClick={() => window.open(msg.media_url!, '_blank')} />;
     if (msg.message_type === 'audio' && msg.media_url) return <audio controls src={msg.media_url} className="max-w-full h-8" />;
     if (msg.message_type === 'file' && msg.media_url) return <a href={msg.media_url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 underline text-xs"><FileText className="h-3 w-3" /> {msg.file_name || 'Arquivo'}</a>;
+    if (msg.message_type === 'shared_item' && msg.shared_item_type === 'lead') {
+      return (
+        <div>
+          <p className="whitespace-pre-wrap break-words">{msg.content}</p>
+          <button
+            onClick={() => openLeadConversation(msg)}
+            className="mt-1 flex items-center gap-1 text-[10px] underline opacity-80 hover:opacity-100 transition-opacity"
+          >
+            <MessageCircle className="h-3 w-3" /> Abrir conversa
+          </button>
+        </div>
+      );
+    }
     return <p className="whitespace-pre-wrap break-words">{msg.content}</p>;
   };
 
