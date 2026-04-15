@@ -8,6 +8,7 @@ import { GlobalCallListenerV2 } from "@/components/meetings/GlobalCallListenerV2
 import { useIsMobile } from "@/hooks/use-mobile";
 import { SystemUpdatesModal } from "@/components/updates/SystemUpdatesModal";
 import { useSystemUpdates } from "@/hooks/useSystemUpdates";
+import { FloatingChatButton } from "@/components/internal-chat";
 
 export function MainLayout() {
   const [session, setSession] = useState<Session | null>(null);
@@ -221,6 +222,9 @@ export function MainLayout() {
         open={showUpdatesModal} 
         onOpenChange={setShowUpdatesModal} 
       />
+      
+      {/* Botão flutuante do chat interno */}
+      <FloatingChatButton />
     </div>
   );
 }
