@@ -496,14 +496,27 @@ function transformInstagramPayload(entry: any) {
           messageContent = `[Reação: ${messageData.reaction}]`;
         }
         
-        // Detectar se é eco de mensagem enviada
-        // Verificar: sender === page ID, is_echo flag, ou recipient === sender
+        // Detectar se é eco de mensagem enviada (pelo CRM ou pelo Instagram Direct)
         const isEcho = senderId === instagramAccountId || 
                        messageData.is_echo === true ||
                        recipientId === senderId;
         
         if (isEcho) {
-          console.log('📸 [INSTAGRAM] Ignorando eco de mensagem enviada (sender:', senderId, 'account:', instagramAccountId, 'is_echo:', messageData.is_echo, ')');
+          console.log('📸 [INSTAGRAM] Echo detectado - salvando como fromme=true (sender:', senderId, 'account:', instagramAccountId, 'is_echo:', messageData.is_echo, ')');
+          // Salvar eco como mensagem enviada (fromme=true) para sincronizar Instagram Direct → CRM
+          messages.push({
+            message_id: messageData.mid || `ig_echo_${Date.now()}`,
+            from: recipientId, // O destinatário é o contato
+            timestamp: value.timestamp || Math.floor(Date.now() / 1000),
+            type: messageType,
+            content: messageContent || '[Mensagem Instagram]',
+            media_id: mediaUrl,
+            contact_name: recipientId,
+            instagram_account_id: instagramAccountId,
+            recipient_id: recipientId,
+            is_from_me: true,
+            source: 'instagram',
+          });
         } else {
           messages.push({
             message_id: messageData.mid || `ig_${Date.now()}`,
@@ -551,13 +564,12 @@ function transformInstagramPayload(entry: any) {
     const messageData = messaging.message;
     
     if (messageData && senderId !== recipientId) {
-      // ⚡ CORREÇÃO: Detectar eco de mensagem enviada pelo CRM
+      // Detectar eco de mensagem enviada (pelo CRM ou Instagram Direct)
       const isEcho = senderId === instagramAccountId || 
                      messageData.is_echo === true;
       
       if (isEcho) {
-        console.log('📸 [INSTAGRAM] Ignorando eco em messaging direto (sender:', senderId, 'account:', instagramAccountId, ')');
-        continue;
+        console.log('📸 [INSTAGRAM] Echo em messaging direto - salvando como fromme=true (sender:', senderId, ')');
       }
 
       let messageType = 'text';
@@ -577,15 +589,15 @@ function transformInstagramPayload(entry: any) {
       
       messages.push({
         message_id: messageData.mid || `ig_${Date.now()}`,
-        from: senderId,
+        from: isEcho ? recipientId : senderId,
         timestamp: messaging.timestamp || Math.floor(Date.now() / 1000),
         type: messageType,
         content: messageContent || '[Mensagem Instagram]',
         media_id: mediaUrl,
-        contact_name: senderId,
+        contact_name: isEcho ? recipientId : senderId,
         instagram_account_id: instagramAccountId,
         recipient_id: recipientId,
-        is_from_me: false,
+        is_from_me: isEcho,
         source: 'instagram',
       });
     }
@@ -910,7 +922,7 @@ serve(async (req) => {
             
             // ⚡ CORREÇÃO: Segunda verificação de eco usando instagram_account_id do banco
             const storedIgAccountId = connection.instagram_account_id || msg.instagram_account_id;
-            if (instagramUserId === storedIgAccountId) {
+            if (instagramUserId === storedIgAccountId && !msg.is_from_me) {
               console.log('📸 [INSTAGRAM] Ignorando eco (sender === stored instagram_account_id):', instagramUserId);
               continue;
             }
@@ -918,7 +930,8 @@ serve(async (req) => {
             // ⚡ CORREÇÃO: Verificar se a mensagem pertence a ESTA conta Instagram
             // Quando múltiplas contas estão conectadas, o webhook envia a mesma mensagem
             // para todas as entries. Devemos processar apenas na conta correta (recipient).
-            if (msg.recipient_id && storedIgAccountId && msg.recipient_id !== storedIgAccountId) {
+            // Para mensagens echo (fromme), o recipient_id é o contato, não a conta - pular esta verificação
+            if (!msg.is_from_me && msg.recipient_id && storedIgAccountId && msg.recipient_id !== storedIgAccountId) {
               console.log('📸 [INSTAGRAM] Ignorando mensagem - destinatário', msg.recipient_id, 'não corresponde à conta', storedIgAccountId);
               continue;
             }
@@ -1158,8 +1171,8 @@ serve(async (req) => {
               mensagem: msg.content,
               tipo_mensagem: msg.type === 'text' ? 'texto' : msg.type,
               origem: 'Instagram',
-              status: 'Recebida',
-              fromme: false,
+              status: msg.is_from_me ? 'Enviada' : 'Recebida',
+              fromme: msg.is_from_me || false,
               company_id: company_id,
               lead_id: leadId,
               nome_contato: finalContactName,
