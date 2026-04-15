@@ -457,9 +457,17 @@ export const loadAllUniqueConversations = async (companyId: string): Promise<Con
       // ⚡ CRÍTICO: Incluir assignedUser do banco para manter filtro "Transferidos"
       const telKey = String(telefone).replace(/^ig_/, '').replace(/[^0-9]/g, '');
       const assignedUserData = assignmentsMap.get(telKey);
+      const leadInfo = leadsNamesMap.get(telKey);
+
+      // Avatar: usar foto do lead se disponível
+      const avatarUrl = leadInfo?.profilePictureUrl
+        ? leadInfo.profilePictureUrl
+        : isInstagramConversation
+          ? `https://ui-avatars.com/api/?name=${encodeURIComponent(contactName)}&background=E1306C&color=fff`
+          : undefined;
 
       return {
-        id: telefone,
+        id: leadInfo?.leadId || telefone,
         contactName,
         channel: isInstagramConversation ? "instagram" as const : "whatsapp" as const,
         status: statusConversa,
@@ -469,6 +477,7 @@ export const loadAllUniqueConversations = async (companyId: string): Promise<Con
         tags: [],
         phoneNumber: telefone,
         isGroup,
+        avatarUrl,
         origemApi: origemApi as "evolution" | "meta",
         // ⚡ CORREÇÃO: Incluir assignedUser para filtro "Transferidos" funcionar
         responsavel: assignedUserData?.id,
