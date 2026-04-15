@@ -10,6 +10,9 @@ import { CallHistory } from '@/components/discador/CallHistory';
 import { SDRDashboard } from '@/components/discador/SDRDashboard';
 import { StartCallFromLeadDialog } from '@/components/discador/StartCallFromLeadDialog';
 import { supabase } from '@/integrations/supabase/client';
+import { useFloatingButtonsVisibility } from '@/hooks/useFloatingButtonsVisibility';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 const Discador = () => {
   const [activeTab, setActiveTab] = useState('fazer-ligacao');
   const [showCallDialog, setShowCallDialog] = useState(false);
