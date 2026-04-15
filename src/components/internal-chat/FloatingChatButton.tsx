@@ -131,16 +131,35 @@ export const FloatingChatButton = () => {
           className="fixed z-[60] bg-background border rounded-xl shadow-2xl overflow-hidden flex flex-col"
           style={{ right: `${position.x}px`, bottom: `${position.y + 64}px`, width: `${popupSize.width}px`, height: `${popupSize.height}px` }}
         >
-          {/* Resize handle (top-left corner) */}
+          {/* Resize handle - top-left corner */}
           <div
             onPointerDown={handleResizePointerDown}
             onPointerMove={handleResizePointerMove}
             onPointerUp={handleResizePointerUp}
-            className="absolute top-0 left-0 w-5 h-5 cursor-nw-resize z-10 flex items-center justify-center opacity-40 hover:opacity-100 transition-opacity"
+            className="absolute top-0 left-0 w-6 h-6 cursor-nw-resize z-20 touch-none"
             title="Redimensionar"
           >
-            <Maximize2 className="h-3 w-3 text-muted-foreground rotate-90" />
+            <div className="absolute top-1 left-1 w-3 h-3 opacity-50 hover:opacity-100 transition-opacity">
+              <div className="absolute top-0 left-0 w-full h-[2px] bg-muted-foreground rounded" />
+              <div className="absolute top-0 left-0 w-[2px] h-full bg-muted-foreground rounded" />
+              <div className="absolute top-[4px] left-[4px] w-[calc(100%-4px)] h-[2px] bg-muted-foreground rounded" />
+              <div className="absolute top-[4px] left-[4px] w-[2px] h-[calc(100%-4px)] bg-muted-foreground rounded" />
+            </div>
           </div>
+          {/* Resize edge - left */}
+          <div
+            onPointerDown={handleResizePointerDown}
+            onPointerMove={handleResizePointerMove}
+            onPointerUp={handleResizePointerUp}
+            className="absolute top-6 left-0 w-2 bottom-0 cursor-ew-resize z-20 touch-none"
+          />
+          {/* Resize edge - top */}
+          <div
+            onPointerDown={handleResizePointerDown}
+            onPointerMove={handleResizePointerMove}
+            onPointerUp={handleResizePointerUp}
+            className="absolute top-0 left-6 right-0 h-2 cursor-ns-resize z-20 touch-none"
+          />
 
           {/* Header */}
           <div className="flex items-center justify-between px-3 py-2 border-b shrink-0" style={{ background: 'linear-gradient(135deg, #25D366 0%, #128C7E 100%)' }}>
