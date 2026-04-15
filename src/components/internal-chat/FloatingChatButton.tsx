@@ -216,6 +216,26 @@ export const FloatingChatButton = () => {
       )}
 
       <NewConversationDialog open={showNewDialog} onOpenChange={setShowNewDialog} onCreated={handleConversationCreated} createConversation={createConversation} />
+
+      <CreatePublicMeetingDialog
+        open={showCreateGroupCall}
+        onClose={() => setShowCreateGroupCall(false)}
+        onMeetingCreated={(id) => console.log('Meeting created:', id)}
+        onJoinMeeting={(id) => {
+          setShowCreateGroupCall(false);
+          setActiveGroupCall({ meetingId: id });
+        }}
+      />
+
+      {activeGroupCall && currentUserId && (
+        <GroupCallModal
+          open={true}
+          onClose={() => setActiveGroupCall(null)}
+          meetingId={activeGroupCall.meetingId}
+          hostUserId={currentUserId}
+          hostUserName=""
+        />
+      )}
     </>
   );
 };
