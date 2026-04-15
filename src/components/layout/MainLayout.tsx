@@ -226,6 +226,9 @@ export function MainLayout() {
       
       {/* Botão flutuante do chat interno */}
       <FloatingChatButton />
+      
+      {/* Botão flutuante do discador */}
+      <FloatingDialerButton />
     </div>
   );
 }
