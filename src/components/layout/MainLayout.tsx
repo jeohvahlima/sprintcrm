@@ -222,6 +222,9 @@ export function MainLayout() {
         open={showUpdatesModal} 
         onOpenChange={setShowUpdatesModal} 
       />
+      
+      {/* Botão flutuante do chat interno */}
+      <FloatingChatButton />
     </div>
   );
 }
