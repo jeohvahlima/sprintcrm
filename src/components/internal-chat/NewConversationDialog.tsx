@@ -94,7 +94,7 @@ export const NewConversationDialog = ({
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md z-[70]">
         <DialogHeader>
           <DialogTitle>Nova Conversa</DialogTitle>
         </DialogHeader>
