@@ -34,7 +34,7 @@ export const FloatingDialerButton = () => {
   const [showNotesDialog, setShowNotesDialog] = useState(false);
 
   // Draggable state
-  const [position, setPosition] = useState({ x: 24, y: 90 });
+  const [position, setPosition] = useState({ x: 24, y: 162 });
   const [isDragging, setIsDragging] = useState(false);
   const dragStartRef = useRef<{ x: number; y: number; posX: number; posY: number } | null>(null);
   const hasMoved = useRef(false);
@@ -145,7 +145,7 @@ export const FloatingDialerButton = () => {
         className={`fixed z-50 h-[56px] w-[56px] rounded-full flex items-center justify-center touch-none select-none ${isDragging ? 'cursor-grabbing scale-110' : 'cursor-grab'}`}
         style={{
           right: `${position.x}px`,
-          bottom: `${position.y}px`,
+          top: `${position.y}px`,
           transition: isDragging ? 'none' : 'transform 0.2s',
           background: isCallActive
             ? 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)'
@@ -173,7 +173,7 @@ export const FloatingDialerButton = () => {
           className="fixed z-[60] bg-background border rounded-xl shadow-2xl overflow-hidden"
           style={{
             right: `${position.x}px`,
-            bottom: `${position.y + 64}px`,
+            top: `${position.y + 64}px`,
             width: '280px',
           }}
         >
