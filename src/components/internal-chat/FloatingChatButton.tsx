@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
-import { MessageCircle, X, ArrowLeft, Plus, Phone, Users, User, Send, Paperclip, Loader2, Mic, Image, FileText, StopCircle, Share2, Maximize2, Minimize2, ExternalLink } from 'lucide-react';
+import { MessageCircle, X, ArrowLeft, Plus, Phone, Video, Users, User, Send, Paperclip, Loader2, Mic, Image, FileText, StopCircle, Share2, Maximize2, Minimize2, ExternalLink } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -177,9 +177,14 @@ export const FloatingChatButton = () => {
             </div>
             <div className="flex items-center gap-1">
               {selectedConversation && (
-                <button onClick={handleCallUser} className="p-1 rounded hover:bg-white/20 transition-colors" title="Ligar">
-                  <Phone className="h-4 w-4 text-white" />
-                </button>
+                <>
+                  <button onClick={handleCallUser} className="p-1 rounded hover:bg-white/20 transition-colors" title="Chamada de áudio">
+                    <Phone className="h-4 w-4 text-white" />
+                  </button>
+                  <button onClick={handleCallUser} className="p-1 rounded hover:bg-white/20 transition-colors" title="Chamada de vídeo">
+                    <Video className="h-4 w-4 text-white" />
+                  </button>
+                </>
               )}
               {!selectedConversation && (
                 <button onClick={() => setShowNewDialog(true)} className="p-1 rounded hover:bg-white/20 transition-colors" title="Nova Conversa">
