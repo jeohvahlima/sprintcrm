@@ -244,6 +244,9 @@ export const useConversationsLoader = () => {
             const digits = String(m.telefone_formatado || m.numero || '').replace(/[^0-9]/g, '');
             return m.origem === 'Instagram' || (m.origem_api === 'meta' && digits.length >= 15);
           });
+          const isMessengerConversation = !isInstagramConversation && mensagens.some(m => {
+            return m.origem === 'Messenger' || m.origem === 'Facebook' || m.origem === 'messenger';
+          });
           
           // Helper: verificar se nome é um placeholder numérico do Instagram
           const isBadInstagramName = (name: string | undefined | null): boolean => {
@@ -386,7 +389,7 @@ export const useConversationsLoader = () => {
           return {
             id: leadInfo?.leadId || `conv-${telefone}`,
             contactName,
-            channel: isInstagramConversation ? "instagram" as const : "whatsapp" as const,
+            channel: isInstagramConversation ? "instagram" as const : isMessengerConversation ? "facebook" as const : "whatsapp" as const,
             status: statusConversa,
             lastMessage: ultimaMensagem?.content || '',
             unread: 0,
