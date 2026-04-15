@@ -388,6 +388,9 @@ export const useConversationsLoader = () => {
                            mensagens.find(m => m.origem_api)?.origem_api || 
                            'evolution';
 
+          // Avatar: usar foto do lead se disponível
+          const avatarUrl = leadInfo?.profilePictureUrl || undefined;
+
           return {
             id: leadInfo?.leadId || `conv-${telefone}`,
             contactName,
@@ -399,8 +402,9 @@ export const useConversationsLoader = () => {
             tags: [],
             phoneNumber: telefone,
             isGroup,
+            avatarUrl,
             assignedUser,
-            origemApi: origemApi as "evolution" | "meta", // 🔥 NOVO
+            origemApi: origemApi as "evolution" | "meta",
           };
         });
 
