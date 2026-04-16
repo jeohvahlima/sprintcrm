@@ -187,6 +187,9 @@ export const useConversationSearch = (companyId: string | null) => {
           const digits = String(m.telefone_formatado || m.numero || '').replace(/[^0-9]/g, '');
           return m.origem === 'Instagram' || (m.origem_api === 'meta' && digits.length >= 15);
         });
+        const isMessengerConversation = !isInstagramConversation && mensagens.some(m => {
+          return m.origem === 'Messenger' || m.origem === 'Facebook' || m.origem === 'messenger';
+        });
         const bestNamedMessage = isInstagramConversation
           ? mensagens.find(m => {
               const name = String(m.nome_contato ?? '').trim();
@@ -201,7 +204,7 @@ export const useConversationSearch = (companyId: string | null) => {
         return {
           id: telefone,
           contactName,
-          channel: isInstagramConversation ? "instagram" as const : "whatsapp" as const,
+          channel: isInstagramConversation ? "instagram" as const : isMessengerConversation ? "facebook" as const : "whatsapp" as const,
           status: statusConversa,
           lastMessage: ultimaMensagem?.content || '',
           unread: 0,
@@ -426,6 +429,7 @@ export const loadAllUniqueConversations = async (companyId: string): Promise<Con
       const isFromMe = conv.fromme === true || String(conv.fromme) === 'true';
       const normalizedDigits = String(conv.telefone_formatado || conv.numero || '').replace(/[^0-9]/g, '');
       const isInstagramConversation = telefone.startsWith('ig_') || conv.origem === 'Instagram' || (conv.origem_api === 'meta' && normalizedDigits.length >= 15);
+      const isMessengerConversation = !isInstagramConversation && (conv.origem === 'Messenger' || conv.origem === 'Facebook' || conv.origem === 'messenger');
 
       const message: Message = {
         id: conv.id || `msg-${Date.now()}-${Math.random()}`,
@@ -469,7 +473,7 @@ export const loadAllUniqueConversations = async (companyId: string): Promise<Con
       return {
         id: leadInfo?.leadId || telefone,
         contactName,
-        channel: isInstagramConversation ? "instagram" as const : "whatsapp" as const,
+        channel: isInstagramConversation ? "instagram" as const : isMessengerConversation ? "facebook" as const : "whatsapp" as const,
         status: statusConversa,
         lastMessage: message.content,
         unread: 0,
