@@ -10,6 +10,7 @@ import { CadenceManager } from "./CadenceManager";
 import { CadenceProgressTracker } from "./CadenceProgressTracker";
 import { ActionableAlerts } from "./ActionableAlerts";
 import { ScriptsLibrary } from "./ScriptsLibrary";
+import { ConversaPopup } from "@/components/leads/ConversaPopup";
 import { 
   Brain,
   TrendingUp, 
