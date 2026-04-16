@@ -95,6 +95,8 @@ export const CommercialIntelligenceDashboard: React.FC = () => {
   const [leadIntelligence, setLeadIntelligence] = useState<LeadIntelligence[]>([]);
   const [alerts, setAlerts] = useState<CommercialAlert[]>([]);
   const [companyId, setCompanyId] = useState<string | null>(null);
+  const [conversaPopupOpen, setConversaPopupOpen] = useState(false);
+  const [selectedLeadForChat, setSelectedLeadForChat] = useState<{ id: string; name: string; phone?: string } | null>(null);
 
   const loadData = useCallback(async () => {
     try {
@@ -440,7 +442,15 @@ export const CommercialIntelligenceDashboard: React.FC = () => {
                     <div
                       key={intel.id}
                       className="flex items-center justify-between p-4 rounded-lg border hover:bg-muted/50 cursor-pointer transition-colors"
-                      onClick={() => navigate(`/leads?search=${intel.leads?.name}`)}
+                      onClick={() => {
+                        if (!intel.lead_id) return;
+                        setSelectedLeadForChat({
+                          id: intel.lead_id,
+                          name: intel.leads?.name || "Lead",
+                          phone: intel.leads?.phone,
+                        });
+                        setConversaPopupOpen(true);
+                      }}
                     >
                       <div className="flex items-center gap-4">
                         <div className="flex flex-col items-center gap-1">
@@ -658,6 +668,19 @@ export const CommercialIntelligenceDashboard: React.FC = () => {
           </Card>
         </TabsContent>
       </Tabs>
+
+      {selectedLeadForChat && (
+        <ConversaPopup
+          open={conversaPopupOpen}
+          onOpenChange={(isOpen) => {
+            setConversaPopupOpen(isOpen);
+            if (!isOpen) setSelectedLeadForChat(null);
+          }}
+          leadId={selectedLeadForChat.id}
+          leadName={selectedLeadForChat.name}
+          leadPhone={selectedLeadForChat.phone}
+        />
+      )}
     </div>
   );
 };
