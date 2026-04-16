@@ -1677,8 +1677,8 @@ function Conversas() {
         // ✅ CORREÇÃO: Para grupos, usar o número original com @g.us
         const isGroupMessage = novaMensagem.is_group === true || /@g\.us$/.test(novaMensagem.numero || '');
         // ⚡ CORREÇÃO: Detectar Instagram via origem
-        const isInstagramMessage = novaMensagem.origem === 'Instagram' || (novaMensagem.origem_api === 'meta' && String(novaMensagem.telefone_formatado || novaMensagem.numero || '').replace(/[^0-9]/g, '').length > 13);
-        const isMessengerMessage = !isInstagramMessage && (novaMensagem.origem === 'Messenger' || novaMensagem.origem === 'Facebook' || novaMensagem.origem === 'messenger');
+        const isMessengerMessage = novaMensagem.origem === 'Messenger' || novaMensagem.origem === 'Facebook' || novaMensagem.origem === 'messenger';
+        const isInstagramMessage = !isMessengerMessage && (novaMensagem.origem === 'Instagram' || (novaMensagem.origem_api === 'meta' && String(novaMensagem.telefone_formatado || novaMensagem.numero || '').replace(/[^0-9]/g, '').length > 13));
         
         const telefone = isGroupMessage 
           ? (novaMensagem.numero || '') // Manter formato original para grupos
@@ -3259,7 +3259,8 @@ function Conversas() {
 
         // ⚡ CORREÇÃO: Permitir Instagram (IDs numéricos longos) e telefones brasileiros
         // Instagram usa IDs numéricos de 15-20 dígitos como identificador
-        const isInstagram = conv.origem === 'Instagram' || conv.origem_api === 'meta' && telefoneNormalizado.length > 13;
+        const isMessenger = conv.origem === 'Messenger' || conv.origem === 'Facebook' || conv.origem === 'messenger';
+        const isInstagram = !isMessenger && (conv.origem === 'Instagram' || conv.origem_api === 'meta' && telefoneNormalizado.length > 13);
         if (telefoneNormalizado.length > 0 && !isInstagram) {
           if (telefoneNormalizado.length < 11 || telefoneNormalizado.length > 13) {
             console.warn(`🚫 [FILTRO CRÍTICO] Telefone malformado/outra instância bloqueado: ${telefoneNormalizado} (${telefoneNormalizado.length} dígitos) - company: ${conv.company_id}`);
@@ -3318,7 +3319,8 @@ function Conversas() {
           key = String(conv.numero || ''); // SEMPRE usar numero para grupos (contém JID do grupo)
         } else {
           // ⚡ CORREÇÃO: Detectar mensagens do Instagram (não são telefones)
-          const isInstagramMsg = conv.origem === 'Instagram' || (conv.origem_api === 'meta' && String(conv.telefone_formatado || conv.numero || '').replace(/[^0-9]/g, '').length > 13);
+          const isMessengerMsg = conv.origem === 'Messenger' || conv.origem === 'Facebook' || conv.origem === 'messenger';
+          const isInstagramMsg = !isMessengerMsg && (conv.origem === 'Instagram' || (conv.origem_api === 'meta' && String(conv.telefone_formatado || conv.numero || '').replace(/[^0-9]/g, '').length > 13));
           
           if (isInstagramMsg) {
             // Instagram usa IDs numéricos como identificador - usar diretamente
@@ -3832,7 +3834,8 @@ function Conversas() {
         // Detectar canal baseado na origem das mensagens
         const isInstagramConv = telefone.startsWith('ig_') || mensagens.some(m => {
           const digits = String(m.telefone_formatado || m.numero || '').replace(/[^0-9]/g, '');
-          return m.origem === 'Instagram' || (m.origem_api === 'meta' && digits.length >= 15);
+          const isMessenger = m.origem === 'Messenger' || m.origem === 'Facebook' || m.origem === 'messenger';
+          return !isMessenger && (m.origem === 'Instagram' || (m.origem_api === 'meta' && digits.length >= 15));
         });
         const isMessengerConv = !isInstagramConv && mensagens.some(m => m.origem === 'Messenger' || m.origem === 'Facebook' || m.origem === 'messenger');
         const channelDetected: "whatsapp" | "instagram" | "facebook" = isInstagramConv ? 'instagram' : isMessengerConv ? 'facebook' : 'whatsapp';

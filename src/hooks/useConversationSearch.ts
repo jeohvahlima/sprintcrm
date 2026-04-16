@@ -99,7 +99,8 @@ export const useConversationSearch = (companyId: string | null) => {
       conversasData.forEach(conv => {
         const isGroup = conv.is_group || /@g\.us$/.test(conv.numero || '');
         const normalizedDigits = String(conv.telefone_formatado || conv.numero || '').replace(/[^0-9]/g, '');
-        const isInstagram = conv.origem === 'Instagram' || (conv.origem_api === 'meta' && normalizedDigits.length >= 15);
+        const isMessenger = conv.origem === 'Messenger' || conv.origem === 'Facebook' || conv.origem === 'messenger';
+        const isInstagram = !isMessenger && (conv.origem === 'Instagram' || (conv.origem_api === 'meta' && normalizedDigits.length >= 15));
 
         const key = isGroup
           ? String(conv.numero || '')
@@ -185,7 +186,8 @@ export const useConversationSearch = (companyId: string | null) => {
         const isLeadOnly = mensagens.some(m => m.is_lead_only);
         const isInstagramConversation = telefone.startsWith('ig_') || mensagens.some(m => {
           const digits = String(m.telefone_formatado || m.numero || '').replace(/[^0-9]/g, '');
-          return m.origem === 'Instagram' || (m.origem_api === 'meta' && digits.length >= 15);
+          const isMessenger = m.origem === 'Messenger' || m.origem === 'Facebook' || m.origem === 'messenger';
+          return !isMessenger && (m.origem === 'Instagram' || (m.origem_api === 'meta' && digits.length >= 15));
         });
         const isMessengerConversation = !isInstagramConversation && mensagens.some(m => {
           return m.origem === 'Messenger' || m.origem === 'Facebook' || m.origem === 'messenger';
@@ -288,7 +290,8 @@ export const loadAllUniqueConversations = async (companyId: string): Promise<Con
 
       const telefoneNorm = String(conv.telefone_formatado || conv.numero || '').replace(/[^0-9]/g, '');
       const isGroup = conv.is_group || /@g\.us$/.test(conv.numero || '');
-      const isInstagram = conv.origem === 'Instagram' || (conv.origem_api === 'meta' && telefoneNorm.length >= 15);
+      const isMessenger = conv.origem === 'Messenger' || conv.origem === 'Facebook' || conv.origem === 'messenger';
+      const isInstagram = !isMessenger && (conv.origem === 'Instagram' || (conv.origem_api === 'meta' && telefoneNorm.length >= 15));
 
       // Validar tamanho apenas para WhatsApp (Instagram usa IDs longos)
       if (telefoneNorm.length > 0 && !isGroup && !isInstagram) {
@@ -306,7 +309,8 @@ export const loadAllUniqueConversations = async (companyId: string): Promise<Con
     validConversas.forEach(conv => {
       const isGroup = conv.is_group || /@g\.us$/.test(conv.numero || '');
       const normalizedDigits = String(conv.telefone_formatado || conv.numero || '').replace(/[^0-9]/g, '');
-      const isInstagram = conv.origem === 'Instagram' || (conv.origem_api === 'meta' && normalizedDigits.length >= 15);
+      const isMessenger = conv.origem === 'Messenger' || conv.origem === 'Facebook' || conv.origem === 'messenger';
+      const isInstagram = !isMessenger && (conv.origem === 'Instagram' || (conv.origem_api === 'meta' && normalizedDigits.length >= 15));
 
       const key = isGroup
         ? String(conv.numero || '')
@@ -428,8 +432,9 @@ export const loadAllUniqueConversations = async (companyId: string): Promise<Con
       const isGroup = conv.is_group || /@g\.us$/.test(telefone);
       const isFromMe = conv.fromme === true || String(conv.fromme) === 'true';
       const normalizedDigits = String(conv.telefone_formatado || conv.numero || '').replace(/[^0-9]/g, '');
-      const isInstagramConversation = telefone.startsWith('ig_') || conv.origem === 'Instagram' || (conv.origem_api === 'meta' && normalizedDigits.length >= 15);
-      const isMessengerConversation = !isInstagramConversation && (conv.origem === 'Messenger' || conv.origem === 'Facebook' || conv.origem === 'messenger');
+      const isMessengerConversation = conv.origem === 'Messenger' || conv.origem === 'Facebook' || conv.origem === 'messenger';
+      const isInstagramConversation = telefone.startsWith('ig_') || (!isMessengerConversation && (conv.origem === 'Instagram' || (conv.origem_api === 'meta' && normalizedDigits.length >= 15)));
+      const isMessengerConversationSafe = !isInstagramConversation && isMessengerConversation;
 
       const message: Message = {
         id: conv.id || `msg-${Date.now()}-${Math.random()}`,
@@ -473,7 +478,7 @@ export const loadAllUniqueConversations = async (companyId: string): Promise<Con
       return {
         id: leadInfo?.leadId || telefone,
         contactName,
-        channel: isInstagramConversation ? "instagram" as const : isMessengerConversation ? "facebook" as const : "whatsapp" as const,
+        channel: isInstagramConversation ? "instagram" as const : isMessengerConversationSafe ? "facebook" as const : "whatsapp" as const,
         status: statusConversa,
         lastMessage: message.content,
         unread: 0,
