@@ -523,8 +523,8 @@ export default function CapturaPublica() {
             <div ref={chatEndRef} />
           </div>
 
-          {/* Sugestões rápidas */}
-          {config.sugestoes_chat && config.sugestoes_chat.length > 0 && messages.length <= 2 && (
+          {/* Sugestões rápidas - só no modo livre, nunca durante coleta de dados */}
+          {chatMode === 'freeform' && !leadCreated && config.sugestoes_chat && config.sugestoes_chat.length > 0 && messages.length <= 2 && (
             <div className="px-3 pt-3 flex flex-wrap gap-2 border-t">
               {config.sugestoes_chat.filter(s => s.trim()).map((s, i) => (
                 <button

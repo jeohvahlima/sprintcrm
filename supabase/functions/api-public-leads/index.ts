@@ -133,9 +133,40 @@ serve(async (req) => {
         funilPadrao = funisPadrao[0].id;
         const etapas = funisPadrao[0].etapas as any[];
         if (etapas && etapas.length > 0) {
-          // Pegar a primeira etapa (menor posição)
           const primeiraEtapa = etapas.sort((a, b) => (a.posicao || 0) - (b.posicao || 0))[0];
           etapaPadrao = primeiraEtapa?.id;
+        }
+      } else {
+        // Criar funil padrão automaticamente se a empresa ainda não tiver nenhum
+        console.log('[api-public-leads] Empresa sem funil. Criando funil padrão...');
+        const { data: novoFunil } = await supabase
+          .from('funis')
+          .insert({
+            nome: 'Funil de Vendas',
+            company_id: companyId,
+          })
+          .select('id')
+          .single();
+
+        if (novoFunil) {
+          funilPadrao = novoFunil.id;
+          const etapasPadrao = [
+            { nome: 'Novos Leads', cor: '#3b82f6', posicao: 1 },
+            { nome: 'Em Contato', cor: '#f59e0b', posicao: 2 },
+            { nome: 'Qualificado', cor: '#8b5cf6', posicao: 3 },
+            { nome: 'Proposta', cor: '#ec4899', posicao: 4 },
+            { nome: 'Ganho', cor: '#10b981', posicao: 5 },
+            { nome: 'Perdido', cor: '#ef4444', posicao: 6 },
+          ];
+
+          const { data: etapasCriadas } = await supabase
+            .from('etapas')
+            .insert(etapasPadrao.map(e => ({ ...e, funil_id: novoFunil.id, company_id: companyId })))
+            .select('id, posicao');
+
+          if (etapasCriadas && etapasCriadas.length > 0) {
+            etapaPadrao = etapasCriadas.sort((a, b) => a.posicao - b.posicao)[0].id;
+          }
         }
       }
 
