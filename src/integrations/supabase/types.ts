@@ -6675,6 +6675,10 @@ export type Database = {
         Args: { p_funil_id: string; p_order: string[] }
         Returns: undefined
       }
+      update_capture_page_config: {
+        Args: { _company_id: string; _config: Json }
+        Returns: Json
+      }
       update_etapa: {
         Args: {
           p_cor: string
