@@ -7,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Copy, Plus, Trash2, Eye, Save, Link2, Palette, FileText, MessageCircle, Globe, Star, HelpCircle, Zap } from "lucide-react";
+import { Copy, Plus, Trash2, Eye, Save, Link2, Palette, FileText, MessageCircle, Globe, Star, HelpCircle, Zap, BarChart3 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { MediaUploadField } from "./MediaUploadField";
 
@@ -44,6 +44,12 @@ interface CaptureConfig {
   og_titulo?: string;
   og_descricao?: string;
   og_imagem_url?: string;
+  // Tracking
+  facebook_pixel_id?: string;
+  google_analytics_id?: string;
+  google_tag_manager_id?: string;
+  google_ads_conversion_id?: string;
+  google_ads_conversion_label?: string;
 }
 
 const DEFAULT_PERGUNTAS: Pergunta[] = [
@@ -182,13 +188,14 @@ export function CapturePageConfig({ companyId }: { companyId: string }) {
       </Card>
 
       <Tabs defaultValue="aparencia" className="w-full">
-        <TabsList className="grid w-full grid-cols-7">
+        <TabsList className="grid w-full grid-cols-8">
           <TabsTrigger value="aparencia" className="gap-1"><Palette className="h-3.5 w-3.5" /> Aparência</TabsTrigger>
           <TabsTrigger value="servicos" className="gap-1"><FileText className="h-3.5 w-3.5" /> Serviços</TabsTrigger>
           <TabsTrigger value="formulario" className="gap-1"><MessageCircle className="h-3.5 w-3.5" /> IA</TabsTrigger>
           <TabsTrigger value="depoimentos" className="gap-1"><Star className="h-3.5 w-3.5" /> Depoimentos</TabsTrigger>
           <TabsTrigger value="faq" className="gap-1"><HelpCircle className="h-3.5 w-3.5" /> FAQ</TabsTrigger>
           <TabsTrigger value="conversao" className="gap-1"><Zap className="h-3.5 w-3.5" /> Conversão</TabsTrigger>
+          <TabsTrigger value="tracking" className="gap-1"><BarChart3 className="h-3.5 w-3.5" /> Tracking</TabsTrigger>
           <TabsTrigger value="contato" className="gap-1"><Globe className="h-3.5 w-3.5" /> Contato</TabsTrigger>
         </TabsList>
 
@@ -435,6 +442,80 @@ export function CapturePageConfig({ companyId }: { companyId: string }) {
               <p className="text-sm text-muted-foreground">
                 Use links como <code className="bg-muted px-1.5 py-0.5 rounded text-xs">{captureUrl}?utm_source=instagram&utm_campaign=promo-junho</code> para rastrear a origem dos seus leads. Os parâmetros suportados: <strong>utm_source, utm_medium, utm_campaign, utm_content, utm_term</strong>.
               </p>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Tracking */}
+        <TabsContent value="tracking" className="space-y-4 mt-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Pixels e Analytics</CardTitle>
+              <CardDescription>Configure pixels de rastreamento para medir conversões em campanhas pagas. Os eventos <strong>PageView</strong> (visita) e <strong>Lead</strong> (conversão) são disparados automaticamente.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label>Facebook Pixel ID</Label>
+                <Input
+                  value={config.facebook_pixel_id || ''}
+                  onChange={e => setConfig(p => ({ ...p, facebook_pixel_id: e.target.value.trim() }))}
+                  placeholder="Ex: 1234567890123456"
+                />
+                <p className="text-xs text-muted-foreground">Encontre em Gerenciador de Eventos do Meta Business → Fontes de Dados.</p>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Google Analytics ID (GA4)</Label>
+                <Input
+                  value={config.google_analytics_id || ''}
+                  onChange={e => setConfig(p => ({ ...p, google_analytics_id: e.target.value.trim() }))}
+                  placeholder="Ex: G-XXXXXXXXXX"
+                />
+                <p className="text-xs text-muted-foreground">Disparará evento <code className="bg-muted px-1 rounded">generate_lead</code> em cada conversão.</p>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Google Tag Manager ID</Label>
+                <Input
+                  value={config.google_tag_manager_id || ''}
+                  onChange={e => setConfig(p => ({ ...p, google_tag_manager_id: e.target.value.trim() }))}
+                  placeholder="Ex: GTM-XXXXXXX"
+                />
+                <p className="text-xs text-muted-foreground">Eventos no dataLayer: <code className="bg-muted px-1 rounded">lead_captured</code>.</p>
+              </div>
+
+              <div className="border-t pt-4 space-y-4">
+                <h4 className="font-semibold text-sm">Google Ads — Conversão</h4>
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Conversion ID</Label>
+                    <Input
+                      value={config.google_ads_conversion_id || ''}
+                      onChange={e => setConfig(p => ({ ...p, google_ads_conversion_id: e.target.value.trim() }))}
+                      placeholder="AW-123456789"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Conversion Label</Label>
+                    <Input
+                      value={config.google_ads_conversion_label || ''}
+                      onChange={e => setConfig(p => ({ ...p, google_ads_conversion_label: e.target.value.trim() }))}
+                      placeholder="abcDEFghi123"
+                    />
+                  </div>
+                </div>
+                <p className="text-xs text-muted-foreground">Em Google Ads → Ferramentas → Conversões → copie o "Tag de evento" (AW-XXX e Label).</p>
+              </div>
+
+              <div className="border-t pt-4 bg-primary/5 -mx-6 -mb-6 px-6 pb-6 mt-4 rounded-b-lg">
+                <h4 className="font-semibold text-sm mb-2 flex items-center gap-2"><BarChart3 className="h-4 w-4" /> Como medir conversões</h4>
+                <ul className="text-xs text-muted-foreground space-y-1.5 list-disc pl-4">
+                  <li>Use links com UTM nas campanhas: <code className="bg-muted px-1 rounded">?utm_source=facebook&utm_campaign=promo</code></li>
+                  <li>O lead criado já vem com origem e UTMs salvos — visíveis em <strong>Relatórios → Campanhas</strong>.</li>
+                  <li>Pixel do Facebook permite criar públicos semelhantes e otimizar anúncios pelo evento <strong>Lead</strong>.</li>
+                  <li>Google Ads usa a conversão para otimizar lances automáticos.</li>
+                </ul>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
