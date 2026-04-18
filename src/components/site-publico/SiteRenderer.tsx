@@ -11,6 +11,8 @@ import { ChatCaptureWidget } from "./ChatCaptureWidget";
 import { WhatsAppFloating } from "./WhatsAppFloating";
 import { AnimatedSection } from "./AnimatedSection";
 import { StatsCounter } from "./StatsCounter";
+import { AgendamentoModal } from "./AgendamentoModal";
+import { Link } from "react-router-dom";
 
 const ICON_MAP: Record<string, React.ComponentType<any>> = {
   Stethoscope, ShieldCheck, Clock, Award, Scale, BookOpen, Trophy, Users,

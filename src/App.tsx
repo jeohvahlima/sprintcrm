@@ -20,6 +20,7 @@ import Reunioes from "./pages/Reunioes";
 import PublicMeeting from "./pages/PublicMeeting";
 import CapturaPublica from "./pages/CapturaPublica";
 import SitePublico from "./pages/SitePublico";
+import SitePublicoAgenda from "./pages/SitePublicoAgenda";
 import Discador from "./pages/Discador";
 import ProcessosComerciais from "./pages/ProcessosComerciais";
 import Treinamento from "./pages/Treinamento";
@@ -78,6 +79,7 @@ const App = () => (
             <Route path="/meeting/:meetingId" element={<PublicMeeting />} />
             <Route path="/captura/:companyId" element={<CapturaPublica />} />
             <Route path="/site/:slug" element={<SitePublico />} />
+            <Route path="/site/:slug/agenda" element={<SitePublicoAgenda />} />
             <Route path="/" element={<MainLayout />}>
               <Route index element={<Navigate to="/analytics" replace />} />
               <Route path="dashboard" element={<Navigate to="/analytics" replace />} />
