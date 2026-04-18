@@ -53,17 +53,21 @@ interface TenantIntegration {
 }
 
 const META_APP_ID = import.meta.env.VITE_META_APP_ID || '1574136874002258';
+// App separado do Instagram (Login do Instagram com API Business)
+const INSTAGRAM_APP_ID = import.meta.env.VITE_INSTAGRAM_APP_ID || '1353481286527361';
 // Redireciona direto para a Edge Function (URL validada no Meta App).
 // A função troca o code pelo token e redireciona o usuário de volta para /configuracoes.
 const META_REDIRECT_URI = `https://${import.meta.env.VITE_SUPABASE_PROJECT_ID || 'dteppsfseusqixuppglh'}.supabase.co/functions/v1/meta-oauth-callback`;
+// Instagram usa redirect próprio (frontend → instagram-oauth-callback)
+const INSTAGRAM_REDIRECT_URI = 'https://wazecrm.lovable.app/oauth/callback';
 
 // Token de verificação MASTER GLOBAL para multi-tenant SaaS
 // IMPORTANTE: Este é o ÚNICO token usado para TODAS as subcontas
 // Configure este mesmo token no painel Meta Developers
 const MASTER_VERIFY_TOKEN = 'wazecrm_master_2024';
 
-// Instagram OAuth URL com todas as permissões necessárias
-const INSTAGRAM_OAUTH_URL = `https://www.instagram.com/oauth/authorize?force_reauth=true&client_id=${META_APP_ID}&redirect_uri=${encodeURIComponent(META_REDIRECT_URI)}&response_type=code&scope=instagram_business_basic%2Cinstagram_business_manage_messages%2Cinstagram_business_manage_comments%2Cinstagram_business_content_publish%2Cinstagram_business_manage_insights`;
+// Instagram OAuth URL com todas as permissões necessárias (usa App do Instagram)
+const INSTAGRAM_OAUTH_URL = `https://www.instagram.com/oauth/authorize?force_reauth=true&client_id=${INSTAGRAM_APP_ID}&redirect_uri=${encodeURIComponent(INSTAGRAM_REDIRECT_URI)}&response_type=code&scope=instagram_business_basic%2Cinstagram_business_manage_messages%2Cinstagram_business_manage_comments%2Cinstagram_business_content_publish%2Cinstagram_business_manage_insights`;
 
 export function MetaIntegrationsConfig({ companyId }: MetaIntegrationsConfigProps) {
   const { toast } = useToast();
