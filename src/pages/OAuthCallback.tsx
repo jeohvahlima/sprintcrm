@@ -26,10 +26,24 @@ export default function OAuthCallback() {
       const code = searchParams.get('code');
       const error = searchParams.get('error');
       const errorDescription = searchParams.get('error_description');
+      const stateParam = searchParams.get('state');
 
       console.log('[OAuthCallback] Starting processing...');
       console.log('[OAuthCallback] Code present:', !!code);
       console.log('[OAuthCallback] Error:', error);
+
+      let stateCompanyId: string | null = null;
+      let returnUrl = '/configuracoes';
+
+      if (stateParam) {
+        try {
+          const decoded = JSON.parse(atob(stateParam));
+          stateCompanyId = decoded.companyId || null;
+          returnUrl = decoded.returnUrl || '/configuracoes';
+        } catch (stateError) {
+          console.warn('[OAuthCallback] Invalid state param:', stateError);
+        }
+      }
 
       if (error) {
         setStatus('error');
@@ -46,7 +60,7 @@ export default function OAuthCallback() {
       try {
         // === STEP 1: Get companyId ===
         // Try localStorage first (saved before redirect)
-        let companyId = localStorage.getItem('instagram_oauth_company_id');
+        let companyId = stateCompanyId || localStorage.getItem('instagram_oauth_company_id');
         console.log('[OAuthCallback] CompanyId from localStorage:', companyId);
 
         if (!companyId) {
@@ -100,7 +114,7 @@ export default function OAuthCallback() {
           body: {
             code,
             companyId,
-            redirectUri: window.location.origin + '/oauth/callback'
+            redirectUri: `${window.location.origin}/oauth/callback`
           }
         });
 
@@ -128,7 +142,7 @@ export default function OAuthCallback() {
           });
           
           setTimeout(() => {
-            navigate('/configuracoes', { replace: true });
+            window.location.replace(returnUrl);
           }, 2000);
         } else {
           throw new Error(data?.error || 'Erro ao processar autenticação');
