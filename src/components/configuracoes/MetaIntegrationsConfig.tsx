@@ -58,16 +58,25 @@ const INSTAGRAM_APP_ID = import.meta.env.VITE_INSTAGRAM_APP_ID || '1353481286527
 // Redireciona direto para a Edge Function (URL validada no Meta App).
 // A função troca o code pelo token e redireciona o usuário de volta para /configuracoes.
 const META_REDIRECT_URI = `https://${import.meta.env.VITE_SUPABASE_PROJECT_ID || 'dteppsfseusqixuppglh'}.supabase.co/functions/v1/meta-oauth-callback`;
-// Instagram usa redirect próprio (frontend → instagram-oauth-callback)
-const INSTAGRAM_REDIRECT_URI = 'https://wazecrm.lovable.app/oauth/callback';
+
+const getInstagramRedirectUri = () => {
+  if (typeof window !== 'undefined') {
+    return `${window.location.origin}/oauth/callback`;
+  }
+
+  return 'https://app.wazecrm.online/oauth/callback';
+};
+
+const getInstagramOAuthUrl = () => {
+  const redirectUri = getInstagramRedirectUri();
+
+  return `https://www.instagram.com/oauth/authorize?force_reauth=true&client_id=${INSTAGRAM_APP_ID}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&scope=instagram_business_basic%2Cinstagram_business_manage_messages%2Cinstagram_business_manage_comments%2Cinstagram_business_content_publish%2Cinstagram_business_manage_insights`;
+};
 
 // Token de verificação MASTER GLOBAL para multi-tenant SaaS
 // IMPORTANTE: Este é o ÚNICO token usado para TODAS as subcontas
 // Configure este mesmo token no painel Meta Developers
 const MASTER_VERIFY_TOKEN = 'wazecrm_master_2024';
-
-// Instagram OAuth URL com todas as permissões necessárias (usa App do Instagram)
-const INSTAGRAM_OAUTH_URL = `https://www.instagram.com/oauth/authorize?force_reauth=true&client_id=${INSTAGRAM_APP_ID}&redirect_uri=${encodeURIComponent(INSTAGRAM_REDIRECT_URI)}&response_type=code&scope=instagram_business_basic%2Cinstagram_business_manage_messages%2Cinstagram_business_manage_comments%2Cinstagram_business_content_publish%2Cinstagram_business_manage_insights`;
 
 export function MetaIntegrationsConfig({ companyId }: MetaIntegrationsConfigProps) {
   const { toast } = useToast();
@@ -123,7 +132,7 @@ export function MetaIntegrationsConfig({ companyId }: MetaIntegrationsConfigProp
       // Save companyId to localStorage so the callback page can retrieve it
       localStorage.setItem('instagram_oauth_company_id', companyId);
       // Open in new tab - localStorage is shared across tabs on same origin
-      window.open(INSTAGRAM_OAUTH_URL, '_blank');
+      window.open(getInstagramOAuthUrl(), '_blank');
       return;
     }
     

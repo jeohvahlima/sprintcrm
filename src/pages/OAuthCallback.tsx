@@ -13,6 +13,15 @@ export default function OAuthCallback() {
   const [message, setMessage] = useState('Processando autenticação...');
 
   useEffect(() => {
+    const callbackKey = `${searchParams.get('code') || 'no-code'}:${window.location.origin}`;
+
+    if (sessionStorage.getItem(`instagram_oauth_processed_${callbackKey}`)) {
+      console.log('[OAuthCallback] Duplicate callback ignored');
+      return;
+    }
+
+    sessionStorage.setItem(`instagram_oauth_processed_${callbackKey}`, 'true');
+
     const processOAuthCallback = async () => {
       const code = searchParams.get('code');
       const error = searchParams.get('error');
@@ -127,7 +136,15 @@ export default function OAuthCallback() {
       } catch (err: any) {
         console.error('[OAuthCallback] Error:', err);
         setStatus('error');
-        setMessage(err.message || 'Erro ao processar autenticação');
+        const errorMessage = err.message || 'Erro ao processar autenticação';
+        if (errorMessage.includes('authorization code has been used')) {
+          setMessage('Esse login já foi processado. Feche esta aba, volte em Configurações e conecte o Instagram novamente.');
+          sessionStorage.removeItem(`instagram_oauth_processed_${callbackKey}`);
+          return;
+        }
+
+        setMessage(errorMessage);
+        sessionStorage.removeItem(`instagram_oauth_processed_${callbackKey}`);
       }
     };
 
