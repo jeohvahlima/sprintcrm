@@ -159,7 +159,6 @@ export function SiteRenderer({ config, companyId, companyName, slug, previewMode
                   {config.hero_cta_secundario || 'Falar com a IA'}
                 </Button>
               </div>
-              </div>
             </div>
             {(isLanding ? config.especialista_foto_url : config.hero_imagem_url) && (
               <div className="animate-scale-in">
