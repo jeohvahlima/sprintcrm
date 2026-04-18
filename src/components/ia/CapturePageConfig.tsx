@@ -353,7 +353,10 @@ export function CapturePageConfig({ companyId }: { companyId: string }) {
                       <Input value={d.nome} onChange={e => updateDepoimento(i, 'nome', e.target.value)} placeholder="Nome do cliente" />
                       <Input type="number" min={1} max={5} value={d.estrelas || 5} onChange={e => updateDepoimento(i, 'estrelas', parseInt(e.target.value) || 5)} placeholder="Estrelas (1-5)" />
                     </div>
-                    <Input value={d.foto_url || ''} onChange={e => updateDepoimento(i, 'foto_url', e.target.value)} placeholder="URL da foto (opcional)" />
+                    <div>
+                      <Label className="text-xs text-muted-foreground">Foto do cliente (opcional)</Label>
+                      <MediaUploadField value={d.foto_url} onChange={v => updateDepoimento(i, 'foto_url', v)} accept="image" folder="depoimentos" placeholder="URL ou upload da foto" />
+                    </div>
                     <Textarea value={d.texto} onChange={e => updateDepoimento(i, 'texto', e.target.value)} placeholder="Depoimento do cliente..." rows={2} />
                   </div>
                   <Button variant="ghost" size="icon" onClick={() => removeDepoimento(i)} className="text-destructive"><Trash2 className="h-4 w-4" /></Button>
