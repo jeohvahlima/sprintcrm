@@ -53,6 +53,8 @@ export function SiteRenderer({ config, companyId, companyName, slug, previewMode
 
   const [openFaq, setOpenFaq] = useState<number | null>(null);
   const [chatOpen, setChatOpen] = useState(false);
+  const [agendaOpen, setAgendaOpen] = useState(false);
+  const agendamentoAtivo = config.agendamento_ativo !== false; // ativo por padrão
 
   const primary = theme.primary;
   const secondary = theme.secondary;
@@ -99,13 +101,20 @@ export function SiteRenderer({ config, companyId, companyName, slug, previewMode
               </button>
             ))}
           </nav>
-          {config.whatsapp && (
-            <Button asChild size="sm" style={{ background: primary }}>
-              <a href={`https://wa.me/${config.whatsapp.replace(/\D/g, '')}`} target="_blank" rel="noreferrer">
-                <MessageCircle className="w-4 h-4 mr-1" /> {isLanding ? 'Agendar' : 'Falar agora'}
-              </a>
-            </Button>
-          )}
+          <div className="hidden md:flex items-center gap-2">
+            {agendamentoAtivo && (
+              <Button size="sm" variant="outline" onClick={() => setAgendaOpen(true)}>
+                <Calendar className="w-4 h-4 mr-1" /> Agendar
+              </Button>
+            )}
+            {config.whatsapp && (
+              <Button asChild size="sm" style={{ background: primary }}>
+                <a href={`https://wa.me/${config.whatsapp.replace(/\D/g, '')}`} target="_blank" rel="noreferrer">
+                  <MessageCircle className="w-4 h-4 mr-1" /> {isLanding ? 'Falar' : 'Falar agora'}
+                </a>
+              </Button>
+            )}
+          </div>
         </div>
       </header>
 
