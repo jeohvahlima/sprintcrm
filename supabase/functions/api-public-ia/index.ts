@@ -215,8 +215,11 @@ REGRAS:
 
 AÇÕES (inclua no final da resposta se aplicável):
 - [COLETAR_LEAD:nome=X,telefone=Y,email=Z] - quando coletar dados do visitante
-- [AGENDAR:data=YYYY-MM-DD,horario=HH:MM,servico=X] - quando confirmar agendamento
-- [TRANSFERIR_HUMANO] - quando precisar de atendente humano`;
+- [MOSTRAR_HORARIOS:data=YYYY-MM-DD] - mostrar slots de horário disponíveis em cards clicáveis
+- [AGENDAR:data=YYYY-MM-DD,horario=HH:MM,servico=X] - confirmar agendamento (cria lead + compromisso + envia WhatsApp)
+- [TRANSFERIR_HUMANO] - quando precisar de atendente humano
+
+IMPORTANTE: Se o visitante quiser agendar, primeiro use MOSTRAR_HORARIOS para mostrar slots, ou colete nome+telefone+data+serviço e use AGENDAR diretamente.`;
       }
 
       // Construir histórico de mensagens
@@ -346,7 +349,30 @@ AÇÕES (inclua no final da resposta se aplicável):
           }
         }
 
-        // Executar ação de agendamento
+        // Buscar horários para mostrar em cards
+        if (actionType === 'MOSTRAR_HORARIOS' && actionParams && companyId) {
+          try {
+            const params: Record<string, string> = {};
+            actionParams.split(',').forEach((p: string) => {
+              const [key, value] = p.split('=');
+              if (key && value) params[key.trim()] = value.trim();
+            });
+            if (params.data) {
+              const horRes = await fetch(
+                `${supabaseUrl}/functions/v1/api-public-agenda?action=horarios&data=${params.data}&company=${companySlug || ''}`
+              );
+              const horData = await horRes.json();
+              if (horData.success) {
+                actions[actions.length - 1].horarios = horData.horarios?.filter((h: any) => h.disponivel) || [];
+                actions[actions.length - 1].data = params.data;
+              }
+            }
+          } catch (e) {
+            console.warn('[api-public-ia] Erro ao buscar horários:', e);
+          }
+        }
+
+        // Executar ação de agendamento via api-public-agenda (lead + compromisso + WhatsApp + notifica profissional)
         if (actionType === 'AGENDAR' && actionParams && companyId) {
           try {
             const params: Record<string, string> = {};
@@ -355,42 +381,34 @@ AÇÕES (inclua no final da resposta se aplicável):
               if (key && value) params[key.trim()] = value.trim();
             });
 
-            if (params.data && params.horario && (body.telefone || body.nome)) {
-              const dataHoraInicio = new Date(`${params.data}T${params.horario}:00`);
-              const dataHoraFim = new Date(dataHoraInicio.getTime() + 30 * 60 * 1000);
+            const nomeFinal = body.nome || params.nome;
+            const telFinal = body.telefone || params.telefone;
 
-              // Buscar ou criar lead
-              let leadId: string | null = null;
-              if (body.telefone) {
-                const telefoneNorm = body.telefone.replace(/\D/g, '');
-                const { data: lead } = await supabase
-                  .from('leads')
-                  .select('id')
-                  .eq('company_id', companyId)
-                  .or(`telefone.eq.${telefoneNorm},phone.eq.${telefoneNorm}`)
-                  .limit(1)
-                  .single();
-                leadId = lead?.id || null;
-              }
-
-              await supabase.from('compromissos').insert({
-                titulo: `${params.servico || 'Consulta'} - ${body.nome || 'Visitante'}`,
-                tipo_servico: params.servico || 'Consulta',
-                data_hora_inicio: dataHoraInicio.toISOString(),
-                data_hora_fim: dataHoraFim.toISOString(),
-                status: 'agendado',
-                paciente: body.nome,
-                telefone: body.telefone?.replace(/\D/g, ''),
-                observacoes: `Agendado via chat IA do site`,
-                lead_id: leadId,
-                company_id: companyId,
-                owner_id: ownerId,
-                usuario_responsavel_id: ownerId
-              });
-              console.log('[api-public-ia] Compromisso criado via chat:', params.data, params.horario);
+            if (params.data && params.horario && nomeFinal && telFinal) {
+              const agRes = await fetch(
+                `${supabaseUrl}/functions/v1/api-public-agenda?action=agendar&company=${companySlug || ''}`,
+                {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    nome: nomeFinal,
+                    telefone: telFinal,
+                    email: body.email || params.email,
+                    data: params.data,
+                    horario: params.horario,
+                    tipo_servico: params.servico || 'Consulta',
+                    observacoes: 'Agendado pela IA do chat do site',
+                    profissional_id: params.profissional_id,
+                    origem: 'ia-chat',
+                  }),
+                }
+              );
+              const agData = await agRes.json();
+              actions[actions.length - 1].agendamento = agData;
+              console.log('[api-public-ia] Agendamento via api-public-agenda:', agData.success);
             }
           } catch (e) {
-            console.warn('[api-public-ia] Erro ao criar compromisso:', e);
+            console.warn('[api-public-ia] Erro ao agendar via API:', e);
           }
         }
       }
