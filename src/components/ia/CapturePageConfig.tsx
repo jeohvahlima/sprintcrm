@@ -253,8 +253,8 @@ export function CapturePageConfig({ companyId }: { companyId: string }) {
                     <Input value={config.og_titulo || ''} onChange={e => setConfig(p => ({ ...p, og_titulo: e.target.value }))} placeholder="Usa o título da página se vazio" />
                   </div>
                   <div className="space-y-2">
-                    <Label>Imagem de Compartilhamento (URL)</Label>
-                    <Input value={config.og_imagem_url || ''} onChange={e => setConfig(p => ({ ...p, og_imagem_url: e.target.value }))} placeholder="https://... (1200x630 recomendado)" />
+                    <Label>Imagem de Compartilhamento</Label>
+                    <MediaUploadField value={config.og_imagem_url} onChange={v => setConfig(p => ({ ...p, og_imagem_url: v }))} accept="image" folder="og" placeholder="1200x630 recomendado" />
                   </div>
                 </div>
                 <div className="space-y-2">
