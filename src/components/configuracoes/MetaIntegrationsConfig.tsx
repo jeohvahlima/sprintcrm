@@ -60,6 +60,24 @@ const INSTAGRAM_APP_ID = import.meta.env.VITE_INSTAGRAM_APP_ID || '1353481286527
 const META_REDIRECT_URI = `https://${import.meta.env.VITE_SUPABASE_PROJECT_ID || 'dteppsfseusqixuppglh'}.supabase.co/functions/v1/meta-oauth-callback`;
 const INSTAGRAM_REDIRECT_URI = `https://${import.meta.env.VITE_SUPABASE_PROJECT_ID || 'dteppsfseusqixuppglh'}.supabase.co/functions/v1/instagram-oauth-redirect`;
 
+const openOAuthWindow = (url: string, width = 700, height = 800) => {
+  const features = `noopener,noreferrer,width=${width},height=${height}`;
+
+  try {
+    if (window.top && window.top !== window) {
+      window.top.open(url, '_blank', features);
+      return;
+    }
+  } catch (error) {
+    console.warn('[MetaIntegrationsConfig] Unable to access top window, falling back to current window navigation.', error);
+  }
+
+  const popup = window.open(url, '_blank', features);
+  if (!popup) {
+    window.location.assign(url);
+  }
+};
+
 const getInstagramOAuthUrl = (companyId: string) => {
   const returnUrl = typeof window !== 'undefined'
     ? `${window.location.origin}/configuracoes`
@@ -126,7 +144,7 @@ export function MetaIntegrationsConfig({ companyId }: MetaIntegrationsConfigProp
 
   const handleOAuthLogin = (scope: string) => {
     if (scope === 'instagram') {
-      window.open(getInstagramOAuthUrl(companyId), '_blank', 'width=700,height=800');
+      openOAuthWindow(getInstagramOAuthUrl(companyId), 700, 800);
       return;
     }
     
@@ -149,7 +167,7 @@ export function MetaIntegrationsConfig({ companyId }: MetaIntegrationsConfigProp
       `&state=${state}` +
       `&response_type=code`;
 
-    window.open(authUrl, '_blank', 'width=600,height=700');
+    openOAuthWindow(authUrl, 600, 700);
   };
 
   const getPermissionsForScope = (scope: string): string[] => {
