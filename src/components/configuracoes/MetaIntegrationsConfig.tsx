@@ -52,8 +52,10 @@ interface TenantIntegration {
   provider_priority: string;
 }
 
-const META_APP_ID = import.meta.env.VITE_META_APP_ID || '1353481286527361';
-const META_REDIRECT_URI = 'https://wazecrm.lovable.app/oauth/callback';
+const META_APP_ID = import.meta.env.VITE_META_APP_ID || '1574136874002258';
+// Redireciona direto para a Edge Function (URL validada no Meta App).
+// A função troca o code pelo token e redireciona o usuário de volta para /configuracoes.
+const META_REDIRECT_URI = `https://${import.meta.env.VITE_SUPABASE_PROJECT_ID || 'dteppsfseusqixuppglh'}.supabase.co/functions/v1/meta-oauth-callback`;
 
 // Token de verificação MASTER GLOBAL para multi-tenant SaaS
 // IMPORTANTE: Este é o ÚNICO token usado para TODAS as subcontas
