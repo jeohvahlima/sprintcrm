@@ -138,6 +138,79 @@ export default function CapturaPublica() {
     if (imagem) setMeta('meta[name="twitter:image"]', 'content', imagem);
   }, [config, companyName]);
 
+  // Tracking pixels (FB Pixel, GA4, GTM, Google Ads)
+  useEffect(() => {
+    if (!config) return;
+
+    // Facebook Pixel
+    if (config.facebook_pixel_id && !window.fbq) {
+      (function(f: any, b, e, v, n?: any, t?: any, s?: any) {
+        if (f.fbq) return; n = f.fbq = function() {
+          n.callMethod ? n.callMethod.apply(n, arguments) : n.queue.push(arguments);
+        };
+        if (!f._fbq) f._fbq = n; n.push = n; n.loaded = !0; n.version = '2.0';
+        n.queue = []; t = b.createElement(e); t.async = !0;
+        t.src = v; s = b.getElementsByTagName(e)[0]; s.parentNode.insertBefore(t, s);
+      })(window, document, 'script', 'https://connect.facebook.net/en_US/fbevents.js');
+      window.fbq('init', config.facebook_pixel_id);
+      window.fbq('track', 'PageView');
+    } else if (config.facebook_pixel_id && window.fbq) {
+      window.fbq('track', 'PageView');
+    }
+
+    // Google Analytics 4 / Google Ads via gtag
+    const gaId = config.google_analytics_id;
+    const adsId = config.google_ads_conversion_id;
+    const gtagIds = [gaId, adsId].filter(Boolean) as string[];
+    if (gtagIds.length > 0 && !window.gtag) {
+      const s = document.createElement('script');
+      s.async = true;
+      s.src = `https://www.googletagmanager.com/gtag/js?id=${gtagIds[0]}`;
+      document.head.appendChild(s);
+      window.dataLayer = window.dataLayer || [];
+      window.gtag = function() { window.dataLayer!.push(arguments); };
+      window.gtag('js', new Date());
+      gtagIds.forEach(id => window.gtag('config', id));
+    }
+
+    // Google Tag Manager
+    if (config.google_tag_manager_id && !document.getElementById('gtm-script')) {
+      const s = document.createElement('script');
+      s.id = 'gtm-script';
+      s.innerHTML = `(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','${config.google_tag_manager_id}');`;
+      document.head.appendChild(s);
+    }
+  }, [config.facebook_pixel_id, config.google_analytics_id, config.google_tag_manager_id, config.google_ads_conversion_id]);
+
+  const fireConversionEvents = (leadData: Record<string, string>) => {
+    try {
+      // Facebook Pixel Lead event
+      if (window.fbq) {
+        window.fbq('track', 'Lead', {
+          content_name: config.tag_automatica || 'pagina-captura',
+        });
+      }
+      // Google Analytics generate_lead
+      if (window.gtag && config.google_analytics_id) {
+        window.gtag('event', 'generate_lead', {
+          send_to: config.google_analytics_id,
+        });
+      }
+      // Google Ads conversion
+      if (window.gtag && config.google_ads_conversion_id && config.google_ads_conversion_label) {
+        window.gtag('event', 'conversion', {
+          send_to: `${config.google_ads_conversion_id}/${config.google_ads_conversion_label}`,
+        });
+      }
+      // GTM dataLayer
+      if (window.dataLayer) {
+        window.dataLayer.push({ event: 'lead_captured', lead_name: leadData.nome });
+      }
+    } catch (e) {
+      console.error('[Tracking] erro:', e);
+    }
+  };
+
   const loadCompanyConfig = async () => {
     if (!companyId) { setNotFound(true); setLoading(false); return; }
 
