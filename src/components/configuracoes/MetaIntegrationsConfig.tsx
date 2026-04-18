@@ -58,7 +58,8 @@ const INSTAGRAM_APP_ID = import.meta.env.VITE_INSTAGRAM_APP_ID || '1353481286527
 // Redireciona direto para a Edge Function (URL validada no Meta App).
 // A função troca o code pelo token e redireciona o usuário de volta para /configuracoes.
 const META_REDIRECT_URI = `https://${import.meta.env.VITE_SUPABASE_PROJECT_ID || 'dteppsfseusqixuppglh'}.supabase.co/functions/v1/meta-oauth-callback`;
-const INSTAGRAM_CALLBACK_URI = import.meta.env.VITE_INSTAGRAM_CALLBACK_URI || 'https://wazecrm.lovable.app/oauth/callback';
+const CRM_PUBLIC_ORIGIN = 'https://app.wazecrm.online';
+const INSTAGRAM_CALLBACK_URI = `${CRM_PUBLIC_ORIGIN}/oauth/callback`;
 
 const openOAuthWindow = (url: string, width = 700, height = 800) => {
   const features = `noopener,noreferrer,width=${width},height=${height}`;
@@ -79,9 +80,7 @@ const openOAuthWindow = (url: string, width = 700, height = 800) => {
 };
 
 const getInstagramOAuthUrl = (companyId: string) => {
-  const returnUrl = typeof window !== 'undefined'
-    ? `${window.location.origin}/configuracoes`
-    : 'https://app.wazecrm.online/configuracoes';
+  const returnUrl = `${CRM_PUBLIC_ORIGIN}/configuracoes`;
 
   const state = btoa(JSON.stringify({ companyId, returnUrl, redirectUri: INSTAGRAM_CALLBACK_URI }));
 
