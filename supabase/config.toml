@@ -98,3 +98,6 @@ verify_jwt = false
 
 [functions.gerar-conteudo-site]
 verify_jwt = true
+
+[functions.meta-oauth-callback]
+verify_jwt = false
