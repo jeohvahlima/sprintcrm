@@ -61,35 +61,15 @@ export default function CapturaPublica() {
   const loadCompanyConfig = async () => {
     if (!companyId) { setNotFound(true); setLoading(false); return; }
 
-    // Try by ID first, then by slug in capture_page_config
-    let data: any = null;
-    
-    // Check if it's a UUID
-    const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(companyId);
-    
-    if (isUUID) {
-      const res = await supabase
-        .from('companies')
-        .select('id, name, capture_page_config')
-        .eq('id', companyId)
-        .single();
-      data = res.data;
+    // Use SECURITY DEFINER RPC to allow anonymous public access
+    const { data: rows, error } = await supabase
+      .rpc('get_capture_page', { _identifier: companyId });
+
+    if (error) {
+      console.error('[CapturaPublica] RPC error:', error);
     }
-    
-    // If not found by ID, search by slug in capture_page_config
-    if (!data) {
-      const res = await supabase
-        .from('companies')
-        .select('id, name, capture_page_config')
-        .not('capture_page_config', 'is', null);
-      
-      if (res.data) {
-        data = res.data.find((c: any) => {
-          const cfg = c.capture_page_config as any;
-          return cfg?.slug === companyId;
-        });
-      }
-    }
+
+    const data: any = Array.isArray(rows) && rows.length > 0 ? rows[0] : null;
 
     if (!data) { setNotFound(true); setLoading(false); return; }
 
