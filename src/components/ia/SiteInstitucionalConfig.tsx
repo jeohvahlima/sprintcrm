@@ -10,13 +10,14 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { Save, Eye, ExternalLink, Sparkles, Plus, Trash2, Globe, Copy, Check } from "lucide-react";
-import { SITE_TEMPLATES, SiteConfig, SiteTheme, getTemplateById, DEFAULT_SITE_SECTIONS, MembroEquipe, PlanoSite } from "@/lib/siteTemplates";
+import { SITE_TEMPLATES, SiteConfig, SiteTheme, getTemplateById, DEFAULT_SITE_SECTIONS, MembroEquipe, PlanoSite, PostBlog } from "@/lib/siteTemplates";
 import { SiteRenderer } from "../site-publico/SiteRenderer";
+import { ImageUploader } from "../site-publico/ImageUploader";
+import { GalleryUploader } from "../site-publico/GalleryUploader";
 
 interface Props { companyId: string; }
 
 interface FullCfg extends SiteConfig {
-  // mantém campos da página de captura
   titulo?: string;
   cor_primaria?: string;
   cor_secundaria?: string;
@@ -44,6 +45,9 @@ export function SiteInstitucionalConfig({ companyId }: Props) {
     galeria: [],
     planos: [],
     blog_posts: [],
+    servicos: [],
+    depoimentos: [],
+    faq: [],
   });
   const [companyName, setCompanyName] = useState('');
   const [companySegmento, setCompanySegmento] = useState<string | null>(null);
@@ -93,7 +97,6 @@ export function SiteInstitucionalConfig({ companyId }: Props) {
       ...t.config,
       site_theme: t.theme,
       site_template: t.id,
-      // não sobrescreve campos da empresa
       whatsapp: prev.whatsapp,
       telefone_contato: prev.telefone_contato,
       email_contato: prev.email_contato,
@@ -127,27 +130,53 @@ export function SiteInstitucionalConfig({ companyId }: Props) {
 
   const copyUrl = () => { navigator.clipboard.writeText(publicUrl); setCopied(true); setTimeout(() => setCopied(false), 2000); };
 
-  // Equipe helpers
+  // Equipe
   const addMembro = () => setCfg(p => ({ ...p, equipe: [...(p.equipe || []), { nome: '', cargo: '' }] }));
   const updMembro = (i: number, k: keyof MembroEquipe, v: string) =>
     setCfg(p => ({ ...p, equipe: p.equipe?.map((m, idx) => idx === i ? { ...m, [k]: v } : m) }));
   const rmMembro = (i: number) => setCfg(p => ({ ...p, equipe: p.equipe?.filter((_, idx) => idx !== i) }));
 
-  // Planos helpers
+  // Planos
   const addPlano = () => setCfg(p => ({ ...p, planos: [...(p.planos || []), { nome: '', preco: '', itens: [] }] }));
   const updPlano = (i: number, k: keyof PlanoSite, v: any) =>
     setCfg(p => ({ ...p, planos: p.planos?.map((pl, idx) => idx === i ? { ...pl, [k]: v } : pl) }));
   const rmPlano = (i: number) => setCfg(p => ({ ...p, planos: p.planos?.filter((_, idx) => idx !== i) }));
 
-  // Galeria
-  const addImagemGaleria = (url: string) => setCfg(p => ({ ...p, galeria: [...(p.galeria || []), url] }));
-  const rmImagemGaleria = (i: number) => setCfg(p => ({ ...p, galeria: p.galeria?.filter((_, idx) => idx !== i) }));
+  // Serviços
+  const addServico = () => setCfg(p => ({ ...p, servicos: [...(p.servicos || []), { nome: '', descricao: '' }] }));
+  const updServico = (i: number, k: string, v: string) =>
+    setCfg(p => ({ ...p, servicos: p.servicos?.map((s, idx) => idx === i ? { ...s, [k]: v } : s) }));
+  const rmServico = (i: number) => setCfg(p => ({ ...p, servicos: p.servicos?.filter((_, idx) => idx !== i) }));
+
+  // Depoimentos
+  const addDepoimento = () => setCfg(p => ({ ...p, depoimentos: [...(p.depoimentos || []), { nome: '', texto: '', estrelas: 5 }] }));
+  const updDepoimento = (i: number, k: string, v: any) =>
+    setCfg(p => ({ ...p, depoimentos: p.depoimentos?.map((d, idx) => idx === i ? { ...d, [k]: v } : d) }));
+  const rmDepoimento = (i: number) => setCfg(p => ({ ...p, depoimentos: p.depoimentos?.filter((_, idx) => idx !== i) }));
+
+  // FAQ
+  const addFaq = () => setCfg(p => ({ ...p, faq: [...(p.faq || []), { pergunta: '', resposta: '' }] }));
+  const updFaq = (i: number, k: string, v: string) =>
+    setCfg(p => ({ ...p, faq: p.faq?.map((f, idx) => idx === i ? { ...f, [k]: v } : f) }));
+  const rmFaq = (i: number) => setCfg(p => ({ ...p, faq: p.faq?.filter((_, idx) => idx !== i) }));
+
+  // Blog
+  const addPost = () => setCfg(p => ({ ...p, blog_posts: [...(p.blog_posts || []), { titulo: '', resumo: '', autor: companyName, data: new Date().toLocaleDateString('pt-BR') }] }));
+  const updPost = (i: number, k: keyof PostBlog, v: string) =>
+    setCfg(p => ({ ...p, blog_posts: p.blog_posts?.map((b, idx) => idx === i ? { ...b, [k]: v } : b) }));
+  const rmPost = (i: number) => setCfg(p => ({ ...p, blog_posts: p.blog_posts?.filter((_, idx) => idx !== i) }));
 
   if (loading) return <div className="p-6 text-center">Carregando...</div>;
 
+  const aiBtn = (secao: string) => (
+    <Button variant="outline" size="sm" onClick={() => gerarComIA(secao)} disabled={generatingAI === secao}>
+      <Sparkles className="w-4 h-4 mr-1" /> {generatingAI === secao ? 'Gerando...' : 'Gerar com IA'}
+    </Button>
+  );
+
   return (
     <div className="space-y-4">
-      {/* Top bar com publicação */}
+      {/* Top bar */}
       <Card>
         <CardContent className="p-4 flex items-center justify-between flex-wrap gap-3">
           <div className="flex items-center gap-3">
@@ -155,11 +184,7 @@ export function SiteInstitucionalConfig({ companyId }: Props) {
             <div>
               <div className="font-semibold flex items-center gap-2">
                 Site Institucional
-                {cfg.site_published ? (
-                  <Badge className="bg-green-500">Publicado</Badge>
-                ) : (
-                  <Badge variant="secondary">Rascunho</Badge>
-                )}
+                {cfg.site_published ? <Badge className="bg-green-500">Publicado</Badge> : <Badge variant="secondary">Rascunho</Badge>}
               </div>
               <div className="text-xs text-muted-foreground flex items-center gap-2">
                 {publicUrl}
@@ -188,13 +213,19 @@ export function SiteInstitucionalConfig({ companyId }: Props) {
           <TabsTrigger value="template">Template</TabsTrigger>
           <TabsTrigger value="hero">Hero</TabsTrigger>
           <TabsTrigger value="sobre">Sobre</TabsTrigger>
+          <TabsTrigger value="servicos">Serviços</TabsTrigger>
           <TabsTrigger value="equipe">Equipe</TabsTrigger>
           <TabsTrigger value="galeria">Galeria</TabsTrigger>
+          <TabsTrigger value="depoimentos">Depoimentos</TabsTrigger>
           <TabsTrigger value="planos">Planos</TabsTrigger>
+          <TabsTrigger value="blog">Blog</TabsTrigger>
+          <TabsTrigger value="faq">FAQ</TabsTrigger>
+          <TabsTrigger value="contato">Contato</TabsTrigger>
           <TabsTrigger value="secoes">Seções</TabsTrigger>
           <TabsTrigger value="preview">Preview</TabsTrigger>
         </TabsList>
 
+        {/* TEMPLATE */}
         <TabsContent value="template">
           <Card>
             <CardHeader><CardTitle>Escolha um template</CardTitle></CardHeader>
@@ -234,49 +265,38 @@ export function SiteInstitucionalConfig({ companyId }: Props) {
                   </div>
                 </div>
               </div>
+              <div className="mt-6">
+                <ImageUploader companyId={companyId} value={cfg.logo_url} onChange={(url) => setCfg(p => ({ ...p, logo_url: url }))} label="Logo da empresa" aspect="square" size="sm" />
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
 
+        {/* HERO */}
         <TabsContent value="hero">
           <Card>
             <CardHeader>
               <div className="flex items-center justify-between">
                 <CardTitle>Seção Hero (Banner principal)</CardTitle>
-                <Button variant="outline" size="sm" onClick={() => gerarComIA('hero')} disabled={generatingAI === 'hero'}>
-                  <Sparkles className="w-4 h-4 mr-1" /> {generatingAI === 'hero' ? 'Gerando...' : 'Gerar com IA'}
-                </Button>
+                {aiBtn('hero')}
               </div>
             </CardHeader>
             <CardContent className="space-y-3">
-              <div>
-                <Label>Título principal</Label>
-                <Input value={cfg.hero_titulo || ''} onChange={(e) => setCfg(p => ({ ...p, hero_titulo: e.target.value }))} placeholder="Bem-vindo à nossa empresa" />
-              </div>
-              <div>
-                <Label>Subtítulo</Label>
-                <Textarea value={cfg.hero_subtitulo || ''} onChange={(e) => setCfg(p => ({ ...p, hero_subtitulo: e.target.value }))} />
-              </div>
-              <div>
-                <Label>Texto do botão CTA</Label>
-                <Input value={cfg.hero_cta_texto || ''} onChange={(e) => setCfg(p => ({ ...p, hero_cta_texto: e.target.value }))} placeholder="Fale conosco" />
-              </div>
-              <div>
-                <Label>URL da imagem (opcional)</Label>
-                <Input value={cfg.hero_imagem_url || ''} onChange={(e) => setCfg(p => ({ ...p, hero_imagem_url: e.target.value }))} placeholder="https://..." />
-              </div>
+              <div><Label>Título principal</Label><Input value={cfg.hero_titulo || ''} onChange={(e) => setCfg(p => ({ ...p, hero_titulo: e.target.value }))} /></div>
+              <div><Label>Subtítulo</Label><Textarea value={cfg.hero_subtitulo || ''} onChange={(e) => setCfg(p => ({ ...p, hero_subtitulo: e.target.value }))} /></div>
+              <div><Label>Texto do botão CTA</Label><Input value={cfg.hero_cta_texto || ''} onChange={(e) => setCfg(p => ({ ...p, hero_cta_texto: e.target.value }))} /></div>
+              <ImageUploader companyId={companyId} value={cfg.hero_imagem_url} onChange={(url) => setCfg(p => ({ ...p, hero_imagem_url: url }))} label="Imagem do Hero" aspect="video" size="lg" />
             </CardContent>
           </Card>
         </TabsContent>
 
+        {/* SOBRE */}
         <TabsContent value="sobre">
           <Card>
             <CardHeader>
               <div className="flex items-center justify-between">
                 <CardTitle>Sobre a empresa</CardTitle>
-                <Button variant="outline" size="sm" onClick={() => gerarComIA('sobre')} disabled={generatingAI === 'sobre'}>
-                  <Sparkles className="w-4 h-4 mr-1" /> {generatingAI === 'sobre' ? 'Gerando...' : 'Gerar com IA'}
-                </Button>
+                {aiBtn('sobre')}
               </div>
             </CardHeader>
             <CardContent className="space-y-3">
@@ -286,32 +306,33 @@ export function SiteInstitucionalConfig({ companyId }: Props) {
               <div><Label>Visão</Label><Textarea rows={2} value={cfg.sobre_visao || ''} onChange={(e) => setCfg(p => ({ ...p, sobre_visao: e.target.value }))} /></div>
               <div>
                 <Label>Valores (separados por vírgula)</Label>
-                <Input value={(cfg.sobre_valores || []).join(', ')} onChange={(e) => setCfg(p => ({ ...p, sobre_valores: e.target.value.split(',').map(v => v.trim()).filter(Boolean) }))} placeholder="Ética, Compromisso, Excelência" />
+                <Input value={(cfg.sobre_valores || []).join(', ')} onChange={(e) => setCfg(p => ({ ...p, sobre_valores: e.target.value.split(',').map(v => v.trim()).filter(Boolean) }))} />
               </div>
-              <div><Label>URL da imagem</Label><Input value={cfg.sobre_imagem_url || ''} onChange={(e) => setCfg(p => ({ ...p, sobre_imagem_url: e.target.value }))} /></div>
+              <ImageUploader companyId={companyId} value={cfg.sobre_imagem_url} onChange={(url) => setCfg(p => ({ ...p, sobre_imagem_url: url }))} label="Imagem da seção Sobre" aspect="video" size="lg" />
             </CardContent>
           </Card>
         </TabsContent>
 
-        <TabsContent value="equipe">
+        {/* SERVIÇOS */}
+        <TabsContent value="servicos">
           <Card>
             <CardHeader>
               <div className="flex items-center justify-between">
-                <CardTitle>Equipe</CardTitle>
-                <Button size="sm" onClick={addMembro}><Plus className="w-4 h-4 mr-1" /> Adicionar</Button>
+                <CardTitle>Serviços</CardTitle>
+                <div className="flex gap-2">
+                  {aiBtn('servicos')}
+                  <Button size="sm" onClick={addServico}><Plus className="w-4 h-4 mr-1" /> Adicionar</Button>
+                </div>
               </div>
             </CardHeader>
             <CardContent className="space-y-3">
-              {(cfg.equipe || []).length === 0 && <p className="text-sm text-muted-foreground">Nenhum membro adicionado.</p>}
-              {(cfg.equipe || []).map((m, i) => (
-                <Card key={i} className="p-3">
-                  <div className="grid sm:grid-cols-2 gap-2">
-                    <Input placeholder="Nome" value={m.nome} onChange={(e) => updMembro(i, 'nome', e.target.value)} />
-                    <Input placeholder="Cargo" value={m.cargo} onChange={(e) => updMembro(i, 'cargo', e.target.value)} />
-                    <Input placeholder="URL da foto" value={m.foto_url || ''} onChange={(e) => updMembro(i, 'foto_url', e.target.value)} />
-                    <Input placeholder="Bio curta" value={m.bio || ''} onChange={(e) => updMembro(i, 'bio', e.target.value)} />
-                  </div>
-                  <Button size="sm" variant="ghost" className="mt-2 text-destructive" onClick={() => rmMembro(i)}>
+              {(cfg.servicos || []).length === 0 && <p className="text-sm text-muted-foreground">Nenhum serviço.</p>}
+              {(cfg.servicos || []).map((s, i) => (
+                <Card key={i} className="p-3 space-y-2">
+                  <Input placeholder="Nome do serviço" value={s.nome} onChange={(e) => updServico(i, 'nome', e.target.value)} />
+                  <Textarea placeholder="Descrição" value={s.descricao || ''} onChange={(e) => updServico(i, 'descricao', e.target.value)} />
+                  <ImageUploader companyId={companyId} value={s.imagem_url} onChange={(url) => updServico(i, 'imagem_url', url)} label="Imagem (opcional)" aspect="video" size="md" />
+                  <Button size="sm" variant="ghost" className="text-destructive" onClick={() => rmServico(i)}>
                     <Trash2 className="w-4 h-4 mr-1" /> Remover
                   </Button>
                 </Card>
@@ -320,37 +341,88 @@ export function SiteInstitucionalConfig({ companyId }: Props) {
           </Card>
         </TabsContent>
 
-        <TabsContent value="galeria">
+        {/* EQUIPE */}
+        <TabsContent value="equipe">
           <Card>
-            <CardHeader><CardTitle>Galeria de imagens</CardTitle></CardHeader>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle>Equipe</CardTitle>
+                <div className="flex gap-2">
+                  {aiBtn('equipe')}
+                  <Button size="sm" onClick={addMembro}><Plus className="w-4 h-4 mr-1" /> Adicionar</Button>
+                </div>
+              </div>
+            </CardHeader>
             <CardContent className="space-y-3">
-              <div className="flex gap-2">
-                <Input id="gal-input" placeholder="Cole uma URL de imagem e pressione Adicionar" />
-                <Button onClick={() => {
-                  const el = document.getElementById('gal-input') as HTMLInputElement;
-                  if (el?.value) { addImagemGaleria(el.value); el.value = ''; }
-                }}>Adicionar</Button>
-              </div>
-              <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
-                {(cfg.galeria || []).map((url, i) => (
-                  <div key={i} className="relative group">
-                    <img src={url} alt={`g${i}`} className="w-full aspect-square object-cover rounded" />
-                    <button onClick={() => rmImagemGaleria(i)} className="absolute top-1 right-1 bg-destructive text-white rounded-full p-1 opacity-0 group-hover:opacity-100">
-                      <Trash2 className="w-3 h-3" />
-                    </button>
+              {(cfg.equipe || []).length === 0 && <p className="text-sm text-muted-foreground">Nenhum membro.</p>}
+              {(cfg.equipe || []).map((m, i) => (
+                <Card key={i} className="p-3 space-y-2">
+                  <div className="grid sm:grid-cols-2 gap-2">
+                    <Input placeholder="Nome" value={m.nome} onChange={(e) => updMembro(i, 'nome', e.target.value)} />
+                    <Input placeholder="Cargo" value={m.cargo} onChange={(e) => updMembro(i, 'cargo', e.target.value)} />
                   </div>
-                ))}
-              </div>
+                  <Input placeholder="Bio curta" value={m.bio || ''} onChange={(e) => updMembro(i, 'bio', e.target.value)} />
+                  <ImageUploader companyId={companyId} value={m.foto_url} onChange={(url) => updMembro(i, 'foto_url', url)} label="Foto" aspect="square" size="sm" />
+                  <Button size="sm" variant="ghost" className="text-destructive" onClick={() => rmMembro(i)}>
+                    <Trash2 className="w-4 h-4 mr-1" /> Remover
+                  </Button>
+                </Card>
+              ))}
             </CardContent>
           </Card>
         </TabsContent>
 
+        {/* GALERIA */}
+        <TabsContent value="galeria">
+          <Card>
+            <CardHeader><CardTitle>Galeria de imagens</CardTitle></CardHeader>
+            <CardContent>
+              <GalleryUploader companyId={companyId} images={cfg.galeria || []} onChange={(imgs) => setCfg(p => ({ ...p, galeria: imgs }))} />
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* DEPOIMENTOS */}
+        <TabsContent value="depoimentos">
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle>Depoimentos</CardTitle>
+                <div className="flex gap-2">
+                  {aiBtn('depoimentos')}
+                  <Button size="sm" onClick={addDepoimento}><Plus className="w-4 h-4 mr-1" /> Adicionar</Button>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {(cfg.depoimentos || []).length === 0 && <p className="text-sm text-muted-foreground">Nenhum depoimento.</p>}
+              {(cfg.depoimentos || []).map((d, i) => (
+                <Card key={i} className="p-3 space-y-2">
+                  <div className="grid sm:grid-cols-2 gap-2">
+                    <Input placeholder="Nome do cliente" value={d.nome} onChange={(e) => updDepoimento(i, 'nome', e.target.value)} />
+                    <Input type="number" min={1} max={5} placeholder="Estrelas (1-5)" value={d.estrelas || 5} onChange={(e) => updDepoimento(i, 'estrelas', Number(e.target.value))} />
+                  </div>
+                  <Textarea placeholder="Depoimento" value={d.texto} onChange={(e) => updDepoimento(i, 'texto', e.target.value)} />
+                  <ImageUploader companyId={companyId} value={d.foto_url} onChange={(url) => updDepoimento(i, 'foto_url', url)} label="Foto (opcional)" aspect="square" size="sm" />
+                  <Button size="sm" variant="ghost" className="text-destructive" onClick={() => rmDepoimento(i)}>
+                    <Trash2 className="w-4 h-4 mr-1" /> Remover
+                  </Button>
+                </Card>
+              ))}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* PLANOS */}
         <TabsContent value="planos">
           <Card>
             <CardHeader>
               <div className="flex items-center justify-between">
                 <CardTitle>Planos & Preços</CardTitle>
-                <Button size="sm" onClick={addPlano}><Plus className="w-4 h-4 mr-1" /> Adicionar plano</Button>
+                <div className="flex gap-2">
+                  {aiBtn('planos')}
+                  <Button size="sm" onClick={addPlano}><Plus className="w-4 h-4 mr-1" /> Adicionar</Button>
+                </div>
               </div>
             </CardHeader>
             <CardContent className="space-y-3">
@@ -362,12 +434,7 @@ export function SiteInstitucionalConfig({ companyId }: Props) {
                     <Input placeholder="Período (ex: mês)" value={p.periodo || ''} onChange={(e) => updPlano(i, 'periodo', e.target.value)} />
                   </div>
                   <Input placeholder="Descrição curta" value={p.descricao || ''} onChange={(e) => updPlano(i, 'descricao', e.target.value)} />
-                  <Textarea
-                    placeholder="Itens (um por linha)"
-                    rows={4}
-                    value={p.itens.join('\n')}
-                    onChange={(e) => updPlano(i, 'itens', e.target.value.split('\n').filter(Boolean))}
-                  />
+                  <Textarea placeholder="Itens (um por linha)" rows={4} value={p.itens.join('\n')} onChange={(e) => updPlano(i, 'itens', e.target.value.split('\n').filter(Boolean))} />
                   <div className="flex items-center justify-between">
                     <label className="flex items-center gap-2 text-sm">
                       <Switch checked={!!p.destaque} onCheckedChange={(v) => updPlano(i, 'destaque', v)} />
@@ -383,6 +450,80 @@ export function SiteInstitucionalConfig({ companyId }: Props) {
           </Card>
         </TabsContent>
 
+        {/* BLOG */}
+        <TabsContent value="blog">
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle>Blog & Notícias</CardTitle>
+                <div className="flex gap-2">
+                  {aiBtn('blog')}
+                  <Button size="sm" onClick={addPost}><Plus className="w-4 h-4 mr-1" /> Adicionar post</Button>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {(cfg.blog_posts || []).length === 0 && <p className="text-sm text-muted-foreground">Nenhum post.</p>}
+              {(cfg.blog_posts || []).map((b, i) => (
+                <Card key={i} className="p-3 space-y-2">
+                  <Input placeholder="Título" value={b.titulo} onChange={(e) => updPost(i, 'titulo', e.target.value)} />
+                  <Textarea placeholder="Resumo" value={b.resumo} onChange={(e) => updPost(i, 'resumo', e.target.value)} />
+                  <Textarea placeholder="Conteúdo completo (opcional)" rows={4} value={b.conteudo || ''} onChange={(e) => updPost(i, 'conteudo', e.target.value)} />
+                  <div className="grid sm:grid-cols-2 gap-2">
+                    <Input placeholder="Autor" value={b.autor || ''} onChange={(e) => updPost(i, 'autor', e.target.value)} />
+                    <Input placeholder="Data" value={b.data || ''} onChange={(e) => updPost(i, 'data', e.target.value)} />
+                  </div>
+                  <ImageUploader companyId={companyId} value={b.imagem_url} onChange={(url) => updPost(i, 'imagem_url', url)} label="Imagem do post" aspect="video" size="md" />
+                  <Button size="sm" variant="ghost" className="text-destructive" onClick={() => rmPost(i)}>
+                    <Trash2 className="w-4 h-4 mr-1" /> Remover
+                  </Button>
+                </Card>
+              ))}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* FAQ */}
+        <TabsContent value="faq">
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle>Perguntas frequentes</CardTitle>
+                <div className="flex gap-2">
+                  {aiBtn('faq')}
+                  <Button size="sm" onClick={addFaq}><Plus className="w-4 h-4 mr-1" /> Adicionar</Button>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {(cfg.faq || []).length === 0 && <p className="text-sm text-muted-foreground">Nenhuma pergunta.</p>}
+              {(cfg.faq || []).map((f, i) => (
+                <Card key={i} className="p-3 space-y-2">
+                  <Input placeholder="Pergunta" value={f.pergunta} onChange={(e) => updFaq(i, 'pergunta', e.target.value)} />
+                  <Textarea placeholder="Resposta" value={f.resposta} onChange={(e) => updFaq(i, 'resposta', e.target.value)} />
+                  <Button size="sm" variant="ghost" className="text-destructive" onClick={() => rmFaq(i)}>
+                    <Trash2 className="w-4 h-4 mr-1" /> Remover
+                  </Button>
+                </Card>
+              ))}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* CONTATO */}
+        <TabsContent value="contato">
+          <Card>
+            <CardHeader><CardTitle>Informações de contato</CardTitle></CardHeader>
+            <CardContent className="space-y-3">
+              <div><Label>WhatsApp (com DDD)</Label><Input value={cfg.whatsapp || ''} onChange={(e) => setCfg(p => ({ ...p, whatsapp: e.target.value }))} placeholder="11999999999" /></div>
+              <div><Label>Telefone</Label><Input value={cfg.telefone_contato || ''} onChange={(e) => setCfg(p => ({ ...p, telefone_contato: e.target.value }))} /></div>
+              <div><Label>E-mail</Label><Input type="email" value={cfg.email_contato || ''} onChange={(e) => setCfg(p => ({ ...p, email_contato: e.target.value }))} /></div>
+              <div><Label>Endereço</Label><Textarea value={cfg.endereco || ''} onChange={(e) => setCfg(p => ({ ...p, endereco: e.target.value }))} /></div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* SECOES */}
         <TabsContent value="secoes">
           <Card>
             <CardHeader><CardTitle>Ativar/Desativar seções</CardTitle></CardHeader>
@@ -406,6 +547,7 @@ export function SiteInstitucionalConfig({ companyId }: Props) {
           </Card>
         </TabsContent>
 
+        {/* PREVIEW */}
         <TabsContent value="preview">
           <Card>
             <CardHeader>
