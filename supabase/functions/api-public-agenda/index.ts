@@ -4,34 +4,70 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-api-key',
+  'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
 };
 
 // ============================================
 // API PÚBLICA DE AGENDA
-// Endpoint para auto-agendamento no site institucional
+// Endpoints:
+//  GET  ?action=agendas&company=SLUG
+//  GET  ?action=profissionais&company=SLUG
+//  GET  ?action=horarios&data=YYYY-MM-DD&company=SLUG[&profissional_id=...&agenda_id=...]
+//  POST ?action=agendar  (cria lead + compromisso + WhatsApp + notifica profissional)
 // ============================================
-
-interface HorarioDisponivel {
-  horario: string;
-  disponivel: boolean;
-  vagas_restantes?: number;
-}
 
 interface CompromissoInput {
   nome: string;
   telefone: string;
   email?: string;
-  data: string;           // YYYY-MM-DD
-  horario: string;        // HH:MM
+  data: string;
+  horario: string;
   tipo_servico: string;
   observacoes?: string;
   company_slug?: string;
   agenda_id?: string;
   profissional_id?: string;
+  origem?: string; // 'site' | 'ia-chat'
+}
+
+async function resolveCompany(supabase: any, companySlug: string | null) {
+  if (companySlug) {
+    // 1. Tenta via get_capture_page (slug salvo em capture_page_config.slug ou UUID)
+    try {
+      const { data: rows } = await supabase.rpc('get_capture_page', { _identifier: companySlug });
+      if (rows && rows.length > 0) {
+        const { data: c } = await supabase
+          .from('companies')
+          .select('id, name, owner_user_id')
+          .eq('id', rows[0].id)
+          .maybeSingle();
+        if (c) return { companyId: c.id, ownerId: c.owner_user_id, companyName: c.name };
+      }
+    } catch {}
+
+    // 2. Fallback domain/name
+    const { data: company } = await supabase
+      .from('companies')
+      .select('id, name, owner_user_id')
+      .or(`domain.eq.${companySlug},name.ilike.%${companySlug}%`)
+      .limit(1)
+      .maybeSingle();
+    if (company) return { companyId: company.id, ownerId: company.owner_user_id, companyName: company.name };
+  }
+
+  // 3. Fallback master
+  const { data: master } = await supabase
+    .from('companies')
+    .select('id, name, owner_user_id')
+    .eq('is_master_account', true)
+    .limit(1)
+    .maybeSingle();
+  if (master) return { companyId: master.id, ownerId: master.owner_user_id, companyName: master.name };
+
+  return { companyId: null, ownerId: null, companyName: null };
 }
 
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -45,38 +81,7 @@ serve(async (req) => {
     const action = url.searchParams.get('action') || 'horarios';
     const companySlug = url.searchParams.get('company') || url.searchParams.get('company_slug');
 
-    // Buscar empresa
-    let companyId: string | null = null;
-    let ownerId: string | null = null;
-
-    if (companySlug) {
-      const { data: company } = await supabase
-        .from('companies')
-        .select('id, owner_user_id')
-        .or(`domain.eq.${companySlug},name.ilike.%${companySlug}%`)
-        .limit(1)
-        .single();
-
-      if (company) {
-        companyId = company.id;
-        ownerId = company.owner_user_id;
-      }
-    }
-
-    // Se não encontrou, usar empresa master
-    if (!companyId) {
-      const { data: masterCompany } = await supabase
-        .from('companies')
-        .select('id, owner_user_id')
-        .eq('is_master_account', true)
-        .limit(1)
-        .single();
-
-      if (masterCompany) {
-        companyId = masterCompany.id;
-        ownerId = masterCompany.owner_user_id;
-      }
-    }
+    const { companyId, ownerId } = await resolveCompany(supabase, companySlug);
 
     if (!companyId) {
       return new Response(
@@ -85,44 +90,47 @@ serve(async (req) => {
       );
     }
 
-    // ============================================
-    // GET: Listar agendas públicas
-    // ============================================
+    // ============ AGENDAS ============
     if (req.method === 'GET' && action === 'agendas') {
-      const { data: agendas, error } = await supabase
+      const { data: agendas } = await supabase
         .from('agendas')
-        .select(`
-          id,
-          nome,
-          tipo,
-          tempo_medio_servico,
-          permite_simultaneo,
-          capacidade_simultanea,
-          disponibilidade
-        `)
+        .select('id, nome, tipo, tempo_medio_servico, permite_simultaneo, capacidade_simultanea, disponibilidade')
         .eq('company_id', companyId)
         .eq('status', 'ativa');
-
-      if (error) {
-        console.error('[api-public-agenda] Erro ao buscar agendas:', error);
-        return new Response(
-          JSON.stringify({ success: false, error: 'Erro ao buscar agendas' }),
-          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
-      }
-
       return new Response(
-        JSON.stringify({
-          success: true,
-          agendas: agendas || []
-        }),
+        JSON.stringify({ success: true, agendas: agendas || [] }),
         { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    // ============================================
-    // GET: Listar horários disponíveis
-    // ============================================
+    // ============ PROFISSIONAIS ============
+    if (req.method === 'GET' && action === 'profissionais') {
+      const { data: profissionais } = await supabase
+        .from('profissionais')
+        .select('id, nome, especialidade, email, telefone')
+        .eq('company_id', companyId);
+
+      // tentar buscar avatar via user_avatars / profiles
+      const enriched = await Promise.all((profissionais || []).map(async (p: any) => {
+        let avatar_url: string | null = null;
+        if (p.email) {
+          const { data: prof } = await supabase
+            .from('profiles')
+            .select('avatar_url')
+            .eq('email', p.email)
+            .maybeSingle();
+          avatar_url = prof?.avatar_url || null;
+        }
+        return { ...p, avatar_url };
+      }));
+
+      return new Response(
+        JSON.stringify({ success: true, profissionais: enriched }),
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // ============ HORÁRIOS ============
     if (req.method === 'GET' && action === 'horarios') {
       const data = url.searchParams.get('data');
       const agendaId = url.searchParams.get('agenda_id');
@@ -130,16 +138,13 @@ serve(async (req) => {
 
       if (!data) {
         return new Response(
-          JSON.stringify({ success: false, error: 'Data é obrigatória (formato: YYYY-MM-DD)' }),
+          JSON.stringify({ success: false, error: 'Data é obrigatória (YYYY-MM-DD)' }),
           { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
 
-      // Validar se data é futura
       const dataConsulta = new Date(data + 'T00:00:00');
-      const hoje = new Date();
-      hoje.setHours(0, 0, 0, 0);
-      
+      const hoje = new Date(); hoje.setHours(0, 0, 0, 0);
       if (dataConsulta < hoje) {
         return new Response(
           JSON.stringify({ success: false, error: 'Data deve ser hoje ou futura' }),
@@ -147,97 +152,58 @@ serve(async (req) => {
         );
       }
 
-      // Buscar configuração de agenda
       let agenda: any = null;
       if (agendaId) {
-        const { data: agendaData } = await supabase
-          .from('agendas')
-          .select('*')
-          .eq('id', agendaId)
-          .eq('company_id', companyId)
-          .single();
-        agenda = agendaData;
+        const { data: a } = await supabase.from('agendas').select('*').eq('id', agendaId).eq('company_id', companyId).maybeSingle();
+        agenda = a;
       } else {
-        // Buscar agenda padrão
-        const { data: agendaData } = await supabase
-          .from('agendas')
-          .select('*')
-          .eq('company_id', companyId)
-          .eq('status', 'ativa')
-          .limit(1)
-          .single();
-        agenda = agendaData;
+        const { data: a } = await supabase.from('agendas').select('*').eq('company_id', companyId).eq('status', 'ativa').limit(1).maybeSingle();
+        agenda = a;
       }
 
-      // Horários base (pode ser configurável pela agenda)
       const horariosBase = agenda?.disponibilidade?.horarios || [
         '08:00', '08:30', '09:00', '09:30', '10:00', '10:30', '11:00', '11:30',
         '13:00', '13:30', '14:00', '14:30', '15:00', '15:30', '16:00', '16:30', '17:00', '17:30'
       ];
-
       const capacidadeMaxima = agenda?.permite_simultaneo ? (agenda?.capacidade_simultanea || 1) : 1;
-
-      // Buscar compromissos do dia
-      const dataInicio = `${data}T00:00:00`;
-      const dataFim = `${data}T23:59:59`;
 
       let query = supabase
         .from('compromissos')
-        .select('data_hora_inicio, data_hora_fim')
+        .select('data_hora_inicio, profissional_id')
         .eq('company_id', companyId)
-        .gte('data_hora_inicio', dataInicio)
-        .lte('data_hora_inicio', dataFim)
+        .gte('data_hora_inicio', `${data}T00:00:00`)
+        .lte('data_hora_inicio', `${data}T23:59:59`)
         .neq('status', 'cancelado');
+      if (profissionalId) query = query.eq('profissional_id', profissionalId);
+      if (agendaId) query = query.eq('agenda_id', agendaId);
 
-      if (profissionalId) {
-        query = query.eq('profissional_id', profissionalId);
-      }
-      if (agendaId) {
-        query = query.eq('agenda_id', agendaId);
-      }
+      const { data: compromissos } = await query;
 
-      const { data: compromissos, error } = await query;
-
-      if (error) {
-        console.error('[api-public-agenda] Erro ao buscar compromissos:', error);
-        return new Response(
-          JSON.stringify({ success: false, error: 'Erro ao verificar horários' }),
-          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
-      }
-
-      // Contar compromissos por horário
-      const contadorPorHorario: Record<string, number> = {};
+      const contador: Record<string, number> = {};
       (compromissos || []).forEach((c: any) => {
-        const hora = new Date(c.data_hora_inicio).toLocaleTimeString('pt-BR', { 
-          hour: '2-digit', 
-          minute: '2-digit',
-          timeZone: 'America/Sao_Paulo'
+        const hora = new Date(c.data_hora_inicio).toLocaleTimeString('pt-BR', {
+          hour: '2-digit', minute: '2-digit', timeZone: 'America/Sao_Paulo'
         });
-        contadorPorHorario[hora] = (contadorPorHorario[hora] || 0) + 1;
+        contador[hora] = (contador[hora] || 0) + 1;
       });
 
-      // Se for hoje, filtrar horários passados
       const agora = new Date();
       const ehHoje = dataConsulta.toDateString() === agora.toDateString();
 
-      const horariosDisponiveis: HorarioDisponivel[] = horariosBase.map((horario: string) => {
-        const ocupados = contadorPorHorario[horario] || 0;
+      const horariosDisponiveis = horariosBase.map((horario: string) => {
+        const ocupados = contador[horario] || 0;
         const vagasRestantes = capacidadeMaxima - ocupados;
-        
-        // Verificar se horário já passou (se for hoje)
         let passado = false;
         if (ehHoje) {
           const [h, m] = horario.split(':').map(Number);
-          const horarioDate = new Date();
-          horarioDate.setHours(h, m, 0, 0);
-          passado = horarioDate <= agora;
+          const d = new Date(); d.setHours(h, m, 0, 0);
+          passado = d <= agora;
         }
-
         return {
           horario,
           disponivel: vagasRestantes > 0 && !passado,
-          vagas_restantes: vagasRestantes > 0 ? vagasRestantes : 0
+          ocupado: ocupados > 0,
+          vagas_restantes: Math.max(0, vagasRestantes),
         };
       });
 
@@ -247,193 +213,180 @@ serve(async (req) => {
           data,
           horarios: horariosDisponiveis,
           agenda_nome: agenda?.nome || 'Agenda',
+          agenda_id: agenda?.id,
           tempo_servico: agenda?.tempo_medio_servico || 30,
-          permite_simultaneo: agenda?.permite_simultaneo || false,
-          capacidade: capacidadeMaxima
+          capacidade: capacidadeMaxima,
         }),
         { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    // ============================================
-    // POST: Criar agendamento
-    // ============================================
+    // ============ AGENDAR ============
     if (req.method === 'POST' && action === 'agendar') {
       const body: CompromissoInput = await req.json();
 
-      // Validações
       if (!body.nome || body.nome.trim().length < 2) {
-        return new Response(
-          JSON.stringify({ success: false, error: 'Nome é obrigatório' }),
-          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
+        return new Response(JSON.stringify({ success: false, error: 'Nome é obrigatório' }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
       }
-
       if (!body.telefone) {
-        return new Response(
-          JSON.stringify({ success: false, error: 'Telefone é obrigatório' }),
-          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
+        return new Response(JSON.stringify({ success: false, error: 'Telefone é obrigatório' }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
       }
-
       if (!body.data || !body.horario) {
-        return new Response(
-          JSON.stringify({ success: false, error: 'Data e horário são obrigatórios' }),
-          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
+        return new Response(JSON.stringify({ success: false, error: 'Data e horário são obrigatórios' }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
       }
-
       if (!body.tipo_servico) {
-        return new Response(
-          JSON.stringify({ success: false, error: 'Tipo de serviço é obrigatório' }),
-          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
+        return new Response(JSON.stringify({ success: false, error: 'Tipo de serviço é obrigatório' }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
       }
 
-      // Montar data/hora
       const dataHoraInicio = new Date(`${body.data}T${body.horario}:00`);
-      
-      // Buscar tempo de serviço da agenda
-      let tempoServico = 30; // padrão
+
+      let tempoServico = 30;
       if (body.agenda_id) {
         const { data: agenda } = await supabase
-          .from('agendas')
-          .select('tempo_medio_servico')
-          .eq('id', body.agenda_id)
-          .single();
-        if (agenda?.tempo_medio_servico) {
-          tempoServico = agenda.tempo_medio_servico;
-        }
+          .from('agendas').select('tempo_medio_servico, permite_simultaneo, capacidade_simultanea')
+          .eq('id', body.agenda_id).maybeSingle();
+        if (agenda?.tempo_medio_servico) tempoServico = agenda.tempo_medio_servico;
       }
-
       const dataHoraFim = new Date(dataHoraInicio.getTime() + tempoServico * 60 * 1000);
 
       // Verificar conflito
-      const { data: conflitos } = await supabase
-        .from('compromissos')
-        .select('id')
+      let conflictQuery = supabase
+        .from('compromissos').select('id')
         .eq('company_id', companyId)
         .gte('data_hora_inicio', dataHoraInicio.toISOString())
         .lt('data_hora_inicio', dataHoraFim.toISOString())
         .neq('status', 'cancelado');
+      if (body.profissional_id) conflictQuery = conflictQuery.eq('profissional_id', body.profissional_id);
 
-      // Buscar agenda para verificar capacidade
+      const { data: conflitos } = await conflictQuery;
+
       let capacidadeMaxima = 1;
       if (body.agenda_id) {
         const { data: agenda } = await supabase
-          .from('agendas')
-          .select('permite_simultaneo, capacidade_simultanea')
-          .eq('id', body.agenda_id)
-          .single();
-        if (agenda?.permite_simultaneo) {
-          capacidadeMaxima = agenda.capacidade_simultanea || 1;
-        }
+          .from('agendas').select('permite_simultaneo, capacidade_simultanea')
+          .eq('id', body.agenda_id).maybeSingle();
+        if (agenda?.permite_simultaneo) capacidadeMaxima = agenda.capacidade_simultanea || 1;
       }
+      // se há profissional específico, é sempre 1 vaga
+      if (body.profissional_id) capacidadeMaxima = 1;
 
       if (conflitos && conflitos.length >= capacidadeMaxima) {
         return new Response(
-          JSON.stringify({ 
-            success: false, 
-            error: 'Este horário não está mais disponível. Por favor, escolha outro horário.' 
-          }),
+          JSON.stringify({ success: false, error: 'Este horário não está mais disponível. Por favor, escolha outro.' }),
           { status: 409, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
 
-      // Normalizar telefone
-      const telefoneNormalizado = body.telefone.replace(/\D/g, '');
+      const telefoneNorm = body.telefone.replace(/\D/g, '');
 
-      // Criar ou buscar lead
+      // Lead
       let leadId: string | null = null;
-
-      // Verificar se já existe lead com este telefone
       const { data: leadExistente } = await supabase
-        .from('leads')
-        .select('id')
+        .from('leads').select('id')
         .eq('company_id', companyId)
-        .or(`telefone.eq.${telefoneNormalizado},phone.eq.${telefoneNormalizado}`)
-        .limit(1)
-        .single();
+        .or(`telefone.eq.${telefoneNorm},phone.eq.${telefoneNorm}`)
+        .limit(1).maybeSingle();
 
       if (leadExistente) {
         leadId = leadExistente.id;
       } else {
-        // Criar novo lead
-        const { data: novoLead, error: leadError } = await supabase
-          .from('leads')
-          .insert({
+        const { data: novoLead } = await supabase
+          .from('leads').insert({
             name: body.nome.trim(),
-            telefone: telefoneNormalizado,
-            phone: telefoneNormalizado,
+            telefone: telefoneNorm,
+            phone: telefoneNorm,
             email: body.email?.toLowerCase().trim() || null,
             company_id: companyId,
             owner_id: ownerId,
-            source: 'auto-agendamento',
+            source: body.origem === 'ia-chat' ? 'site-ia-chat' : 'site-agendamento',
             status: 'novo',
-            tags: ['auto-agendamento', 'site-institucional'],
-            notes: `Lead criado via auto-agendamento em ${new Date().toLocaleString('pt-BR')}`
-          })
-          .select('id')
-          .single();
+            tags: ['agendamento-site', body.origem === 'ia-chat' ? 'ia-chat' : 'manual'],
+            notes: `Lead criado via ${body.origem === 'ia-chat' ? 'IA do chat do site' : 'agendamento manual no site'} em ${new Date().toLocaleString('pt-BR')}`,
+          }).select('id').maybeSingle();
+        if (novoLead) leadId = novoLead.id;
+      }
 
-        if (!leadError && novoLead) {
-          leadId = novoLead.id;
+      // Buscar nome do profissional para o título
+      let profissionalNome = '';
+      let profissionalUserId: string | null = null;
+      let profissionalTelefone: string | null = null;
+      if (body.profissional_id) {
+        const { data: prof } = await supabase
+          .from('profissionais').select('nome, user_id, telefone, email').eq('id', body.profissional_id).maybeSingle();
+        if (prof) {
+          profissionalNome = prof.nome;
+          profissionalUserId = prof.user_id;
+          profissionalTelefone = prof.telefone;
         }
       }
 
-      // Criar compromisso
+      // Compromisso
       const { data: compromisso, error: compError } = await supabase
-        .from('compromissos')
-        .insert({
-          titulo: `${body.tipo_servico} - ${body.nome}`,
+        .from('compromissos').insert({
+          titulo: `${body.tipo_servico} - ${body.nome}${profissionalNome ? ` (${profissionalNome})` : ''}`,
           tipo_servico: body.tipo_servico,
           data_hora_inicio: dataHoraInicio.toISOString(),
           data_hora_fim: dataHoraFim.toISOString(),
           status: 'agendado',
           paciente: body.nome.trim(),
-          telefone: telefoneNormalizado,
-          observacoes: body.observacoes || `Agendamento via site - ${body.email || 'Sem email'}`,
+          telefone: telefoneNorm,
+          observacoes: body.observacoes || `Agendamento via site${body.origem === 'ia-chat' ? ' (IA Chat)' : ''} - ${body.email || 'Sem email'}`,
           lead_id: leadId,
           agenda_id: body.agenda_id || null,
           profissional_id: body.profissional_id || null,
           company_id: companyId,
           owner_id: ownerId,
-          usuario_responsavel_id: ownerId
-        })
-        .select('id, data_hora_inicio, data_hora_fim, tipo_servico')
-        .single();
+          usuario_responsavel_id: profissionalUserId || ownerId,
+        }).select('id, data_hora_inicio, data_hora_fim, tipo_servico').maybeSingle();
 
       if (compError) {
         console.error('[api-public-agenda] Erro ao criar compromisso:', compError);
-        return new Response(
-          JSON.stringify({ success: false, error: 'Erro ao criar agendamento' }),
-          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
+        return new Response(JSON.stringify({ success: false, error: 'Erro ao criar agendamento: ' + compError.message }),
+          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
       }
 
-      console.log('[api-public-agenda] Compromisso criado:', compromisso.id);
+      const dataFmt = dataHoraInicio.toLocaleDateString('pt-BR');
+      const horaFmt = dataHoraInicio.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
 
-      // Tentar enviar confirmação via WhatsApp
+      // 1. WhatsApp para o cliente
       try {
-        const dataFormatada = dataHoraInicio.toLocaleDateString('pt-BR');
-        const horaFormatada = dataHoraInicio.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-        
-        const mensagemConfirmacao = `✅ *Agendamento Confirmado!*\n\n` +
+        const msgCliente = `✅ *Agendamento Confirmado!*\n\n` +
           `Olá ${body.nome}!\n\n` +
-          `📅 *Data:* ${dataFormatada}\n` +
-          `⏰ *Horário:* ${horaFormatada}\n` +
-          `📋 *Serviço:* ${body.tipo_servico}\n\n` +
-          `Aguardamos você! 😊`;
+          `📅 *Data:* ${dataFmt}\n` +
+          `⏰ *Horário:* ${horaFmt}\n` +
+          `📋 *Serviço:* ${body.tipo_servico}\n` +
+          (profissionalNome ? `👤 *Profissional:* ${profissionalNome}\n` : '') +
+          `\nAguardamos você! 😊`;
 
         await supabase.functions.invoke('enviar-whatsapp', {
-          body: {
-            telefone: telefoneNormalizado,
-            mensagem: mensagemConfirmacao,
-            company_id: companyId
-          }
+          body: { telefone: telefoneNorm, mensagem: msgCliente, company_id: companyId }
         });
       } catch (e) {
-        console.warn('[api-public-agenda] Erro ao enviar confirmação WhatsApp:', e);
+        console.warn('[api-public-agenda] WhatsApp cliente falhou:', e);
+      }
+
+      // 2. Notificar profissional via WhatsApp
+      if (profissionalTelefone) {
+        try {
+          const profTel = profissionalTelefone.replace(/\D/g, '');
+          if (profTel.length >= 10) {
+            const msgProf = `🔔 *Novo Agendamento*\n\n` +
+              `👤 Cliente: ${body.nome}\n` +
+              `📞 ${telefoneNorm}\n` +
+              `📅 ${dataFmt} às ${horaFmt}\n` +
+              `📋 ${body.tipo_servico}\n` +
+              (body.observacoes ? `📝 ${body.observacoes}\n` : '');
+            await supabase.functions.invoke('enviar-whatsapp', {
+              body: { telefone: profTel, mensagem: msgProf, company_id: companyId }
+            });
+          }
+        } catch (e) {
+          console.warn('[api-public-agenda] WhatsApp profissional falhou:', e);
+        }
       }
 
       return new Response(
@@ -441,54 +394,33 @@ serve(async (req) => {
           success: true,
           message: 'Agendamento realizado com sucesso!',
           compromisso: {
-            id: compromisso.id,
+            id: compromisso?.id,
             data: body.data,
             horario: body.horario,
-            tipo_servico: compromisso.tipo_servico,
-            data_hora_formatada: `${dataHoraInicio.toLocaleDateString('pt-BR')} às ${dataHoraInicio.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}`
+            tipo_servico: compromisso?.tipo_servico,
+            profissional: profissionalNome || null,
+            data_hora_formatada: `${dataFmt} às ${horaFmt}`,
           }
         }),
         { status: 201, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    // ============================================
-    // GET: Status da API
-    // ============================================
     if (req.method === 'GET' && action === 'status') {
       return new Response(
-        JSON.stringify({
-          success: true,
-          status: 'online',
-          version: '1.0.0',
-          endpoints: {
-            agendas: 'GET /?action=agendas&company=SLUG',
-            horarios: 'GET /?action=horarios&data=YYYY-MM-DD&company=SLUG',
-            agendar: 'POST /?action=agendar',
-            status: 'GET /?action=status'
-          }
-        }),
+        JSON.stringify({ success: true, status: 'online', version: '2.0.0' }),
         { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    // Rota não encontrada
     return new Response(
-      JSON.stringify({ 
-        success: false, 
-        error: 'Rota não encontrada',
-        available_actions: ['agendas', 'horarios', 'agendar', 'status']
-      }),
+      JSON.stringify({ success: false, error: 'Rota não encontrada', available_actions: ['agendas', 'profissionais', 'horarios', 'agendar', 'status'] }),
       { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
-
   } catch (error) {
     console.error('[api-public-agenda] Erro:', error);
     return new Response(
-      JSON.stringify({ 
-        success: false, 
-        error: error instanceof Error ? error.message : 'Erro interno do servidor' 
-      }),
+      JSON.stringify({ success: false, error: error instanceof Error ? error.message : 'Erro interno' }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
