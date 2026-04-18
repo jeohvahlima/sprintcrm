@@ -72,8 +72,16 @@ export function CapturePageConfig({ companyId }: { companyId: string }) {
   const [loading, setLoading] = useState(true);
   const [companyName, setCompanyName] = useState('');
 
+  const normalizeSlug = (value: string) => value
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9-]+/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '');
+
   const publishedDomain = 'https://wazecrm.lovable.app';
-  const slugValue = config.slug || companyId;
+  const slugValue = normalizeSlug(config.slug || companyName || companyId) || companyId;
   const captureUrl = `${publishedDomain}/captura/${slugValue}`;
 
   useEffect(() => {
@@ -102,14 +110,23 @@ export function CapturePageConfig({ companyId }: { companyId: string }) {
 
   const saveConfig = async () => {
     setSaving(true);
-    const { error } = await supabase
-      .from('companies')
-      .update({ capture_page_config: config as any })
-      .eq('id', companyId);
+    const configToSave = {
+      ...config,
+      slug: slugValue,
+      ativo: config.ativo ?? true,
+      titulo: config.titulo?.trim() || `Bem-vindo à ${companyName}`,
+    };
+
+    const { error } = await (supabase as any)
+      .rpc('update_capture_page_config', {
+        _company_id: companyId,
+        _config: configToSave,
+      });
 
     if (error) {
-      toast.error('Erro ao salvar configuração');
+      toast.error(error.message || 'Erro ao salvar configuração');
     } else {
+      setConfig(configToSave);
       toast.success('Configuração salva com sucesso!');
     }
     setSaving(false);
@@ -209,8 +226,8 @@ export function CapturePageConfig({ companyId }: { companyId: string }) {
                 </div>
                 <div className="space-y-2">
                   <Label>Slug da URL</Label>
-                  <Input value={config.slug || ''} onChange={e => setConfig(p => ({ ...p, slug: e.target.value.toLowerCase().replace(/[^a-z0-9-]+/g, '-') }))} placeholder="nome-da-empresa" />
-                  <p className="text-xs text-muted-foreground">Define a URL: wazecrm.lovable.app/captura/<strong>{config.slug || 'slug'}</strong></p>
+                  <Input value={config.slug || ''} onChange={e => setConfig(p => ({ ...p, slug: normalizeSlug(e.target.value) }))} placeholder="nome-da-empresa" />
+                  <p className="text-xs text-muted-foreground">Define a URL: wazecrm.lovable.app/captura/<strong>{slugValue}</strong></p>
                 </div>
               </div>
               <div className="grid md:grid-cols-2 gap-4">
