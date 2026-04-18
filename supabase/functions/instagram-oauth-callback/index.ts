@@ -6,8 +6,9 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
 };
 
-const INSTAGRAM_APP_ID = Deno.env.get('META_APP_ID') || '1353481286527361';
-const INSTAGRAM_APP_SECRET = Deno.env.get('META_APP_SECRET') || '';
+// Instagram tem App ID/Secret separados do Facebook
+const INSTAGRAM_APP_ID = Deno.env.get('INSTAGRAM_APP_ID') || '1353481286527361';
+const INSTAGRAM_APP_SECRET = Deno.env.get('INSTAGRAM_APP_SECRET') || Deno.env.get('META_APP_SECRET') || '';
 const DEFAULT_REDIRECT_URI = 'https://wazecrm.lovable.app/oauth/callback';
 
 serve(async (req: Request) => {
