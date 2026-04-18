@@ -213,8 +213,8 @@ export function CapturePageConfig({ companyId }: { companyId: string }) {
               </div>
               <div className="grid md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>URL do Logo</Label>
-                  <Input value={config.logo_url || ''} onChange={e => setConfig(p => ({ ...p, logo_url: e.target.value }))} placeholder="https://..." />
+                  <Label>Logo da Empresa</Label>
+                  <MediaUploadField value={config.logo_url} onChange={v => setConfig(p => ({ ...p, logo_url: v }))} accept="image" folder="logos" placeholder="URL ou faça upload do logo" />
                 </div>
               </div>
               <div className="space-y-2">
