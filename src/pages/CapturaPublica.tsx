@@ -396,7 +396,7 @@ export default function CapturaPublica() {
           </p>
           <Button
             size="lg"
-            onClick={() => { setChatOpen(true); document.getElementById('chat-section')?.scrollIntoView({ behavior: 'smooth' }); }}
+            onClick={() => setChatOpen(true)}
             className="bg-white hover:bg-gray-100 font-bold text-lg px-8 py-6 rounded-2xl shadow-xl"
             style={{ color: primaryColor }}
           >
