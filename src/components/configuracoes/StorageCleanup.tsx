@@ -167,6 +167,26 @@ export function StorageCleanup() {
             </div>
           )}
 
+          {/* Scope toggle for super admins */}
+          {isSuperAdmin && (
+            <div className="flex items-center justify-between p-3 rounded-lg border bg-muted/30">
+              <div>
+                <Label htmlFor="scope-all" className="text-sm font-medium">
+                  Varrer TODAS as subcontas
+                </Label>
+                <p className="text-xs text-muted-foreground">
+                  Quando ativado, analisa e limpa arquivos de todas as empresas (recomendado para liberar espaço total).
+                </p>
+              </div>
+              <Switch
+                id="scope-all"
+                checked={scopeAll}
+                onCheckedChange={setScopeAll}
+                disabled={analyzing || cleaning}
+              />
+            </div>
+          )}
+
           {/* Actions */}
           <div className="flex gap-3">
             <Button
