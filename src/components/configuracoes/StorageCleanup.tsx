@@ -52,7 +52,7 @@ export function StorageCleanup() {
     setCleanResult(null);
     try {
       const { data, error } = await supabase.functions.invoke("cleanup-storage", {
-        body: { action: "analyze" },
+        body: { action: "analyze", scope: scopeAll ? "all" : "company" },
       });
 
       if (error) throw error;
