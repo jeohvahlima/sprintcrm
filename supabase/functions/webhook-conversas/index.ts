@@ -1896,6 +1896,10 @@ serve(async (req) => {
                 telefone: telCheck,
                 assignmentId: assignment.id
               });
+              logSkip(supabase, companyId, numeroLimpo, 'human_assignment', {
+                telefone: telCheck,
+                assignmentId: assignment.id,
+              });
             }
           }
           
@@ -1933,6 +1937,7 @@ serve(async (req) => {
                 
                 if (hasBlockedTag) {
                   console.log(`🚫 [WEBHOOK-FLOW] Lead tem tag bloqueada, pulando fluxo ${flow.id}`, { leadTags, excludeTags });
+                  logSkip(supabase, companyId, numeroLimpo, 'excluded_tag', { leadTags, excludeTags, flowName: (flow as any).name }, flow.id);
                   continue;
                 }
               }
@@ -1962,6 +1967,7 @@ serve(async (req) => {
                 
                 if (!isAllowedDay || !isWithinTime) {
                   console.log(`🕐 [WEBHOOK-FLOW] Fora do horário de funcionamento do fluxo ${flow.id}`, { currentDay, currentTime, allowedDays, startTime, endTime });
+                  logSkip(supabase, companyId, numeroLimpo, 'out_of_schedule', { currentDay, currentTime, allowedDays, startTime, endTime, flowName: (flow as any).name }, flow.id);
                   
                   // Send out-of-hours message if configured
                   const outOfHoursMessage = flowSettings?.schedule?.outOfHoursMessage;
@@ -2022,6 +2028,7 @@ serve(async (req) => {
                 console.log(`🔑 [WEBHOOK-FLOW] Verificando palavra-chave: "${keyword}" na mensagem: "${msg}"`);
                 if (!msg.includes(keyword)) {
                   console.log(`⏭️ [WEBHOOK-FLOW] Palavra-chave "${keyword}" NÃO encontrada, pulando fluxo`);
+                  logSkip(supabase, companyId, numeroLimpo, 'keyword_no_match', { keyword, message: msg.substring(0, 200), flowName: (flow as any).name }, flow.id);
                   continue;
                 }
                 console.log(`✅ [WEBHOOK-FLOW] Palavra-chave "${keyword}" encontrada!`);
@@ -2033,6 +2040,7 @@ serve(async (req) => {
                 );
                 if (!hasNovaMensagem) {
                   console.log(`⏭️ [WEBHOOK-FLOW] Fluxo ${flow.id} não tem gatilho nova_mensagem nem palavra_chave`);
+                  logSkip(supabase, companyId, numeroLimpo, 'no_trigger_match', { flowName: (flow as any).name }, flow.id);
                   continue;
                 }
               }
