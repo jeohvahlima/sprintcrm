@@ -225,8 +225,26 @@ export function FluxoAutomacaoBuilder() {
     );
   }
 
+  const fluxosAtivos = fluxos.filter((f) => f.active).length;
+  const fluxosSemTrigger = fluxos.filter((f) => {
+    const triggers = (f.nodes || []).filter((n: any) => n.type === 'trigger');
+    return triggers.length === 0 || !triggers.some((t: any) =>
+      ['nova_mensagem', 'palavra_chave'].includes(t.data?.triggerType)
+    );
+  });
+
   return (
     <div className="space-y-6">
+      {fluxos.length > 0 && fluxosAtivos === 0 && (
+        <div className="rounded-lg border border-amber-500/50 bg-amber-500/10 p-4 text-sm">
+          <strong>⚠️ Nenhum fluxo está ativo.</strong> A URA não vai disparar para nenhum contato até você ativar um fluxo abaixo.
+        </div>
+      )}
+      {fluxosSemTrigger.length > 0 && (
+        <div className="rounded-lg border border-destructive/50 bg-destructive/10 p-4 text-sm">
+          <strong>🚫 {fluxosSemTrigger.length} fluxo(s) sem gatilho válido:</strong> {fluxosSemTrigger.map((f) => f.name).join(', ')}. Adicione um gatilho "Nova mensagem" ou "Palavra-chave" para que ele dispare.
+        </div>
+      )}
       <div className="flex justify-between items-center">
         <div>
           <h2 className="text-2xl font-bold">Fluxos de Automação</h2>
@@ -235,6 +253,9 @@ export function FluxoAutomacaoBuilder() {
           </p>
         </div>
         <div className="flex gap-2">
+          <Button variant="outline" onClick={() => window.location.href = '/automacoes/diagnostico'}>
+            🔍 Diagnóstico URA
+          </Button>
           <Button onClick={criarNovoFluxo}>
             <Plus className="h-4 w-4 mr-2" />
             Novo Fluxo

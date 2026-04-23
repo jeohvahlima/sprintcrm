@@ -31,6 +31,7 @@ import GmailCallback from "./pages/GmailCallback";
 import InstallApp from "./pages/InstallApp";
 import { MainLayout } from "./components/layout/MainLayout";
 import NotFound from "./pages/NotFound";
+import AutomacaoDiagnostico from "./pages/AutomacaoDiagnostico";
 import { Component, ErrorInfo, ReactNode } from 'react';
 import { Button } from "./components/ui/button";
 
@@ -102,6 +103,7 @@ const App = () => (
               <Route path="prospeccao" element={<Prospeccao />} />
               <Route path="financeiro" element={<Financeiro />} />
               <Route path="treinamento" element={<Treinamento />} />
+              <Route path="automacoes/diagnostico" element={<AutomacaoDiagnostico />} />
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>
