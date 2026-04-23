@@ -2,6 +2,10 @@ import React from "react";
 import { createRoot } from "react-dom/client";
 import App from "./App.tsx";
 import "./index.css";
+import { setupPWA } from "./pwa/registerSW";
+
+// Registra o PWA (com guards para iframe/preview da Lovable)
+setupPWA();
 
 // Silenciar avisos específicos que atrapalham a verificação visual em dev
 const originalWarn = console.warn;

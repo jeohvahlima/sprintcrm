@@ -28,6 +28,7 @@ import Financeiro from "./pages/Financeiro";
 import Prospeccao from "./pages/Prospeccao";
 import OAuthCallback from "./pages/OAuthCallback";
 import GmailCallback from "./pages/GmailCallback";
+import InstallApp from "./pages/InstallApp";
 import { MainLayout } from "./components/layout/MainLayout";
 import NotFound from "./pages/NotFound";
 import { Component, ErrorInfo, ReactNode } from 'react';
@@ -73,6 +74,8 @@ const App = () => (
           <Sonner />
           <Routes>
             <Route path="/auth" element={<Auth />} />
+            <Route path="/instalar" element={<InstallApp />} />
+            <Route path="/install" element={<InstallApp />} />
             <Route path="/oauth/callback" element={<OAuthCallback />} />
             <Route path="/oauth/gmail/callback" element={<GmailCallback />} />
             <Route path="/agenda/:slug" element={<AgendaPublica />} />
