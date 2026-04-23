@@ -152,18 +152,18 @@ export function MetaIntegrationsConfig({ companyId }: MetaIntegrationsConfigProp
   };
 
   const handleOAuthLogin = (scope: string) => {
-    if (scope === 'instagram') {
-      localStorage.setItem('instagram_oauth_company_id', companyId);
-      openOAuthWindow(getInstagramOAuthUrl(companyId), 700, 800);
-      return;
-    }
-    
     if (!META_APP_ID) {
       toast({
         variant: 'destructive',
         title: 'App ID não configurado',
         description: 'Configure VITE_META_APP_ID nas variáveis de ambiente'
       });
+      return;
+    }
+
+    if (scope === 'instagram') {
+      localStorage.setItem('instagram_oauth_company_id', companyId);
+      openOAuthWindow(getInstagramOAuthUrl(companyId), 700, 800);
       return;
     }
 
