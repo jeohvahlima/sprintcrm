@@ -55,10 +55,12 @@ serve(async (req: Request) => {
 
   let companyId: string | null = null;
   let scope: string = 'all';
+  let returnUrl: string = APP_RETURN_URL;
   try {
     const decoded = JSON.parse(atob(stateRaw));
     companyId = decoded.companyId;
     scope = decoded.scope || 'all';
+    returnUrl = decoded.returnUrl || APP_RETURN_URL;
   } catch (e) {
     console.error('[meta-oauth-callback] invalid state:', e);
     return htmlRedirect(`${APP_RETURN_URL}?meta_error=invalid_state`, 'Estado inválido');
@@ -88,7 +90,7 @@ serve(async (req: Request) => {
     if (!tokenResp.ok || !tokenData.access_token) {
       console.error('[meta-oauth-callback] token error:', JSON.stringify(tokenData));
       return htmlRedirect(
-        `${APP_RETURN_URL}?meta_error=${encodeURIComponent(tokenData.error?.message || 'token_exchange_failed')}`,
+        `${returnUrl}?meta_error=${encodeURIComponent(tokenData.error?.message || 'token_exchange_failed')}`,
         'Falha ao obter token'
       );
     }
@@ -128,7 +130,7 @@ serve(async (req: Request) => {
       console.warn('[meta-oauth-callback] pages fetch failed:', e);
     }
 
-    const firstPage = pages[0];
+    const firstPage = pages.find((page: any) => page?.instagram_business_account) || pages[0];
     const igAccount = firstPage?.instagram_business_account;
 
     // 4) Salvar em tenant_integrations
@@ -168,14 +170,50 @@ serve(async (req: Request) => {
       await supabase.from('tenant_integrations').insert({ company_id: companyId, ...integrationData });
     }
 
+    const connectionData: Record<string, any> = {
+      api_provider: 'meta',
+      status: 'connected',
+      updated_at: new Date().toISOString(),
+      last_connected_at: new Date().toISOString(),
+      meta_access_token: accessToken,
+      meta_token_expires_at: tokenExpiresAt,
+    };
+
+    if (igAccount) {
+      connectionData.instagram_account_id = igAccount.id;
+      connectionData.instagram_username = igAccount.username;
+      connectionData.instagram_access_token = accessToken;
+    }
+
+    const { data: existingConnection } = await supabase
+      .from('whatsapp_connections')
+      .select('id, instance_name')
+      .eq('company_id', companyId)
+      .maybeSingle();
+
+    if (existingConnection) {
+      await supabase
+        .from('whatsapp_connections')
+        .update(connectionData)
+        .eq('id', existingConnection.id);
+    } else {
+      await supabase
+        .from('whatsapp_connections')
+        .insert({
+          company_id: companyId,
+          instance_name: `META_${companyId.slice(0, 8).toUpperCase()}`,
+          ...connectionData,
+        });
+    }
+
     return htmlRedirect(
-      `${APP_RETURN_URL}?meta_connected=1&scope=${encodeURIComponent(scope)}`,
+      `${returnUrl}?meta_connected=1&scope=${encodeURIComponent(scope)}`,
       '✅ Conectado com sucesso!'
     );
   } catch (err: any) {
     console.error('[meta-oauth-callback] fatal:', err);
     return htmlRedirect(
-      `${APP_RETURN_URL}?meta_error=${encodeURIComponent(err.message || 'unknown')}`,
+      `${returnUrl}?meta_error=${encodeURIComponent(err.message || 'unknown')}`,
       'Erro ao processar conexão'
     );
   }
