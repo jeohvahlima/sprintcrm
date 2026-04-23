@@ -1915,7 +1915,9 @@ serve(async (req) => {
           
           let flowStarted = false;
           
-          if (activeFlows && activeFlows.length > 0) {
+          if (!activeFlows || activeFlows.length === 0) {
+            logSkip(supabase, companyId, numeroLimpo, 'no_active_flow', { searchedCompanies: companyIdsToSearch });
+          } else {
             console.log(`🔍 [WEBHOOK-FLOW] ${activeFlows.length} fluxo(s) ativo(s) encontrado(s), mensagem: "${validatedData.mensagem}"`);
             for (const flow of activeFlows) {
               const nodes = (flow.nodes as any[]) || [];
