@@ -3,6 +3,36 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 
+// 📊 Helper de diagnóstico da URA: registra fire-and-forget quando um fluxo NÃO é disparado
+// Motivos: flow_state_active | human_assignment | excluded_tag | out_of_schedule
+//          no_active_flow | keyword_no_match | no_trigger_match | ai_mode_off | ai_mode_fluxo
+function logSkip(
+  supabase: any,
+  companyId: string | null | undefined,
+  telefone: string | null | undefined,
+  motivo: string,
+  details: Record<string, unknown> = {},
+  flowId: string | null = null,
+) {
+  if (!companyId || !telefone) return;
+  try {
+    supabase
+      .from('automation_skip_logs')
+      .insert({
+        company_id: companyId,
+        telefone: String(telefone),
+        flow_id: flowId,
+        motivo,
+        details,
+      })
+      .then(({ error }: any) => {
+        if (error) console.warn('⚠️ [SKIP-LOG] erro ao gravar:', error.message);
+      });
+  } catch (e) {
+    console.warn('⚠️ [SKIP-LOG] exceção:', e);
+  }
+}
+
 // Helper function to upload media to Storage
 async function uploadMediaToStorage(
   supabase: any,
