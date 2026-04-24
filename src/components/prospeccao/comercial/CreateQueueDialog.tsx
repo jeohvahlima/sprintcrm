@@ -29,11 +29,11 @@ export function CreateQueueDialog({ open, onOpenChange, companyId, userId }: Pro
   useEffect(() => {
     if (!open || !companyId) return;
     (async () => {
-      const { data } = await supabase
+      const res: any = await (supabase as any)
         .from("profiles")
         .select("id, full_name, email")
         .eq("company_id", companyId);
-      setUsers((data || []).map((p: any) => ({ id: p.id, name: p.full_name || p.email })));
+      setUsers(((res?.data as any[]) || []).map((p: any) => ({ id: p.id, name: p.full_name || p.email })));
     })();
   }, [open, companyId]);
 
