@@ -75,6 +75,7 @@ export function DisparoEmMassa() {
   const [pauseAfterMessages, setPauseAfterMessages] = useState<number>(15); // quantidade
   const [pauseDuration, setPauseDuration] = useState<number>(120); // segundos (2 minutos)
   const [campanhaNome, setCampanhaNome] = useState<string>("");
+  const [markAsProspect, setMarkAsProspect] = useState<boolean>(true);
   
   // Estados para templates
   const [selectedTemplate, setSelectedTemplate] = useState<Template | null>(null);
