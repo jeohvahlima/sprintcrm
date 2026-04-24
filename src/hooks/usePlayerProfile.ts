@@ -22,12 +22,12 @@ export function xpNeededForLevel(level: number) {
 }
 
 export function getRankByLevel(level: number) {
-  if (level >= 100) return { name: "Mítico", className: "rpg-rank-mythic", min: 100 };
-  if (level >= 75) return { name: "Diamante", className: "rpg-rank-diamond", min: 75 };
-  if (level >= 50) return { name: "Platina", className: "rpg-rank-platinum", min: 50 };
-  if (level >= 25) return { name: "Ouro", className: "rpg-rank-gold", min: 25 };
-  if (level >= 10) return { name: "Prata", className: "rpg-rank-silver", min: 10 };
-  return { name: "Bronze", className: "rpg-rank-bronze", min: 1 };
+  if (level >= 100) return { name: "Elite", className: "rpg-rank-mythic", min: 100 };
+  if (level >= 75) return { name: "Master", className: "rpg-rank-diamond", min: 75 };
+  if (level >= 50) return { name: "Expert", className: "rpg-rank-platinum", min: 50 };
+  if (level >= 25) return { name: "Sênior", className: "rpg-rank-gold", min: 25 };
+  if (level >= 10) return { name: "Pleno", className: "rpg-rank-silver", min: 10 };
+  return { name: "Iniciante", className: "rpg-rank-bronze", min: 1 };
 }
 
 export function usePlayerProfile() {
