@@ -1,7 +1,6 @@
-import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { ClassAvatar } from "./ClassAvatar";
-import { Users, Flame, Zap } from "lucide-react";
+import { Users, Flame, TrendingUp } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 
 interface Props {
@@ -33,16 +32,15 @@ export function TeamLobbyPanel({ companyId, currentUserId }: Props) {
       const ids = (profiles || []).map((p: any) => p.user_id);
       if (ids.length === 0) return [];
       const { data: pr } = await supabase.from("profiles").select("id, full_name").in("id", ids);
-      const names = Object.fromEntries((pr || []).map((p: any) => [p.id, p.full_name || "Operador"]));
+      const names = Object.fromEntries((pr || []).map((p: any) => [p.id, p.full_name || "Vendedor"]));
       return (profiles || []).map((p: any) => ({
         ...p,
         player_class: p.class,
-        full_name: names[p.user_id] || "Operador",
+        full_name: names[p.user_id] || "Vendedor",
       })) as Member[];
     },
   });
 
-  // Active "online" within last 24h
   const isOnline = (m: Member) => {
     if (!m.last_activity_date) return false;
     const last = new Date(m.last_activity_date);
@@ -52,19 +50,19 @@ export function TeamLobbyPanel({ companyId, currentUserId }: Props) {
   const onlineCount = members.filter(isOnline).length;
 
   return (
-    <div className="rpg-card rounded-lg p-3">
+    <div className="bg-card border border-border rounded-lg p-3 shadow-sm">
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
-          <Users className="w-4 h-4 rpg-neon-magenta" />
-          <h3 className="rpg-text-mono text-xs uppercase tracking-wider rpg-neon-magenta">Equipe · Lobby</h3>
+          <Users className="w-4 h-4 text-primary" />
+          <h3 className="text-xs font-semibold text-foreground uppercase tracking-wide">Equipe</h3>
         </div>
-        <div className="rpg-text-mono text-[10px] text-muted-foreground flex items-center gap-1">
+        <div className="text-[10px] text-muted-foreground flex items-center gap-1">
           <span className="w-2 h-2 rounded-full bg-green-500 rpg-pulse-dot" />
-          {onlineCount}/{members.length}
+          {onlineCount}/{members.length} ativos
         </div>
       </div>
       {members.length === 0 ? (
-        <p className="text-xs text-muted-foreground rpg-text-mono">Nenhum operador.</p>
+        <p className="text-xs text-muted-foreground">Nenhum vendedor cadastrado.</p>
       ) : (
         <div className="space-y-1.5 max-h-[420px] overflow-y-auto pr-1">
           {members.map((m) => {
@@ -73,18 +71,18 @@ export function TeamLobbyPanel({ companyId, currentUserId }: Props) {
             return (
               <div
                 key={m.user_id}
-                className={`flex items-center gap-2 p-2 rounded border ${isMe ? "border-cyan-400 bg-cyan-500/5" : "border-border bg-background/40"} ${!online ? "opacity-60" : ""}`}
+                className={`flex items-center gap-2 p-2 rounded-md border ${isMe ? "border-primary bg-primary/5" : "border-border bg-background/40"} ${!online ? "opacity-60" : ""}`}
               >
                 <ClassAvatar name={m.full_name} playerClass={m.player_class} size="sm" online={online} />
                 <div className="flex-1 min-w-0">
                   <div className="text-xs font-medium truncate text-foreground">
-                    {m.full_name} {isMe && <span className="rpg-neon-cyan text-[9px]">[VOCÊ]</span>}
+                    {m.full_name} {isMe && <span className="text-primary text-[9px]">(você)</span>}
                   </div>
-                  <div className="rpg-text-mono text-[9px] text-muted-foreground flex gap-1.5 items-center">
-                    <span className="rpg-neon-cyan">Nv{m.level}</span>
-                    <span className="flex items-center gap-0.5"><Zap className="w-2 h-2" />{m.xp_total.toLocaleString()}</span>
+                  <div className="text-[10px] text-muted-foreground flex gap-1.5 items-center">
+                    <span className="text-primary">Nv {m.level}</span>
+                    <span className="flex items-center gap-0.5"><TrendingUp className="w-2.5 h-2.5" />{m.xp_total.toLocaleString()}</span>
                     {m.streak_days > 0 && (
-                      <span className="flex items-center gap-0.5 text-orange-400"><Flame className="w-2 h-2" />{m.streak_days}</span>
+                      <span className="flex items-center gap-0.5 text-orange-500"><Flame className="w-2.5 h-2.5" />{m.streak_days}</span>
                     )}
                   </div>
                 </div>

@@ -1,6 +1,7 @@
 import { ActiveQuest, useActiveQuests } from "@/hooks/useActiveQuests";
 import { Button } from "@/components/ui/button";
-import { Crosshair, MessageCircle, Calendar, Radar, Trophy, Gem, Target, Sparkles } from "lucide-react";
+import { Progress } from "@/components/ui/progress";
+import { Phone, MessageCircle, Calendar, Search, Trophy, Coins, Target, CheckCircle2 } from "lucide-react";
 
 interface Props {
   userId: string | null;
@@ -8,33 +9,32 @@ interface Props {
 }
 
 const ICONS: Record<string, any> = {
-  crosshair: Crosshair,
+  crosshair: Phone,
   "message-circle": MessageCircle,
   calendar: Calendar,
-  radar: Radar,
+  radar: Search,
   trophy: Trophy,
-  gem: Gem,
+  gem: Coins,
   target: Target,
 };
 
 const TYPE_LABEL: Record<string, string> = {
-  daily: "DIÁRIA",
-  weekly: "SEMANAL",
-  monthly: "MENSAL",
-  special: "ESPECIAL",
+  daily: "Diária",
+  weekly: "Semanal",
+  monthly: "Mensal",
+  special: "Especial",
 };
 
-const TYPE_COLOR: Record<string, string> = {
-  daily: "rpg-neon-cyan border-cyan-500/40",
-  weekly: "rpg-neon-violet border-violet-500/40",
-  monthly: "rpg-neon-magenta border-fuchsia-500/40",
-  special: "text-amber-400 border-amber-500/40",
+const TYPE_BADGE: Record<string, string> = {
+  daily: "bg-primary/10 text-primary border-primary/30",
+  weekly: "bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/30",
+  monthly: "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30",
+  special: "bg-pink-500/10 text-pink-600 dark:text-pink-400 border-pink-500/30",
 };
 
 export function QuestBoard({ userId, companyId }: Props) {
   const { data: quests = [], isLoading, claim } = useActiveQuests(userId, companyId);
 
-  // Group: claimable first, then in-progress, then completed-claimed
   const sorted = [...quests].sort((a, b) => {
     const aClaim = a.completed_at && !a.claimed_at ? 0 : !a.completed_at ? 1 : 2;
     const bClaim = b.completed_at && !b.claimed_at ? 0 : !b.completed_at ? 1 : 2;
@@ -42,17 +42,17 @@ export function QuestBoard({ userId, companyId }: Props) {
   });
 
   return (
-    <div className="rpg-card rounded-lg p-4">
+    <div className="bg-card border border-border rounded-lg p-4 shadow-sm">
       <div className="flex items-center gap-2 mb-3">
-        <Sparkles className="w-4 h-4 rpg-neon-cyan" />
-        <h3 className="rpg-text-mono text-sm uppercase tracking-wider rpg-neon-cyan">Missões Ativas</h3>
+        <CheckCircle2 className="w-4 h-4 text-primary" />
+        <h3 className="text-sm font-semibold text-foreground">Metas e Desafios</h3>
       </div>
       {isLoading ? (
         <div className="space-y-2">
           {[1, 2, 3].map((i) => <div key={i} className="h-16 bg-muted/30 rounded animate-pulse" />)}
         </div>
       ) : sorted.length === 0 ? (
-        <p className="text-xs text-muted-foreground rpg-text-mono">Nenhuma missão ativa.</p>
+        <p className="text-xs text-muted-foreground">Nenhuma meta ativa.</p>
       ) : (
         <div className="space-y-2 max-h-[480px] overflow-y-auto pr-1">
           {sorted.map((q) => <QuestRow key={q.quest_id + q.period_start} q={q} onClaim={() => claim.mutate(q.progress_id!)} />)}
@@ -69,30 +69,28 @@ function QuestRow({ q, onClaim }: { q: ActiveQuest; onClaim: () => void }) {
   const claimed = !!q.claimed_at;
 
   return (
-    <div className={`p-2.5 rounded border bg-background/40 ${claimed ? "opacity-50" : ""} ${claimable ? "border-cyan-400 rpg-pulse" : "border-border"}`}>
-      <div className="flex items-center gap-2 mb-1">
-        <Icon className="w-4 h-4 rpg-neon-cyan shrink-0" />
-        <span className="text-sm font-semibold text-foreground flex-1 truncate">{q.name}</span>
-        <span className={`rpg-text-mono text-[9px] px-1.5 py-0.5 rounded border ${TYPE_COLOR[q.type]}`}>
+    <div className={`p-2.5 rounded-md border bg-background/40 ${claimed ? "opacity-50" : ""} ${claimable ? "border-primary" : "border-border"}`}>
+      <div className="flex items-center gap-2 mb-1.5">
+        <Icon className="w-4 h-4 text-primary shrink-0" />
+        <span className="text-sm font-medium text-foreground flex-1 truncate">{q.name}</span>
+        <span className={`text-[9px] font-medium px-1.5 py-0.5 rounded border ${TYPE_BADGE[q.type]}`}>
           {TYPE_LABEL[q.type]}
         </span>
       </div>
-      <div className="flex items-center gap-2">
-        <div className="flex-1 h-1.5 bg-background border border-border rounded overflow-hidden">
-          <div className={`h-full ${claimable ? "rpg-xp-bar" : "bg-cyan-500/60"}`} style={{ width: `${pct}%` }} />
-        </div>
-        <span className="rpg-text-mono text-[10px] text-muted-foreground tabular-nums">
+      <div className="flex items-center gap-2 mb-1.5">
+        <Progress value={pct} className="h-1.5 flex-1" />
+        <span className="text-[10px] text-muted-foreground tabular-nums">
           {Math.floor(q.current_value).toLocaleString()}/{q.goal_value.toLocaleString()}
         </span>
       </div>
-      <div className="flex items-center justify-between mt-1.5">
-        <span className="rpg-text-mono text-[10px] rpg-neon-cyan">+{q.xp_reward} XP · +{q.coin_reward} 💎</span>
+      <div className="flex items-center justify-between">
+        <span className="text-[10px] text-muted-foreground">+{q.xp_reward} pts · +{q.coin_reward} moedas</span>
         {claimable ? (
-          <Button size="sm" onClick={onClaim} className="h-6 px-2 text-[10px] rpg-text-mono bg-cyan-500 hover:bg-cyan-400 text-background rpg-glow-cyan">
-            RESGATAR
+          <Button size="sm" onClick={onClaim} className="h-6 px-2 text-[10px]">
+            Resgatar
           </Button>
         ) : claimed ? (
-          <span className="text-[10px] rpg-text-mono text-emerald-400">✓ RESGATADA</span>
+          <span className="text-[10px] text-emerald-600 dark:text-emerald-400">✓ Resgatada</span>
         ) : null}
       </div>
     </div>

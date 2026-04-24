@@ -1,12 +1,12 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 const RANKS = [
-  { name: "Bronze", min: 1, max: 9, className: "rpg-rank-bronze", desc: "Iniciado · Aprendendo a caçada" },
-  { name: "Prata", min: 10, max: 24, className: "rpg-rank-silver", desc: "Operador · Domina o fluxo básico" },
-  { name: "Ouro", min: 25, max: 49, className: "rpg-rank-gold", desc: "Hunter · Caça com precisão" },
-  { name: "Platina", min: 50, max: 74, className: "rpg-rank-platinum", desc: "Veterano · Mestre da conversão" },
-  { name: "Diamante", min: 75, max: 99, className: "rpg-rank-diamond", desc: "Lenda · Topo do servidor" },
-  { name: "Mítico", min: 100, max: 999, className: "rpg-rank-mythic", desc: "Lobo Alfa · Ascensão final" },
+  { name: "Iniciante", min: 1, max: 9, className: "rpg-rank-bronze", desc: "Aprendendo o processo de vendas" },
+  { name: "Pleno", min: 10, max: 24, className: "rpg-rank-silver", desc: "Domina o fluxo básico de prospecção" },
+  { name: "Sênior", min: 25, max: 49, className: "rpg-rank-gold", desc: "Atinge metas com consistência" },
+  { name: "Expert", min: 50, max: 74, className: "rpg-rank-platinum", desc: "Mestre da conversão e fechamento" },
+  { name: "Master", min: 75, max: 99, className: "rpg-rank-diamond", desc: "Referência da equipe comercial" },
+  { name: "Elite", min: 100, max: 999, className: "rpg-rank-mythic", desc: "Top performer absoluto" },
 ];
 
 interface Props {
@@ -18,9 +18,9 @@ interface Props {
 export function RankLadder({ open, onOpenChange, currentLevel }: Props) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="rpg-card max-w-2xl">
+      <DialogContent className="max-w-2xl">
         <DialogHeader>
-          <DialogTitle className="rpg-text-mono rpg-neon-cyan uppercase tracking-widest">⚔️ Hierarquia de Ranks</DialogTitle>
+          <DialogTitle className="text-foreground">Trilha de Carreira</DialogTitle>
         </DialogHeader>
         <div className="space-y-2 mt-4">
           {RANKS.map((r) => {
@@ -28,16 +28,16 @@ export function RankLadder({ open, onOpenChange, currentLevel }: Props) {
             return (
               <div
                 key={r.name}
-                className={`p-3 rounded border-2 flex items-center gap-4 ${r.className} ${active ? "rpg-pulse bg-background/60" : "bg-background/20 opacity-60"}`}
+                className={`p-3 rounded-lg border-2 flex items-center gap-4 ${r.className} ${active ? "bg-primary/5" : "bg-background/20 opacity-70"}`}
               >
-                <div className={`w-12 h-12 rounded border-2 ${r.className} flex items-center justify-center rpg-text-mono text-lg font-bold`}>
-                  {r.min}+
+                <div className={`w-12 h-12 rounded-md border-2 ${r.className} flex items-center justify-center text-sm font-bold`}>
+                  Nv {r.min}+
                 </div>
                 <div className="flex-1">
-                  <div className={`rpg-text-mono uppercase tracking-wider font-bold ${r.className}`}>{r.name}</div>
+                  <div className={`font-semibold ${r.className}`}>{r.name}</div>
                   <div className="text-xs text-muted-foreground">{r.desc}</div>
                 </div>
-                {active && <span className="rpg-text-mono text-xs rpg-neon-cyan">[ VOCÊ ESTÁ AQUI ]</span>}
+                {active && <span className="text-xs text-primary font-medium">Sua posição atual</span>}
               </div>
             );
           })}

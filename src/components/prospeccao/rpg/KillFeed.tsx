@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Flame, Trophy, Zap, Target, Calendar, MessageCircle } from "lucide-react";
+import { Trophy, Zap, Target, Calendar, MessageCircle } from "lucide-react";
 
 interface FeedItem {
   id: string;
@@ -16,11 +16,11 @@ interface Props {
 }
 
 const ACTION_META: Record<string, { icon: any; verb: string; color: string; xp?: number }> = {
-  sale_closed: { icon: Trophy, verb: "🔥 abateu lead premium", color: "text-amber-400", xp: 100 },
-  meeting_scheduled: { icon: Calendar, verb: "📅 marcou reunião", color: "text-cyan-400", xp: 30 },
-  proposal_sent: { icon: Target, verb: "🎯 enviou proposta", color: "text-violet-400", xp: 20 },
-  response_received: { icon: MessageCircle, verb: "💬 recebeu resposta", color: "text-emerald-400", xp: 5 },
-  followup_sent: { icon: Zap, verb: "⚡ disparou follow-up", color: "text-fuchsia-400", xp: 2 },
+  sale_closed: { icon: Trophy, verb: "fechou venda", color: "text-amber-500", xp: 100 },
+  meeting_scheduled: { icon: Calendar, verb: "agendou reunião", color: "text-primary", xp: 30 },
+  proposal_sent: { icon: Target, verb: "enviou proposta", color: "text-purple-500", xp: 20 },
+  response_received: { icon: MessageCircle, verb: "recebeu resposta", color: "text-emerald-500", xp: 5 },
+  followup_sent: { icon: Zap, verb: "fez follow-up", color: "text-blue-500", xp: 2 },
 };
 
 function playBeep(freq = 800) {
@@ -48,7 +48,7 @@ export function KillFeed({ companyId, enableSound = false }: Props) {
     if (!companyId) return;
 
     const channel = supabase
-      .channel(`killfeed-${companyId}`)
+      .channel(`activity-feed-${companyId}`)
       .on(
         "postgres_changes",
         {
@@ -65,11 +65,10 @@ export function KillFeed({ companyId, enableSound = false }: Props) {
           const meta = ACTION_META[row.action_type as string];
           if (!meta) return;
 
-          // Fetch operator name (cached)
           let name = namesRef.current[row.user_id];
           if (!name) {
             const { data } = await supabase.from("profiles").select("full_name").eq("id", row.user_id).maybeSingle();
-            name = (data as any)?.full_name || "Operador";
+            name = (data as any)?.full_name || "Vendedor";
             namesRef.current[row.user_id] = name;
           }
 
@@ -77,14 +76,13 @@ export function KillFeed({ companyId, enableSound = false }: Props) {
           const item: FeedItem = {
             id: row.id,
             icon: meta.icon,
-            message: `${name} ${meta.verb}${xp ? ` · +${xp} XP` : ""}`,
+            message: `${name} ${meta.verb}${xp ? ` · +${xp} pts` : ""}`,
             color: meta.color,
             ts: Date.now(),
           };
           setItems((prev) => [item, ...prev].slice(0, 5));
           if (enableSound) playBeep(row.action_type === "sale_closed" ? 1200 : 700);
 
-          // remove after 5s
           setTimeout(() => {
             setItems((prev) => prev.filter((i) => i.id !== item.id));
           }, 5000);
@@ -106,10 +104,10 @@ export function KillFeed({ companyId, enableSound = false }: Props) {
         return (
           <div
             key={item.id}
-            className="rpg-killfeed rpg-card rounded-md px-3 py-2 flex items-center gap-2 shadow-2xl"
+            className="rpg-killfeed bg-card border border-border rounded-md px-3 py-2 flex items-center gap-2 shadow-lg"
           >
             <Icon className={`w-4 h-4 ${item.color}`} />
-            <span className="rpg-text-mono text-xs text-foreground">{item.message}</span>
+            <span className="text-xs text-foreground">{item.message}</span>
           </div>
         );
       })}
