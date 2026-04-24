@@ -149,7 +149,8 @@ export default function Prospeccao() {
   const labels = gamificationOn ? RPG_TAB_LABELS : CLASSIC_TAB_LABELS;
 
   return (
-    <div className={`space-y-6 p-4 md:p-6 ${gamificationOn ? "rpg-grid-bg min-h-screen" : ""}`}>
+    <div className={`space-y-6 p-4 md:p-6 ${gamificationOn ? "rpg-hex-bg min-h-screen" : ""}`}>
+      {gamificationOn && <KillFeed companyId={companyId} enableSound={soundOn} />}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-foreground">
