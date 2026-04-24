@@ -235,6 +235,9 @@ export default function Prospeccao() {
         />
       )}
 
+      {/* HUD de Metas Comerciais — sempre visível */}
+      <GoalProgressHUD period="daily" />
+
       <div className={`flex gap-6 ${isMobile ? "flex-col" : ""}`}>
         <div className="flex-1 min-w-0">
           <Tabs value={activeTab} onValueChange={(v) => { setActiveTab(v as any); setSubTab("registros"); }}>
