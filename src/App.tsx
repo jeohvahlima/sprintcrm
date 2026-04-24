@@ -26,6 +26,7 @@ import ProcessosComerciais from "./pages/ProcessosComerciais";
 import Treinamento from "./pages/Treinamento";
 import Financeiro from "./pages/Financeiro";
 import Prospeccao from "./pages/Prospeccao";
+import ConfiguracoesGamificacao from "./pages/ConfiguracoesGamificacao";
 import OAuthCallback from "./pages/OAuthCallback";
 import GmailCallback from "./pages/GmailCallback";
 import InstallApp from "./pages/InstallApp";
@@ -101,6 +102,7 @@ const App = () => (
               <Route path="discador" element={<Discador />} />
               <Route path="processos" element={<ProcessosComerciais />} />
               <Route path="prospeccao" element={<Prospeccao />} />
+              <Route path="configuracoes/gamificacao" element={<ConfiguracoesGamificacao />} />
               <Route path="financeiro" element={<Financeiro />} />
               <Route path="treinamento" element={<Treinamento />} />
               <Route path="automacoes/diagnostico" element={<AutomacaoDiagnostico />} />

@@ -1,93 +1,126 @@
-## Diagnóstico da URA — Por que ativa para alguns contatos e não para outros
+## 🎮 Sales Quest — Gamificação Cyberpunk do módulo Prospecção (MVP)
 
-Fiz uma varredura completa no motor de URA (`webhook-conversas`) e nos dados reais do banco. A URA tem **6 portões de bloqueio** que rodam ANTES de iniciar o fluxo. Se qualquer um deles falhar, a URA é silenciosamente pulada — e é exatamente isso que está acontecendo.
+Transforma o módulo `/prospeccao` em uma experiência estilo HUD de jogo (tema sci-fi/cyberpunk: neon ciano, magenta, glow), mantendo 100% da engenharia atual (logs, KPIs, scripts, follow-up). XP é gerado automaticamente a partir das interações que o vendedor já registra.
 
-### O que descobri no banco agora
+---
 
-1. **TODOS os fluxos de automação estão `active = false`** — inclusive o fluxo chamado "URA de Atendimento" (id `3c58e0c5...`, da empresa `3d34ff74...`). Isso por si só explica grande parte do "às vezes ativa, às vezes não": só ativa para empresas/contatos onde alguém ligou o flag manualmente em algum momento.
-2. Existem **estados de fluxo travados** em `conversation_flow_state` para 4 números (`555391984592`, `558699400294`, `558799257780`, `558799636954`) — todos no nó `f830826f...` aguardando input. Esses contatos não vão reativar o início da URA até o estado expirar (TTL 30min) ou ser limpo manualmente.
-3. Existe **1 conversa com `ai_mode = 'off'`** (`558798157747`) — esse contato nunca dispara nada.
-4. Existem **dezenas de `conversation_assignments` ativos** (atendimento humano em curso) — qualquer mensagem desses números pula a URA por design.
+### 🎨 Identidade visual cyberpunk
+- Paleta: ciano neon (#00f0ff), magenta (#ff2bd6), violeta (#7a3cff), fundo grafite com grid sutil
+- Bordas com `box-shadow` glow, fontes mono para números, animações scanline
+- Ícones Lucide: `Zap`, `Target`, `Trophy`, `Crosshair`, `Cpu`, `Radar`, `ShieldCheck`, `Flame`
+- Animações: `canvas-confetti` (level up/venda), toasts com slide-glow, barras de XP com gradiente animado
 
-### Os 6 portões que bloqueiam silenciosamente a URA
+---
 
-Ordem real no código (`webhook-conversas/index.ts` linhas 1747–2050):
+### 🧱 Banco de dados (1 migration)
 
-```text
-mensagem recebida
-   │
-   ├─[1]─ é mensagem RECEBIDA, não-grupo, com companyId e número?           ── não → pula
-   │
-   ├─[2]─ existe flowState ativo (TTL 30min) p/ esse número+empresa?
-   │        sim → continua de onde parou (não reinicia a URA)
-   │
-   ├─[3]─ palavra-chave de algum fluxo bate na mensagem?
-   │        sim → reseta estado e força reinício
-   │
-   ├─[4]─ existe conversation_assignment ativo (humano atendendo)?           ── sim → pula URA
-   │
-   ├─[5]─ existem fluxos com active=true na MESMA empresa?                   ── não → pula URA
-   │        (regra: NÃO herda fluxo da empresa-mãe — cada subconta precisa do próprio)
-   │
-   ├─[6]─ p/ cada fluxo:
-   │        ├─ lead tem tag em settings.filters.excludeTags? ── sim → pula esse fluxo
-   │        ├─ schedule.enabled e fora do horário?           ── sim → envia msg fora-de-hora e PARA
-   │        ├─ tem trigger keyword? msg contém keyword?      ── não → pula
-   │        └─ tem trigger nova_mensagem?                    ── não → pula
-   │
-   └─[7]─ fluxo iniciou? sim → break (só usa o primeiro fluxo que casar)
-```
+**Tabelas novas (todas com RLS por `company_id` via `get_my_company_id()`):**
 
-### Causas concretas do comportamento "ativa às vezes"
+1. `prospecting_player_profile`  
+   `user_id`, `company_id`, `level int default 1`, `xp_total int`, `xp_current int`, `class text` (hunter/closer/farmer/ranger), `title text`, `streak_days int`, `last_activity_date date`, `coins int`
 
-| # | Causa | Quem afeta | Sintoma |
-|---|---|---|---|
-| A | Fluxo está com `active = false` | Todos os contatos da empresa | URA nunca dispara |
-| B | `conversation_flow_state` travado em nó "aguardando input" | Apenas o número travado | Primeira mensagem entra na URA, depois a URA "some" — na verdade está esperando resposta de menu |
-| C | `conversation_assignments` ativo | Apenas números atribuídos a um colaborador | URA não dispara mais para aquele contato (correto, mas invisível para o usuário) |
-| D | `conversation_ai_settings.ai_mode = 'off'` ou `'fluxo'` | Apenas a conversa com flag | Bloqueia IA (e em parte fluxos) |
-| E | Lead com tag em `excludeTags` do fluxo | Lead específico | URA pula esse fluxo silenciosamente |
-| F | Fora do `schedule` configurado (timezone fixo Brasília UTC-3) | Todos no horário ruim | URA não dispara, mas envia msg fora-de-hora se configurado |
-| G | Subconta criou fluxo na empresa-mãe achando que ia herdar | Toda a subconta | URA nunca dispara (regra de isolamento explícita) |
-| H | Fluxo só tem trigger `palavra_chave` e mensagem não contém | Mensagens "olá", "bom dia" etc. | URA só ativa para frases específicas |
-| I | `numeroLimpo` veio vazio na normalização | Mensagens com formato anômalo | Bloqueio no portão [1] |
+2. `prospecting_quests`  
+   `id`, `company_id` (NULL = global/template), `name`, `description`, `type` (daily/weekly/monthly), `goal_metric` (leads/responses/opportunities/meetings/sales/gross_value), `goal_value numeric`, `xp_reward int`, `coin_reward int`, `icon text`, `active bool`, `is_template bool`
 
-### O que vou fazer (Fase 1 — Diagnóstico Visível)
+3. `prospecting_quest_progress`  
+   `user_id`, `quest_id`, `period_start date`, `current_value numeric`, `completed_at`, `claimed_at` (UNIQUE user+quest+period)
 
-Criar uma **tela de diagnóstico da URA por contato** dentro do builder de automação, que mostra em tempo real **qual portão bloqueou** a URA para um número específico. Sem isso, vocês continuam no escuro.
+4. `prospecting_achievements`  
+   `user_id`, `company_id`, `achievement_code text`, `unlocked_at`, `rarity` (common/rare/epic/legendary)
 
-1. **Tabela nova `automation_skip_logs`** — toda vez que `webhook-conversas` decide não disparar a URA, registra: `company_id`, `numero`, `flow_id` (se aplicável), `motivo` (enum: `flow_state_active`, `human_assignment`, `excluded_tag`, `out_of_schedule`, `no_active_flow`, `keyword_no_match`, `ai_mode_off`, `no_trigger_match`), `details` jsonb, `created_at`. TTL de 7 dias via cron (evita inflar o banco).
-2. **Instrumentar `webhook-conversas/index.ts`** — adicionar 1 insert por portão de bloqueio (não-bloqueante, fire-and-forget). Zero impacto em performance.
-3. **Nova página `/automacoes/diagnostico`** com:
-   - Campo "Buscar por número"
-   - Lista dos últimos 50 eventos de skip + os últimos 50 disparos OK
-   - Badge colorido por motivo + tooltip com solução ("Limpar estado", "Remover atribuição", "Editar tag", etc.)
-   - Botão "Limpar estado de fluxo deste número" (deleta da `conversation_flow_state`)
-   - Botão "Liberar atendimento humano" (deleta da `conversation_assignments`)
+5. `prospecting_rewards_shop` (configurável; ativa/desativa por empresa)  
+   `company_id`, `name`, `description`, `cost_coins`, `stock`, `active`, `requires_approval`
 
-### O que vou fazer (Fase 2 — Correções de Robustez)
+6. `prospecting_reward_redemptions`  
+   `user_id`, `reward_id`, `status` (pending/approved/delivered/rejected), `notes`
 
-4. **Aviso visual no Builder** quando o fluxo está `active = false` — um banner amarelo grande no topo: "Este fluxo está DESATIVADO. Mensagens não dispararão a URA." (hoje fica meio escondido no toggle).
-5. **Aviso no Builder** quando o fluxo NÃO tem trigger de `nova_mensagem` nem `palavra_chave` — banner vermelho explicando que ele nunca vai disparar sozinho.
-6. **Reduzir TTL do `conversation_flow_state`** dos atuais 30min para um valor configurável por fluxo (default 30min) e adicionar **botão "Resetar fluxo"** dentro de cada conversa no menu Conversas (3 pontinhos → "Reiniciar URA").
-7. **Filtro de fluxo herdado opcional**: adicionar checkbox no fluxo da empresa-mãe "Permitir que subcontas usem este fluxo" — quando ligado, mudar a query no webhook para buscar também `parent_company_id`. Hoje a regra é hardcoded em "não herda".
-8. **Corrigir o cálculo de timezone** do `schedule` — o código atual usa offset fixo `-3 * 60`, ignora horário de verão de outros países e está duplicando a aplicação do offset (`now.getTimezoneOffset()` + `brasiliaOffset`). Vou usar `Intl.DateTimeFormat` com `timeZone: 'America/Sao_Paulo'`.
+**Triggers automáticas:**
+- `AFTER INSERT/UPDATE on prospecting_interactions` → calcula delta de XP por outcome (responded=+5, opportunity=+15, meeting=+30, sale=+100 + valor/100), atualiza `xp_total`, `xp_current`, `level` (curva: `xp_needed = 100 * level^1.5`), seta `streak_days`
+- Mesma lógica `AFTER INSERT/UPDATE on prospecting_daily_logs`
+- Função `recalc_quest_progress(user_id, company_id)` chamada nas triggers — soma métricas do período da quest e marca `completed_at` quando bate a meta
+- Função `unlock_achievement(user_id, code, rarity)` idempotente
 
-### O que NÃO vou mexer
+**Function RPC:**
+- `claim_quest_reward(quest_progress_id)` — credita XP + coins, marca `claimed_at`
+- `get_player_dashboard(user_id)` — retorna profile + quests ativas + progresso + ranking semanal numa única chamada
+- `get_company_leaderboard(company_id, period)` — top 10 da semana/mês
 
-- Lógica do `executar-fluxo` (motor de execução de nós) — está estável
-- IA orchestrator / ia-atendimento / ia-agendamento
-- Estrutura visual do builder n8n-style
-- Webhook do Meta — só o da Evolution (`webhook-conversas`) tem o motor de URA
+**Seed inicial (15 missões template + 20 conquistas):**
+- Diárias: "Caçar 10 leads", "3 respostas hoje", "1 reunião agendada"
+- Semanais: "30 oportunidades", "5 vendas", "R$ 5k em vendas"
+- Mensais: "100 leads", "Top 3 do ranking", "R$ 50k bruto"
+- Conquistas: First Blood, Combo x5, Velocista (50 leads/dia), Lobo Solitário (7 dias streak), Implacável (30 dias streak), Diamante (R$ 100k acumulado), Lenda (Nv 50), etc.
 
-### Detalhes técnicos
+---
 
-- Migration: `automation_skip_logs (id uuid pk, company_id uuid, telefone text, flow_id uuid null, motivo text, details jsonb, created_at timestamptz default now())` + index em `(company_id, telefone, created_at desc)` + RLS por `company_id` via `get_user_company_ids()` + cron `pg_cron` diário para purge >7d.
-- Hook React Query: `useAutomationDiagnostics(numero?: string)` com realtime subscription.
-- Componente: `src/pages/AutomacaoDiagnostico.tsx` + rota em `src/App.tsx`.
-- Botão "Resetar URA": chama edge function existente ou nova `resetar-fluxo-conversa` que deleta de `conversation_flow_state`.
-- Timezone fix: `new Intl.DateTimeFormat('pt-BR', {timeZone: 'America/Sao_Paulo', hour: '2-digit', minute: '2-digit', weekday: 'long'}).formatToParts(now)`.
+### 🧩 Hooks novos (`src/hooks/`)
 
-### Pergunta rápida pra você decidir
+- `usePlayerProfile.ts` — busca + realtime do profile do usuário logado
+- `useActiveQuests.ts` — quests ativas + progresso, com mutation `claimReward`
+- `useLeaderboard.ts` — ranking da empresa (week/month)
+- `useAchievements.ts` — conquistas desbloqueadas + bloqueadas
+- `useGamificationConfig.ts` — config da empresa (ativo? loja real ativa?)
 
-Quer que eu faça as **Fases 1 e 2 juntas agora** (recomendo, demora o mesmo "round"), ou prefere **só a Fase 1** primeiro pra você ver os bloqueios reais e decidir as correções depois?
+---
+
+### 🧱 Componentes novos (`src/components/prospeccao/rpg/`)
+
+1. **`PlayerHeaderCard.tsx`** — Banner topo: avatar com moldura por rank, nome, classe, level, barra XP animada (gradiente ciano→magenta), streak 🔥, moedas 💎, botão "Ver Conquistas"
+2. **`QuestBoard.tsx`** — Lista de quests ativas com barra de progresso, ícone neon, botão "RESGATAR" pulsante quando completa
+3. **`RankLadder.tsx`** — Modal/seção mostrando os 6 ranks (Iniciado → Operador → Hunter → Veterano → Mestre → Lenda) com requisitos
+4. **`WeeklyLeaderboard.tsx`** — Top 10 com pódio (1º glow dourado, 2º prata, 3º bronze), substitui/complementa `BenchmarkPanel`
+5. **`AchievementsGallery.tsx`** — Grid de badges (desbloqueadas em cor + bloqueadas em silhueta com hint)
+6. **`LevelUpModal.tsx`** — Modal full-screen ao subir nível, com confetti + áudio + classe nova
+7. **`XpToast.tsx`** — Toast custom slide-in com `+XX XP` em estilo HUD
+8. **`ClassicVsRpgToggle.tsx`** — Switch persistido em `localStorage` por usuário
+9. **`RewardShop.tsx`** — Loja de recompensas (só renderiza se config da empresa estiver com loja real ativa)
+
+---
+
+### 🛠 Refator de `src/pages/Prospeccao.tsx`
+
+- Header novo com `PlayerHeaderCard` quando modo RPG ativo
+- Toggle "🎮 Modo RPG / 📊 Modo Clássico" no canto superior direito
+- Renomear tabs em modo RPG: ⚔️ Caçada · 💰 Mercenário · 📜 Reforço · 🏆 **Arena** (novo) · 📖 Grimório
+- Aba Arena nova: `WeeklyLeaderboard` + `AchievementsGallery` + `RankLadder`
+- Sidebar direita: `QuestBoard` (substitui ou fica acima do `BenchmarkPanel`)
+- Em modo Clássico: layout 100% atual permanece intacto
+
+---
+
+### ⚙️ Tela de configuração (gestor)
+
+Nova rota: `/configuracoes/gamificacao` (`src/pages/ConfiguracoesGamificacao.tsx`)
+
+- Toggle global "Ativar gamificação na empresa"
+- Toggle "Ativar loja de recompensas reais" (com aprovação por gestor)
+- Editor de pesos de XP (responded/opportunity/meeting/sale_closed)
+- CRUD de missões customizadas (clonar das 15 templates ou criar do zero)
+- CRUD da loja de recompensas (folga, vale, bônus, etc.)
+- Botão "Resetar temporada" (zera ranking semanal/mensal sem apagar histórico)
+- Listagem de pedidos de resgate pendentes para aprovação
+
+Permissão: apenas `super_admin`, `company_admin` e `gestor`.
+
+---
+
+### 📦 Dependências novas
+- `canvas-confetti` (já leve, ~7kb) para efeitos de venda/level up
+
+---
+
+### 📋 Resumo de arquivos
+- **1 migration SQL** com 6 tabelas + triggers + RPCs + seed
+- **5 hooks novos**
+- **9 componentes RPG novos** + pasta `src/components/prospeccao/rpg/`
+- **1 página nova** (`ConfiguracoesGamificacao.tsx`) + rota em `App.tsx`
+- **1 refator** em `Prospeccao.tsx`
+- **1 entrada de menu** em `Configurações`
+
+---
+
+### ✅ O que NÃO muda
+- Tabelas `prospecting_daily_logs`, `prospecting_interactions`, `prospecting_scripts`, `prospecting_followup_logs` permanecem idênticas
+- Componentes existentes (`ProspeccaoKPIs`, `ProspeccaoTable`, `ProspeccaoCharts`, `FollowUp*`, `BenchmarkPanel`, `ScriptLibrary`, `InteractionTimeline`) ficam intocados — são apenas reembrulhados visualmente
+- Nenhum dado existente é migrado/destruído
+- Modo Clássico sempre disponível com 1 clique

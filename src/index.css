@@ -586,3 +586,80 @@ body.lead-conversa-popup-open .lead-card-conversa-active,
 body.lead-conversa-popup-open .lead-card-conversa-active * {
   pointer-events: auto !important;
 }
+/* ============================================
+   🎮 SALES QUEST — Cyberpunk RPG Theme
+   ============================================ */
+@layer utilities {
+  .rpg-grid-bg {
+    background-image:
+      linear-gradient(rgba(0, 240, 255, 0.05) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0, 240, 255, 0.05) 1px, transparent 1px);
+    background-size: 32px 32px;
+  }
+  .rpg-neon-cyan { color: #00f0ff; }
+  .rpg-neon-magenta { color: #ff2bd6; }
+  .rpg-neon-violet { color: #7a3cff; }
+  .rpg-glow-cyan { box-shadow: 0 0 12px rgba(0,240,255,.6), 0 0 24px rgba(0,240,255,.3); }
+  .rpg-glow-magenta { box-shadow: 0 0 12px rgba(255,43,214,.6), 0 0 24px rgba(255,43,214,.3); }
+  .rpg-glow-gold { box-shadow: 0 0 12px rgba(255,200,0,.7), 0 0 24px rgba(255,170,0,.4); }
+  .rpg-card {
+    background: linear-gradient(135deg, rgba(15, 20, 35, 0.95), rgba(25, 15, 45, 0.95));
+    border: 1px solid rgba(0, 240, 255, 0.3);
+    box-shadow: 0 0 20px rgba(0, 240, 255, 0.1), inset 0 0 30px rgba(122, 60, 255, 0.05);
+    color: hsl(var(--foreground));
+  }
+  .rpg-card-magenta {
+    background: linear-gradient(135deg, rgba(35, 15, 35, 0.95), rgba(45, 15, 25, 0.95));
+    border: 1px solid rgba(255, 43, 214, 0.3);
+    box-shadow: 0 0 20px rgba(255, 43, 214, 0.1);
+    color: hsl(var(--foreground));
+  }
+  .rpg-text-mono { font-family: 'JetBrains Mono', 'Courier New', monospace; }
+  .rpg-xp-bar {
+    background: linear-gradient(90deg, #00f0ff 0%, #7a3cff 50%, #ff2bd6 100%);
+    background-size: 200% 100%;
+    animation: rpg-xp-flow 3s linear infinite;
+  }
+  @keyframes rpg-xp-flow {
+    0% { background-position: 0% 50%; }
+    100% { background-position: 200% 50%; }
+  }
+  @keyframes rpg-pulse-glow {
+    0%, 100% { box-shadow: 0 0 8px rgba(0,240,255,.5), 0 0 16px rgba(0,240,255,.2); }
+    50% { box-shadow: 0 0 16px rgba(0,240,255,.9), 0 0 32px rgba(0,240,255,.5); }
+  }
+  .rpg-pulse { animation: rpg-pulse-glow 1.5s ease-in-out infinite; }
+  @keyframes rpg-scanline {
+    0% { transform: translateY(-100%); }
+    100% { transform: translateY(100%); }
+  }
+  .rpg-scanline::before {
+    content: '';
+    position: absolute; left: 0; right: 0; height: 2px;
+    background: linear-gradient(90deg, transparent, #00f0ff, transparent);
+    animation: rpg-scanline 3s linear infinite;
+    pointer-events: none; opacity: .3;
+  }
+  .rpg-rank-bronze { color: #cd7f32; border-color: #cd7f32; }
+  .rpg-rank-silver { color: #c0c0c0; border-color: #c0c0c0; }
+  .rpg-rank-gold { color: #ffd700; border-color: #ffd700; }
+  .rpg-rank-platinum { color: #e5e4e2; border-color: #00f0ff; }
+  .rpg-rank-diamond { color: #b9f2ff; border-color: #ff2bd6; }
+  .rpg-rank-mythic {
+    background: linear-gradient(90deg, #ff2bd6, #7a3cff, #00f0ff);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    border-color: #ff2bd6;
+  }
+  .rpg-locked { filter: grayscale(1) brightness(0.4); }
+  @keyframes rpg-shimmer {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+  }
+  .rpg-shimmer {
+    background: linear-gradient(90deg, transparent 30%, rgba(255,255,255,.2) 50%, transparent 70%);
+    background-size: 200% 100%;
+    animation: rpg-shimmer 2s linear infinite;
+  }
+}

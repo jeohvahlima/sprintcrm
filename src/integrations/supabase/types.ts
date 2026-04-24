@@ -4855,6 +4855,33 @@ export type Database = {
           },
         ]
       }
+      prospecting_achievements: {
+        Row: {
+          achievement_code: string
+          company_id: string
+          id: string
+          rarity: string
+          unlocked_at: string
+          user_id: string
+        }
+        Insert: {
+          achievement_code: string
+          company_id: string
+          id?: string
+          rarity?: string
+          unlocked_at?: string
+          user_id: string
+        }
+        Update: {
+          achievement_code?: string
+          company_id?: string
+          id?: string
+          rarity?: string
+          unlocked_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       prospecting_daily_logs: {
         Row: {
           ad_spend: number | null
@@ -4919,6 +4946,45 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      prospecting_gamification_config: {
+        Row: {
+          coins_per_sale: number
+          company_id: string
+          enabled: boolean
+          shop_enabled: boolean
+          updated_at: string
+          xp_per_meeting: number
+          xp_per_opportunity: number
+          xp_per_response: number
+          xp_per_sale: number
+          xp_per_value_unit: number
+        }
+        Insert: {
+          coins_per_sale?: number
+          company_id: string
+          enabled?: boolean
+          shop_enabled?: boolean
+          updated_at?: string
+          xp_per_meeting?: number
+          xp_per_opportunity?: number
+          xp_per_response?: number
+          xp_per_sale?: number
+          xp_per_value_unit?: number
+        }
+        Update: {
+          coins_per_sale?: number
+          company_id?: string
+          enabled?: boolean
+          shop_enabled?: boolean
+          updated_at?: string
+          xp_per_meeting?: number
+          xp_per_opportunity?: number
+          xp_per_response?: number
+          xp_per_sale?: number
+          xp_per_value_unit?: number
+        }
+        Relationships: []
       }
       prospecting_interactions: {
         Row: {
@@ -4997,6 +5063,244 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      prospecting_player_profile: {
+        Row: {
+          avatar_frame: string | null
+          class: string
+          coins: number
+          company_id: string
+          created_at: string
+          id: string
+          last_activity_date: string | null
+          level: number
+          streak_days: number
+          title: string | null
+          updated_at: string
+          user_id: string
+          xp_current: number
+          xp_total: number
+        }
+        Insert: {
+          avatar_frame?: string | null
+          class?: string
+          coins?: number
+          company_id: string
+          created_at?: string
+          id?: string
+          last_activity_date?: string | null
+          level?: number
+          streak_days?: number
+          title?: string | null
+          updated_at?: string
+          user_id: string
+          xp_current?: number
+          xp_total?: number
+        }
+        Update: {
+          avatar_frame?: string | null
+          class?: string
+          coins?: number
+          company_id?: string
+          created_at?: string
+          id?: string
+          last_activity_date?: string | null
+          level?: number
+          streak_days?: number
+          title?: string | null
+          updated_at?: string
+          user_id?: string
+          xp_current?: number
+          xp_total?: number
+        }
+        Relationships: []
+      }
+      prospecting_quest_progress: {
+        Row: {
+          claimed_at: string | null
+          company_id: string
+          completed_at: string | null
+          created_at: string
+          current_value: number
+          id: string
+          period_start: string
+          quest_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          claimed_at?: string | null
+          company_id: string
+          completed_at?: string | null
+          created_at?: string
+          current_value?: number
+          id?: string
+          period_start: string
+          quest_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          claimed_at?: string | null
+          company_id?: string
+          completed_at?: string | null
+          created_at?: string
+          current_value?: number
+          id?: string
+          period_start?: string
+          quest_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "prospecting_quest_progress_quest_id_fkey"
+            columns: ["quest_id"]
+            isOneToOne: false
+            referencedRelation: "prospecting_quests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      prospecting_quests: {
+        Row: {
+          active: boolean
+          coin_reward: number
+          company_id: string | null
+          created_at: string
+          description: string | null
+          goal_metric: string
+          goal_value: number
+          icon: string | null
+          id: string
+          is_template: boolean
+          name: string
+          type: string
+          updated_at: string
+          xp_reward: number
+        }
+        Insert: {
+          active?: boolean
+          coin_reward?: number
+          company_id?: string | null
+          created_at?: string
+          description?: string | null
+          goal_metric: string
+          goal_value: number
+          icon?: string | null
+          id?: string
+          is_template?: boolean
+          name: string
+          type: string
+          updated_at?: string
+          xp_reward?: number
+        }
+        Update: {
+          active?: boolean
+          coin_reward?: number
+          company_id?: string | null
+          created_at?: string
+          description?: string | null
+          goal_metric?: string
+          goal_value?: number
+          icon?: string | null
+          id?: string
+          is_template?: boolean
+          name?: string
+          type?: string
+          updated_at?: string
+          xp_reward?: number
+        }
+        Relationships: []
+      }
+      prospecting_reward_redemptions: {
+        Row: {
+          approved_by: string | null
+          company_id: string
+          cost_paid: number
+          created_at: string
+          id: string
+          notes: string | null
+          reward_id: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          approved_by?: string | null
+          company_id: string
+          cost_paid: number
+          created_at?: string
+          id?: string
+          notes?: string | null
+          reward_id: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          approved_by?: string | null
+          company_id?: string
+          cost_paid?: number
+          created_at?: string
+          id?: string
+          notes?: string | null
+          reward_id?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "prospecting_reward_redemptions_reward_id_fkey"
+            columns: ["reward_id"]
+            isOneToOne: false
+            referencedRelation: "prospecting_rewards_shop"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      prospecting_rewards_shop: {
+        Row: {
+          active: boolean
+          company_id: string
+          cost_coins: number
+          created_at: string
+          description: string | null
+          icon: string | null
+          id: string
+          name: string
+          requires_approval: boolean
+          stock: number | null
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          company_id: string
+          cost_coins: number
+          created_at?: string
+          description?: string | null
+          icon?: string | null
+          id?: string
+          name: string
+          requires_approval?: boolean
+          stock?: number | null
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          company_id?: string
+          cost_coins?: number
+          created_at?: string
+          description?: string | null
+          icon?: string | null
+          id?: string
+          name?: string
+          requires_approval?: boolean
+          stock?: number | null
+          updated_at?: string
+        }
+        Relationships: []
       }
       prospecting_scripts: {
         Row: {
@@ -6587,6 +6891,15 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      add_player_xp: {
+        Args: {
+          p_coins?: number
+          p_company_id: string
+          p_user_id: string
+          p_xp: number
+        }
+        Returns: undefined
+      }
       assert_user_can_access_funil: {
         Args: { p_funil_id: string }
         Returns: undefined
@@ -6595,6 +6908,7 @@ export type Database = {
         Args: { p_company_id: string; p_end_date: string; p_start_date: string }
         Returns: Json
       }
+      claim_quest_reward: { Args: { p_progress_id: string }; Returns: Json }
       create_attendance_protocol: {
         Args: {
           p_attending_user_id?: string
@@ -6611,6 +6925,10 @@ export type Database = {
         }[]
       }
       elevate_self_to_super_admin: { Args: never; Returns: Json }
+      ensure_player_profile: {
+        Args: { p_company_id: string; p_user_id: string }
+        Returns: string
+      }
       formatar_telefone: { Args: { telefone: string }; Returns: string }
       generate_protocol_number: {
         Args: { p_company_id: string }
@@ -6702,8 +7020,22 @@ export type Database = {
       }
       is_super_admin: { Args: never; Returns: boolean }
       purge_automation_skip_logs: { Args: never; Returns: undefined }
+      recalc_quest_progress: {
+        Args: { p_company_id: string; p_user_id: string }
+        Returns: undefined
+      }
+      redeem_shop_reward: { Args: { p_reward_id: string }; Returns: Json }
       reorder_etapas: {
         Args: { p_funil_id: string; p_order: string[] }
+        Returns: undefined
+      }
+      unlock_achievement: {
+        Args: {
+          p_code: string
+          p_company_id: string
+          p_rarity?: string
+          p_user_id: string
+        }
         Returns: undefined
       }
       update_capture_page_config: {
@@ -6731,6 +7063,7 @@ export type Database = {
         Args: { _permission_name: string; _user_id: string }
         Returns: boolean
       }
+      xp_needed_for_level: { Args: { p_level: number }; Returns: number }
     }
     Enums: {
       app_role:
