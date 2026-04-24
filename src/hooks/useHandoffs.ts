@@ -97,11 +97,11 @@ export function useCompanyClosers() {
     queryKey: ["company-closers", companyId],
     enabled: !!companyId,
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from("prospecting_player_profile")
         .select("user_id, commercial_role")
-        .eq("company_id", companyId!)
-        .in("commercial_role" as any, ["closer", "hybrid"]);
+        .eq("company_id", companyId)
+        .in("commercial_role", ["closer", "hybrid"]);
       if (error) throw error;
       const ids = (data || []).map((r: any) => r.user_id);
       if (ids.length === 0) return [];
