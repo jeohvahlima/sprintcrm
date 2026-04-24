@@ -3419,7 +3419,7 @@ function Conversas() {
           for (let i = 0; i < phoneConditions.length; i += BATCH_SIZE) {
             const batch = phoneConditions.slice(i, i + BATCH_SIZE);
             const orCondition = batch.join(',');
-            const leadsResult = await supabase.from('leads').select('id, phone, name, telefone, tags, profile_picture_url').eq('company_id', companyId).or(orCondition).limit(500); // Limite maior por lote
+            const leadsResult = await supabase.from('leads').select('id, phone, name, telefone, tags, profile_picture_url, stage, value').eq('company_id', companyId).or(orCondition).limit(500); // Limite maior por lote
 
             if (!leadsResult.error && leadsResult.data) {
               allLeads = [...allLeads, ...leadsResult.data];
@@ -3562,6 +3562,8 @@ function Conversas() {
         leadId: string;
         tags: string[];
         profilePictureUrl?: string;
+        stage?: string;
+        value?: number;
       }>();
       leadsData.forEach(lead => {
         const phoneRaw = lead.phone || lead.telefone;
@@ -3572,7 +3574,9 @@ function Conversas() {
             name: lead.name || phoneKey,
             leadId: lead.id,
             tags: lead.tags || [],
-            profilePictureUrl: lead.profile_picture_url || undefined
+            profilePictureUrl: lead.profile_picture_url || undefined,
+            stage: lead.stage || undefined,
+            value: lead.value != null ? Number(lead.value) : undefined,
           };
           // Armazenar com chave original
           leadsMap.set(phoneKey, leadEntry);
@@ -3860,6 +3864,9 @@ function Conversas() {
           unread: messagensFormatadas.length > 0 && messagensFormatadas[messagensFormatadas.length - 1]?.sender === 'contact' ? 1 : 0,
           messages: messagensFormatadas,
           tags: leadInfo?.tags || [],
+          funnelStage: leadInfo?.stage || undefined,
+          valor: leadInfo?.value != null ? `R$ ${Number(leadInfo.value).toLocaleString('pt-BR')}` : undefined,
+          leadId: leadInfo?.leadId || undefined,
           phoneNumber: telefone,
           avatarUrl: isGroup 
             ? `https://ui-avatars.com/api/?name=${encodeURIComponent('Grupo')}&background=10b981&color=fff` 
