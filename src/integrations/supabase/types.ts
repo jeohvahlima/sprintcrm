@@ -3481,6 +3481,7 @@ export type Database = {
           govbr_login: string | null
           govbr_senha: string | null
           id: string
+          last_prospected_at: string | null
           lead_origem_id: string | null
           lead_source_type: string | null
           loss_reason: string | null
@@ -3492,6 +3493,7 @@ export type Database = {
           probability: number | null
           produto_id: string | null
           profile_picture_url: string | null
+          prospecting_priority: number
           responsaveis: string[] | null
           responsavel_id: string | null
           segmentacao: string | null
@@ -3502,6 +3504,7 @@ export type Database = {
           tags: string[] | null
           telefone: string | null
           title: string | null
+          to_prospect: boolean
           updated_at: string | null
           utm_campaign: string | null
           utm_content: string | null
@@ -3537,6 +3540,7 @@ export type Database = {
           govbr_login?: string | null
           govbr_senha?: string | null
           id?: string
+          last_prospected_at?: string | null
           lead_origem_id?: string | null
           lead_source_type?: string | null
           loss_reason?: string | null
@@ -3548,6 +3552,7 @@ export type Database = {
           probability?: number | null
           produto_id?: string | null
           profile_picture_url?: string | null
+          prospecting_priority?: number
           responsaveis?: string[] | null
           responsavel_id?: string | null
           segmentacao?: string | null
@@ -3558,6 +3563,7 @@ export type Database = {
           tags?: string[] | null
           telefone?: string | null
           title?: string | null
+          to_prospect?: boolean
           updated_at?: string | null
           utm_campaign?: string | null
           utm_content?: string | null
@@ -3593,6 +3599,7 @@ export type Database = {
           govbr_login?: string | null
           govbr_senha?: string | null
           id?: string
+          last_prospected_at?: string | null
           lead_origem_id?: string | null
           lead_source_type?: string | null
           loss_reason?: string | null
@@ -3604,6 +3611,7 @@ export type Database = {
           probability?: number | null
           produto_id?: string | null
           profile_picture_url?: string | null
+          prospecting_priority?: number
           responsaveis?: string[] | null
           responsavel_id?: string | null
           segmentacao?: string | null
@@ -3614,6 +3622,7 @@ export type Database = {
           tags?: string[] | null
           telefone?: string | null
           title?: string | null
+          to_prospect?: boolean
           updated_at?: string | null
           utm_campaign?: string | null
           utm_content?: string | null
@@ -5212,6 +5221,119 @@ export type Database = {
           xp_reward?: number
         }
         Relationships: []
+      }
+      prospecting_queue_leads: {
+        Row: {
+          assigned_user_id: string | null
+          attempts: number
+          company_id: string
+          created_at: string
+          id: string
+          last_attempt_at: string | null
+          lead_id: string
+          notes: string | null
+          outcome: string | null
+          position: number
+          queue_id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          assigned_user_id?: string | null
+          attempts?: number
+          company_id: string
+          created_at?: string
+          id?: string
+          last_attempt_at?: string | null
+          lead_id: string
+          notes?: string | null
+          outcome?: string | null
+          position?: number
+          queue_id: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          assigned_user_id?: string | null
+          attempts?: number
+          company_id?: string
+          created_at?: string
+          id?: string
+          last_attempt_at?: string | null
+          lead_id?: string
+          notes?: string | null
+          outcome?: string | null
+          position?: number
+          queue_id?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "prospecting_queue_leads_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "prospecting_queue_leads_queue_id_fkey"
+            columns: ["queue_id"]
+            isOneToOne: false
+            referencedRelation: "prospecting_queues"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      prospecting_queues: {
+        Row: {
+          active: boolean
+          assigned_user_ids: string[] | null
+          channel: string
+          color: string | null
+          company_id: string
+          created_at: string
+          created_by: string
+          description: string | null
+          id: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          assigned_user_ids?: string[] | null
+          channel?: string
+          color?: string | null
+          company_id: string
+          created_at?: string
+          created_by: string
+          description?: string | null
+          id?: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          assigned_user_ids?: string[] | null
+          channel?: string
+          color?: string | null
+          company_id?: string
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          id?: string
+          name?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "prospecting_queues_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       prospecting_reward_redemptions: {
         Row: {
