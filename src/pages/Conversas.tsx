@@ -1388,11 +1388,12 @@ function Conversas() {
   }, []);
 
   // ⚡ CORREÇÃO CRÍTICA: Carregar TODAS as conversas únicas usando nova função otimizada
-  const loadInitialConversations = useCallback(async () => {
-    if (!userCompanyId) return;
+  const loadInitialConversations = useCallback(async (companyIdOverride?: string) => {
+    const companyIdToUse = companyIdOverride || userCompanyId;
+    if (!companyIdToUse) return;
     try {
       console.log('📦 [LOAD-ALL] Iniciando carregamento otimizado de todas as conversas...');
-      const allConversations = await loadAllUniqueConversations(userCompanyId);
+      const allConversations = await loadAllUniqueConversations(companyIdToUse);
       if (allConversations.length > 0) {
         console.log(`✅ [LOAD-ALL] ${allConversations.length} conversas únicas carregadas`);
 
@@ -1469,6 +1470,15 @@ function Conversas() {
               responsavel: conv.responsavel || existingResponsavel
             };
           });
+
+          try {
+            sessionStorage.setItem(CONVERSATIONS_CACHE_KEY, JSON.stringify(merged));
+            sessionStorage.setItem(CONVERSATIONS_CACHE_TIMESTAMP_KEY, Date.now().toString());
+            sessionStorage.setItem(CONVERSATIONS_CACHE_COMPANY_KEY, companyIdToUse);
+          } catch {
+            // Ignorar falhas de cache para não bloquear a renderização da lista
+          }
+
           console.log(`✅ [LOAD-ALL] ${avatarMap.size} avatares, ${assignedUserMap.size} assignedUsers, ${existingMessagesMap.size} conversas com mensagens preservadas`);
           return merged;
         });
@@ -1482,7 +1492,7 @@ function Conversas() {
     } finally {
       setLoadingConversations(false);
     }
-  }, [userCompanyId, getProfilePictureWithFallback]);
+  }, [userCompanyId]);
 
   // CORREÇÃO: Carregar tarefas quando o modal de tarefas abrir e tiver lead vinculado
   useEffect(() => {
@@ -2891,7 +2901,9 @@ function Conversas() {
 
   // ⚡ CARREGAMENTO INSTANTÂNEO: Carregar conversas imediatamente
   useEffect(() => {
-    // ⚡ PASSO 1: Carregar do banco SEMPRE primeiro para obter userCompanyId
+    let backgroundSyncTimeout: ReturnType<typeof setTimeout> | null = null;
+
+    // ⚡ PASSO 1: Identificar a empresa e pintar a lista com a carga mais leve possível
     const loadInitialData = async () => {
       // Se já está carregando ou já carregou, não fazer nada
       if (loadingConversations || initialLoadRef.current) return;
@@ -2942,16 +2954,27 @@ function Conversas() {
         setUserCompanyId(currentCompanyId);
         userCompanyIdRef.current = currentCompanyId;
 
-        // Agora carregar do banco
-        console.log('⚡ [LOAD] Carregando conversas para company:', currentCompanyId);
-        await loadSupabaseConversations();
+        // Primeiro pintar a lista com a rotina leve (última mensagem por conversa)
+        console.log('⚡ [LOAD] Carregando lista inicial otimizada para company:', currentCompanyId);
+        await loadInitialConversations(currentCompanyId);
         initialLoadRef.current = true;
-        console.log('✅ [LOAD] Conversas carregadas');
+
+        // Depois sincronizar o histórico completo em segundo plano sem travar a abertura do módulo
+        backgroundSyncTimeout = setTimeout(() => {
+          void loadSupabaseConversations();
+        }, 150);
+
+        console.log('✅ [LOAD] Lista inicial carregada');
       } catch (error) {
         console.error('❌ [LOAD] Erro ao carregar:', error);
       }
     };
     loadInitialData();
+    return () => {
+      if (backgroundSyncTimeout) {
+        clearTimeout(backgroundSyncTimeout);
+      }
+    };
   }, []); // ⚡ Executar apenas uma vez no mount
 
   // Fallback: polling com jitter enquanto desconectado (OTIMIZADO)
