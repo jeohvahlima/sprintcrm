@@ -263,7 +263,15 @@ export default function Prospeccao() {
               </div>
             )}
 
-            {activeTab === "arena" ? (
+            {isCloserTab ? (
+              <div className="mt-4">
+                <CloserInbox />
+              </div>
+            ) : isComandoTab ? (
+              <div className="mt-4">
+                <ManagerCommandCenter />
+              </div>
+            ) : activeTab === "arena" ? (
               <div className="space-y-6 mt-4">
                 <WeeklyLeaderboard companyId={companyId} currentUserId={userId} />
                 <div className="rpg-card rounded-lg p-4">
