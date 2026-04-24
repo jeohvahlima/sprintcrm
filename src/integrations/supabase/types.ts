@@ -7192,6 +7192,22 @@ export type Database = {
         Args: { p_company_id: string; p_end_date: string; p_start_date: string }
         Returns: Json
       }
+      claim_next_queue_lead: {
+        Args: { _queue_id: string; _user_id: string }
+        Returns: {
+          attempts: number
+          lead_email: string
+          lead_id: string
+          lead_name: string
+          lead_phone: string
+          lead_stage: string
+          lead_tags: string[]
+          lead_value: number
+          notes: string
+          queue_lead_id: string
+          queue_position: number
+        }[]
+      }
       claim_quest_reward: { Args: { p_progress_id: string }; Returns: Json }
       create_attendance_protocol: {
         Args: {
@@ -7208,6 +7224,7 @@ export type Database = {
           protocol_number: string
         }[]
       }
+      distribute_queue_leads: { Args: { _queue_id: string }; Returns: number }
       elevate_self_to_super_admin: { Args: never; Returns: Json }
       ensure_player_profile: {
         Args: { p_company_id: string; p_user_id: string }

@@ -37,6 +37,7 @@ import { ChannelProspectPanel } from "@/components/prospeccao/channels/ChannelPr
 import { GoalProgressHUD } from "@/components/prospeccao/comercial/GoalProgressHUD";
 import { CloserInbox } from "@/components/prospeccao/comercial/CloserInbox";
 import { ManagerCommandCenter } from "@/components/prospeccao/comercial/ManagerCommandCenter";
+import { SDRQueuePanel } from "@/components/prospeccao/comercial/SDRQueuePanel";
 import { usePermissions } from "@/hooks/usePermissions";
 
 const RPG_KEY = "prospeccao_rpg_mode";
@@ -46,7 +47,7 @@ export default function Prospeccao() {
   const isMobile = useIsMobile();
   const [rpgMode, setRpgMode] = useState<boolean>(() => localStorage.getItem(RPG_KEY) !== "false");
   const [soundOn, setSoundOn] = useState<boolean>(() => localStorage.getItem(SOUND_KEY) === "true");
-  const [activeTab, setActiveTab] = useState<"organic" | "paid" | "followup" | "arena" | "coldcall" | "instagram" | "whatsapp" | "funil" | "closer" | "comando">("organic");
+  const [activeTab, setActiveTab] = useState<"organic" | "paid" | "followup" | "arena" | "coldcall" | "instagram" | "whatsapp" | "funil" | "closer" | "comando" | "fila">("organic");
   const [subTab, setSubTab] = useState<"registros" | "interacoes">("registros");
   const [channelView, setChannelView] = useState<"prospect" | "chat">("prospect");
   const [period, setPeriod] = useState("30");
@@ -66,7 +67,8 @@ export default function Prospeccao() {
   const isFunilTab = activeTab === "funil";
   const isCloserTab = activeTab === "closer";
   const isComandoTab = activeTab === "comando";
-  const channelType = activeTab === "followup" || activeTab === "arena" || isChannelTab || isFunilTab || isCloserTab || isComandoTab ? "organic" : activeTab;
+  const isFilaTab = activeTab === "fila";
+  const channelType = activeTab === "followup" || activeTab === "arena" || isChannelTab || isFunilTab || isCloserTab || isComandoTab || isFilaTab ? "organic" : activeTab;
   const { data, isLoading, refetch } = useProspeccaoData(channelType as "organic" | "paid", parseInt(period));
   const { data: followUpData, isLoading: followUpLoading, refetch: followUpRefetch } = useFollowUpData(parseInt(period));
 
@@ -157,6 +159,7 @@ export default function Prospeccao() {
     funil: "🗺️ Funil",
     closer: "📥 Caixa Closer",
     comando: "🎖️ Comando",
+    fila: "🎯 Minha Fila",
   };
   const CLASSIC_TAB_LABELS: Record<string, string> = {
     organic: "Orgânico",
@@ -169,6 +172,7 @@ export default function Prospeccao() {
     funil: "Funil de Vendas",
     closer: "Caixa do Closer",
     comando: "Gestor",
+    fila: "Minha Fila",
   };
   const labels = gamificationOn ? RPG_TAB_LABELS : CLASSIC_TAB_LABELS;
 
@@ -245,6 +249,7 @@ export default function Prospeccao() {
               <TabsTrigger value="organic">{labels.organic}</TabsTrigger>
               <TabsTrigger value="paid">{labels.paid}</TabsTrigger>
               <TabsTrigger value="followup">{labels.followup}</TabsTrigger>
+              <TabsTrigger value="fila">{labels.fila}</TabsTrigger>
               <TabsTrigger value="coldcall">{labels.coldcall}</TabsTrigger>
               <TabsTrigger value="instagram">{labels.instagram}</TabsTrigger>
               <TabsTrigger value="whatsapp">{labels.whatsapp}</TabsTrigger>
@@ -254,7 +259,7 @@ export default function Prospeccao() {
               {gamificationOn && <TabsTrigger value="arena">{labels.arena}</TabsTrigger>}
             </TabsList>
 
-            {activeTab !== "arena" && !isChannelTab && !isFunilTab && !isCloserTab && !isComandoTab && (
+            {activeTab !== "arena" && !isChannelTab && !isFunilTab && !isCloserTab && !isComandoTab && !isFilaTab && (
               <div className="flex gap-1 mt-3 mb-4">
                 <Button variant={subTab === "registros" ? "default" : "ghost"} size="sm" onClick={() => setSubTab("registros")}>Registros</Button>
                 <Button variant={subTab === "interacoes" ? "default" : "ghost"} size="sm" onClick={() => setSubTab("interacoes")}>
@@ -263,7 +268,11 @@ export default function Prospeccao() {
               </div>
             )}
 
-            {isCloserTab ? (
+            {isFilaTab ? (
+              <div className="mt-4">
+                <SDRQueuePanel />
+              </div>
+            ) : isCloserTab ? (
               <div className="mt-4">
                 <CloserInbox />
               </div>
