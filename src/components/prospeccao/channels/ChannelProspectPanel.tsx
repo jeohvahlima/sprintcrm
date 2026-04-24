@@ -40,7 +40,7 @@ export function ChannelProspectPanel({ channel }: Props) {
 
   // Cold call only
   const callCenter = useCallCenter();
-  const callOpen = channel === "coldcall" && callCenter.callState.isActive;
+  const callOpen = channel === "coldcall" && callCenter.callState.isActive && callCenter.callState.status !== "finalizado";
 
   const handleAction = async (lead: any) => {
     const phone = lead.phone || lead.telefone;
@@ -196,24 +196,32 @@ export function ChannelProspectPanel({ channel }: Props) {
       {/* Cold Call Modal */}
       {channel === "coldcall" && (
         <>
-          <CallModal
-            open={callOpen}
-            onClose={() => {
-              callCenter.endCall();
-              setShowNotes(true);
-            }}
-            callState={callCenter.callState}
-          />
+          {callOpen && (
+            <CallModal
+              open
+              onClose={() => {}}
+              leadName={callCenter.callState.leadName}
+              phoneNumber={callCenter.callState.phoneNumber}
+              status={callCenter.callState.status}
+              duration={callCenter.callState.duration}
+              isMuted={callCenter.callState.isMuted}
+              onEndCall={async () => {
+                await callCenter.endCall();
+                setShowNotes(true);
+              }}
+              onToggleMute={callCenter.toggleMute}
+            />
+          )}
           <PostCallNotesDialog
             open={showNotes}
-            onClose={() => { setShowNotes(false); refetch(); }}
-            onSave={async (notes: string, result: string) => {
-              await callCenter.saveCallNotes(notes, result);
-              callCenter.resetCall();
+            leadName={callCenter.callState.leadName}
+            phoneNumber={callCenter.callState.phoneNumber}
+            duration={callCenter.callState.duration}
+            onSave={async (notes: string) => {
+              await callCenter.saveCallNotes(notes);
               setShowNotes(false);
               refetch();
             }}
-            phoneNumber={callCenter.callState.phoneNumber}
           />
         </>
       )}
