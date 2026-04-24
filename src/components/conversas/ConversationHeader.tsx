@@ -12,6 +12,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { Dialog, DialogContent, DialogHeader as UIDialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { useEffect, useState } from "react";
+import { MarkProspectionButton } from "./MarkProspectionButton";
 
  type SyncStatus = 'synced' | 'syncing' | 'error' | 'idle';
  type OnlineStatus = 'online' | 'offline' | 'unknown';
@@ -262,7 +263,15 @@ import { useEffect, useState } from "react";
                    compact
                  />
                )}
-               {/* Botão Transferir Atendimento */}
+                {/* Botão Marcar Prospecção */}
+                <MarkProspectionButton
+                  leadId={leadVinculado?.id}
+                  contactPhone={contactPhone}
+                  channel={channel}
+                  companyId={companyId}
+                  variant="icon"
+                />
+                {/* Botão Transferir Atendimento */}
                {onTransferAtendimento && (
                  <Tooltip>
                    <TooltipTrigger asChild>
@@ -386,6 +395,14 @@ import { useEffect, useState } from "react";
                   compact
                 />
               )}
+              {/* Botão Marcar Prospecção (mobile) */}
+              <MarkProspectionButton
+                leadId={leadVinculado?.id}
+                contactPhone={contactPhone}
+                channel={channel}
+                companyId={companyId}
+                variant="ghost"
+              />
               {/* Botão Transferir Atendimento */}
               {onTransferAtendimento && (
                 <Button
