@@ -75,6 +75,7 @@ export function DisparoEmMassa() {
   const [pauseAfterMessages, setPauseAfterMessages] = useState<number>(15); // quantidade
   const [pauseDuration, setPauseDuration] = useState<number>(120); // segundos (2 minutos)
   const [campanhaNome, setCampanhaNome] = useState<string>("");
+  const [markAsProspect, setMarkAsProspect] = useState<boolean>(true);
   
   // Estados para templates
   const [selectedTemplate, setSelectedTemplate] = useState<Template | null>(null);
@@ -466,6 +467,22 @@ export function DisparoEmMassa() {
 
     setActiveCampaignId(campaignId);
 
+    // Marcar leads como "para prospectar" se a opção estiver ativa
+    if (markAsProspect && leadsToSend.length > 0) {
+      try {
+        const ids = leadsToSend.map((l) => l.id);
+        await supabase
+          .from('leads')
+          .update({
+            to_prospect: true,
+            prospecting_priority: 1,
+          } as any)
+          .in('id', ids);
+      } catch (err) {
+        console.warn('Falha ao marcar leads para prospecção:', err);
+      }
+    }
+
     // Fire and forget - edge function processes in background
     supabase.functions.invoke('disparo-em-massa', {
       body: { campaign_id: campaignId },
@@ -685,6 +702,23 @@ export function DisparoEmMassa() {
             <p className="text-xs text-muted-foreground">
               Dê um nome descritivo para identificar esta campanha nos relatórios
             </p>
+            <div className="flex items-start gap-2 pt-2 p-3 rounded-md border border-border bg-muted/30">
+              <Checkbox
+                id="mark-prospect"
+                checked={markAsProspect}
+                onCheckedChange={(c) => setMarkAsProspect(!!c)}
+                disabled={sending}
+                className="mt-0.5"
+              />
+              <div className="flex-1">
+                <Label htmlFor="mark-prospect" className="font-medium cursor-pointer text-sm">
+                  🎯 Marcar leads selecionados para prospecção
+                </Label>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Adiciona automaticamente todos os leads desta campanha à fila de prospecção (canal WhatsApp) — eles aparecerão no módulo Prospecção.
+                </p>
+              </div>
+            </div>
           </div>
 
           {/* Configurações de Timing */}
