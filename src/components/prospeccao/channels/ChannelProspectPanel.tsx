@@ -277,6 +277,15 @@ export function ChannelProspectPanel({ channel }: Props) {
           />
         </>
       )}
+
+      {handoffLead && (
+        <HandoffDialog
+          open={!!handoffLead}
+          onOpenChange={(o) => !o && setHandoffLead(null)}
+          leadId={handoffLead.id}
+          leadName={handoffLead.name}
+        />
+      )}
     </div>
   );
 }
