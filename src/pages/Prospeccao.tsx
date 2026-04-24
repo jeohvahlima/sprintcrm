@@ -42,7 +42,7 @@ export default function Prospeccao() {
   const isMobile = useIsMobile();
   const [rpgMode, setRpgMode] = useState<boolean>(() => localStorage.getItem(RPG_KEY) !== "false");
   const [soundOn, setSoundOn] = useState<boolean>(() => localStorage.getItem(SOUND_KEY) === "true");
-  const [activeTab, setActiveTab] = useState<"organic" | "paid" | "followup" | "arena" | "coldcall" | "instagram" | "whatsapp">("organic");
+  const [activeTab, setActiveTab] = useState<"organic" | "paid" | "followup" | "arena" | "coldcall" | "instagram" | "whatsapp" | "funil">("organic");
   const [subTab, setSubTab] = useState<"registros" | "interacoes">("registros");
   const [period, setPeriod] = useState("30");
   const [showForm, setShowForm] = useState(false);
@@ -58,7 +58,8 @@ export default function Prospeccao() {
   useEffect(() => { localStorage.setItem(SOUND_KEY, String(soundOn)); }, [soundOn]);
 
   const isChannelTab = activeTab === "coldcall" || activeTab === "instagram" || activeTab === "whatsapp";
-  const channelType = activeTab === "followup" || activeTab === "arena" || isChannelTab ? "organic" : activeTab;
+  const isFunilTab = activeTab === "funil";
+  const channelType = activeTab === "followup" || activeTab === "arena" || isChannelTab || isFunilTab ? "organic" : activeTab;
   const { data, isLoading, refetch } = useProspeccaoData(channelType as "organic" | "paid", parseInt(period));
   const { data: followUpData, isLoading: followUpLoading, refetch: followUpRefetch } = useFollowUpData(parseInt(period));
 
@@ -144,6 +145,7 @@ export default function Prospeccao() {
     coldcall: "📞 Cold Call",
     instagram: "📸 Instagram",
     whatsapp: "💬 WhatsApp",
+    funil: "🗺️ Funil",
   };
   const CLASSIC_TAB_LABELS: Record<string, string> = {
     organic: "Orgânico",
@@ -153,6 +155,7 @@ export default function Prospeccao() {
     coldcall: "Cold Call",
     instagram: "Instagram",
     whatsapp: "WhatsApp",
+    funil: "Funil de Vendas",
   };
   const labels = gamificationOn ? RPG_TAB_LABELS : CLASSIC_TAB_LABELS;
 
@@ -229,10 +232,11 @@ export default function Prospeccao() {
               <TabsTrigger value="coldcall">{labels.coldcall}</TabsTrigger>
               <TabsTrigger value="instagram">{labels.instagram}</TabsTrigger>
               <TabsTrigger value="whatsapp">{labels.whatsapp}</TabsTrigger>
+              <TabsTrigger value="funil">{labels.funil}</TabsTrigger>
               {gamificationOn && <TabsTrigger value="arena">{labels.arena}</TabsTrigger>}
             </TabsList>
 
-            {activeTab !== "arena" && !isChannelTab && (
+            {activeTab !== "arena" && !isChannelTab && !isFunilTab && (
               <div className="flex gap-1 mt-3 mb-4">
                 <Button variant={subTab === "registros" ? "default" : "ghost"} size="sm" onClick={() => setSubTab("registros")}>Registros</Button>
                 <Button variant={subTab === "interacoes" ? "default" : "ghost"} size="sm" onClick={() => setSubTab("interacoes")}>
@@ -256,6 +260,26 @@ export default function Prospeccao() {
             ) : isChannelTab ? (
               <div className="mt-4">
                 <ChannelProspectPanel channel={activeTab as "coldcall" | "instagram" | "whatsapp"} />
+              </div>
+            ) : isFunilTab ? (
+              <div className="mt-4 space-y-3">
+                <div className="flex items-center justify-between gap-2 flex-wrap">
+                  <p className="text-sm text-muted-foreground">
+                    Espelho do Funil de Vendas — arraste leads entre etapas em tempo real.
+                  </p>
+                  <Button variant="outline" size="sm" asChild>
+                    <Link to="/kanban" target="_blank" rel="noopener noreferrer">
+                      Abrir em nova aba
+                    </Link>
+                  </Button>
+                </div>
+                <div className="rounded-lg border border-border overflow-hidden bg-background" style={{ height: "calc(100vh - 320px)", minHeight: 600 }}>
+                  <iframe
+                    src="/kanban"
+                    title="Funil de Vendas"
+                    className="w-full h-full border-0"
+                  />
+                </div>
               </div>
             ) : subTab === "interacoes" ? (
               <div className="space-y-6">
