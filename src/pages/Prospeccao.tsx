@@ -249,6 +249,7 @@ export default function Prospeccao() {
               <TabsTrigger value="organic">{labels.organic}</TabsTrigger>
               <TabsTrigger value="paid">{labels.paid}</TabsTrigger>
               <TabsTrigger value="followup">{labels.followup}</TabsTrigger>
+              <TabsTrigger value="fila">{labels.fila}</TabsTrigger>
               <TabsTrigger value="coldcall">{labels.coldcall}</TabsTrigger>
               <TabsTrigger value="instagram">{labels.instagram}</TabsTrigger>
               <TabsTrigger value="whatsapp">{labels.whatsapp}</TabsTrigger>
@@ -258,7 +259,7 @@ export default function Prospeccao() {
               {gamificationOn && <TabsTrigger value="arena">{labels.arena}</TabsTrigger>}
             </TabsList>
 
-            {activeTab !== "arena" && !isChannelTab && !isFunilTab && !isCloserTab && !isComandoTab && (
+            {activeTab !== "arena" && !isChannelTab && !isFunilTab && !isCloserTab && !isComandoTab && !isFilaTab && (
               <div className="flex gap-1 mt-3 mb-4">
                 <Button variant={subTab === "registros" ? "default" : "ghost"} size="sm" onClick={() => setSubTab("registros")}>Registros</Button>
                 <Button variant={subTab === "interacoes" ? "default" : "ghost"} size="sm" onClick={() => setSubTab("interacoes")}>
