@@ -44,6 +44,7 @@ export default function Prospeccao() {
   const [soundOn, setSoundOn] = useState<boolean>(() => localStorage.getItem(SOUND_KEY) === "true");
   const [activeTab, setActiveTab] = useState<"organic" | "paid" | "followup" | "arena" | "coldcall" | "instagram" | "whatsapp" | "funil">("organic");
   const [subTab, setSubTab] = useState<"registros" | "interacoes">("registros");
+  const [channelView, setChannelView] = useState<"prospect" | "chat">("prospect");
   const [period, setPeriod] = useState("30");
   const [showForm, setShowForm] = useState(false);
   const [showFollowUpForm, setShowFollowUpForm] = useState(false);
