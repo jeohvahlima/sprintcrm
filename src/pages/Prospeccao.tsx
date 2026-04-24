@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { Plus, Download, FileText, UserPlus, Settings } from "lucide-react";
+import { Plus, Download, FileText, UserPlus, Settings, Volume2, VolumeX } from "lucide-react";
 import { Link } from "react-router-dom";
 import confetti from "canvas-confetti";
 import { ProspeccaoKPIs } from "@/components/prospeccao/ProspeccaoKPIs";
@@ -186,12 +186,20 @@ export default function Prospeccao() {
             <Plus className="h-4 w-4 mr-1" /> Registrar
           </Button>
           {gamificationOn && (
-            <Button size="sm" variant="ghost" asChild>
-              <Link to="/configuracoes/gamificacao"><Settings className="h-4 w-4" /></Link>
-            </Button>
+            <>
+              <Button size="sm" variant="ghost" onClick={() => setSoundOn((s) => !s)} title={soundOn ? "Desligar som" : "Ligar som"}>
+                {soundOn ? <Volume2 className="h-4 w-4" /> : <VolumeX className="h-4 w-4" />}
+              </Button>
+              <Button size="sm" variant="ghost" asChild>
+                <Link to="/configuracoes/gamificacao"><Settings className="h-4 w-4" /></Link>
+              </Button>
+            </>
           )}
         </div>
       </div>
+
+      {/* Arena ao vivo (topo) */}
+      {gamificationOn && <ArenaTopBar companyId={companyId} currentUserId={userId} />}
 
       {/* Player Header (modo RPG) */}
       {gamificationOn && (
