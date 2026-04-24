@@ -686,6 +686,23 @@ export function DisparoEmMassa() {
             <p className="text-xs text-muted-foreground">
               Dê um nome descritivo para identificar esta campanha nos relatórios
             </p>
+            <div className="flex items-start gap-2 pt-2 p-3 rounded-md border border-border bg-muted/30">
+              <Checkbox
+                id="mark-prospect"
+                checked={markAsProspect}
+                onCheckedChange={(c) => setMarkAsProspect(!!c)}
+                disabled={sending}
+                className="mt-0.5"
+              />
+              <div className="flex-1">
+                <Label htmlFor="mark-prospect" className="font-medium cursor-pointer text-sm">
+                  🎯 Marcar leads selecionados para prospecção
+                </Label>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Adiciona automaticamente todos os leads desta campanha à fila de prospecção (canal WhatsApp) — eles aparecerão no módulo Prospecção.
+                </p>
+              </div>
+            </div>
           </div>
 
           {/* Configurações de Timing */}
