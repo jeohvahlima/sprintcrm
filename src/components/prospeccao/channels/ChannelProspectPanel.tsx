@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Phone, MessageSquare, Instagram, Send, Search, Star, StarOff, ExternalLink, Loader2, PhoneCall, Tag as TagIcon } from "lucide-react";
+import { Phone, MessageSquare, Instagram, Send, Search, Star, StarOff, ExternalLink, Loader2, PhoneCall, Tag as TagIcon, ArrowRightLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -15,6 +15,7 @@ import { CallModal } from "@/components/discador/CallModal";
 import { PostCallNotesDialog } from "@/components/discador/PostCallNotesDialog";
 import { useTagsManager } from "@/hooks/useTagsManager";
 import { ConversaPopup } from "@/components/leads/ConversaPopup";
+import { HandoffDialog } from "@/components/prospeccao/comercial/HandoffDialog";
 
 interface Props {
   channel: ProspectChannel;
@@ -38,6 +39,7 @@ export function ChannelProspectPanel({ channel }: Props) {
   // Popup de conversa inline (Instagram/WhatsApp)
   const [conversaOpen, setConversaOpen] = useState(false);
   const [activeLead, setActiveLead] = useState<{ id: string; name: string; phone?: string } | null>(null);
+  const [handoffLead, setHandoffLead] = useState<{ id: string; name: string } | null>(null);
 
   const { allTags } = useTagsManager();
 
@@ -211,6 +213,9 @@ export function ChannelProspectPanel({ channel }: Props) {
                          <Send className="h-3.5 w-3.5 mr-1" />}
                         {meta.cta}
                       </Button>
+                      <Button size="icon" variant="ghost" onClick={() => setHandoffLead({ id: lead.id, name: lead.name || "Lead" })} title="Passar para Closer">
+                        <ArrowRightLeft className="h-3.5 w-3.5" />
+                      </Button>
                       <Button size="icon" variant="ghost" onClick={() => navigate(`/leads?id=${lead.id}`)} title="Abrir lead">
                         <ExternalLink className="h-3.5 w-3.5" />
                       </Button>
@@ -271,6 +276,15 @@ export function ChannelProspectPanel({ channel }: Props) {
             }}
           />
         </>
+      )}
+
+      {handoffLead && (
+        <HandoffDialog
+          open={!!handoffLead}
+          onOpenChange={(o) => !o && setHandoffLead(null)}
+          leadId={handoffLead.id}
+          leadName={handoffLead.name}
+        />
       )}
     </div>
   );

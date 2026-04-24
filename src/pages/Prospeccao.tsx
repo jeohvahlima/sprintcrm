@@ -34,6 +34,10 @@ import { ArenaTopBar } from "@/components/prospeccao/rpg/ArenaTopBar";
 import { TeamLobbyPanel } from "@/components/prospeccao/rpg/TeamLobbyPanel";
 import { KillFeed } from "@/components/prospeccao/rpg/KillFeed";
 import { ChannelProspectPanel } from "@/components/prospeccao/channels/ChannelProspectPanel";
+import { GoalProgressHUD } from "@/components/prospeccao/comercial/GoalProgressHUD";
+import { CloserInbox } from "@/components/prospeccao/comercial/CloserInbox";
+import { ManagerCommandCenter } from "@/components/prospeccao/comercial/ManagerCommandCenter";
+import { usePermissions } from "@/hooks/usePermissions";
 
 const RPG_KEY = "prospeccao_rpg_mode";
 const SOUND_KEY = "prospeccao_rpg_sound";
@@ -42,7 +46,7 @@ export default function Prospeccao() {
   const isMobile = useIsMobile();
   const [rpgMode, setRpgMode] = useState<boolean>(() => localStorage.getItem(RPG_KEY) !== "false");
   const [soundOn, setSoundOn] = useState<boolean>(() => localStorage.getItem(SOUND_KEY) === "true");
-  const [activeTab, setActiveTab] = useState<"organic" | "paid" | "followup" | "arena" | "coldcall" | "instagram" | "whatsapp" | "funil">("organic");
+  const [activeTab, setActiveTab] = useState<"organic" | "paid" | "followup" | "arena" | "coldcall" | "instagram" | "whatsapp" | "funil" | "closer" | "comando">("organic");
   const [subTab, setSubTab] = useState<"registros" | "interacoes">("registros");
   const [channelView, setChannelView] = useState<"prospect" | "chat">("prospect");
   const [period, setPeriod] = useState("30");
@@ -60,7 +64,9 @@ export default function Prospeccao() {
 
   const isChannelTab = activeTab === "coldcall" || activeTab === "instagram" || activeTab === "whatsapp";
   const isFunilTab = activeTab === "funil";
-  const channelType = activeTab === "followup" || activeTab === "arena" || isChannelTab || isFunilTab ? "organic" : activeTab;
+  const isCloserTab = activeTab === "closer";
+  const isComandoTab = activeTab === "comando";
+  const channelType = activeTab === "followup" || activeTab === "arena" || isChannelTab || isFunilTab || isCloserTab || isComandoTab ? "organic" : activeTab;
   const { data, isLoading, refetch } = useProspeccaoData(channelType as "organic" | "paid", parseInt(period));
   const { data: followUpData, isLoading: followUpLoading, refetch: followUpRefetch } = useFollowUpData(parseInt(period));
 
@@ -73,6 +79,8 @@ export default function Prospeccao() {
   const { data: profile, userId, companyId } = usePlayerProfile();
   const { data: gamificationCfg } = useGamificationConfig(companyId);
   const gamificationOn = rpgMode && (gamificationCfg?.enabled ?? true);
+  const { isAdmin, userRoles } = usePermissions();
+  const isManagerLike = isAdmin || userRoles.some((r) => r.role === "gestor");
 
   // Detect level up via realtime profile
   const lastLevel = useRef<number | null>(null);
@@ -147,6 +155,8 @@ export default function Prospeccao() {
     instagram: "📸 Instagram",
     whatsapp: "💬 WhatsApp",
     funil: "🗺️ Funil",
+    closer: "📥 Caixa Closer",
+    comando: "🎖️ Comando",
   };
   const CLASSIC_TAB_LABELS: Record<string, string> = {
     organic: "Orgânico",
@@ -157,6 +167,8 @@ export default function Prospeccao() {
     instagram: "Instagram",
     whatsapp: "WhatsApp",
     funil: "Funil de Vendas",
+    closer: "Caixa do Closer",
+    comando: "Gestor",
   };
   const labels = gamificationOn ? RPG_TAB_LABELS : CLASSIC_TAB_LABELS;
 
@@ -223,6 +235,9 @@ export default function Prospeccao() {
         />
       )}
 
+      {/* HUD de Metas Comerciais — sempre visível */}
+      <GoalProgressHUD period="daily" />
+
       <div className={`flex gap-6 ${isMobile ? "flex-col" : ""}`}>
         <div className="flex-1 min-w-0">
           <Tabs value={activeTab} onValueChange={(v) => { setActiveTab(v as any); setSubTab("registros"); }}>
@@ -234,10 +249,12 @@ export default function Prospeccao() {
               <TabsTrigger value="instagram">{labels.instagram}</TabsTrigger>
               <TabsTrigger value="whatsapp">{labels.whatsapp}</TabsTrigger>
               <TabsTrigger value="funil">{labels.funil}</TabsTrigger>
+              <TabsTrigger value="closer">{labels.closer}</TabsTrigger>
+              {isManagerLike && <TabsTrigger value="comando">{labels.comando}</TabsTrigger>}
               {gamificationOn && <TabsTrigger value="arena">{labels.arena}</TabsTrigger>}
             </TabsList>
 
-            {activeTab !== "arena" && !isChannelTab && !isFunilTab && (
+            {activeTab !== "arena" && !isChannelTab && !isFunilTab && !isCloserTab && !isComandoTab && (
               <div className="flex gap-1 mt-3 mb-4">
                 <Button variant={subTab === "registros" ? "default" : "ghost"} size="sm" onClick={() => setSubTab("registros")}>Registros</Button>
                 <Button variant={subTab === "interacoes" ? "default" : "ghost"} size="sm" onClick={() => setSubTab("interacoes")}>
@@ -246,7 +263,15 @@ export default function Prospeccao() {
               </div>
             )}
 
-            {activeTab === "arena" ? (
+            {isCloserTab ? (
+              <div className="mt-4">
+                <CloserInbox />
+              </div>
+            ) : isComandoTab ? (
+              <div className="mt-4">
+                <ManagerCommandCenter />
+              </div>
+            ) : activeTab === "arena" ? (
               <div className="space-y-6 mt-4">
                 <WeeklyLeaderboard companyId={companyId} currentUserId={userId} />
                 <div className="rpg-card rounded-lg p-4">
