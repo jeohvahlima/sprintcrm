@@ -10130,6 +10130,17 @@ function Conversas() {
                         >
                           <Workflow className="h-4 w-4 mr-2" /> Roteiros Comerciais
                         </Button>
+                        {selectedConv && (
+                          <RoteirosComerciaisDialog
+                            open={roteirosDialogOpen}
+                            onOpenChange={setRoteirosDialogOpen}
+                            conversationContext={{
+                              conversation_id: selectedConv.id,
+                              lead_id: (selectedConv as any).leadId || undefined,
+                              telefone_formatado: (selectedConv.phoneNumber || selectedConv.id || "").replace(/[^0-9]/g, ""),
+                            }}
+                          />
+                        )}
                         {/* Quick Messages */}
                         <Dialog>
                           <DialogTrigger asChild>
