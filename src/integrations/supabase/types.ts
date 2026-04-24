@@ -945,6 +945,60 @@ export type Database = {
           },
         ]
       }
+      commercial_goals: {
+        Row: {
+          active: boolean | null
+          company_id: string
+          created_at: string | null
+          created_by: string | null
+          end_date: string | null
+          id: string
+          metric: string
+          period: string
+          role_target: string | null
+          scope: string
+          start_date: string
+          target_value: number
+          team_id: string | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          active?: boolean | null
+          company_id: string
+          created_at?: string | null
+          created_by?: string | null
+          end_date?: string | null
+          id?: string
+          metric: string
+          period: string
+          role_target?: string | null
+          scope?: string
+          start_date?: string
+          target_value?: number
+          team_id?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          active?: boolean | null
+          company_id?: string
+          created_at?: string | null
+          created_by?: string | null
+          end_date?: string | null
+          id?: string
+          metric?: string
+          period?: string
+          role_target?: string | null
+          scope?: string
+          start_date?: string
+          target_value?: number
+          team_id?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       companies: {
         Row: {
           allow_ai_features: boolean | null
@@ -5078,12 +5132,15 @@ export type Database = {
           avatar_frame: string | null
           class: string
           coins: number
+          commercial_role: string | null
+          commission_per_sale: number | null
           company_id: string
           created_at: string
           id: string
           last_activity_date: string | null
           level: number
           streak_days: number
+          team_id: string | null
           title: string | null
           updated_at: string
           user_id: string
@@ -5094,12 +5151,15 @@ export type Database = {
           avatar_frame?: string | null
           class?: string
           coins?: number
+          commercial_role?: string | null
+          commission_per_sale?: number | null
           company_id: string
           created_at?: string
           id?: string
           last_activity_date?: string | null
           level?: number
           streak_days?: number
+          team_id?: string | null
           title?: string | null
           updated_at?: string
           user_id: string
@@ -5110,12 +5170,15 @@ export type Database = {
           avatar_frame?: string | null
           class?: string
           coins?: number
+          commercial_role?: string | null
+          commission_per_sale?: number | null
           company_id?: string
           created_at?: string
           id?: string
           last_activity_date?: string | null
           level?: number
           streak_days?: number
+          team_id?: string | null
           title?: string | null
           updated_at?: string
           user_id?: string
@@ -5590,6 +5653,45 @@ export type Database = {
           },
         ]
       }
+      sales_teams: {
+        Row: {
+          active: boolean | null
+          color: string | null
+          company_id: string
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          id: string
+          manager_id: string | null
+          name: string
+          updated_at: string | null
+        }
+        Insert: {
+          active?: boolean | null
+          color?: string | null
+          company_id: string
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          manager_id?: string | null
+          name: string
+          updated_at?: string | null
+        }
+        Update: {
+          active?: boolean | null
+          color?: string | null
+          company_id?: string
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          manager_id?: string | null
+          name?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       scheduled_cadence_actions: {
         Row: {
           action_description: string | null
@@ -5708,6 +5810,66 @@ export type Database = {
           sent_at?: string | null
           status?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      sdr_closer_handoffs: {
+        Row: {
+          accepted_at: string | null
+          actual_value: number | null
+          closed_at: string | null
+          closer_id: string | null
+          closer_notes: string | null
+          company_id: string
+          created_at: string | null
+          expected_value: number | null
+          id: string
+          lead_id: string
+          meeting_done_at: string | null
+          qualification_score: number | null
+          scheduled_meeting_at: string | null
+          sdr_id: string
+          sdr_notes: string | null
+          status: string
+          updated_at: string | null
+        }
+        Insert: {
+          accepted_at?: string | null
+          actual_value?: number | null
+          closed_at?: string | null
+          closer_id?: string | null
+          closer_notes?: string | null
+          company_id: string
+          created_at?: string | null
+          expected_value?: number | null
+          id?: string
+          lead_id: string
+          meeting_done_at?: string | null
+          qualification_score?: number | null
+          scheduled_meeting_at?: string | null
+          sdr_id: string
+          sdr_notes?: string | null
+          status?: string
+          updated_at?: string | null
+        }
+        Update: {
+          accepted_at?: string | null
+          actual_value?: number | null
+          closed_at?: string | null
+          closer_id?: string | null
+          closer_notes?: string | null
+          company_id?: string
+          created_at?: string | null
+          expected_value?: number | null
+          id?: string
+          lead_id?: string
+          meeting_done_at?: string | null
+          qualification_score?: number | null
+          scheduled_meeting_at?: string | null
+          sdr_id?: string
+          sdr_notes?: string | null
+          status?: string
+          updated_at?: string | null
         }
         Relationships: []
       }
@@ -7128,10 +7290,37 @@ export type Database = {
           total_users: number
         }[]
       }
+      get_team_performance: {
+        Args: { p_company_id: string; p_period?: string }
+        Returns: {
+          calls: number
+          commercial_role: string
+          conversion_rate: number
+          gross_value: number
+          leads_prospected: number
+          meetings_scheduled: number
+          responses: number
+          sales_closed: number
+          team_id: string
+          team_name: string
+          user_id: string
+          user_name: string
+        }[]
+      }
       get_user_company_ids: {
         Args: never
         Returns: {
           company_id: string
+        }[]
+      }
+      get_user_goal_progress: {
+        Args: { p_period: string; p_user_id: string }
+        Returns: {
+          current_value: number
+          goal_id: string
+          metric: string
+          progress_pct: number
+          target_value: number
         }[]
       }
       get_user_parent_company_id: { Args: never; Returns: string }
