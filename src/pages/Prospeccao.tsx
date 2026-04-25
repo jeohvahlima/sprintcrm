@@ -62,6 +62,10 @@ export default function Prospeccao() {
   const [showRanks, setShowRanks] = useState(false);
   const [showLevelUp, setShowLevelUp] = useState(false);
   const [newLevel] = useState(0);
+  const [sidebarOpen, setSidebarOpen] = useState<boolean>(() => localStorage.getItem("prospeccao_sidebar") !== "false");
+  const [recordsView, setRecordsView] = useState<"table" | "kanban">("table");
+  const [activeFunnelStage, setActiveFunnelStage] = useState<string | null>(null);
+  useEffect(() => { localStorage.setItem("prospeccao_sidebar", String(sidebarOpen)); }, [sidebarOpen]);
 
   useEffect(() => { localStorage.setItem(RPG_KEY, String(rpgMode)); }, [rpgMode]);
   useEffect(() => { localStorage.setItem(SOUND_KEY, String(soundOn)); }, [soundOn]);
