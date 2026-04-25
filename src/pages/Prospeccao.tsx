@@ -356,14 +356,36 @@ export default function Prospeccao() {
             ) : (
               <>
                 <TabsContent value="organic" className="space-y-6 mt-0">
+                  <PipelineFunnelVisual
+                    data={data || []}
+                    isLoading={isLoading}
+                    activeStage={activeFunnelStage}
+                    onStageClick={setActiveFunnelStage}
+                  />
                   <ProspeccaoKPIs data={data || []} channelType="organic" isLoading={isLoading} />
                   <ProspeccaoCharts data={data || []} channelType="organic" />
-                  <ProspeccaoTable data={data || []} channelType="organic" isLoading={isLoading} onRefresh={refetch} />
+                  <RecordsViewToggle view={recordsView} onChange={setRecordsView} />
+                  {recordsView === "table" ? (
+                    <ProspeccaoTable data={data || []} channelType="organic" isLoading={isLoading} onRefresh={refetch} />
+                  ) : (
+                    <ProspeccaoKanbanView data={data || []} />
+                  )}
                 </TabsContent>
                 <TabsContent value="paid" className="space-y-6 mt-0">
+                  <PipelineFunnelVisual
+                    data={data || []}
+                    isLoading={isLoading}
+                    activeStage={activeFunnelStage}
+                    onStageClick={setActiveFunnelStage}
+                  />
                   <ProspeccaoKPIs data={data || []} channelType="paid" isLoading={isLoading} />
                   <ProspeccaoCharts data={data || []} channelType="paid" />
-                  <ProspeccaoTable data={data || []} channelType="paid" isLoading={isLoading} onRefresh={refetch} />
+                  <RecordsViewToggle view={recordsView} onChange={setRecordsView} />
+                  {recordsView === "table" ? (
+                    <ProspeccaoTable data={data || []} channelType="paid" isLoading={isLoading} onRefresh={refetch} />
+                  ) : (
+                    <ProspeccaoKanbanView data={data || []} />
+                  )}
                 </TabsContent>
                 <TabsContent value="followup" className="space-y-6 mt-0">
                   <FollowUpKPIs data={followUpData || []} isLoading={followUpLoading} />
