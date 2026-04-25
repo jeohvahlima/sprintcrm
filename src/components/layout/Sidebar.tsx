@@ -1,6 +1,6 @@
 import { NavLink, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
-import { LayoutDashboard, Users, MessageSquare, Calendar, Bot, Settings, LogOut, MessagesSquare, Video, PhoneCall, Target, Lock, X, Brain, DollarSign, GraduationCap } from "lucide-react";
+import { LayoutDashboard, Users, MessageSquare, Calendar, Bot, Settings, LogOut, MessagesSquare, Video, PhoneCall, Target, Lock, X, Brain, DollarSign, GraduationCap, Activity, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
@@ -68,6 +68,16 @@ const navigation = [{
   href: "/prospeccao",
   icon: Target,
   menuKey: "prospeccao"
+}, {
+  name: "Maturidade",
+  href: "/maturidade",
+  icon: Activity,
+  menuKey: "maturidade"
+}, {
+  name: "Mentoria",
+  href: "/mentoria",
+  icon: Sparkles,
+  menuKey: "mentoria"
 }, {
   name: "Financeiro",
   href: "/financeiro",
