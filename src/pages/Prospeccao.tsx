@@ -426,3 +426,29 @@ export default function Prospeccao() {
     </div>
   );
 }
+
+function RecordsViewToggle({ view, onChange }: { view: "table" | "kanban"; onChange: (v: "table" | "kanban") => void }) {
+  return (
+    <div className="flex items-center justify-between gap-2">
+      <h3 className="text-sm font-semibold text-foreground">Registros</h3>
+      <div className="inline-flex rounded-lg border border-border bg-muted/40 p-0.5">
+        <Button
+          size="sm"
+          variant={view === "table" ? "default" : "ghost"}
+          className="h-7 px-3 text-xs"
+          onClick={() => onChange("table")}
+        >
+          <TableIcon className="h-3.5 w-3.5 mr-1" /> Tabela
+        </Button>
+        <Button
+          size="sm"
+          variant={view === "kanban" ? "default" : "ghost"}
+          className="h-7 px-3 text-xs"
+          onClick={() => onChange("kanban")}
+        >
+          <LayoutGrid className="h-3.5 w-3.5 mr-1" /> Kanban
+        </Button>
+      </div>
+    </div>
+  );
+}
