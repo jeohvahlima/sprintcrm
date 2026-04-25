@@ -4331,6 +4331,199 @@ export type Database = {
         }
         Relationships: []
       }
+      mentorship_community_comments: {
+        Row: {
+          author_id: string
+          author_name: string
+          content: string
+          created_at: string
+          id: string
+          post_id: string
+        }
+        Insert: {
+          author_id: string
+          author_name: string
+          content: string
+          created_at?: string
+          id?: string
+          post_id: string
+        }
+        Update: {
+          author_id?: string
+          author_name?: string
+          content?: string
+          created_at?: string
+          id?: string
+          post_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mentorship_community_comments_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "mentorship_community_posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      mentorship_community_posts: {
+        Row: {
+          author_company_id: string
+          author_id: string
+          author_name: string
+          comments_count: number
+          content: string
+          created_at: string
+          id: string
+          likes_count: number
+          pinned: boolean
+          post_type: string
+          tags: string[] | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          author_company_id: string
+          author_id: string
+          author_name: string
+          comments_count?: number
+          content: string
+          created_at?: string
+          id?: string
+          likes_count?: number
+          pinned?: boolean
+          post_type?: string
+          tags?: string[] | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          author_company_id?: string
+          author_id?: string
+          author_name?: string
+          comments_count?: number
+          content?: string
+          created_at?: string
+          id?: string
+          likes_count?: number
+          pinned?: boolean
+          post_type?: string
+          tags?: string[] | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      mentorship_recordings: {
+        Row: {
+          company_id: string | null
+          created_at: string
+          description: string | null
+          duration_seconds: number | null
+          id: string
+          session_id: string | null
+          tags: string[] | null
+          thumbnail_url: string | null
+          title: string
+          updated_at: string
+          uploaded_by: string | null
+          video_url: string
+          views_count: number
+        }
+        Insert: {
+          company_id?: string | null
+          created_at?: string
+          description?: string | null
+          duration_seconds?: number | null
+          id?: string
+          session_id?: string | null
+          tags?: string[] | null
+          thumbnail_url?: string | null
+          title: string
+          updated_at?: string
+          uploaded_by?: string | null
+          video_url: string
+          views_count?: number
+        }
+        Update: {
+          company_id?: string | null
+          created_at?: string
+          description?: string | null
+          duration_seconds?: number | null
+          id?: string
+          session_id?: string | null
+          tags?: string[] | null
+          thumbnail_url?: string | null
+          title?: string
+          updated_at?: string
+          uploaded_by?: string | null
+          video_url?: string
+          views_count?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mentorship_recordings_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "mentorship_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      mentorship_sessions: {
+        Row: {
+          action_items: Json | null
+          company_id: string
+          created_at: string
+          description: string | null
+          duration_minutes: number
+          id: string
+          meeting_url: string | null
+          mentor_name: string
+          post_session_notes: string | null
+          recording_id: string | null
+          scheduled_at: string
+          scheduled_by: string
+          status: string
+          topic: string
+          updated_at: string
+        }
+        Insert: {
+          action_items?: Json | null
+          company_id: string
+          created_at?: string
+          description?: string | null
+          duration_minutes?: number
+          id?: string
+          meeting_url?: string | null
+          mentor_name?: string
+          post_session_notes?: string | null
+          recording_id?: string | null
+          scheduled_at: string
+          scheduled_by: string
+          status?: string
+          topic: string
+          updated_at?: string
+        }
+        Update: {
+          action_items?: Json | null
+          company_id?: string
+          created_at?: string
+          description?: string | null
+          duration_minutes?: number
+          id?: string
+          meeting_url?: string | null
+          mentor_name?: string
+          post_session_notes?: string | null
+          recording_id?: string | null
+          scheduled_at?: string
+          scheduled_by?: string
+          status?: string
+          topic?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       notificacoes: {
         Row: {
           company_id: string | null
@@ -7483,6 +7676,10 @@ export type Database = {
           id: string
           name: string
         }[]
+      }
+      get_commercial_maturity_score: {
+        Args: { p_company_id?: string }
+        Returns: Json
       }
       get_monthly_cost_comparison: {
         Args: { p_master_company_id: string; p_months?: number }
