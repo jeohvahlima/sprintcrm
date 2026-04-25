@@ -188,6 +188,18 @@ export function MainLayout() {
     }
   };
 
+  const isEmbed = typeof window !== "undefined" && new URLSearchParams(window.location.search).get("embed") === "1";
+
+  if (isEmbed) {
+    return (
+      <div className="h-screen overflow-hidden bg-background">
+        <main className="h-full overflow-y-auto p-2 md:p-4">
+          <Outlet />
+        </main>
+      </div>
+    );
+  }
+
   return (
     <div className="flex h-screen overflow-hidden bg-background">
       {/* Backdrop para mobile */}
