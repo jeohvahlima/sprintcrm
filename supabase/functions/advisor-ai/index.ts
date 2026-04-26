@@ -76,6 +76,41 @@ Gere um roadmap evolutivo de 3 semanas. Retorne APENAS via tool call.`;
         }],
         tool_choice: { type: "function", function: { name: "generate_roadmap" } },
       };
+    } else if (mode === "diagnostico_360") {
+      // Análise do Diagnóstico 360 (avaliação manual por alavancas)
+      const userPrompt = `Resultado do Diagnóstico 360 da empresa:
+${JSON.stringify(diagnostic, null, 2)}
+
+A empresa obteve nota ${diagnostic?.nota} (${diagnostic?.percentual}%) — classificação: ${diagnostic?.classificacao}.
+
+Gere um plano de ação completo e específico para esta empresa, em markdown, com:
+
+## 🎯 Diagnóstico Executivo
+(2-3 parágrafos analisando o cenário atual e o "balde furado" mais crítico)
+
+## 🚨 Top 3 Gargalos Críticos
+(as alavancas mais fracas, com impacto financeiro estimado)
+
+## ⚡ Plano de Ação Imediato (Próximos 30 dias)
+(5 ações concretas, priorizadas, cada uma com: o quê fazer, como fazer, KPI de sucesso)
+
+## 📈 Plano 60-90 dias (Estruturação)
+(3-4 iniciativas estratégicas)
+
+## 💎 Visão de 6 meses
+(onde a empresa estará se executar o plano)
+
+## 🛠 Módulos da Waze recomendados
+(quais módulos da plataforma destravar para cada gargalo: Funil, IA, Discador, Cadências, Automações, Analytics, Mentoria)
+
+Seja específico, direto e mensurável. Use números e metas.`;
+      payload = {
+        model: "google/gemini-2.5-pro",
+        messages: [
+          { role: "system", content: SYSTEM_PROMPT },
+          { role: "user", content: userPrompt },
+        ],
+      };
     } else if (mode === "strategic_plan") {
       const userPrompt = `Diagnóstico estratégico inicial preenchido pelo cliente:
 ${JSON.stringify(diagnostic, null, 2)}
