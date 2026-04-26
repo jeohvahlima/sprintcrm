@@ -204,7 +204,11 @@ export default function Maturidade() {
           </div>
         </TabsContent>
 
-        {/* ROADMAP */}
+        {/* DIAGNÓSTICO 360 */}
+        <TabsContent value="diagnostico">
+          <Diagnostico360 />
+        </TabsContent>
+
         <TabsContent value="roadmap" className="space-y-4">
           {!roadmap?.length ? (
             <Card>
