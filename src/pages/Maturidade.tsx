@@ -156,8 +156,9 @@ export default function Maturidade() {
 
       {/* TABS DETALHE */}
       <Tabs defaultValue="pilares" className="space-y-4">
-        <TabsList>
+        <TabsList className="flex-wrap h-auto">
           <TabsTrigger value="pilares" className="gap-2"><Zap className="h-4 w-4" /> Pilares</TabsTrigger>
+          <TabsTrigger value="diagnostico" className="gap-2"><ClipboardCheck className="h-4 w-4" /> Diagnóstico 360</TabsTrigger>
           <TabsTrigger value="roadmap" className="gap-2"><Sparkles className="h-4 w-4" /> Roadmap IA</TabsTrigger>
           <TabsTrigger value="benchmark" className="gap-2"><BarChart3 className="h-4 w-4" /> Benchmark</TabsTrigger>
           <TabsTrigger value="evolucao" className="gap-2"><TrendingUp className="h-4 w-4" /> Evolução</TabsTrigger>
