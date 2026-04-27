@@ -94,13 +94,45 @@ export function usePlaybookAdoptionStats() {
         .select("playbook_id, user_id, applied_count");
       if (e1) throw e1;
 
-      const { data: playbooks, error: e2 } = await supabase
-        .from("processes_playbooks" as any)
-        .select("id, title")
-        .limit(50);
-      if (e2 && (e2 as any).code !== "PGRST116") {
-        // tabela pode ter outro nome — tentar fallback
-      }
+      // 1) Templates oficiais da biblioteca
+      const { data: templates } = await supabase
+        .from("advisory_playbooks" as any)
+        .select("id, title, category, content, is_active")
+        .eq("is_active", true)
+        .order("created_at", { ascending: false });
+
+      // 2) Playbooks customizados (Workspace) - páginas com tipo playbook
+      const { data: customPages } = await supabase
+        .from("process_pages" as any)
+        .select("id, title, icon, page_type, properties, created_at")
+        .order("created_at", { ascending: false })
+        .limit(100);
+
+      const customPlaybooks = (customPages || []).filter((p: any) => {
+        const isPb = p.page_type === "playbook" ||
+          (p.properties && (p.properties.kind === "playbook" || p.properties.type === "playbook"));
+        const titleHints = ["playbook", "script", "cadência", "cadencia", "objeç", "discovery", "fechamento"];
+        const titleMatch = p.title && titleHints.some((h) => p.title.toLowerCase().includes(h));
+        return isPb || titleMatch;
+      });
+
+      // Combinar todos
+      const playbooks = [
+        ...(templates || []).map((t: any) => ({
+          id: t.id,
+          title: t.title,
+          category: t.category,
+          source: "template" as const,
+          icon: "📘",
+        })),
+        ...customPlaybooks.map((p: any) => ({
+          id: p.id,
+          title: p.title || "Sem título",
+          category: "custom",
+          source: "custom" as const,
+          icon: p.icon || "📝",
+        })),
+      ];
 
       const byPlaybook: Record<string, { views: number; applies: number }> = {};
       (adoption || []).forEach((a: any) => {
@@ -111,7 +143,9 @@ export function usePlaybookAdoptionStats() {
 
       return {
         adoption: adoption || [],
-        playbooks: playbooks || [],
+        playbooks,
+        templates: templates || [],
+        customPlaybooks,
         byPlaybook,
       };
     },
