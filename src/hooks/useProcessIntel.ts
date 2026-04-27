@@ -94,12 +94,12 @@ export function usePlaybookAdoptionStats() {
         .select("playbook_id, user_id, applied_count");
       if (e1) throw e1;
 
-      // 1) Templates oficiais da biblioteca
-      const { data: templates } = await supabase
+      // 1) Templates oficiais da biblioteca (apenas templates globais + os da empresa)
+      const { data: templates, error: tplErr } = await supabase
         .from("advisory_playbooks" as any)
-        .select("id, title, category, content, is_active")
-        .eq("is_active", true)
+        .select("id, title, category, is_template, company_id")
         .order("created_at", { ascending: false });
+      if (tplErr) console.warn("[playbooks] erro templates:", tplErr);
 
       // 2) Playbooks customizados (Workspace) - páginas com tipo playbook
       const { data: customPages } = await supabase
