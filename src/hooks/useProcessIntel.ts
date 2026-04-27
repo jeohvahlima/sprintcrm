@@ -1,0 +1,158 @@
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+
+// ============ Commission Plans ============
+export interface CommissionPlan {
+  id?: string;
+  name: string;
+  role: "sdr" | "closer" | "gestor";
+  base_salary: number;
+  ote_target: number;
+  variable_pct: number;
+  quota_monthly: number;
+  commission_pct: number;
+  accelerator_threshold: number;
+  accelerator_multiplier: number;
+  stage_kickers: Record<string, number>;
+  is_active: boolean;
+}
+
+export function useCommissionPlans() {
+  return useQuery({
+    queryKey: ["commission_plans"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("commission_plans" as any)
+        .select("*")
+        .eq("is_active", true)
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return (data || []) as unknown as CommissionPlan[];
+    },
+  });
+}
+
+export function useSaveCommissionPlan() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (plan: CommissionPlan) => {
+      const { data: companyId } = await supabase.rpc("get_my_company_id");
+      const payload: any = { ...plan, company_id: companyId };
+      if (plan.id) {
+        const { error } = await supabase.from("commission_plans" as any).update(payload).eq("id", plan.id);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase.from("commission_plans" as any).insert(payload);
+        if (error) throw error;
+      }
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["commission_plans"] }),
+  });
+}
+
+export function calcCommission(plan: CommissionPlan, achievementPct: number, salesValue: number) {
+  const monthlyVariable = (plan.ote_target / 12) * (plan.variable_pct / 100);
+  const baseCommission = salesValue * (plan.commission_pct / 100);
+  const aboveThreshold = achievementPct >= plan.accelerator_threshold;
+  const accelerated = aboveThreshold
+    ? baseCommission * plan.accelerator_multiplier
+    : baseCommission;
+  // Pro-rata para atingimento parcial: usa o maior entre comissão por % e atingimento × variável-alvo
+  const targetBased = monthlyVariable * (achievementPct / 100);
+  const payout = Math.max(accelerated, targetBased);
+  const totalEarnings = (plan.base_salary) + payout;
+  return {
+    monthlyVariable,
+    baseCommission,
+    accelerated,
+    payout,
+    totalEarnings,
+    aboveThreshold,
+  };
+}
+
+// ============ Playbook Adoption ============
+export function usePlaybookAdoption() {
+  return useQuery({
+    queryKey: ["playbook_adoption"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("playbook_adoption" as any)
+        .select("*");
+      if (error) throw error;
+      return (data || []) as any[];
+    },
+  });
+}
+
+export function usePlaybookAdoptionStats() {
+  return useQuery({
+    queryKey: ["playbook_adoption_stats"],
+    queryFn: async () => {
+      const { data: adoption, error: e1 } = await supabase
+        .from("playbook_adoption" as any)
+        .select("playbook_id, user_id, applied_count");
+      if (e1) throw e1;
+
+      const { data: playbooks, error: e2 } = await supabase
+        .from("commercial_playbooks" as any)
+        .select("id, title")
+        .limit(50);
+      if (e2 && e2.code !== "PGRST116") {
+        // tabela pode ter outro nome — tentar fallback
+      }
+
+      const byPlaybook: Record<string, { views: number; applies: number }> = {};
+      (adoption || []).forEach((a: any) => {
+        if (!byPlaybook[a.playbook_id]) byPlaybook[a.playbook_id] = { views: 0, applies: 0 };
+        byPlaybook[a.playbook_id].views += 1;
+        byPlaybook[a.playbook_id].applies += a.applied_count || 0;
+      });
+
+      return {
+        adoption: adoption || [],
+        playbooks: playbooks || [],
+        byPlaybook,
+      };
+    },
+  });
+}
+
+export async function trackPlaybookView(playbookId: string) {
+  const { data: companyId } = await supabase.rpc("get_my_company_id");
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session?.user || !companyId) return;
+  await supabase.from("playbook_adoption" as any).upsert({
+    company_id: companyId,
+    playbook_id: playbookId,
+    user_id: session.user.id,
+    viewed_at: new Date().toISOString(),
+  }, { onConflict: "playbook_id,user_id" });
+}
+
+export async function trackPlaybookApply(playbookId: string) {
+  const { data: companyId } = await supabase.rpc("get_my_company_id");
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session?.user || !companyId) return;
+  // Increment applied_count
+  const { data: existing } = await supabase
+    .from("playbook_adoption" as any)
+    .select("id, applied_count")
+    .eq("playbook_id", playbookId)
+    .eq("user_id", session.user.id)
+    .maybeSingle();
+  if (existing) {
+    await supabase.from("playbook_adoption" as any).update({
+      applied_count: ((existing as any).applied_count || 0) + 1,
+      last_applied_at: new Date().toISOString(),
+    }).eq("id", (existing as any).id);
+  } else {
+    await supabase.from("playbook_adoption" as any).insert({
+      company_id: companyId,
+      playbook_id: playbookId,
+      user_id: session.user.id,
+      applied_count: 1,
+      last_applied_at: new Date().toISOString(),
+    });
+  }
+}
