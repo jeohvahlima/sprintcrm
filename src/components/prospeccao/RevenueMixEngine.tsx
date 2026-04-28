@@ -67,15 +67,43 @@ export function RevenueMixEngine() {
     const cac = offers.reduce((s, o) => s + o.cac_total, 0);
     const lucro = margem - cac;
     const leads = offers.reduce((s, o) => s + o.leads, 0);
-    const reunioes = offers.reduce((s, o) => s + o.reunioes_agendadas, 0);
+    const reunioesAg = offers.reduce((s, o) => s + o.reunioes_agendadas, 0);
+    const reunioesReal = offers.reduce((s, o) => s + o.reunioes_realizadas, 0);
     const vendas = offers.reduce((s, o) => s + o.target_sales, 0);
     const metaPct = cfg.revenue_goal > 0 ? (receita / cfg.revenue_goal) * 100 : 0;
     const sdrs = cfg.sdr_capacity_per_day > 0 ? leads / (cfg.sdr_capacity_per_day * Math.max(cfg.cycle_days, 1)) : 0;
-    const closers = cfg.closer_capacity_per_day > 0 ? reunioes / (cfg.closer_capacity_per_day * Math.max(cfg.cycle_days, 1)) : 0;
+    const closers = cfg.closer_capacity_per_day > 0 ? reunioesAg / (cfg.closer_capacity_per_day * Math.max(cfg.cycle_days, 1)) : 0;
     // Dependência (% maior oferta)
     const maxReceita = Math.max(0, ...offers.map(o => o.receita));
     const dependencia = receita > 0 ? (maxReceita / receita) * 100 : 0;
-    return { receita, margem, cac, lucro, leads, reunioes, vendas, metaPct, sdrs, closers, dependencia };
+    // Métricas avançadas
+    const ticketMedioPond = vendas > 0 ? receita / vendas : 0;
+    const margemPct = receita > 0 ? (margem / receita) * 100 : 0;
+    const roi = cac > 0 ? (lucro / cac) * 100 : 0;
+    // LTV simples = ticket médio * margem% (sem retenção configurável aqui — proxy 12 meses se recorrente)
+    const ltvProxy = ticketMedioPond * (margemPct / 100);
+    const ltvCac = vendas > 0 && cac > 0 ? ltvProxy / (cac / vendas) : 0;
+    const cacUnit = vendas > 0 ? cac / vendas : 0;
+    const paybackMeses = cacUnit > 0 && ticketMedioPond > 0 ? cacUnit / (ticketMedioPond * (margemPct / 100) || 1) : 0;
+    const vendasDia = cfg.cycle_days > 0 ? vendas / cfg.cycle_days : 0;
+    const leadsDia = cfg.cycle_days > 0 ? leads / cfg.cycle_days : 0;
+    const reunioesDia = cfg.cycle_days > 0 ? reunioesAg / cfg.cycle_days : 0;
+    const velocity = cfg.cycle_days > 0 ? receita / cfg.cycle_days : 0; // R$/dia
+    const pipelineAlvo = receita * cfg.pipeline_coverage;
+    const conversaoGlobal = leads > 0 ? (vendas / leads) * 100 : 0;
+    const custoPorLead = leads > 0 ? cac / leads : 0;
+    const custoPorReuniao = reunioesAg > 0 ? cac / reunioesAg : 0;
+    // Capacidade vs disponibilidade
+    const capSdrLeadsCiclo = cfg.sdr_capacity_per_day * cfg.cycle_days;
+    const capCloserReunCiclo = cfg.closer_capacity_per_day * cfg.cycle_days;
+    const utilSdr = capSdrLeadsCiclo > 0 ? (leads / capSdrLeadsCiclo) * 100 : 0;
+    const utilCloser = capCloserReunCiclo > 0 ? (reunioesAg / capCloserReunCiclo) * 100 : 0;
+    return {
+      receita, margem, cac, lucro, leads, reunioesAg, reunioesReal, vendas, metaPct, sdrs, closers, dependencia,
+      ticketMedioPond, margemPct, roi, ltvProxy, ltvCac, cacUnit, paybackMeses,
+      vendasDia, leadsDia, reunioesDia, velocity, pipelineAlvo, conversaoGlobal,
+      custoPorLead, custoPorReuniao, utilSdr, utilCloser,
+    };
   }, [offers, cfg]);
 
   const handleSaveCfg = async () => {
