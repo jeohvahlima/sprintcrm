@@ -109,8 +109,28 @@ export function ICPIntelligenceBuilder({ onApplied }: Props) {
               </button>
             ))}
           </div>
+          <div className="flex flex-wrap gap-2 text-[11px] text-muted-foreground pt-1 border-t">
+            <span>Contexto enviado à IA:</span>
+            {segmento && <Badge variant="outline" className="text-[10px]">Segmento: {segmento}</Badge>}
+            <Badge variant="outline" className="text-[10px]">{produtos.length} produto(s)/serviço(s)</Badge>
+          </div>
         </CardContent>
       </Card>
+
+      {data && (
+        <div className="space-y-4">
+          {/* Cabeçalho com Score */}
+          <Card className="border-emerald-500/30 bg-gradient-to-br from-emerald-500/5 to-transparent">
+            <CardContent className="p-4 grid grid-cols-2 md:grid-cols-5 gap-3 items-center">
+              <div className="col-span-2">
+                <p className="text-xs text-muted-foreground">Nicho analisado</p>
+                <p className="text-sm font-semibold">{data.niche}</p>
+              </div>
+              <Metric label="Fit Score" value={`${data.intelligence.scoring?.fit_score ?? "-"}/100`} accent="text-emerald-600" />
+              <Metric label="Potencial" value={data.intelligence.scoring?.potencial_fechamento || "-"} accent="text-primary" />
+              <Metric label="CAC" value={data.intelligence.scoring?.cac_estimado || "-"} />
+            </CardContent>
+          </Card>
 
       {data && (
         <div className="space-y-4">
