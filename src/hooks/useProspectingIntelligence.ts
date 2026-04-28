@@ -43,10 +43,46 @@ export function useGenerateICPIntelligence() {
   return useMutation({
     mutationFn: async (input: string | { niche: string; segmento?: string; produtos?: any[] }) => {
       const body = typeof input === "string" ? { niche: input } : input;
-      const { data, error } = await supabase.functions.invoke("generate-icp-intelligence", { body });
-      if (error) throw error;
-      if ((data as any)?.error) throw new Error((data as any).error);
-      return data as { niche: string; intelligence: ICPIntelligence };
+
+      // fetch direto com timeout maior (geração pode levar até ~60s)
+      const { data: sessionData } = await supabase.auth.getSession();
+      const accessToken = sessionData?.session?.access_token;
+      const SUPABASE_URL = (import.meta.env.VITE_SUPABASE_URL as string) || "";
+      const ANON_KEY = (import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string) || "";
+
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), 90000);
+
+      try {
+        const resp = await fetch(`${SUPABASE_URL}/functions/v1/generate-icp-intelligence`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            apikey: ANON_KEY,
+            ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
+          },
+          body: JSON.stringify(body),
+          signal: controller.signal,
+        });
+        clearTimeout(timer);
+
+        const text = await resp.text();
+        let json: any = null;
+        try { json = text ? JSON.parse(text) : null; } catch { /* ignore */ }
+
+        if (!resp.ok) {
+          const msg = json?.error || `Erro ${resp.status} ao gerar ICP`;
+          throw new Error(msg);
+        }
+        if (json?.error) throw new Error(json.error);
+        return json as { niche: string; intelligence: ICPIntelligence };
+      } catch (e: any) {
+        clearTimeout(timer);
+        if (e?.name === "AbortError") {
+          throw new Error("A geração demorou mais de 90s. Tente novamente.");
+        }
+        throw e;
+      }
     },
   });
 }
