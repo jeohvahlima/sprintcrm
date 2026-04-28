@@ -196,6 +196,9 @@ Deno.serve(async (req) => {
     }
     ctxLines.push("Use esse contexto para casar dores do ICP com as ofertas e gerar um plano de ataque agressivo e realista para o mercado brasileiro.");
 
+    console.log("[ICP] Iniciando geração para nicho:", niche);
+    const t0 = Date.now();
+
     const resp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
@@ -210,22 +213,44 @@ Deno.serve(async (req) => {
       }),
     });
 
+    console.log("[ICP] AI Gateway respondeu", resp.status, "em", Date.now() - t0, "ms");
+
     if (resp.status === 429) return new Response(JSON.stringify({ error: "Rate limit. Tente novamente em instantes." }), { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     if (resp.status === 402) return new Response(JSON.stringify({ error: "Créditos esgotados. Adicione créditos em Settings > Workspace > Usage." }), { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     if (!resp.ok) {
       const t = await resp.text();
-      console.error("AI error", resp.status, t);
-      return new Response(JSON.stringify({ error: "Erro no AI Gateway" }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      console.error("[ICP] AI error", resp.status, t);
+      return new Response(JSON.stringify({ error: `AI Gateway ${resp.status}: ${t.slice(0, 200)}` }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
-    const data = await resp.json();
+    const raw = await resp.text();
+    if (!raw || raw.trim().length === 0) {
+      console.error("[ICP] AI Gateway retornou body vazio");
+      return new Response(JSON.stringify({ error: "IA retornou resposta vazia. Tente novamente." }), { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+
+    let data: any;
+    try {
+      data = JSON.parse(raw);
+    } catch (e) {
+      console.error("[ICP] Falha parsear JSON:", raw.slice(0, 500));
+      return new Response(JSON.stringify({ error: "Resposta inválida da IA. Tente novamente." }), { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+
     const call = data.choices?.[0]?.message?.tool_calls?.[0];
     if (!call) {
-      console.error("Sem tool_call", JSON.stringify(data));
+      console.error("[ICP] Sem tool_call. Data:", JSON.stringify(data).slice(0, 800));
       return new Response(JSON.stringify({ error: "IA não retornou estrutura esperada" }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
-    const intelligence = JSON.parse(call.function.arguments);
+    let intelligence: any;
+    try {
+      intelligence = JSON.parse(call.function.arguments);
+    } catch (e) {
+      console.error("[ICP] Falha parsear arguments:", call.function.arguments?.slice(0, 500));
+      return new Response(JSON.stringify({ error: "IA gerou estrutura inválida. Tente novamente." }), { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
 
+    console.log("[ICP] Sucesso em", Date.now() - t0, "ms");
     return new Response(JSON.stringify({ niche, intelligence }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
   } catch (e) {
     console.error("generate-icp-intelligence error", e);
