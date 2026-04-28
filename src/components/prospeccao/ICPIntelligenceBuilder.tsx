@@ -1,10 +1,12 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Sparkles, Brain, AlertTriangle, Heart, XCircle, Users, Target, TrendingUp, CheckCircle2, Loader2, Wand2 } from "lucide-react";
+import { Sparkles, Brain, AlertTriangle, Heart, XCircle, Users, Target, TrendingUp, CheckCircle2, Loader2, Wand2, ShoppingCart, Radio, ListChecks, Package } from "lucide-react";
 import { useGenerateICPIntelligence, useSaveICPProfile, type ICPIntelligence } from "@/hooks/useProspectingIntelligence";
+import { useCompanySegmento } from "@/hooks/useCompanySegmento";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 const sample = ["Clínicas médicas de pequeno e médio porte", "Escritórios de advocacia tributária", "SaaS B2B early-stage", "Imobiliárias de alto padrão"];
@@ -16,13 +18,28 @@ interface Props {
 export function ICPIntelligenceBuilder({ onApplied }: Props) {
   const [niche, setNiche] = useState("");
   const [data, setData] = useState<{ niche: string; intelligence: ICPIntelligence } | null>(null);
+  const [produtos, setProdutos] = useState<any[]>([]);
   const generate = useGenerateICPIntelligence();
   const save = useSaveICPProfile();
+  const { segmento, companyId } = useCompanySegmento();
+
+  useEffect(() => {
+    if (!companyId) return;
+    (async () => {
+      const { data } = await supabase
+        .from("produtos_servicos" as any)
+        .select("nome, preco, descricao")
+        .eq("company_id", companyId)
+        .eq("ativo", true)
+        .limit(15);
+      setProdutos((data as any[]) || []);
+    })();
+  }, [companyId]);
 
   const handleGenerate = async () => {
     if (!niche.trim()) { toast.error("Informe um nicho/segmento"); return; }
     try {
-      const result = await generate.mutateAsync(niche.trim());
+      const result = await generate.mutateAsync({ niche: niche.trim(), segmento: segmento || undefined, produtos });
       setData(result);
       toast.success("ICP Inteligente gerado");
     } catch (e: any) {
