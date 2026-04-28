@@ -10,7 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Gamepad2, Trash2, Plus } from "lucide-react";
+import { Trophy, Trash2, Plus, Target, Award, Coins as CoinsIcon } from "lucide-react";
 
 export default function ConfiguracoesGamificacao() {
   const { companyId } = usePlayerProfile();
@@ -120,52 +120,63 @@ export default function ConfiguracoesGamificacao() {
   return (
     <div className="p-4 md:p-6 space-y-6 max-w-5xl mx-auto">
       <div className="flex items-center gap-3">
-        <Gamepad2 className="w-7 h-7 rpg-neon-cyan" />
+        <Trophy className="w-7 h-7 text-amber-500" />
         <div>
-          <h1 className="text-2xl font-bold">Gamificação · Sales Quest</h1>
-          <p className="text-sm text-muted-foreground">Configure XP, missões e loja de recompensas do módulo Prospecção</p>
+          <h1 className="text-2xl font-bold">Performance Comercial · Arena de Vendas</h1>
+          <p className="text-sm text-muted-foreground">Configure pontuação, metas e bônus da equipe comercial</p>
         </div>
       </div>
 
       <Tabs defaultValue="geral">
         <TabsList>
-          <TabsTrigger value="geral">Geral & XP</TabsTrigger>
-          <TabsTrigger value="missoes">Missões</TabsTrigger>
-          <TabsTrigger value="loja">Loja de Prêmios</TabsTrigger>
-          <TabsTrigger value="resgates">Resgates ({pending.length})</TabsTrigger>
+          <TabsTrigger value="geral">Pontuação</TabsTrigger>
+          <TabsTrigger value="missoes">Metas & Desafios</TabsTrigger>
+          <TabsTrigger value="loja">Bônus & Premiações</TabsTrigger>
+          <TabsTrigger value="resgates">Solicitações ({pending.length})</TabsTrigger>
         </TabsList>
 
         <TabsContent value="geral" className="space-y-4 mt-4">
-          <Card><CardHeader><CardTitle>Status</CardTitle></CardHeader>
+          <Card><CardHeader><CardTitle>Status do Programa</CardTitle></CardHeader>
             <CardContent className="space-y-4">
               <div className="flex items-center justify-between">
-                <Label>Ativar gamificação na empresa</Label>
+                <div>
+                  <Label>Ativar programa de performance</Label>
+                  <p className="text-xs text-muted-foreground mt-0.5">Habilita pontuação, ranking e carreira para a equipe comercial</p>
+                </div>
                 <Switch checked={form.enabled} onCheckedChange={(v) => setForm({ ...form, enabled: v })} />
               </div>
               <div className="flex items-center justify-between">
-                <Label>Ativar loja de recompensas reais</Label>
+                <div>
+                  <Label>Ativar programa de bônus e premiações</Label>
+                  <p className="text-xs text-muted-foreground mt-0.5">Permite que vendedores troquem pontos por bônus reais aprovados pelo gestor</p>
+                </div>
                 <Switch checked={form.shop_enabled} onCheckedChange={(v) => setForm({ ...form, shop_enabled: v })} />
               </div>
             </CardContent>
           </Card>
 
-          <Card><CardHeader><CardTitle>Pesos de XP por evento</CardTitle></CardHeader>
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2"><Target className="w-4 h-4 text-primary" /> Pesos de pontos por atividade comercial</CardTitle>
+              <p className="text-xs text-muted-foreground">Defina quanto cada ação vale no índice de produtividade da equipe</p>
+            </CardHeader>
             <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {[
-                ["xp_per_response", "XP por Resposta"],
-                ["xp_per_opportunity", "XP por Oportunidade"],
-                ["xp_per_meeting", "XP por Reunião agendada"],
-                ["xp_per_sale", "XP por Venda fechada"],
-                ["xp_per_value_unit", "XP por R$ vendido (multiplicador)"],
-                ["coins_per_sale", "Moedas por Venda"],
-              ].map(([key, label]) => (
-                <div key={key}>
-                  <Label className="text-xs">{label}</Label>
+                ["xp_per_response", "Pontos por resposta de lead", "Engajamento — interação retornada pelo prospect"],
+                ["xp_per_opportunity", "Pontos por oportunidade gerada", "Lead qualificado avançou no funil"],
+                ["xp_per_meeting", "Pontos por reunião agendada", "Agendamento confirmado na agenda"],
+                ["xp_per_sale", "Pontos por venda fechada", "Negócio ganho e movido para 'Fechado'"],
+                ["xp_per_value_unit", "Multiplicador por R$ faturado", "Pontos extras por valor da venda (ex.: 0,01 = +1 pt a cada R$100)"],
+                ["coins_per_sale", "Bônus (créditos) por venda", "Créditos acumulados para troca por premiações"],
+              ].map(([key, label, hint]) => (
+                <div key={key} className="space-y-1">
+                  <Label className="text-xs font-medium">{label}</Label>
                   <Input
                     type="number" step="0.01"
                     value={form[key]}
                     onChange={(e) => setForm({ ...form, [key]: Number(e.target.value) })}
                   />
+                  {hint && <p className="text-[10px] text-muted-foreground">{hint}</p>}
                 </div>
               ))}
             </CardContent>
@@ -179,14 +190,18 @@ export default function ConfiguracoesGamificacao() {
         </TabsContent>
 
         <TabsContent value="missoes" className="space-y-4 mt-4">
-          <Card><CardHeader><CardTitle>Missões da empresa ({quests.length})</CardTitle></CardHeader>
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2"><Target className="w-4 h-4 text-primary" /> Metas ativas da empresa ({quests.length})</CardTitle>
+              <p className="text-xs text-muted-foreground">Desafios diários, semanais e mensais que sua equipe vai disputar</p>
+            </CardHeader>
             <CardContent className="space-y-2">
-              {quests.length === 0 && <p className="text-sm text-muted-foreground">Nenhuma missão customizada. Use os templates abaixo, ou as missões padrão já estão ativas.</p>}
+              {quests.length === 0 && <p className="text-sm text-muted-foreground">Nenhuma meta customizada. Adicione um modelo abaixo ou mantenha as metas padrão da plataforma.</p>}
               {quests.map((q: any) => (
                 <div key={q.id} className="flex items-center gap-3 p-3 border rounded">
                   <div className="flex-1">
-                    <div className="font-medium">{q.name} <span className="text-xs text-muted-foreground">[{q.type}]</span></div>
-                    <div className="text-xs text-muted-foreground">Meta: {q.goal_value} {q.goal_metric} · +{q.xp_reward} XP · +{q.coin_reward} 💎</div>
+                    <div className="font-medium">{q.name} <span className="text-xs text-muted-foreground uppercase">[{TYPE_LABEL[q.type] || q.type}]</span></div>
+                    <div className="text-xs text-muted-foreground">Meta: {q.goal_value} {q.goal_metric} · +{q.xp_reward} pts · +{q.coin_reward} créditos</div>
                   </div>
                   <Switch checked={q.active} onCheckedChange={(v) => toggleQuest(q.id, v)} />
                   <Button size="icon" variant="ghost" onClick={() => deleteQuest(q.id)}><Trash2 className="w-4 h-4" /></Button>
@@ -195,13 +210,17 @@ export default function ConfiguracoesGamificacao() {
             </CardContent>
           </Card>
 
-          <Card><CardHeader><CardTitle>Templates disponíveis ({templates.length})</CardTitle></CardHeader>
+          <Card>
+            <CardHeader>
+              <CardTitle>Modelos de metas prontas ({templates.length})</CardTitle>
+              <p className="text-xs text-muted-foreground">Adicione metas comerciais validadas com um clique</p>
+            </CardHeader>
             <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-2">
               {templates.map((t: any) => (
                 <div key={t.id} className="flex items-center gap-2 p-3 border rounded">
                   <div className="flex-1 min-w-0">
                     <div className="font-medium text-sm truncate">{t.name}</div>
-                    <div className="text-xs text-muted-foreground">[{t.type}] +{t.xp_reward} XP</div>
+                    <div className="text-xs text-muted-foreground uppercase">[{TYPE_LABEL[t.type] || t.type}] +{t.xp_reward} pts</div>
                   </div>
                   <Button size="sm" variant="outline" onClick={() => cloneTemplate(t)}><Plus className="w-3 h-3 mr-1" />Adicionar</Button>
                 </div>
@@ -213,17 +232,20 @@ export default function ConfiguracoesGamificacao() {
         <TabsContent value="loja" className="space-y-4 mt-4">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle>Recompensas da loja</CardTitle>
-              <Button size="sm" onClick={addReward}><Plus className="w-4 h-4 mr-1" />Nova</Button>
+              <div>
+                <CardTitle className="flex items-center gap-2"><Award className="w-4 h-4 text-amber-500" /> Catálogo de premiações</CardTitle>
+                <p className="text-xs text-muted-foreground mt-0.5">Bônus, day-off, vouchers, cursos — defina o que motiva sua equipe</p>
+              </div>
+              <Button size="sm" onClick={addReward}><Plus className="w-4 h-4 mr-1" />Nova premiação</Button>
             </CardHeader>
             <CardContent className="space-y-2">
-              {!form.shop_enabled && <p className="text-sm text-amber-500">⚠️ A loja está desativada. Ative em "Geral" para que os vendedores vejam.</p>}
-              {shop.length === 0 ? <p className="text-sm text-muted-foreground">Nenhuma recompensa criada.</p> :
+              {!form.shop_enabled && <p className="text-sm text-amber-500">⚠️ O programa de premiações está desativado. Ative em "Pontuação" para liberar para a equipe.</p>}
+              {shop.length === 0 ? <p className="text-sm text-muted-foreground">Nenhuma premiação cadastrada.</p> :
                 shop.map((r: any) => (
                   <div key={r.id} className="flex items-center gap-3 p-3 border rounded">
                     <div className="flex-1">
                       <div className="font-medium">{r.name}</div>
-                      <div className="text-xs text-muted-foreground">{r.cost_coins} moedas · {r.active ? "ativa" : "inativa"}</div>
+                      <div className="text-xs text-muted-foreground flex items-center gap-1"><CoinsIcon className="w-3 h-3" />{r.cost_coins} créditos · {r.active ? "ativa" : "inativa"}</div>
                     </div>
                     <Button size="icon" variant="ghost" onClick={async () => { await supabase.from("prospecting_rewards_shop").delete().eq("id", r.id); qc.invalidateQueries({ queryKey: ["shop-admin"] }); }}><Trash2 className="w-4 h-4" /></Button>
                   </div>
@@ -233,17 +255,21 @@ export default function ConfiguracoesGamificacao() {
         </TabsContent>
 
         <TabsContent value="resgates" className="mt-4">
-          <Card><CardHeader><CardTitle>Resgates pendentes</CardTitle></CardHeader>
+          <Card>
+            <CardHeader>
+              <CardTitle>Solicitações de premiação pendentes</CardTitle>
+              <p className="text-xs text-muted-foreground">Aprovar ou recusar resgates feitos pela equipe</p>
+            </CardHeader>
             <CardContent className="space-y-2">
-              {pending.length === 0 ? <p className="text-sm text-muted-foreground">Nenhum resgate pendente.</p> :
+              {pending.length === 0 ? <p className="text-sm text-muted-foreground">Nenhuma solicitação pendente no momento.</p> :
                 pending.map((p: any) => (
                   <div key={p.id} className="flex items-center gap-3 p-3 border rounded">
                     <div className="flex-1">
                       <div className="font-medium">{p.reward?.name || "—"}</div>
-                      <div className="text-xs text-muted-foreground">{p.cost_paid} moedas · {new Date(p.created_at).toLocaleString("pt-BR")}</div>
+                      <div className="text-xs text-muted-foreground">{p.cost_paid} créditos · solicitado em {new Date(p.created_at).toLocaleString("pt-BR")}</div>
                     </div>
                     <Button size="sm" onClick={() => handleRedemption(p.id, "approved")}>Aprovar</Button>
-                    <Button size="sm" variant="outline" onClick={() => handleRedemption(p.id, "rejected")}>Rejeitar</Button>
+                    <Button size="sm" variant="outline" onClick={() => handleRedemption(p.id, "rejected")}>Recusar</Button>
                   </div>
                 ))}
             </CardContent>
@@ -253,3 +279,10 @@ export default function ConfiguracoesGamificacao() {
     </div>
   );
 }
+
+const TYPE_LABEL: Record<string, string> = {
+  daily: "Diária",
+  weekly: "Semanal",
+  monthly: "Mensal",
+  special: "Especial",
+};

@@ -1,12 +1,12 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 const RANKS = [
-  { name: "Iniciante", min: 1, max: 9, className: "rpg-rank-bronze", desc: "Aprendendo o processo de vendas" },
-  { name: "Pleno", min: 10, max: 24, className: "rpg-rank-silver", desc: "Domina o fluxo básico de prospecção" },
-  { name: "Sênior", min: 25, max: 49, className: "rpg-rank-gold", desc: "Atinge metas com consistência" },
-  { name: "Expert", min: 50, max: 74, className: "rpg-rank-platinum", desc: "Mestre da conversão e fechamento" },
-  { name: "Master", min: 75, max: 99, className: "rpg-rank-diamond", desc: "Referência da equipe comercial" },
-  { name: "Elite", min: 100, max: 999, className: "rpg-rank-mythic", desc: "Top performer absoluto" },
+  { name: "Trainee Comercial", min: 1, max: 9, className: "rpg-rank-bronze", desc: "Em treinamento e aprendendo o processo de vendas" },
+  { name: "Vendedor Júnior", min: 10, max: 24, className: "rpg-rank-silver", desc: "Domina o fluxo de prospecção e atinge metas básicas" },
+  { name: "Vendedor Pleno", min: 25, max: 49, className: "rpg-rank-gold", desc: "Bate meta com consistência e gera previsibilidade" },
+  { name: "Vendedor Sênior", min: 50, max: 74, className: "rpg-rank-platinum", desc: "Especialista em fechamento e negociação" },
+  { name: "Account Executive", min: 75, max: 99, className: "rpg-rank-diamond", desc: "Referência da equipe e mentor de novos vendedores" },
+  { name: "Top Performer", min: 100, max: 999, className: "rpg-rank-mythic", desc: "Vendedor de elite — performance acima da média do mercado" },
 ];
 
 interface Props {
@@ -20,7 +20,7 @@ export function RankLadder({ open, onOpenChange, currentLevel }: Props) {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl">
         <DialogHeader>
-          <DialogTitle className="text-foreground">Trilha de Carreira</DialogTitle>
+          <DialogTitle className="text-foreground">Plano de Carreira Comercial</DialogTitle>
         </DialogHeader>
         <div className="space-y-2 mt-4">
           {RANKS.map((r) => {

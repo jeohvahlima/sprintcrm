@@ -16,11 +16,11 @@ interface Props {
 }
 
 const ACTION_META: Record<string, { icon: any; verb: string; color: string; xp?: number }> = {
-  sale_closed: { icon: Trophy, verb: "fechou venda", color: "text-amber-500", xp: 100 },
+  sale_closed: { icon: Trophy, verb: "fechou negócio", color: "text-amber-500", xp: 100 },
   meeting_scheduled: { icon: Calendar, verb: "agendou reunião", color: "text-primary", xp: 30 },
-  proposal_sent: { icon: Target, verb: "enviou proposta", color: "text-purple-500", xp: 20 },
-  response_received: { icon: MessageCircle, verb: "recebeu resposta", color: "text-emerald-500", xp: 5 },
-  followup_sent: { icon: Zap, verb: "fez follow-up", color: "text-blue-500", xp: 2 },
+  proposal_sent: { icon: Target, verb: "enviou proposta comercial", color: "text-purple-500", xp: 20 },
+  response_received: { icon: MessageCircle, verb: "engajou um lead", color: "text-emerald-500", xp: 5 },
+  followup_sent: { icon: Zap, verb: "executou follow-up", color: "text-blue-500", xp: 2 },
 };
 
 function playBeep(freq = 800) {
