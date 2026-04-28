@@ -30,7 +30,7 @@ export function AchievementsGallery({ open, onOpenChange, userId }: Props) {
       <DialogContent className="max-w-3xl">
         <DialogHeader>
           <DialogTitle className="text-foreground">
-            🏆 Conquistas — {unlocked}/{items.length}
+            🏆 Reconhecimentos Comerciais — {unlocked}/{items.length} desbloqueados
           </DialogTitle>
         </DialogHeader>
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 mt-4">
