@@ -9,6 +9,17 @@ export interface ICPCriterion {
   options: { value: string; label: string; score: number }[]; // score 0-100
 }
 
+export interface ICPIntelligence {
+  profile?: any;
+  pains?: any;
+  desires?: string[];
+  beliefs?: any;
+  decision_map?: any;
+  prospecting_strategy?: any;
+  scoring?: any;
+  lead_score_criteria?: ICPCriterion[];
+}
+
 export interface ICPProfile {
   id: string;
   company_id: string;
@@ -17,6 +28,22 @@ export interface ICPProfile {
   criteria: ICPCriterion[];
   hot_threshold: number;
   warm_threshold: number;
+  source?: "manual" | "ai";
+  niche?: string;
+  intelligence?: ICPIntelligence;
+  fit_score?: number;
+  generated_at?: string;
+}
+
+export function useGenerateICPIntelligence() {
+  return useMutation({
+    mutationFn: async (niche: string) => {
+      const { data, error } = await supabase.functions.invoke("generate-icp-intelligence", { body: { niche } });
+      if (error) throw error;
+      if ((data as any)?.error) throw new Error((data as any).error);
+      return data as { niche: string; intelligence: ICPIntelligence };
+    },
+  });
 }
 
 export function useICPProfiles() {

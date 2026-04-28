@@ -3802,10 +3802,15 @@ export type Database = {
           created_at: string
           created_by: string | null
           criteria: Json
+          fit_score: number | null
+          generated_at: string | null
           hot_threshold: number
           id: string
+          intelligence: Json
           is_default: boolean
           name: string
+          niche: string | null
+          source: string
           updated_at: string
           warm_threshold: number
         }
@@ -3814,10 +3819,15 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           criteria?: Json
+          fit_score?: number | null
+          generated_at?: string | null
           hot_threshold?: number
           id?: string
+          intelligence?: Json
           is_default?: boolean
           name: string
+          niche?: string | null
+          source?: string
           updated_at?: string
           warm_threshold?: number
         }
@@ -3826,10 +3836,15 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           criteria?: Json
+          fit_score?: number | null
+          generated_at?: string | null
           hot_threshold?: number
           id?: string
+          intelligence?: Json
           is_default?: boolean
           name?: string
+          niche?: string | null
+          source?: string
           updated_at?: string
           warm_threshold?: number
         }
@@ -6690,6 +6705,75 @@ export type Database = {
             columns: ["company_id"]
             isOneToOne: false
             referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      revenue_machine_offers: {
+        Row: {
+          cac: number
+          company_id: string
+          config_id: string
+          created_at: string
+          id: string
+          lead_to_meeting_rate: number
+          margin_pct: number
+          meeting_show_rate: number
+          name: string
+          position: number
+          produto_servico_id: string | null
+          target_sales: number
+          ticket: number
+          updated_at: string
+          win_rate: number
+        }
+        Insert: {
+          cac?: number
+          company_id: string
+          config_id: string
+          created_at?: string
+          id?: string
+          lead_to_meeting_rate?: number
+          margin_pct?: number
+          meeting_show_rate?: number
+          name: string
+          position?: number
+          produto_servico_id?: string | null
+          target_sales?: number
+          ticket?: number
+          updated_at?: string
+          win_rate?: number
+        }
+        Update: {
+          cac?: number
+          company_id?: string
+          config_id?: string
+          created_at?: string
+          id?: string
+          lead_to_meeting_rate?: number
+          margin_pct?: number
+          meeting_show_rate?: number
+          name?: string
+          position?: number
+          produto_servico_id?: string | null
+          target_sales?: number
+          ticket?: number
+          updated_at?: string
+          win_rate?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "revenue_machine_offers_config_id_fkey"
+            columns: ["config_id"]
+            isOneToOne: false
+            referencedRelation: "sales_machine_configs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "revenue_machine_offers_produto_servico_id_fkey"
+            columns: ["produto_servico_id"]
+            isOneToOne: false
+            referencedRelation: "produtos_servicos"
             referencedColumns: ["id"]
           },
         ]

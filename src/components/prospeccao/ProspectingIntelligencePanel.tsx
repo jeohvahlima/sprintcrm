@@ -1,7 +1,7 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Brain, Calculator, Target, Sparkles, DollarSign, Lock } from "lucide-react";
-import { ICPBuilder } from "./ICPBuilder";
-import { SalesMachineCalculator } from "./SalesMachineCalculator";
+import { ICPDualBuilder } from "./ICPDualBuilder";
+import { RevenueMixEngine } from "./RevenueMixEngine";
 import { LeadScorePanel } from "./LeadScorePanel";
 import { CommissionCalculator } from "@/components/processos/CommissionCalculator";
 import { Badge } from "@/components/ui/badge";
@@ -32,8 +32,8 @@ export function ProspectingIntelligencePanel() {
           </TabsTrigger>
         </TabsList>
         <TabsContent value="leads"><LeadScorePanel /></TabsContent>
-        <TabsContent value="icp"><ICPBuilder /></TabsContent>
-        <TabsContent value="machine"><SalesMachineCalculator /></TabsContent>
+        <TabsContent value="icp"><ICPDualBuilder /></TabsContent>
+        <TabsContent value="machine"><RevenueMixEngine /></TabsContent>
         <TabsContent value="ote">
           {isManagerLike ? (
             <CommissionCalculator />
