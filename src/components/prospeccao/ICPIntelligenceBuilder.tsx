@@ -183,6 +183,77 @@ export function ICPIntelligenceBuilder({ onApplied }: Props) {
             </Block>
           </div>
 
+          {data.intelligence.buying_behavior && (
+            <Block icon={ShoppingCart} title="7. Comportamento de compra" tone="primary">
+              <div className="grid md:grid-cols-2 gap-3">
+                <div className="space-y-2">
+                  <Group title="Gatilhos de compra" items={data.intelligence.buying_behavior.gatilhos_compra} />
+                  <Group title="Sinais de intenção" items={data.intelligence.buying_behavior.sinais_de_intencao} />
+                  <Group title="Jornada de decisão" items={data.intelligence.buying_behavior.jornada_decisao} />
+                </div>
+                <div className="space-y-2">
+                  <Kv k="Padrão de consumo" v={data.intelligence.buying_behavior.padrao_consumo} />
+                  <Kv k="Ciclo médio" v={data.intelligence.buying_behavior.ciclo_medio_dias} />
+                  <Kv k="Momento ideal de abordagem" v={data.intelligence.buying_behavior.momento_ideal_abordagem} />
+                </div>
+              </div>
+            </Block>
+          )}
+
+          {data.intelligence.channel_strategy && (
+            <Block icon={Radio} title="8. Estratégia por canal de abordagem" tone="emerald">
+              <div className="grid md:grid-cols-2 gap-2">
+                {(["cold_call","whatsapp","linkedin","email","social_selling"] as const).map((ch) => {
+                  const c = (data.intelligence.channel_strategy as any)?.[ch];
+                  if (!c) return null;
+                  const labels: Record<string,string> = { cold_call: "Cold Call", whatsapp: "WhatsApp", linkedin: "LinkedIn", email: "E-mail", social_selling: "Social Selling" };
+                  const tone = c.eficacia === "alta" ? "text-emerald-600" : c.eficacia === "média" ? "text-amber-600" : "text-muted-foreground";
+                  return (
+                    <div key={ch} className="border rounded p-2 space-y-1">
+                      <div className="flex items-center justify-between">
+                        <p className="text-xs font-semibold">{labels[ch]}</p>
+                        <Badge variant="outline" className={`text-[10px] ${tone}`}>Eficácia: {c.eficacia}</Badge>
+                      </div>
+                      <p className="text-[11px] text-muted-foreground"><strong>Quando:</strong> {c.quando_usar}</p>
+                      <p className="text-[11px] p-1.5 rounded bg-muted/50 border whitespace-pre-line"><strong>Abertura:</strong> {c.abertura}</p>
+                    </div>
+                  );
+                })}
+              </div>
+              {data.intelligence.channel_strategy.ordem_recomendada?.length > 0 && (
+                <div className="mt-2">
+                  <p className="text-[11px] uppercase font-medium text-muted-foreground">Ordem recomendada na cadência</p>
+                  <div className="flex flex-wrap gap-1 mt-1">
+                    {data.intelligence.channel_strategy.ordem_recomendada.map((c: string, i: number) => (
+                      <Badge key={i} variant="secondary" className="text-[10px]">{i + 1}. {c}</Badge>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </Block>
+          )}
+
+          {data.intelligence.action_plan && (
+            <Block icon={ListChecks} title="9. Plano de ação prático" tone="amber">
+              <div className="grid md:grid-cols-2 gap-3">
+                <Group title="Primeiros 30 dias" items={data.intelligence.action_plan.primeiros_30_dias} />
+                <Group title="Metas semanais" items={data.intelligence.action_plan.metas_semanais} />
+                <Group title="KPIs de acompanhamento" items={data.intelligence.action_plan.kpis_acompanhamento} />
+                <Group title="Riscos e mitigação" items={data.intelligence.action_plan.riscos_e_mitigacao} />
+              </div>
+            </Block>
+          )}
+
+          {data.intelligence.product_fit && (
+            <Block icon={Package} title="10. Casamento com seus produtos/serviços" tone="primary">
+              <Kv k="Oferta principal" v={data.intelligence.product_fit.oferta_principal} />
+              <Kv k="Ângulo de pitch" v={data.intelligence.product_fit.angulo_pitch} />
+              <Kv k="Prova social ideal" v={data.intelligence.product_fit.prova_social_ideal} />
+              <Kv k="Upsell natural" v={data.intelligence.product_fit.upsell_natural} />
+              <Kv k="Why now" v={data.intelligence.product_fit.why_now} />
+            </Block>
+          )}
+
           {/* Aplicar */}
           <Card className="border-primary bg-primary/5">
             <CardContent className="p-4 flex items-center justify-between gap-3 flex-wrap">
