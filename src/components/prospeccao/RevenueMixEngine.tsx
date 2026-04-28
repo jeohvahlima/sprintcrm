@@ -5,7 +5,8 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Trash2, Plus, Target, DollarSign, TrendingUp, Users, AlertTriangle, Save, Layers, Sparkles, Briefcase, BadgePercent, Loader2 } from "lucide-react";
+import { Trash2, Plus, Target, DollarSign, TrendingUp, Users, AlertTriangle, Save, Layers, Sparkles, Briefcase, BadgePercent, Loader2, Activity, Gauge, Repeat, Zap, Calendar, PiggyBank, Scale, Phone, CalendarCheck, Trophy, Rocket } from "lucide-react";
+import { Progress } from "@/components/ui/progress";
 import { useSalesMachineConfigs, useSaveSalesMachine, type SalesMachineConfig } from "@/hooks/useProspectingIntelligence";
 import { useProdutosServicos, useRevenueOffers, useUpsertOffer, useDeleteOffer, computeOffer, type RevenueOffer } from "@/hooks/useRevenueEngine";
 import { toast } from "sonner";
@@ -66,15 +67,43 @@ export function RevenueMixEngine() {
     const cac = offers.reduce((s, o) => s + o.cac_total, 0);
     const lucro = margem - cac;
     const leads = offers.reduce((s, o) => s + o.leads, 0);
-    const reunioes = offers.reduce((s, o) => s + o.reunioes_agendadas, 0);
+    const reunioesAg = offers.reduce((s, o) => s + o.reunioes_agendadas, 0);
+    const reunioesReal = offers.reduce((s, o) => s + o.reunioes_realizadas, 0);
     const vendas = offers.reduce((s, o) => s + o.target_sales, 0);
     const metaPct = cfg.revenue_goal > 0 ? (receita / cfg.revenue_goal) * 100 : 0;
     const sdrs = cfg.sdr_capacity_per_day > 0 ? leads / (cfg.sdr_capacity_per_day * Math.max(cfg.cycle_days, 1)) : 0;
-    const closers = cfg.closer_capacity_per_day > 0 ? reunioes / (cfg.closer_capacity_per_day * Math.max(cfg.cycle_days, 1)) : 0;
+    const closers = cfg.closer_capacity_per_day > 0 ? reunioesAg / (cfg.closer_capacity_per_day * Math.max(cfg.cycle_days, 1)) : 0;
     // Dependência (% maior oferta)
     const maxReceita = Math.max(0, ...offers.map(o => o.receita));
     const dependencia = receita > 0 ? (maxReceita / receita) * 100 : 0;
-    return { receita, margem, cac, lucro, leads, reunioes, vendas, metaPct, sdrs, closers, dependencia };
+    // Métricas avançadas
+    const ticketMedioPond = vendas > 0 ? receita / vendas : 0;
+    const margemPct = receita > 0 ? (margem / receita) * 100 : 0;
+    const roi = cac > 0 ? (lucro / cac) * 100 : 0;
+    // LTV simples = ticket médio * margem% (sem retenção configurável aqui — proxy 12 meses se recorrente)
+    const ltvProxy = ticketMedioPond * (margemPct / 100);
+    const ltvCac = vendas > 0 && cac > 0 ? ltvProxy / (cac / vendas) : 0;
+    const cacUnit = vendas > 0 ? cac / vendas : 0;
+    const paybackMeses = cacUnit > 0 && ticketMedioPond > 0 ? cacUnit / (ticketMedioPond * (margemPct / 100) || 1) : 0;
+    const vendasDia = cfg.cycle_days > 0 ? vendas / cfg.cycle_days : 0;
+    const leadsDia = cfg.cycle_days > 0 ? leads / cfg.cycle_days : 0;
+    const reunioesDia = cfg.cycle_days > 0 ? reunioesAg / cfg.cycle_days : 0;
+    const velocity = cfg.cycle_days > 0 ? receita / cfg.cycle_days : 0; // R$/dia
+    const pipelineAlvo = receita * cfg.pipeline_coverage;
+    const conversaoGlobal = leads > 0 ? (vendas / leads) * 100 : 0;
+    const custoPorLead = leads > 0 ? cac / leads : 0;
+    const custoPorReuniao = reunioesAg > 0 ? cac / reunioesAg : 0;
+    // Capacidade vs disponibilidade
+    const capSdrLeadsCiclo = cfg.sdr_capacity_per_day * cfg.cycle_days;
+    const capCloserReunCiclo = cfg.closer_capacity_per_day * cfg.cycle_days;
+    const utilSdr = capSdrLeadsCiclo > 0 ? (leads / capSdrLeadsCiclo) * 100 : 0;
+    const utilCloser = capCloserReunCiclo > 0 ? (reunioesAg / capCloserReunCiclo) * 100 : 0;
+    return {
+      receita, margem, cac, lucro, leads, reunioesAg, reunioesReal, vendas, metaPct, sdrs, closers, dependencia,
+      ticketMedioPond, margemPct, roi, ltvProxy, ltvCac, cacUnit, paybackMeses,
+      vendasDia, leadsDia, reunioesDia, velocity, pipelineAlvo, conversaoGlobal,
+      custoPorLead, custoPorReuniao, utilSdr, utilCloser,
+    };
   }, [offers, cfg]);
 
   const handleSaveCfg = async () => {
@@ -181,6 +210,26 @@ export function RevenueMixEngine() {
         <KPI icon={Users} label="Leads necessários" value={fmt(totals.leads)} accent="text-primary" />
       </div>
 
+      {/* KPIs primários */}
+      <div className="grid grid-cols-2 md:grid-cols-6 gap-3">
+        <KPI icon={Target} label="Receita projetada" value={money(totals.receita)} accent="text-emerald-600" sub={`Meta: ${money(cfg.revenue_goal)}`} />
+        <KPI icon={BadgePercent} label="% da meta" value={`${totals.metaPct.toFixed(0)}%`} accent={totals.metaPct >= 100 ? "text-emerald-600" : "text-amber-600"} progress={Math.min(totals.metaPct, 100)} />
+        <KPI icon={DollarSign} label="Margem bruta" value={money(totals.margem)} sub={`${totals.margemPct.toFixed(1)}% da receita`} />
+        <KPI icon={Briefcase} label="CAC total" value={money(totals.cac)} sub={`Unit.: ${money(totals.cacUnit)}`} />
+        <KPI icon={TrendingUp} label="Lucro líquido" value={money(totals.lucro)} accent={totals.lucro >= 0 ? "text-emerald-600" : "text-rose-600"} sub={`ROI ${totals.roi.toFixed(0)}%`} />
+        <KPI icon={Users} label="Leads necessários" value={fmt(totals.leads)} accent="text-primary" sub={`${fmt(totals.leadsDia)}/dia`} />
+      </div>
+
+      {/* KPIs estratégicos */}
+      <div className="grid grid-cols-2 md:grid-cols-6 gap-3">
+        <KPI icon={Scale} label="Ticket médio pond." value={money(totals.ticketMedioPond)} accent="text-indigo-600" />
+        <KPI icon={PiggyBank} label="LTV / CAC" value={`${totals.ltvCac.toFixed(2)}x`} accent={totals.ltvCac >= 3 ? "text-emerald-600" : totals.ltvCac >= 1 ? "text-amber-600" : "text-rose-600"} sub={totals.ltvCac >= 3 ? "Saudável" : totals.ltvCac >= 1 ? "Ajustar" : "Crítico"} />
+        <KPI icon={Repeat} label="Payback CAC" value={`${totals.paybackMeses.toFixed(1)} m`} accent={totals.paybackMeses <= 6 ? "text-emerald-600" : "text-amber-600"} />
+        <KPI icon={Zap} label="Velocity" value={`${money(totals.velocity)}/dia`} accent="text-violet-600" />
+        <KPI icon={Activity} label="Conv. global" value={`${totals.conversaoGlobal.toFixed(1)}%`} sub="Lead → Venda" />
+        <KPI icon={Gauge} label="Pipeline alvo" value={money(totals.pipelineAlvo)} sub={`${cfg.pipeline_coverage}× cobertura`} />
+      </div>
+
       {/* Alerta de dependência */}
       {totals.dependencia >= 70 && offers.length > 1 && (
         <Card className="border-amber-500/40 bg-amber-500/5">
@@ -274,61 +323,125 @@ export function RevenueMixEngine() {
       <div className="grid md:grid-cols-2 gap-4">
         <Card className="border-emerald-500/30 bg-gradient-to-br from-emerald-500/5 to-transparent">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm flex items-center gap-2"><Users className="h-4 w-4 text-emerald-600" /> Capacidade do time</CardTitle>
-            <CardDescription className="text-xs">Calculado pelo mix em {cfg.cycle_days} dias úteis.</CardDescription>
+            <CardTitle className="text-sm flex items-center gap-2"><Users className="h-4 w-4 text-emerald-600" /> Capacidade & Utilização</CardTitle>
+            <CardDescription className="text-xs">Mix em {cfg.cycle_days} dias úteis. Avalie se o time aguenta.</CardDescription>
           </CardHeader>
-          <CardContent className="grid grid-cols-2 gap-3">
-            <div>
-              <Label className="text-xs">SDR: leads/dia</Label>
-              <Input className="h-8 mt-1" type="number" value={cfg.sdr_capacity_per_day}
-                onChange={(e) => setCfg({ ...cfg, sdr_capacity_per_day: Number(e.target.value) })} onBlur={handleSaveCfg} />
+          <CardContent className="space-y-3">
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label className="text-xs">SDR: leads/dia</Label>
+                <Input className="h-8 mt-1" type="number" value={cfg.sdr_capacity_per_day}
+                  onChange={(e) => setCfg({ ...cfg, sdr_capacity_per_day: Number(e.target.value) })} onBlur={handleSaveCfg} />
+              </div>
+              <div>
+                <Label className="text-xs">Closer: reun./dia</Label>
+                <Input className="h-8 mt-1" type="number" value={cfg.closer_capacity_per_day}
+                  onChange={(e) => setCfg({ ...cfg, closer_capacity_per_day: Number(e.target.value) })} onBlur={handleSaveCfg} />
+              </div>
             </div>
-            <div>
-              <Label className="text-xs">Closer: reun./dia</Label>
-              <Input className="h-8 mt-1" type="number" value={cfg.closer_capacity_per_day}
-                onChange={(e) => setCfg({ ...cfg, closer_capacity_per_day: Number(e.target.value) })} onBlur={handleSaveCfg} />
+            <div className="grid grid-cols-2 gap-3">
+              <div className="p-3 rounded-lg border bg-card">
+                <div className="flex items-center justify-between">
+                  <p className="text-[10px] uppercase text-muted-foreground">SDRs necessários</p>
+                  <Badge variant={totals.utilSdr > 100 ? "destructive" : totals.utilSdr > 80 ? "secondary" : "outline"} className="text-[9px] h-4">
+                    {totals.utilSdr.toFixed(0)}% util.
+                  </Badge>
+                </div>
+                <p className="text-2xl font-bold text-emerald-600">{Math.ceil(totals.sdrs)}</p>
+                <Progress value={Math.min(totals.utilSdr, 100)} className="h-1.5 mt-1" />
+                <p className="text-[10px] text-muted-foreground mt-1">{totals.sdrs.toFixed(2)} ideal</p>
+              </div>
+              <div className="p-3 rounded-lg border bg-card">
+                <div className="flex items-center justify-between">
+                  <p className="text-[10px] uppercase text-muted-foreground">Closers necessários</p>
+                  <Badge variant={totals.utilCloser > 100 ? "destructive" : totals.utilCloser > 80 ? "secondary" : "outline"} className="text-[9px] h-4">
+                    {totals.utilCloser.toFixed(0)}% util.
+                  </Badge>
+                </div>
+                <p className="text-2xl font-bold text-emerald-600">{Math.ceil(totals.closers)}</p>
+                <Progress value={Math.min(totals.utilCloser, 100)} className="h-1.5 mt-1" />
+                <p className="text-[10px] text-muted-foreground mt-1">{totals.closers.toFixed(2)} ideal</p>
+              </div>
             </div>
-            <div className="p-3 rounded-lg border bg-card text-center">
-              <p className="text-[10px] uppercase text-muted-foreground">SDRs</p>
-              <p className="text-2xl font-bold text-emerald-600">{Math.ceil(totals.sdrs)}</p>
-              <p className="text-[10px] text-muted-foreground">({totals.sdrs.toFixed(2)} ideal)</p>
-            </div>
-            <div className="p-3 rounded-lg border bg-card text-center">
-              <p className="text-[10px] uppercase text-muted-foreground">Closers</p>
-              <p className="text-2xl font-bold text-emerald-600">{Math.ceil(totals.closers)}</p>
-              <p className="text-[10px] text-muted-foreground">({totals.closers.toFixed(2)} ideal)</p>
+            <div className="grid grid-cols-3 gap-2 pt-2 border-t">
+              <Mini icon={Phone} label="Custo/lead" value={money(totals.custoPorLead)} />
+              <Mini icon={CalendarCheck} label="Custo/reun." value={money(totals.custoPorReuniao)} />
+              <Mini icon={Trophy} label="Custo/venda" value={money(totals.cacUnit)} />
             </div>
           </CardContent>
         </Card>
 
         <Card className="border-primary/30 bg-gradient-to-br from-primary/5 to-transparent">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm flex items-center gap-2"><TrendingUp className="h-4 w-4 text-primary" /> Plano de execução</CardTitle>
-            <CardDescription className="text-xs">Atividades diárias para o mix bater a meta.</CardDescription>
+            <CardTitle className="text-sm flex items-center gap-2"><Rocket className="h-4 w-4 text-primary" /> Plano de execução diário</CardTitle>
+            <CardDescription className="text-xs">Atividades para o mix bater a meta em {cfg.cycle_days} dias.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-2 text-xs">
             <Row k="Vendas totais (mês)" v={fmt(totals.vendas)} />
-            <Row k="Reuniões agendadas" v={fmt(totals.reunioes)} />
-            <Row k="Leads totais" v={fmt(totals.leads)} accent />
-            <Row k="Prospecções/SDR/dia" v={`${cfg.sdr_capacity_per_day}`} />
-            <Row k="Reuniões/Closer/dia" v={`${cfg.closer_capacity_per_day}`} />
-            <div className="pt-2 mt-2 border-t flex items-center justify-between">
-              <span className="text-muted-foreground">Pipeline alvo ({cfg.pipeline_coverage}x)</span>
-              <span className="font-mono font-semibold">{money(totals.receita * cfg.pipeline_coverage)}</span>
+            <Row k="Vendas / dia útil" v={totals.vendasDia.toFixed(2)} accent />
+            <Row k="Reuniões agendadas (mês)" v={fmt(totals.reunioesAg)} />
+            <Row k="Reuniões realizadas (mês)" v={fmt(totals.reunioesReal)} />
+            <Row k="Reuniões / dia" v={totals.reunioesDia.toFixed(1)} />
+            <Row k="Leads totais (mês)" v={fmt(totals.leads)} accent />
+            <Row k="Leads / dia" v={totals.leadsDia.toFixed(0)} />
+            <div className="pt-2 mt-2 border-t space-y-1">
+              <Row k="Velocity de receita" v={`${money(totals.velocity)}/dia`} />
+              <Row k="Pipeline alvo" v={money(totals.pipelineAlvo)} />
+              <Row k={`Cobertura (${cfg.pipeline_coverage}×)`} v={`${cfg.pipeline_coverage}x meta`} />
             </div>
           </CardContent>
         </Card>
       </div>
+
+      {/* Mix por oferta — concentração de receita */}
+      {offers.length > 0 && (
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm flex items-center gap-2"><Layers className="h-4 w-4 text-primary" /> Mix de Receita por Oferta</CardTitle>
+            <CardDescription className="text-xs">Concentração de receita e contribuição de cada oferta no resultado.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            {offers
+              .map(o => ({ ...o, share: totals.receita > 0 ? (o.receita / totals.receita) * 100 : 0 }))
+              .sort((a, b) => b.share - a.share)
+              .map(o => (
+                <div key={o.id || o.name} className="space-y-1">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="font-medium truncate max-w-[60%]">{o.name}</span>
+                    <span className="font-mono text-muted-foreground">
+                      {money(o.receita)} <span className="text-primary font-semibold ml-2">{o.share.toFixed(1)}%</span>
+                    </span>
+                  </div>
+                  <Progress value={o.share} className="h-2" />
+                </div>
+              ))}
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }
 
-function KPI({ icon: Icon, label, value, accent }: any) {
+function Mini({ icon: Icon, label, value }: any) {
+  return (
+    <div className="p-2 rounded-md border bg-card/50">
+      <div className="flex items-center gap-1 text-muted-foreground">
+        <Icon className="h-3 w-3" />
+        <span className="text-[9px] uppercase">{label}</span>
+      </div>
+      <p className="text-sm font-bold mt-0.5">{value}</p>
+    </div>
+  );
+}
+
+function KPI({ icon: Icon, label, value, accent, sub, progress }: any) {
   return (
     <Card>
       <CardContent className="p-3">
         <div className="flex items-center gap-1.5 text-muted-foreground"><Icon className="h-3.5 w-3.5" /><span className="text-[10px] uppercase tracking-wide">{label}</span></div>
         <p className={`text-lg font-bold mt-1 ${accent || ""}`}>{value}</p>
+        {typeof progress === "number" && <Progress value={progress} className="h-1 mt-1.5" />}
+        {sub && <p className="text-[10px] text-muted-foreground mt-1 truncate">{sub}</p>}
       </CardContent>
     </Card>
   );
