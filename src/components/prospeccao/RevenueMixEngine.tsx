@@ -410,9 +410,13 @@ export function RevenueMixEngine() {
         </CardHeader>
         <CardContent className="grid grid-cols-2 md:grid-cols-4 gap-3">
           <BigGoal icon={DollarSign} label="Faturamento" value={money(metasPorPeriodo.receita)} accent="text-emerald-600" />
-          <BigGoal icon={Trophy} label="Vendas fechadas" value={fmt(metasPorPeriodo.vendas)} accent="text-primary" />
-          <BigGoal icon={CalendarCheck} label="Reuniões agendadas" value={fmt(metasPorPeriodo.reunioes)} />
-          <BigGoal icon={Users} label="Leads gerados" value={fmt(metasPorPeriodo.leads)} accent="text-violet-600" />
+          <BigGoal icon={Trophy} label={T.vendaPlural.charAt(0).toUpperCase() + T.vendaPlural.slice(1) + " fechadas"} value={fmt(metasPorPeriodo.vendas)} accent="text-primary" />
+          {model.hasMeeting ? (
+            <BigGoal icon={CalendarCheck} label={`${T.reuniaoPlural.charAt(0).toUpperCase() + T.reuniaoPlural.slice(1)} agendadas`} value={fmt(metasPorPeriodo.reunioes)} />
+          ) : (
+            <BigGoal icon={CalendarCheck} label={`${T.reuniaoPlural.charAt(0).toUpperCase() + T.reuniaoPlural.slice(1)} (volume)`} value={fmt(metasPorPeriodo.reunioes)} />
+          )}
+          <BigGoal icon={Users} label={`${T.leadPlural.charAt(0).toUpperCase() + T.leadPlural.slice(1)}`} value={fmt(metasPorPeriodo.leads)} accent="text-violet-600" />
         </CardContent>
       </Card>
 
