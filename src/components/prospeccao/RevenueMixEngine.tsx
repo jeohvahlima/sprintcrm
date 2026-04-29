@@ -280,6 +280,60 @@ export function RevenueMixEngine() {
 
   return (
     <div className="space-y-4">
+      {/* PASSO 0 — Modelo de Negócio */}
+      <Card className="border-indigo-500/30 bg-gradient-to-br from-indigo-500/5 via-transparent to-transparent">
+        <CardHeader className="pb-3">
+          <div className="flex items-center justify-between flex-wrap gap-2">
+            <div>
+              <CardTitle className="flex items-center gap-2 text-base">
+                <Layers className="h-5 w-5 text-indigo-600" /> Passo 0 — Qual é o seu modelo de negócio?
+                <Badge variant="outline" className="text-[10px]">{model.emoji} {model.label}</Badge>
+              </CardTitle>
+              <CardDescription className="text-xs">
+                Cada modelo tem uma jornada de venda diferente. Escolha o seu para que o sistema use a terminologia, métricas e templates certos.
+              </CardDescription>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <div className="grid md:grid-cols-3 gap-3">
+            <div className="md:col-span-2">
+              <Label className="text-xs">Modelo de negócio</Label>
+              <Select value={modelId} onValueChange={(v: BusinessModelId) => setModelId(v)}>
+                <SelectTrigger className="h-9 mt-1"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {BUSINESS_MODELS.map(m => (
+                    <SelectItem key={m.id} value={m.id}>{m.emoji} {m.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-[11px] text-muted-foreground mt-1.5">{model.description}</p>
+            </div>
+            <div className="flex flex-col gap-2 justify-end">
+              <Button variant="outline" size="sm" className="gap-1" onClick={applyModelDefaults}>
+                <Sparkles className="h-3.5 w-3.5" /> Aplicar padrões do modelo
+              </Button>
+              {model.offerTemplates.length > 0 && (
+                <Button variant="outline" size="sm" className="gap-1" onClick={handleApplyOfferTemplates} disabled={!cfg.id}>
+                  <Plus className="h-3.5 w-3.5" /> Adicionar ofertas-modelo
+                </Button>
+              )}
+            </div>
+          </div>
+          {/* Indicadores da jornada deste modelo */}
+          <div className="flex items-center gap-2 flex-wrap pt-1">
+            <Badge variant={model.hasSDR ? "default" : "secondary"} className="text-[10px]">
+              {model.hasSDR ? "✓ Tem prospecção (SDR)" : "✗ Sem SDR"}
+            </Badge>
+            <Badge variant={model.hasMeeting ? "default" : "secondary"} className="text-[10px]">
+              {model.hasMeeting ? `✓ Tem ${T.reuniao} agendada` : `✗ Sem ${T.reuniao}`}
+            </Badge>
+            <Badge variant="outline" className="text-[10px]">Vendedor = {T.closer}</Badge>
+            <Badge variant="outline" className="text-[10px]">Venda = {T.venda}</Badge>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* PASSO 1 — Defina sua meta de faturamento */}
       <Card className="border-primary/30 bg-gradient-to-br from-primary/5 via-transparent to-transparent">
         <CardHeader className="pb-3">
