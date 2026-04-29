@@ -49,6 +49,7 @@ import { PastedImagePreview } from "@/components/conversas/PastedImagePreview";
 import { formatPhoneNumber, safeFormatPhoneNumber, normalizePhoneForComparison } from "@/utils/phoneFormatter";
 import { cleanAllConversationsHistory } from "@/utils/cleanConversationsHistory";
 import { getMediaUrl, MediaExpiredError } from "@/utils/mediaLoader";
+import { throttledProfilePicture } from "@/utils/profilePictureThrottle";
 import { useLeadsSync } from "@/hooks/useLeadsSync";
 import { useGlobalSync } from "@/hooks/useGlobalSync";
 import { useWorkflowAutomation } from "@/hooks/useWorkflowAutomation";
