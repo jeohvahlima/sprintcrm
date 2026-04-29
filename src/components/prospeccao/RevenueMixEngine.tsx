@@ -256,6 +256,28 @@ export function RevenueMixEngine() {
     try { await delOffer.mutateAsync(o.id); } catch (e: any) { toast.error("Erro", { description: e.message }); }
   };
 
+  const handleApplyOfferTemplates = async () => {
+    if (!cfg.id) { toast.error("Salve o plano antes"); return; }
+    if (!model.offerTemplates.length) { toast.info("Este modelo não possui templates"); return; }
+    try {
+      for (let i = 0; i < model.offerTemplates.length; i++) {
+        const t = model.offerTemplates[i];
+        await upsertOffer.mutateAsync({
+          ...newOffer(cfg.id, draftOffers.length + i),
+          name: t.name,
+          ticket: t.ticket,
+          margin_pct: t.margin_pct,
+          target_sales: t.target_sales,
+          lead_to_meeting_rate: model.defaults.lead_to_meeting_rate,
+          meeting_show_rate: model.defaults.meeting_show_rate,
+          win_rate: model.defaults.win_rate,
+          cac: model.defaults.cac,
+        });
+      }
+      toast.success(`${model.offerTemplates.length} ofertas-modelo adicionadas`);
+    } catch (e: any) { toast.error("Erro", { description: e.message }); }
+  };
+
   return (
     <div className="space-y-4">
       {/* PASSO 1 — Defina sua meta de faturamento */}
