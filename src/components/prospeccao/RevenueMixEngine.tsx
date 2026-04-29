@@ -448,20 +448,30 @@ export function RevenueMixEngine() {
           </div>
         </CardHeader>
         <CardContent>
-          {/* Legenda */}
+          {/* Legenda — adaptada ao modelo */}
           <div className="mb-3 p-2.5 rounded-md border bg-muted/30 text-[11px] text-muted-foreground flex items-start gap-2">
             <Info className="h-3.5 w-3.5 mt-0.5 flex-shrink-0 text-primary" />
             <div className="space-y-0.5">
-              <div><strong>Lead → Reunião %</strong>: de cada 100 leads, quantos viram reunião agendada.</div>
-              <div><strong>Show %</strong>: dos que agendaram, quantos comparecem (taxa de comparecimento).</div>
-              <div><strong>Win %</strong>: das reuniões realizadas, quantas viram venda fechada.</div>
-              <div><strong>CAC</strong>: custo de aquisição por cliente (marketing + vendas ÷ vendas).</div>
+              {model.hasMeeting ? (
+                <>
+                  <div><strong>{T.lead.charAt(0).toUpperCase() + T.lead.slice(1)} → {T.reuniao} %</strong>: de cada 100 {T.leadPlural}, quantos viram {T.reuniao} agendada.</div>
+                  <div><strong>Show %</strong>: dos que agendaram, quantos comparecem.</div>
+                  <div><strong>Win %</strong>: das {T.reuniaoPlural} realizadas, quantas viram {T.venda} fechada.</div>
+                </>
+              ) : (
+                <>
+                  <div><strong>{T.lead.charAt(0).toUpperCase() + T.lead.slice(1)} → Atendimento %</strong>: dos {T.leadPlural}, quantos foram efetivamente atendidos/abordados.</div>
+                  <div><strong>Conversão %</strong>: dos atendidos, quantos compraram (deixe 100 se já considera só fechamento).</div>
+                  <div><strong>Win %</strong>: taxa final de conversão {T.lead} → {T.venda}.</div>
+                </>
+              )}
+              <div><strong>CAC</strong>: custo médio para conquistar 1 cliente (marketing + vendas ÷ {T.vendaPlural}).</div>
             </div>
           </div>
 
           {offers.length === 0 ? (
             <div className="text-center py-10 text-sm text-muted-foreground">
-              Nenhuma oferta cadastrada. Adicione manualmente ou importe de Produtos.
+              Nenhuma oferta cadastrada. Adicione manualmente, importe de Produtos ou use o template do modelo.
             </div>
           ) : (
             <div className="overflow-x-auto">
@@ -469,12 +479,12 @@ export function RevenueMixEngine() {
                 <thead className="text-muted-foreground border-b">
                   <tr className="text-left">
                     <th className="py-2 pr-2">Oferta</th>
-                    <th className="py-2 px-1"><HLabel label="Ticket" hint="Preço médio cobrado por venda dessa oferta." /></th>
+                    <th className="py-2 px-1"><HLabel label={T.ticket.charAt(0).toUpperCase() + T.ticket.slice(1)} hint={model.hints.ticket} /></th>
                     <th className="py-2 px-1"><HLabel label="Margem %" hint="Margem bruta após custos diretos do produto/serviço (sem vendas)." /></th>
-                    <th className="py-2 px-1"><HLabel label="Meta vendas" hint="Quantas vendas dessa oferta você quer fechar no mês." /></th>
-                    <th className="py-2 px-1"><HLabel label="Lead→Reun %" hint="De cada 100 leads, quantos viram reunião agendada." /></th>
-                    <th className="py-2 px-1"><HLabel label="Show %" hint="Quantos % dos agendados comparecem na reunião." /></th>
-                    <th className="py-2 px-1"><HLabel label="Win %" hint="Taxa de fechamento sobre as reuniões realizadas." /></th>
+                    <th className="py-2 px-1"><HLabel label={`Meta ${T.vendaPlural}`} hint={`Quantas ${T.vendaPlural} dessa oferta você quer fechar no período.`} /></th>
+                    <th className="py-2 px-1"><HLabel label={model.hasMeeting ? `${T.lead.charAt(0).toUpperCase()+T.lead.slice(1)}→${T.reuniao.charAt(0).toUpperCase()+T.reuniao.slice(1).slice(0,4)} %` : `${T.lead.charAt(0).toUpperCase()+T.lead.slice(1)}→Atend. %`} hint={model.hasMeeting ? `De cada 100 ${T.leadPlural}, quantos viram ${T.reuniao} agendada.` : `Dos ${T.leadPlural}, quantos foram efetivamente atendidos.`} /></th>
+                    <th className="py-2 px-1"><HLabel label={model.hasMeeting ? "Show %" : "Conv. %"} hint={model.hasMeeting ? "Quantos % dos agendados comparecem." : "Quantos % dos atendidos efetivam compra."} /></th>
+                    <th className="py-2 px-1"><HLabel label="Win %" hint={model.hints.win_rate} /></th>
                     <th className="py-2 px-1"><HLabel label="CAC" hint="Custo médio para conquistar 1 cliente nessa oferta." /></th>
                     <th className="py-2 px-1 text-right">Receita</th>
                     <th className="py-2 px-1 text-right">Leads</th>
