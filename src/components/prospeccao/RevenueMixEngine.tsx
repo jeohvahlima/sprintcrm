@@ -535,53 +535,63 @@ export function RevenueMixEngine() {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid md:grid-cols-2 gap-3">
+          <div className={`grid ${model.hasSDR ? "md:grid-cols-2" : "md:grid-cols-1"} gap-3`}>
+            {model.hasSDR && (
+              <div className="p-2 rounded border bg-card/50">
+                <Label className="text-xs">
+                  <HLabel label={`Quantos ${T.sdr}s no time?`} hint={`${T.sdr} = quem prospecta, qualifica ${T.leadPlural} e agenda ${T.reuniaoPlural}.`} />
+                </Label>
+                <Input type="number" min={1} className="h-9 mt-1" value={sdrsTeam}
+                  onChange={(e) => setSdrsTeam(Math.max(1, Number(e.target.value)))} />
+              </div>
+            )}
             <div className="p-2 rounded border bg-card/50">
               <Label className="text-xs">
-                <HLabel label="Quantos SDRs no time?" hint="SDR = Sales Development Rep. Quem prospecta, qualifica leads e agenda reuniões." />
-              </Label>
-              <Input type="number" min={1} className="h-9 mt-1" value={sdrsTeam}
-                onChange={(e) => setSdrsTeam(Math.max(1, Number(e.target.value)))} />
-            </div>
-            <div className="p-2 rounded border bg-card/50">
-              <Label className="text-xs">
-                <HLabel label="Quantos Closers/Vendedores?" hint="Closer = quem realiza a reunião, faz a proposta e fecha a venda." />
+                <HLabel label={`Quantos ${T.closer}?`} hint={`${T.closer} = quem realiza a ${T.venda} e fecha o atendimento.`} />
               </Label>
               <Input type="number" min={1} className="h-9 mt-1" value={closersTeam}
                 onChange={(e) => setClosersTeam(Math.max(1, Number(e.target.value)))} />
             </div>
           </div>
 
-          <div className="grid md:grid-cols-2 gap-3">
-            {/* SDR */}
-            <div className="rounded-lg border bg-card p-3 space-y-2">
-              <div className="flex items-center gap-2 pb-2 border-b">
-                <Phone className="h-4 w-4 text-blue-600" />
-                <span className="text-sm font-semibold">Meta por SDR</span>
-                <Badge variant="outline" className="ml-auto text-[10px]">{sdrsTeam} pessoa(s)</Badge>
+          <div className={`grid ${model.hasSDR ? "md:grid-cols-2" : "md:grid-cols-1"} gap-3`}>
+            {/* SDR (somente se modelo tem SDR) */}
+            {model.hasSDR && (
+              <div className="rounded-lg border bg-card p-3 space-y-2">
+                <div className="flex items-center gap-2 pb-2 border-b">
+                  <Phone className="h-4 w-4 text-blue-600" />
+                  <span className="text-sm font-semibold">Meta por {T.sdr}</span>
+                  <Badge variant="outline" className="ml-auto text-[10px]">{sdrsTeam} pessoa(s)</Badge>
+                </div>
+                <Row k={`${T.leadPlural.charAt(0).toUpperCase()+T.leadPlural.slice(1)} / dia`} v={metasPorPessoa.sdr.leadsDia.toFixed(1)} accent />
+                <Row k={`${T.leadPlural.charAt(0).toUpperCase()+T.leadPlural.slice(1)} / semana`} v={fmt(metasPorPessoa.sdr.leadsSemana)} />
+                <Row k={`${T.leadPlural.charAt(0).toUpperCase()+T.leadPlural.slice(1)} / mês`} v={fmt(metasPorPessoa.sdr.leadsMes)} />
+                {model.hasMeeting && (
+                  <>
+                    <div className="pt-2 border-t" />
+                    <Row k={`${T.reuniaoPlural.charAt(0).toUpperCase()+T.reuniaoPlural.slice(1)} agendadas / dia`} v={metasPorPessoa.sdr.reunioesDia.toFixed(1)} />
+                    <Row k={`${T.reuniaoPlural.charAt(0).toUpperCase()+T.reuniaoPlural.slice(1)} agendadas / mês`} v={fmt(metasPorPessoa.sdr.reunioesMes)} accent />
+                  </>
+                )}
               </div>
-              <Row k="Leads / dia" v={metasPorPessoa.sdr.leadsDia.toFixed(1)} accent />
-              <Row k="Leads / semana" v={fmt(metasPorPessoa.sdr.leadsSemana)} />
-              <Row k="Leads / mês" v={fmt(metasPorPessoa.sdr.leadsMes)} />
-              <div className="pt-2 border-t" />
-              <Row k="Reuniões agendadas / dia" v={metasPorPessoa.sdr.reunioesDia.toFixed(1)} />
-              <Row k="Reuniões agendadas / mês" v={fmt(metasPorPessoa.sdr.reunioesMes)} accent />
-            </div>
+            )}
 
             {/* Closer */}
             <div className="rounded-lg border bg-card p-3 space-y-2">
               <div className="flex items-center gap-2 pb-2 border-b">
                 <Trophy className="h-4 w-4 text-emerald-600" />
-                <span className="text-sm font-semibold">Meta por Closer/Vendedor</span>
+                <span className="text-sm font-semibold">Meta por {T.closer}</span>
                 <Badge variant="outline" className="ml-auto text-[10px]">{closersTeam} pessoa(s)</Badge>
               </div>
-              <Row k="Vendas / dia" v={metasPorPessoa.closer.vendasDia.toFixed(2)} accent />
-              <Row k="Vendas / semana" v={metasPorPessoa.closer.vendasSemana.toFixed(1)} />
-              <Row k="Vendas / mês" v={fmt(metasPorPessoa.closer.vendasMes)} />
+              <Row k={`${T.vendaPlural.charAt(0).toUpperCase()+T.vendaPlural.slice(1)} / dia`} v={metasPorPessoa.closer.vendasDia.toFixed(2)} accent />
+              <Row k={`${T.vendaPlural.charAt(0).toUpperCase()+T.vendaPlural.slice(1)} / semana`} v={metasPorPessoa.closer.vendasSemana.toFixed(1)} />
+              <Row k={`${T.vendaPlural.charAt(0).toUpperCase()+T.vendaPlural.slice(1)} / mês`} v={fmt(metasPorPessoa.closer.vendasMes)} />
               <div className="pt-2 border-t" />
               <Row k="Faturamento / mês" v={money(metasPorPessoa.closer.receitaMes)} accent />
               <Row k="Faturamento / dia" v={money(metasPorPessoa.closer.receitaDia)} />
-              <Row k="Reuniões realizadas / mês" v={fmt(metasPorPessoa.closer.reunioesMes)} />
+              {model.hasMeeting && (
+                <Row k={`${T.reuniaoPlural.charAt(0).toUpperCase()+T.reuniaoPlural.slice(1)} realizadas / mês`} v={fmt(metasPorPessoa.closer.reunioesMes)} />
+              )}
             </div>
           </div>
         </CardContent>
