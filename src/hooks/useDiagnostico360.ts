@@ -298,8 +298,8 @@ export function useSalvarDiagnostico() {
               nota,
               classificacao,
               segmento: input.segmento,
-              dores: input.dores,
-              gargalos: input.gargalos,
+              dores,
+              gargalos,
             },
           },
         });
