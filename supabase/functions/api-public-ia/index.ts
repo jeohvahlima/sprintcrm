@@ -416,32 +416,62 @@ IMPORTANTE: Se o visitante quiser agendar, primeiro use MOSTRAR_HORARIOS para mo
       const aiResponse = data.choices[0].message.content;
 
       // Extrair ações da resposta
-      const actionPattern = /\[(COLETAR_LEAD|AGENDAR|TRANSFERIR_HUMANO)(:([^\]]+))?\]/g;
+      const actionPattern = /\[(COLETAR_LEAD|AGENDAR|TRANSFERIR_HUMANO|MOSTRAR_HORARIOS|QUALIFICAR_LEAD)(:([^\]]+))?\]/g;
       const actions: any[] = [];
       let match;
-      
+
+      // Estado de qualificação acumulado nesta resposta
+      let qualificacaoAtual: { score?: number; classificacao?: string; resumo?: string; interesse?: string } | null = null;
+      let transferirHumano = false;
+      let motivoTransferencia: string | undefined;
+
       while ((match = actionPattern.exec(aiResponse)) !== null) {
         const actionType = match[1];
         const actionParams = match[3];
-        
-        actions.push({
-          type: actionType,
-          params: actionParams
-        });
+
+        const parseParams = (raw?: string): Record<string, string> => {
+          const p: Record<string, string> = {};
+          if (!raw) return p;
+          raw.split(',').forEach((piece: string) => {
+            const idx = piece.indexOf('=');
+            if (idx > -1) {
+              const k = piece.slice(0, idx).trim();
+              const v = piece.slice(idx + 1).trim();
+              if (k) p[k] = v;
+            }
+          });
+          return p;
+        };
+
+        actions.push({ type: actionType, params: actionParams });
+
+        // QUALIFICAR_LEAD: armazena estado para aplicar no lead
+        if (actionType === 'QUALIFICAR_LEAD' && actionParams) {
+          const p = parseParams(actionParams);
+          const scoreNum = p.score ? parseInt(p.score, 10) : undefined;
+          qualificacaoAtual = {
+            score: Number.isFinite(scoreNum) ? scoreNum : undefined,
+            classificacao: p.classificacao?.toLowerCase(),
+            resumo: p.resumo,
+            interesse: p.interesse,
+          };
+          actions[actions.length - 1].qualificacao = qualificacaoAtual;
+        }
+
+        if (actionType === 'TRANSFERIR_HUMANO') {
+          transferirHumano = true;
+          motivoTransferencia = actionParams ? parseParams(actionParams).motivo : undefined;
+        }
 
         // Executar ação de coleta de lead
         if (actionType === 'COLETAR_LEAD' && actionParams && companyId) {
           try {
-            const params: Record<string, string> = {};
-            actionParams.split(',').forEach((p: string) => {
-              const [key, value] = p.split('=');
-              if (key && value) params[key.trim()] = value.trim();
-            });
+            const params = parseParams(actionParams);
 
             if (params.nome || params.telefone || params.email) {
               // Verificar se já existe
               const telefoneNorm = params.telefone?.replace(/\D/g, '');
-              let leadExiste = false;
+              let leadExisteId: string | null = null;
 
               if (telefoneNorm) {
                 const { data: existe } = await supabase
@@ -451,10 +481,10 @@ IMPORTANTE: Se o visitante quiser agendar, primeiro use MOSTRAR_HORARIOS para mo
                   .or(`telefone.eq.${telefoneNorm},phone.eq.${telefoneNorm}`)
                   .limit(1)
                   .single();
-                leadExiste = !!existe;
+                if (existe) leadExisteId = (existe as any).id;
               }
 
-              if (!leadExiste && params.email) {
+              if (!leadExisteId && params.email) {
                 const { data: existe } = await supabase
                   .from('leads')
                   .select('id')
@@ -462,11 +492,29 @@ IMPORTANTE: Se o visitante quiser agendar, primeiro use MOSTRAR_HORARIOS para mo
                   .eq('email', params.email.toLowerCase())
                   .limit(1)
                   .single();
-                leadExiste = !!existe;
+                if (existe) leadExisteId = (existe as any).id;
               }
 
-              if (!leadExiste) {
-                await supabase.from('leads').insert({
+              // Tags + status baseados na qualificação atual
+              const classif = qualificacaoAtual?.classificacao;
+              const tags = ['chat-ia', 'site-institucional'];
+              if (classif) tags.push(`lead-${classif}`);
+              if (companySegmento) tags.push(`segmento-${companySegmento}`);
+
+              const status = classif === 'quente' ? 'qualificado'
+                : classif === 'morno' ? 'em_qualificacao'
+                : classif === 'curioso' ? 'descartado'
+                : 'novo';
+
+              const notesParts = [
+                `Lead captado via chat IA do site em ${new Date().toLocaleString('pt-BR')}`,
+                params.interesse ? `Interesse: ${params.interesse}` : '',
+                qualificacaoAtual?.resumo ? `Resumo IA: ${qualificacaoAtual.resumo}` : '',
+                qualificacaoAtual?.score != null ? `Score: ${qualificacaoAtual.score}/100 (${classif || 'n/a'})` : '',
+              ].filter(Boolean).join('\n');
+
+              if (!leadExisteId) {
+                const { data: novoLead } = await supabase.from('leads').insert({
                   name: params.nome || 'Visitante Site',
                   telefone: telefoneNorm,
                   phone: telefoneNorm,
@@ -474,12 +522,24 @@ IMPORTANTE: Se o visitante quiser agendar, primeiro use MOSTRAR_HORARIOS para mo
                   company_id: companyId,
                   owner_id: ownerId,
                   source: 'chat-ia-site',
-                  status: 'novo',
-                  tags: ['chat-ia', 'site-institucional'],
-                  notes: `Lead captado via chat IA do site em ${new Date().toLocaleString('pt-BR')}`
-                });
-                console.log('[api-public-ia] Lead criado via chat:', params.nome);
+                  status,
+                  tags,
+                  notes: notesParts,
+                }).select('id').single();
+                if (novoLead) leadExisteId = (novoLead as any).id;
+                console.log('[api-public-ia] Lead criado via chat:', params.nome, 'classif:', classif);
+              } else {
+                // Atualizar lead existente com nova qualificação
+                await supabase.from('leads').update({
+                  status,
+                  tags,
+                  notes: notesParts,
+                  updated_at: new Date().toISOString(),
+                }).eq('id', leadExisteId);
               }
+
+              actions[actions.length - 1].lead_id = leadExisteId;
+              actions[actions.length - 1].classificacao = classif;
             }
           } catch (e) {
             console.warn('[api-public-ia] Erro ao criar lead:', e);
