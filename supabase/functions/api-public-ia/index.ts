@@ -458,9 +458,10 @@ AÇÃO CONFIGURADA AO QUALIFICAR LEAD QUENTE: ${acaoQuente}.`;
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          model: 'google/gemini-2.5-flash',
+          model: botCfg.modelo || 'google/gemini-2.5-flash',
           messages,
-          max_tokens: 500,
+          max_tokens: 600,
+          temperature: typeof botCfg.criatividade === 'number' ? Math.max(0, Math.min(1, botCfg.criatividade / 100)) : 0.7,
         }),
       });
 
