@@ -48,13 +48,13 @@ export function SegmentBenchmarkCard({ currentMetrics = {} }: Props) {
       <CardContent>
         {isLoading ? (
           <div className="space-y-2">{[...Array(3)].map((_, i) => <Skeleton key={i} className="h-12" />)}</div>
-        ) : !data || data.length === 0 ? (
+        ) : !rows || rows.length === 0 ? (
           <p className="text-sm text-muted-foreground text-center py-6">
             Sem dados de benchmark para o segmento "{seg}". Em breve.
           </p>
         ) : (
           <div className="space-y-2">
-            {data.map((b: any) => {
+            {rows.map((b: any) => {
               const current = currentMetrics[b.metric_key];
               const hasCurrent = typeof current === "number";
               const diff = hasCurrent ? current - Number(b.market_average) : 0;
