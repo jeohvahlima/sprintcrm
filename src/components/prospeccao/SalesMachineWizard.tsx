@@ -465,7 +465,8 @@ export function SalesMachineWizard() {
 // ==================== Painel de Acompanhamento ====================
 function AccompanyPanel({ meta }: { meta: number }) {
   const { data: todayLog, save } = useTodayLog();
-  const { data: teamLogs } = useTeamLogs(30);
+  const { data: teamLogs } = useTeamLogs(90);
+  const { members } = useTeamMembers();
   const [log, setLog] = useState<DailyLog>(EMPTY_LOG);
   const [periodView, setPeriodView] = useState<"dia" | "semana" | "mes" | "trimestre">("semana");
 
