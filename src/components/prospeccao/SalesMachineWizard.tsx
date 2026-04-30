@@ -658,18 +658,39 @@ function AccompanyPanel({ meta }: { meta: number }) {
       {/* Painel agregado do time */}
       <Card>
         <CardHeader className="pb-3">
-          <div className="flex items-center justify-between flex-wrap gap-2">
+          <div className="flex items-center justify-between flex-wrap gap-3">
             <div>
               <CardTitle className="flex items-center gap-2 text-base">
                 <Trophy className="h-5 w-5 text-amber-600" /> Desempenho do time
               </CardTitle>
-              <CardDescription>Soma de todos os check-ins no período selecionado.</CardDescription>
+              <CardDescription>
+                {dataEspecifica
+                  ? `Visualizando o dia ${new Date(dataEspecifica + "T00:00:00").toLocaleDateString("pt-BR")}`
+                  : "Soma de todos os check-ins no período selecionado."}
+              </CardDescription>
             </div>
-            <div className="flex gap-1">
-              {(["dia", "semana", "mes", "trimestre"] as const).map(p => (
-                <Badge key={p} variant={periodView === p ? "default" : "outline"}
-                  className="cursor-pointer capitalize" onClick={() => setPeriodView(p)}>{p}</Badge>
-              ))}
+            <div className="flex flex-wrap items-center gap-2">
+              <div className="flex items-center gap-1">
+                <Label className="text-[10px] uppercase text-muted-foreground">Data:</Label>
+                <Input
+                  type="date"
+                  value={dataEspecifica}
+                  onChange={(e) => setDataEspecifica(e.target.value)}
+                  className="h-7 w-[140px] text-xs"
+                />
+                {dataEspecifica && (
+                  <Button size="sm" variant="ghost" className="h-7 px-2 text-[10px]"
+                    onClick={() => setDataEspecifica("")}>limpar</Button>
+                )}
+              </div>
+              {!dataEspecifica && (
+                <div className="flex gap-1">
+                  {(["dia", "semana", "mes", "trimestre"] as const).map(p => (
+                    <Badge key={p} variant={periodView === p ? "default" : "outline"}
+                      className="cursor-pointer capitalize" onClick={() => setPeriodView(p)}>{p}</Badge>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         </CardHeader>
@@ -678,7 +699,9 @@ function AccompanyPanel({ meta }: { meta: number }) {
           {meta > 0 && (
             <div className="rounded-lg border p-3 bg-gradient-to-r from-emerald-500/5 to-blue-500/5">
               <div className="flex items-center justify-between mb-1.5">
-                <span className="text-xs font-semibold uppercase text-muted-foreground">Faturamento {periodView}</span>
+                <span className="text-xs font-semibold uppercase text-muted-foreground">
+                  Faturamento {dataEspecifica ? "do dia" : periodView}
+                </span>
                 <span className="text-xs">{progressoMeta.toFixed(1)}% da meta</span>
               </div>
               <div className="flex items-end gap-3 mb-2">
@@ -700,25 +723,122 @@ function AccompanyPanel({ meta }: { meta: number }) {
             <KPI label="Conversão" value={agg.leads > 0 ? `${((agg.vendas / agg.leads) * 100).toFixed(1)}%` : "—"} />
           </div>
 
-          {/* Logs recentes */}
-          <div>
-            <h4 className="text-xs font-semibold uppercase text-muted-foreground mb-2">Últimos check-ins do time</h4>
-            <div className="rounded border max-h-60 overflow-y-auto">
-              {(teamLogs || []).length === 0 && (
-                <p className="text-xs text-muted-foreground p-3 italic">Nenhum check-in registrado ainda.</p>
+          {/* Gráfico de evolução com picos */}
+          <div className="rounded-lg border p-3">
+            <div className="flex items-center justify-between mb-2">
+              <h4 className="text-xs font-semibold uppercase text-muted-foreground flex items-center gap-1.5">
+                <BarChart3 className="h-3.5 w-3.5" /> Evolução diária — últimos 30 dias
+              </h4>
+              {picoFaturamento && picoFaturamento.faturamento > 0 && (
+                <Badge variant="outline" className="text-[10px] gap-1">
+                  <TrendingUp className="h-3 w-3 text-emerald-600" />
+                  Pico: {picoFaturamento.label} — {money(picoFaturamento.faturamento)}
+                </Badge>
               )}
-              {(teamLogs || []).slice(0, 15).map(l => (
-                <div key={l.id} className="flex items-center justify-between px-3 py-2 border-b last:border-b-0 text-xs">
-                  <div className="flex items-center gap-2">
-                    <Badge variant="outline" className="text-[10px] uppercase">{l.role_type}</Badge>
-                    <span className="text-muted-foreground">{new Date(l.log_date).toLocaleDateString("pt-BR")}</span>
+            </div>
+            {serieDiaria.every(d => d.faturamento === 0 && d.vendas === 0) ? (
+              <p className="text-xs text-muted-foreground italic py-8 text-center">
+                Sem check-ins nos últimos 30 dias. Registre o primeiro acima para ver picos e tendências.
+              </p>
+            ) : (
+              <ResponsiveContainer width="100%" height={220}>
+                <LineChart data={serieDiaria} onClick={(e: any) => {
+                  if (e?.activePayload?.[0]?.payload?.date) setDataEspecifica(e.activePayload[0].payload.date);
+                }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                  <XAxis dataKey="label" tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 10 }} />
+                  <YAxis yAxisId="left" tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 10 }} />
+                  <YAxis yAxisId="right" orientation="right" tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 10 }} />
+                  <Tooltip
+                    contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 8, fontSize: 12 }}
+                    formatter={(v: any, name: string) => name === "Faturamento" ? money(Number(v)) : v}
+                  />
+                  <Line yAxisId="left" type="monotone" dataKey="faturamento" name="Faturamento"
+                    stroke="hsl(var(--primary))" strokeWidth={2} dot={{ r: 3 }} activeDot={{ r: 5 }} />
+                  <Line yAxisId="right" type="monotone" dataKey="vendas" name="Vendas"
+                    stroke="#10b981" strokeWidth={2} dot={{ r: 2 }} />
+                  <Line yAxisId="right" type="monotone" dataKey="leads" name="Leads"
+                    stroke="#f59e0b" strokeWidth={1.5} strokeDasharray="4 2" dot={false} />
+                  {picoFaturamento && picoFaturamento.faturamento > 0 && (
+                    <ReferenceDot yAxisId="left" x={picoFaturamento.label} y={picoFaturamento.faturamento}
+                      r={6} fill="#10b981" stroke="#fff" strokeWidth={2} />
+                  )}
+                </LineChart>
+              </ResponsiveContainer>
+            )}
+            <p className="text-[10px] text-muted-foreground mt-1 italic">
+              💡 Clique em um ponto no gráfico para filtrar os dados daquele dia.
+            </p>
+          </div>
+
+          {/* Top performers */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div className="rounded-lg border p-3 bg-gradient-to-br from-amber-500/5 to-orange-500/5">
+              <div className="flex items-center gap-2 mb-2">
+                <Crown className="h-4 w-4 text-amber-600" />
+                <h4 className="text-xs font-semibold uppercase">Top SDR</h4>
+              </div>
+              {topSDR ? (
+                <>
+                  <p className="font-bold text-sm">{memberName(topSDR.user_id)}</p>
+                  <div className="flex gap-3 mt-1 text-[11px] text-muted-foreground">
+                    <span>{topSDR.leads} leads</span>
+                    <span>{topSDR.reunioes} reuniões</span>
+                    <span>{topSDR.ligacoes} ligações</span>
                   </div>
-                  <div className="flex gap-3 text-[11px]">
-                    <span>{l.leads_prospectados} leads</span>
-                    <span>{l.reunioes_realizadas} reuniões</span>
-                    <span className="text-emerald-600 font-semibold">{l.vendas_fechadas} vendas</span>
-                    <span className="text-emerald-700 font-semibold">{money(Number(l.faturamento_gerado || 0))}</span>
+                </>
+              ) : <p className="text-xs text-muted-foreground italic">Sem dados de SDR no período.</p>}
+            </div>
+            <div className="rounded-lg border p-3 bg-gradient-to-br from-emerald-500/5 to-blue-500/5">
+              <div className="flex items-center gap-2 mb-2">
+                <Award className="h-4 w-4 text-emerald-600" />
+                <h4 className="text-xs font-semibold uppercase">Top Vendedor (Closer)</h4>
+              </div>
+              {topCloser ? (
+                <>
+                  <p className="font-bold text-sm">{memberName(topCloser.user_id)}</p>
+                  <div className="flex gap-3 mt-1 text-[11px]">
+                    <span className="text-emerald-700 font-semibold">{money(topCloser.faturamento)}</span>
+                    <span className="text-muted-foreground">{topCloser.vendas} vendas</span>
                   </div>
+                </>
+              ) : <p className="text-xs text-muted-foreground italic">Sem dados de closer no período.</p>}
+            </div>
+          </div>
+
+          {/* Ranking completo */}
+          <div>
+            <h4 className="text-xs font-semibold uppercase text-muted-foreground mb-2 flex items-center gap-1.5">
+              <Medal className="h-3.5 w-3.5" /> Ranking de performance
+            </h4>
+            <div className="rounded border overflow-hidden">
+              <div className="grid grid-cols-12 px-3 py-1.5 bg-muted/40 text-[10px] uppercase font-semibold tracking-wide">
+                <div className="col-span-1">#</div>
+                <div className="col-span-4">Vendedor</div>
+                <div className="col-span-1 text-center">Papel</div>
+                <div className="col-span-1 text-right">Leads</div>
+                <div className="col-span-1 text-right">Ligações</div>
+                <div className="col-span-1 text-right">Reuniões</div>
+                <div className="col-span-1 text-right">Vendas</div>
+                <div className="col-span-2 text-right">Faturamento</div>
+              </div>
+              {ranking.length === 0 && (
+                <p className="text-xs text-muted-foreground p-3 italic">Nenhum check-in no período selecionado.</p>
+              )}
+              {ranking.map((r, i) => (
+                <div key={r.user_id} className="grid grid-cols-12 px-3 py-2 border-t text-xs items-center hover:bg-muted/30">
+                  <div className="col-span-1 font-bold">
+                    {i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : `${i + 1}º`}
+                  </div>
+                  <div className="col-span-4 truncate font-medium">{memberName(r.user_id)}</div>
+                  <div className="col-span-1 text-center">
+                    <Badge variant="outline" className="text-[9px] uppercase">{r.role}</Badge>
+                  </div>
+                  <div className="col-span-1 text-right">{r.leads}</div>
+                  <div className="col-span-1 text-right">{r.ligacoes}</div>
+                  <div className="col-span-1 text-right">{r.reunioes}</div>
+                  <div className="col-span-1 text-right font-semibold">{r.vendas}</div>
+                  <div className="col-span-2 text-right text-emerald-700 font-bold">{money(r.faturamento)}</div>
                 </div>
               ))}
             </div>
