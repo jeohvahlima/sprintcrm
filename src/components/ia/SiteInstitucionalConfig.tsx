@@ -14,6 +14,7 @@ import { SITE_TEMPLATES, SiteConfig, SiteTheme, getTemplateById, DEFAULT_SITE_SE
 import { SiteRenderer } from "../site-publico/SiteRenderer";
 import { ImageUploader } from "../site-publico/ImageUploader";
 import { GalleryUploader } from "../site-publico/GalleryUploader";
+import { BotIASiteTab, BotIASiteConfig } from "./BotIASiteTab";
 
 interface Props { companyId: string; }
 
