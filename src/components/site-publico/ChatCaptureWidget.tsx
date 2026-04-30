@@ -22,6 +22,15 @@ interface Props {
     tag_automatica?: string;
     whatsapp_flutuante_mensagem?: string;
     company_slug?: string;
+    bot_ia_site?: {
+      ativo?: boolean;
+      nome_bot?: string;
+      avatar_url?: string;
+      saudacao?: string;
+      sugestoes_iniciais?: string[];
+      delay_resposta_ms?: number;
+      limite_mensagens?: number;
+    };
   };
 }
 
