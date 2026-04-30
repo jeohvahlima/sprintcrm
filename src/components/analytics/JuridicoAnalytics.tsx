@@ -30,11 +30,22 @@ interface LegalStats {
 }
 
 const STATUS_LABELS: Record<string, string> = {
+  pre_processual: "Pré-Processual",
+  protocolado: "Protocolado",
   em_andamento: "Em Andamento",
+  aguardando_citacao: "Ag. Citação",
+  aguardando_contestacao: "Ag. Contestação",
   aguardando_audiencia: "Aguardando Audiência",
   aguardando_pericia: "Aguardando Perícia",
+  aguardando_sentenca: "Ag. Sentença",
+  em_recurso: "Em Recurso",
+  em_execucao: "Em Execução",
+  cumprimento_sentenca: "Cumprimento de Sentença",
+  acordo: "Acordo",
+  transito_julgado: "Trânsito em Julgado",
   suspenso: "Suspenso",
   arquivado: "Arquivado",
+  extinto: "Extinto",
   ganho: "Ganho",
   perdido: "Perdido",
 };
