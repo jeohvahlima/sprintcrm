@@ -35,6 +35,7 @@ interface FullCfg extends SiteConfig {
   sugestoes_chat?: string[];
   slug?: string;
   ativo?: boolean;
+  bot_ia_site?: BotIASiteConfig;
 }
 
 export function SiteInstitucionalConfig({ companyId }: Props) {
