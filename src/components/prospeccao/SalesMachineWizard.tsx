@@ -9,12 +9,16 @@ import { Switch } from "@/components/ui/switch";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import {
-  Stethoscope, Target, Rocket, LineChart, Save, AlertTriangle, CheckCircle2,
+  Stethoscope, Target, Rocket, LineChart as LineChartIcon, Save, AlertTriangle, CheckCircle2,
   TrendingUp, Phone, Mail, Users, Calendar, Briefcase, Loader2, ArrowRight,
-  ArrowLeft, Trophy, Activity, Sparkles, Plus, Trash2,
+  ArrowLeft, Trophy, Activity, Sparkles, Plus, Trash2, BarChart3, Medal, Crown, Award,
 } from "lucide-react";
 import { toast } from "sonner";
+import {
+  ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid, ReferenceDot,
+} from "recharts";
 import { RevenueMixEngine } from "./RevenueMixEngine";
+import { useTeamMembers } from "@/hooks/useTeamMembers";
 import {
   useDiagnostico, DEFAULT_DIAGNOSTICO, type DiagnosticoMaquina, detectGargalos,
   useTodayLog, EMPTY_LOG, type DailyLog, useTeamLogs,
