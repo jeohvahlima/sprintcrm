@@ -4131,10 +4131,18 @@ function Conversas() {
                 lastMessage: novaConv.lastMessage,
                 // Atualizar última mensagem
                 status: statusFinal,
-                // ⚡ Status atualizado baseado na última mensagem
-                isGroup: conversaExistente.isGroup,
                 // ⚡ PRESERVAR flag de grupo
-                avatarUrl: conversaExistente.avatarUrl || novaConv.avatarUrl // ⚡ PRESERVAR avatar
+                isGroup: conversaExistente.isGroup,
+                // ⚡ PRESERVAR avatar
+                avatarUrl: conversaExistente.avatarUrl || novaConv.avatarUrl,
+                // ✅ FIX: PRESERVAR informações de lead (valor, funil, tags, responsável)
+                // que vêm de queries de enriquecimento — não sobrescrever com undefined
+                valor: novaConv.valor ?? conversaExistente.valor,
+                funnelStage: novaConv.funnelStage ?? conversaExistente.funnelStage,
+                tags: (novaConv.tags && novaConv.tags.length > 0) ? novaConv.tags : conversaExistente.tags,
+                responsavel: novaConv.responsavel ?? conversaExistente.responsavel,
+                assignedUser: novaConv.assignedUser ?? conversaExistente.assignedUser,
+                leadId: novaConv.leadId ?? conversaExistente.leadId,
               };
             }
 
@@ -4153,10 +4161,17 @@ function Conversas() {
             return {
               ...novaConv,
               status: statusFinal,
-              // ⚡ Status atualizado baseado na última mensagem
-              isGroup: conversaExistente?.isGroup ?? novaConv.isGroup,
               // ⚡ PRESERVAR flag de grupo
-              avatarUrl: conversaExistente?.avatarUrl || novaConv.avatarUrl // ⚡ PRESERVAR avatar
+              isGroup: conversaExistente?.isGroup ?? novaConv.isGroup,
+              // ⚡ PRESERVAR avatar
+              avatarUrl: conversaExistente?.avatarUrl || novaConv.avatarUrl,
+              // ✅ FIX: PRESERVAR informações de lead vindas de enriquecimento anterior
+              valor: novaConv.valor ?? conversaExistente?.valor,
+              funnelStage: novaConv.funnelStage ?? conversaExistente?.funnelStage,
+              tags: (novaConv.tags && novaConv.tags.length > 0) ? novaConv.tags : (conversaExistente?.tags ?? []),
+              responsavel: novaConv.responsavel ?? conversaExistente?.responsavel,
+              assignedUser: novaConv.assignedUser ?? conversaExistente?.assignedUser,
+              leadId: novaConv.leadId ?? conversaExistente?.leadId,
             };
           });
           const finalMerged = [...conversasRealtime, ...merged];
