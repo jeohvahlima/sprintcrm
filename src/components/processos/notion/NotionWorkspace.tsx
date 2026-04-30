@@ -321,7 +321,7 @@ export function NotionWorkspace({ companyId }: NotionWorkspaceProps) {
   };
 
   return (
-    <div className="flex h-[calc(100vh-220px)] bg-background rounded-xl border border-border overflow-hidden">
+    <div className="flex h-[calc(100vh-180px)] min-h-[600px] bg-background rounded-xl border border-border overflow-hidden">
       {/* Sidebar */}
       {!sidebarCollapsed && (
         <NotionSidebar
