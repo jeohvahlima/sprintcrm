@@ -18,6 +18,8 @@ interface Profissional {
   nome: string;
   especialidade?: string | null;
   avatar_url?: string | null;
+  valor_consulta?: number | null;
+  duracao_consulta?: number | null;
 }
 
 interface HorarioSlot {
