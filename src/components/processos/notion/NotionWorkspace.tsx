@@ -223,38 +223,97 @@ export function NotionWorkspace({ companyId }: NotionWorkspaceProps) {
     }
 
     return (
-      <div className="flex-1 flex items-center justify-center h-full">
-        <div className="text-center max-w-md">
-          <div className="w-24 h-24 mx-auto mb-6 rounded-full bg-primary/10 flex items-center justify-center">
-            <FileText className="h-12 w-12 text-primary" />
+      <div className="flex-1 overflow-auto h-full">
+        <div className="max-w-4xl mx-auto px-6 py-6">
+          {/* Hero compacto */}
+          <div className="flex items-start gap-4 mb-6 p-5 rounded-xl bg-gradient-to-br from-primary/10 via-primary/5 to-transparent border border-primary/20">
+            <div className="w-12 h-12 rounded-lg bg-primary/15 flex items-center justify-center shrink-0">
+              <FileText className="h-6 w-6 text-primary" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <h2 className="text-xl font-bold leading-tight">Workspace Comercial</h2>
+              <p className="text-sm text-muted-foreground mt-0.5">
+                Documentos, tarefas, playbooks, cadências e etapas — tudo em um só lugar.
+              </p>
+              <div className="flex flex-wrap gap-2 mt-3">
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button size="sm">
+                      <Plus className="h-4 w-4 mr-1.5" />
+                      Criar novo
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="start" className="w-56">
+                    <DropdownMenuItem onClick={() => handleCreateItem(null, 'page')}>
+                      <FileText className="h-4 w-4 mr-2" />
+                      Página em Branco
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => handleCreateItem(null, 'task')}>
+                      <CheckSquare className="h-4 w-4 mr-2" />
+                      Tarefa
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={() => handleCreateItem(null, 'playbook')}>
+                      <BookOpen className="h-4 w-4 mr-2" />
+                      Playbook
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => handleCreateItem(null, 'cadence')}>
+                      <Workflow className="h-4 w-4 mr-2" />
+                      Cadência
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => handleCreateItem(null, 'stage')}>
+                      <GitBranch className="h-4 w-4 mr-2" />
+                      Etapa
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+                <TemplateLibrary
+                  companyId={companyId}
+                  onCreateFromTemplate={handleCreateFromTemplate}
+                />
+              </div>
+            </div>
           </div>
-          <h2 className="text-2xl font-bold mb-2">Bem-vindo ao Workspace</h2>
-          <p className="text-muted-foreground mb-6">
-            Gerencie documentos, tarefas, playbooks, cadências e etapas do seu processo comercial em um só lugar.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-3 justify-center">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Criar Novo
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="center" className="w-56">
-                <DropdownMenuItem onClick={() => handleCreateItem(null, 'page')}>
-                  <FileText className="h-4 w-4 mr-2" />
-                  Página em Branco
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => handleCreateItem(null, 'task')}>
-                  <CheckSquare className="h-4 w-4 mr-2" />
-                  Tarefa
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-            <TemplateLibrary 
-              companyId={companyId}
-              onCreateFromTemplate={handleCreateFromTemplate}
-            />
+
+          {/* Cards rápidos */}
+          <div>
+            <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2.5">
+              Comece rapidamente
+            </h3>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-2.5">
+              {[
+                { type: 'page' as ContentType, icon: FileText, label: 'Página', desc: 'Documento em branco', color: 'text-blue-500 bg-blue-500/10' },
+                { type: 'task' as ContentType, icon: CheckSquare, label: 'Tarefa', desc: 'Com checklist e prazo', color: 'text-emerald-500 bg-emerald-500/10' },
+                { type: 'playbook' as ContentType, icon: BookOpen, label: 'Playbook', desc: 'Roteiro comercial', color: 'text-purple-500 bg-purple-500/10' },
+                { type: 'cadence' as ContentType, icon: Workflow, label: 'Cadência', desc: 'Sequência de toques', color: 'text-amber-500 bg-amber-500/10' },
+                { type: 'stage' as ContentType, icon: GitBranch, label: 'Etapa', desc: 'Fase do processo', color: 'text-pink-500 bg-pink-500/10' },
+                { type: 'page' as ContentType, icon: CalendarDays, label: 'Calendário', desc: 'Ver agenda', color: 'text-cyan-500 bg-cyan-500/10', onClick: handleViewCalendar },
+              ].map((item) => {
+                const Icon = item.icon;
+                return (
+                  <button
+                    key={item.label}
+                    onClick={() => item.onClick ? item.onClick() : handleCreateItem(null, item.type)}
+                    className="group flex items-start gap-2.5 p-3 rounded-lg border border-border hover:border-primary/40 hover:bg-muted/30 transition-all text-left"
+                  >
+                    <div className={`w-8 h-8 rounded-md flex items-center justify-center shrink-0 ${item.color}`}>
+                      <Icon className="h-4 w-4" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="text-sm font-medium leading-tight">{item.label}</div>
+                      <div className="text-xs text-muted-foreground mt-0.5 leading-tight">{item.desc}</div>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Dica */}
+          <div className="mt-5 p-3 rounded-lg bg-muted/40 border border-border/60">
+            <p className="text-xs text-muted-foreground leading-relaxed">
+              <span className="font-semibold text-foreground">Dica:</span> use a barra lateral para navegar entre páginas, favoritos e tarefas. Clique em <span className="font-semibold text-foreground">Templates</span> no topo para começar a partir de um modelo pronto.
+            </p>
           </div>
         </div>
       </div>
@@ -262,7 +321,7 @@ export function NotionWorkspace({ companyId }: NotionWorkspaceProps) {
   };
 
   return (
-    <div className="flex h-[calc(100vh-220px)] bg-background rounded-xl border border-border overflow-hidden">
+    <div className="flex h-[calc(100vh-180px)] min-h-[600px] bg-background rounded-xl border border-border overflow-hidden">
       {/* Sidebar */}
       {!sidebarCollapsed && (
         <NotionSidebar

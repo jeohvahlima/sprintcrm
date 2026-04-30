@@ -351,12 +351,12 @@ export function NotionPage({ page, onPageUpdate, companyId }: NotionPageProps) {
 
       {/* Page Content */}
       <ScrollArea className="flex-1">
-        <div className="max-w-3xl mx-auto px-6 py-8">
+        <div className="max-w-4xl mx-auto px-8 py-5">
           {/* Icon & Title */}
-          <div className="mb-8">
+          <div className="mb-5">
             <Popover open={showEmojiPicker} onOpenChange={setShowEmojiPicker}>
               <PopoverTrigger asChild>
-                <button className="text-6xl hover:bg-muted/50 p-2 rounded-lg transition-colors mb-4">
+                <button className="text-5xl hover:bg-muted/50 p-1.5 rounded-lg transition-colors mb-2 -ml-1.5">
                   {icon}
                 </button>
               </PopoverTrigger>
@@ -381,11 +381,11 @@ export function NotionPage({ page, onPageUpdate, companyId }: NotionPageProps) {
               onChange={handleTitleChange}
               onBlur={handleTitleBlur}
               placeholder="Sem título"
-              className="w-full text-4xl font-bold bg-transparent border-0 focus:outline-none focus:ring-0 placeholder:text-muted-foreground/50"
+              className="w-full text-3xl md:text-4xl font-bold bg-transparent border-0 focus:outline-none focus:ring-0 placeholder:text-muted-foreground/50 leading-tight"
             />
             
-            <p className="text-sm text-muted-foreground mt-2 flex items-center gap-2">
-              <Clock className="h-3.5 w-3.5" />
+            <p className="text-xs text-muted-foreground mt-1.5 flex items-center gap-1.5">
+              <Clock className="h-3 w-3" />
               Atualizado em {format(new Date(page.updated_at), "dd 'de' MMMM 'às' HH:mm", { locale: ptBR })}
             </p>
           </div>
