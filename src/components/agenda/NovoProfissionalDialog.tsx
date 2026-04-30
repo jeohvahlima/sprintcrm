@@ -26,7 +26,9 @@ export function NovoProfissionalDialog({
     email: "",
     senha: "",
     telefone: "",
-    especialidade: ""
+    especialidade: "",
+    valor_consulta: "",
+    duracao_consulta: "30"
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -50,6 +52,9 @@ export function NovoProfissionalDialog({
         email: formData.email
       });
 
+      const valorNum = formData.valor_consulta ? Number(formData.valor_consulta.replace(',', '.')) : null;
+      const duracaoNum = formData.duracao_consulta ? parseInt(formData.duracao_consulta, 10) : 30;
+
       const { data, error } = await supabase.functions.invoke('criar-profissional', {
         body: {
           nome: formData.nome,
@@ -57,6 +62,8 @@ export function NovoProfissionalDialog({
           senha: formData.senha,
           telefone: formData.telefone || undefined,
           especialidade: formData.especialidade || undefined,
+          valor_consulta: Number.isFinite(valorNum) ? valorNum : null,
+          duracao_consulta: Number.isFinite(duracaoNum) && duracaoNum > 0 ? duracaoNum : 30,
           company_id: companyId
         }
       });
@@ -80,7 +87,9 @@ export function NovoProfissionalDialog({
         email: "",
         senha: "",
         telefone: "",
-        especialidade: ""
+        especialidade: "",
+        valor_consulta: "",
+        duracao_consulta: "30"
       });
 
       onSuccess();
@@ -163,8 +172,37 @@ export function NovoProfissionalDialog({
               id="especialidade"
               value={formData.especialidade}
               onChange={(e) => setFormData({ ...formData, especialidade: e.target.value })}
-              placeholder="Ex: Dentista, Psicólogo, Nutricionista..."
+              placeholder="Ex: Dentista, Psicólogo, Nutricionista, Advogado..."
             />
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-2">
+              <Label htmlFor="valor_consulta">Valor da consulta (R$)</Label>
+              <Input
+                id="valor_consulta"
+                type="number"
+                step="0.01"
+                min="0"
+                value={formData.valor_consulta}
+                onChange={(e) => setFormData({ ...formData, valor_consulta: e.target.value })}
+                placeholder="Ex: 250.00"
+              />
+              <p className="text-xs text-muted-foreground">Exibido no agendamento público</p>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="duracao_consulta">Duração (minutos)</Label>
+              <Input
+                id="duracao_consulta"
+                type="number"
+                min="5"
+                step="5"
+                value={formData.duracao_consulta}
+                onChange={(e) => setFormData({ ...formData, duracao_consulta: e.target.value })}
+                placeholder="30"
+              />
+              <p className="text-xs text-muted-foreground">Tempo de cada atendimento</p>
+            </div>
           </div>
 
           <div className="flex justify-end gap-3 pt-4">
