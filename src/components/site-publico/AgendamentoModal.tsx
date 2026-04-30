@@ -18,6 +18,8 @@ interface Profissional {
   nome: string;
   especialidade?: string | null;
   avatar_url?: string | null;
+  valor_consulta?: number | null;
+  duracao_consulta?: number | null;
 }
 
 interface HorarioSlot {
@@ -182,6 +184,18 @@ export function AgendamentoFlow({ slug, companyName, primary, onSuccess }: { slu
                     <div className="flex-1 min-w-0">
                       <div className="font-medium truncate">{p.nome}</div>
                       {p.especialidade && <div className="text-xs text-muted-foreground truncate">{p.especialidade}</div>}
+                      <div className="flex flex-wrap gap-1.5 mt-1.5">
+                        {p.valor_consulta != null && (
+                          <Badge variant="secondary" className="text-[10px] font-semibold" style={{ background: `${primary}15`, color: primary }}>
+                            {Number(p.valor_consulta).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                          </Badge>
+                        )}
+                        {p.duracao_consulta && (
+                          <Badge variant="outline" className="text-[10px] gap-0.5">
+                            <Clock className="w-2.5 h-2.5" /> {p.duracao_consulta}min
+                          </Badge>
+                        )}
+                      </div>
                     </div>
                   </Card>
                 ))}
@@ -267,9 +281,17 @@ export function AgendamentoFlow({ slug, companyName, primary, onSuccess }: { slu
           </div>
 
           {/* Resumo */}
-          <Card className="p-3 bg-slate-50 space-y-1 text-sm">
+          <Card className="p-3 bg-slate-50 space-y-1.5 text-sm">
             <div className="flex items-center gap-2"><CalendarDays className="w-4 h-4" style={{ color: primary }} />{data && format(data, "dd/MM/yyyy", { locale: ptBR })} às {horario}</div>
             {profissional && <div className="flex items-center gap-2"><User className="w-4 h-4" style={{ color: primary }} />{profissional.nome}</div>}
+            {profissional?.duracao_consulta && (
+              <div className="flex items-center gap-2"><Clock className="w-4 h-4" style={{ color: primary }} />Duração: {profissional.duracao_consulta} minutos</div>
+            )}
+            {profissional?.valor_consulta != null && (
+              <div className="flex items-center gap-2 font-semibold" style={{ color: primary }}>
+                💰 Valor: {Number(profissional.valor_consulta).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+              </div>
+            )}
           </Card>
 
           <div>

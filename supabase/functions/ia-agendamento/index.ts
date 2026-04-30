@@ -162,7 +162,7 @@ async function createTools(supabase: any): Promise<IATools> {
       
       let query = supabase
         .from('profissionais')
-        .select('id, nome, especialidade, email, telefone')
+        .select('id, nome, especialidade, email, telefone, valor_consulta, duracao_consulta')
         .eq('company_id', company_id);
       
       if (especialidade) {
@@ -217,8 +217,21 @@ async function createTools(supabase: any): Promise<IATools> {
     criar_compromisso: async ({ lead_id, agenda_id, profissional_id, data_hora, tipo_servico, duracao_minutos = 30, observacoes, company_id, owner_id, telefone }) => {
       console.log('📅 [TOOL] Criando compromisso:', { lead_id, data_hora, tipo_servico });
       
+      // Se houver profissional, usar a duração e valor cadastrados nele
+      let duracaoFinal = duracao_minutos;
+      let valorConsulta: number | null = null;
+      if (profissional_id) {
+        const { data: prof } = await supabase
+          .from('profissionais')
+          .select('duracao_consulta, valor_consulta')
+          .eq('id', profissional_id)
+          .maybeSingle();
+        if (prof?.duracao_consulta) duracaoFinal = prof.duracao_consulta;
+        if (prof?.valor_consulta != null) valorConsulta = Number(prof.valor_consulta);
+      }
+
       const dataHoraInicio = new Date(data_hora);
-      const dataHoraFim = new Date(dataHoraInicio.getTime() + duracao_minutos * 60 * 1000);
+      const dataHoraFim = new Date(dataHoraInicio.getTime() + duracaoFinal * 60 * 1000);
       
       // Verificar conflitos
       let conflictQuery = supabase
@@ -274,7 +287,8 @@ async function createTools(supabase: any): Promise<IATools> {
           usuario_responsavel_id: owner_id,
           paciente: nomePaciente,
           telefone: telefonePaciente,
-          duracao: duracao_minutos
+          duracao: duracaoFinal,
+          custo_estimado: valorConsulta
         })
         .select()
         .single();

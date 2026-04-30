@@ -6125,6 +6125,7 @@ export type Database = {
         Row: {
           company_id: string | null
           created_at: string | null
+          duracao_consulta: number
           email: string
           especialidade: string | null
           id: string
@@ -6132,10 +6133,12 @@ export type Database = {
           telefone: string | null
           updated_at: string | null
           user_id: string | null
+          valor_consulta: number | null
         }
         Insert: {
           company_id?: string | null
           created_at?: string | null
+          duracao_consulta?: number
           email: string
           especialidade?: string | null
           id?: string
@@ -6143,10 +6146,12 @@ export type Database = {
           telefone?: string | null
           updated_at?: string | null
           user_id?: string | null
+          valor_consulta?: number | null
         }
         Update: {
           company_id?: string | null
           created_at?: string | null
+          duracao_consulta?: number
           email?: string
           especialidade?: string | null
           id?: string
@@ -6154,6 +6159,7 @@ export type Database = {
           telefone?: string | null
           updated_at?: string | null
           user_id?: string | null
+          valor_consulta?: number | null
         }
         Relationships: [
           {

@@ -1,0 +1,3 @@
+ALTER TABLE public.profissionais
+  ADD COLUMN IF NOT EXISTS valor_consulta NUMERIC(10,2),
+  ADD COLUMN IF NOT EXISTS duracao_consulta INTEGER NOT NULL DEFAULT 30;
