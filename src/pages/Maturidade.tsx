@@ -11,6 +11,7 @@ import { PlanoComercialCompleto } from "@/components/wmi/PlanoComercialCompleto"
 import { WMIAlertsPanel } from "@/components/wmi/WMIAlertsPanel";
 import { SegmentBenchmarkCard } from "@/components/wmi/SegmentBenchmarkCard";
 import { PillarEvolutionChart } from "@/components/wmi/PillarEvolutionChart";
+import { Diagnostico360 } from "@/components/wmi/Diagnostico360";
 import {
   Activity, Trophy, Sparkles, ArrowRight, GraduationCap, AlertTriangle,
   TrendingUp, Target, FileText, BarChart3, Bot, Users, ClipboardCheck,
@@ -140,8 +141,11 @@ export default function Maturidade() {
       <WMIAlertsPanel />
 
       {/* TABS UNIFICADAS */}
-      <Tabs defaultValue="plano" className="space-y-4">
+      <Tabs defaultValue="diagnostico" className="space-y-4">
         <TabsList className="flex-wrap h-auto">
+          <TabsTrigger value="diagnostico" className="gap-2">
+            <Sparkles className="h-4 w-4" /> Diagnóstico 360° + SWOT
+          </TabsTrigger>
           <TabsTrigger value="plano" className="gap-2">
             <ClipboardCheck className="h-4 w-4" /> Plano Comercial Completo
           </TabsTrigger>
@@ -149,6 +153,11 @@ export default function Maturidade() {
             <TrendingUp className="h-4 w-4" /> Pilares & Evolução
           </TabsTrigger>
         </TabsList>
+
+        {/* DIAGNÓSTICO 360 ESTRATÉGICO (SWOT + segmento + roadmap) */}
+        <TabsContent value="diagnostico">
+          <Diagnostico360 />
+        </TabsContent>
 
         {/* PLANO COMERCIAL UNIFICADO */}
         <TabsContent value="plano">
