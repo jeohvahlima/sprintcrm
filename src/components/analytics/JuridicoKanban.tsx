@@ -46,12 +46,28 @@ const KANBAN_COLUMNS = [
 ];
 
 const TIPO_LABELS: Record<string, string> = {
-  comercial: "Comercial",
-  trabalhista: "Trabalhista",
   civil: "Civil",
-  tributario: "Tributário",
+  trabalhista: "Trabalhista",
   criminal: "Criminal",
+  tributario: "Tributário",
   administrativo: "Administrativo",
+  comercial: "Comercial / Empresarial",
+  previdenciario: "Previdenciário",
+  familia: "Família e Sucessões",
+  consumidor: "Direito do Consumidor",
+  imobiliario: "Imobiliário",
+  contratual: "Contratual",
+  bancario: "Bancário / Financeiro",
+  ambiental: "Ambiental",
+  eleitoral: "Eleitoral",
+  juizado_especial: "Juizado Especial (JEC)",
+  execucao_fiscal: "Execução Fiscal",
+  recuperacao_judicial: "Recuperação Judicial / Falência",
+  arbitragem: "Arbitragem",
+  regulatorio: "Regulatório / Concorrencial",
+  internacional: "Internacional",
+  militar: "Militar",
+  outro: "Outro",
 };
 
 const PRIORIDADE_COLORS: Record<string, string> = {
