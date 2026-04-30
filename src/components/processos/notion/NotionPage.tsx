@@ -351,7 +351,7 @@ export function NotionPage({ page, onPageUpdate, companyId }: NotionPageProps) {
 
       {/* Page Content */}
       <ScrollArea className="flex-1">
-        <div className="w-full max-w-5xl px-6 md:px-10 py-4">
+        <div className="w-full px-6 md:px-10 py-4">
           {/* Icon & Title */}
           <div className="mb-5">
             <Popover open={showEmojiPicker} onOpenChange={setShowEmojiPicker}>
