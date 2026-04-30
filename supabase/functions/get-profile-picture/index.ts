@@ -88,24 +88,33 @@ serve(async (req) => {
       );
     }
 
-    // 2. Buscar config Evolution para a company
+    // 2. Buscar config Evolution para a company (tabela whatsapp_connections)
     const { data: instance } = await supabase
-      .from('whatsapp_instances')
-      .select('instance_name, api_url, api_key')
+      .from('whatsapp_connections')
+      .select('instance_name, evolution_api_url, evolution_api_key, api_provider, status, last_connected_at')
       .eq('company_id', company_id)
-      .eq('is_active', true)
+      .eq('status', 'connected')
+      .in('api_provider', ['evolution', 'both'])
+      .order('last_connected_at', { ascending: false, nullsFirst: false })
+      .limit(1)
       .maybeSingle();
 
     let profilePictureUrl: string | null = null;
 
     if (instance && channel !== 'instagram') {
-      const apiUrl = instance.api_url || Deno.env.get('EVOLUTION_API_URL');
-      const apiKey = instance.api_key || Deno.env.get('EVOLUTION_API_KEY');
+      const apiUrl = instance.evolution_api_url || Deno.env.get('EVOLUTION_API_URL');
+      const apiKey = instance.evolution_api_key || Deno.env.get('EVOLUTION_API_KEY');
       if (apiUrl && apiKey && instance.instance_name) {
         profilePictureUrl = await fetchProfilePicViaEvolution(
           apiUrl, instance.instance_name, apiKey, cleanNumber
         );
+      } else {
+        console.log('[get-profile-picture] instância sem credenciais', {
+          instance_name: instance.instance_name, hasUrl: !!apiUrl, hasKey: !!apiKey,
+        });
       }
+    } else if (!instance) {
+      console.log('[get-profile-picture] nenhuma whatsapp_connection ativa para company', company_id);
     }
 
     // 3. Atualizar no DB se encontrou
