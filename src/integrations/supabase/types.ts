@@ -6892,6 +6892,141 @@ export type Database = {
         }
         Relationships: []
       }
+      sales_machine_daily_log: {
+        Row: {
+          company_id: string
+          created_at: string
+          faturamento_gerado: number
+          followups: number
+          id: string
+          leads_prospectados: number
+          ligacoes_feitas: number
+          log_date: string
+          mensagens_enviadas: number
+          observacoes: string | null
+          oportunidades_abertas: number
+          propostas_enviadas: number
+          reunioes_agendadas: number
+          reunioes_realizadas: number
+          role_type: string
+          updated_at: string
+          user_id: string
+          vendas_fechadas: number
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          faturamento_gerado?: number
+          followups?: number
+          id?: string
+          leads_prospectados?: number
+          ligacoes_feitas?: number
+          log_date?: string
+          mensagens_enviadas?: number
+          observacoes?: string | null
+          oportunidades_abertas?: number
+          propostas_enviadas?: number
+          reunioes_agendadas?: number
+          reunioes_realizadas?: number
+          role_type?: string
+          updated_at?: string
+          user_id: string
+          vendas_fechadas?: number
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          faturamento_gerado?: number
+          followups?: number
+          id?: string
+          leads_prospectados?: number
+          ligacoes_feitas?: number
+          log_date?: string
+          mensagens_enviadas?: number
+          observacoes?: string | null
+          oportunidades_abertas?: number
+          propostas_enviadas?: number
+          reunioes_agendadas?: number
+          reunioes_realizadas?: number
+          role_type?: string
+          updated_at?: string
+          user_id?: string
+          vendas_fechadas?: number
+        }
+        Relationships: []
+      }
+      sales_machine_diagnostico: {
+        Row: {
+          atividades: Json
+          ciclo_dias_atual: number
+          closers_atual: number
+          company_id: string
+          created_at: string
+          faturamento_atual: number
+          ferramentas: string[]
+          gargalos_auto: Json
+          gargalos_observacoes: string | null
+          id: string
+          manter_estrutura: boolean
+          meses_travado: number
+          meta_faturamento: number
+          plano_acoes: Json
+          prazo_meses: number
+          sdrs_atual: number
+          taxa_lead_reuniao_atual: number
+          taxa_show_atual: number
+          taxa_win_atual: number
+          ticket_medio_atual: number
+          updated_at: string
+        }
+        Insert: {
+          atividades?: Json
+          ciclo_dias_atual?: number
+          closers_atual?: number
+          company_id: string
+          created_at?: string
+          faturamento_atual?: number
+          ferramentas?: string[]
+          gargalos_auto?: Json
+          gargalos_observacoes?: string | null
+          id?: string
+          manter_estrutura?: boolean
+          meses_travado?: number
+          meta_faturamento?: number
+          plano_acoes?: Json
+          prazo_meses?: number
+          sdrs_atual?: number
+          taxa_lead_reuniao_atual?: number
+          taxa_show_atual?: number
+          taxa_win_atual?: number
+          ticket_medio_atual?: number
+          updated_at?: string
+        }
+        Update: {
+          atividades?: Json
+          ciclo_dias_atual?: number
+          closers_atual?: number
+          company_id?: string
+          created_at?: string
+          faturamento_atual?: number
+          ferramentas?: string[]
+          gargalos_auto?: Json
+          gargalos_observacoes?: string | null
+          id?: string
+          manter_estrutura?: boolean
+          meses_travado?: number
+          meta_faturamento?: number
+          plano_acoes?: Json
+          prazo_meses?: number
+          sdrs_atual?: number
+          taxa_lead_reuniao_atual?: number
+          taxa_show_atual?: number
+          taxa_win_atual?: number
+          ticket_medio_atual?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       sales_teams: {
         Row: {
           active: boolean | null
