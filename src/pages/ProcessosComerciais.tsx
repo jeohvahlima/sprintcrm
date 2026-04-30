@@ -12,7 +12,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { NotionWorkspace } from "@/components/processos/notion/NotionWorkspace";
 import { CommercialIntelligenceDashboard } from "@/components/ia/CommercialIntelligenceDashboard";
 import { PlaybookAdoptionDashboard } from "@/components/processos/PlaybookAdoptionDashboard";
-import { EbooksComerciais } from "@/components/processos/EbooksComerciais";
+import { PlaybooksCatalog } from "@/components/processos/playbooks/PlaybooksCatalog";
 
 
 interface Stats {
@@ -97,7 +97,7 @@ export default function ProcessosComerciais() {
           </TabsTrigger>
           <TabsTrigger value="ebooks" className="flex items-center gap-2 py-2">
             <Library className="h-4 w-4" />
-            <span className="hidden md:inline">Ebooks & Kits</span>
+            <span className="hidden md:inline">Playbooks & Scripts</span>
           </TabsTrigger>
         </TabsList>
 
@@ -114,7 +114,7 @@ export default function ProcessosComerciais() {
         </TabsContent>
 
         <TabsContent value="ebooks">
-          <EbooksComerciais />
+          <PlaybooksCatalog />
         </TabsContent>
 
       </Tabs>
