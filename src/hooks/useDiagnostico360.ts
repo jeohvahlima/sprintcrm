@@ -16,11 +16,34 @@ export interface Pergunta {
   alavanca_id: string;
   ordem: number;
   pergunta: string;
+  segmento?: string | null;
 }
 
-export interface DiagnosticoResposta {
+export interface DoresDesejos {
+  principal_dor?: string;
+  principal_desejo?: string;
+  o_que_travou?: string;
+  meta_faturamento?: number;
+  faturamento_atual?: number;
+  prazo_meta_meses?: number;
+  swot_forcas?: string;
+  swot_fraquezas?: string;
+  swot_oportunidades?: string;
+  swot_ameacas?: string;
+  observacoes_alavanca?: Record<string, string>;
+}
+
+export interface GargaloDetectado {
+  key: string;
+  titulo: string;
+  alavanca_id?: string;
+  severidade: "alta" | "media" | "baixa";
+}
+
+export interface DiagnosticoResposta extends DoresDesejos {
   id: string;
   company_id: string;
+  segmento?: string | null;
   pontuacoes: Record<string, number>;
   respostas_perguntas: Record<string, boolean>;
   total_score: number;
@@ -29,6 +52,7 @@ export interface DiagnosticoResposta {
   classificacao: string | null;
   diagnostico_ia: string | null;
   plano_acao_ia: any;
+  gargalos_detectados?: GargaloDetectado[];
   created_at: string;
 }
 
@@ -49,9 +73,9 @@ export const CLASSIFICACOES = {
     emoji: "🏗️",
     range: "70-89%",
     cenario:
-      "Processos definidos e resultados consistentes, mas existem falhas que impactam previsibilidade e conversão. Pode haver desperdício de oportunidades por falta de automação ou follow-up.",
+      "Processos definidos e resultados consistentes, mas existem falhas que impactam previsibilidade e conversão.",
     recomendacao:
-      "Foco: identificar pontos de dispersão (leads não convertidos, clientes que não voltam, campanhas com baixo ROI). Estruture scripts, treine o time, otimize CRM e implemente rotina comercial clara.",
+      "Foco: identificar pontos de dispersão, estruturar scripts, treinar o time, otimizar CRM e implementar rotina comercial clara.",
   },
   C: {
     titulo: "EMPRESA ATIVA, MAS SEM PREVISIBILIDADE",
@@ -59,9 +83,9 @@ export const CLASSIFICACOES = {
     emoji: "⚠️",
     range: "50-69%",
     cenario:
-      "Operação reativa. Processo comercial confuso ou fragmentado, equipe sem padrão, leads se perdem por falta de follow-up. Marketing gera volume, mas sem estratégia de retorno. Sem previsão de receita.",
+      "Operação reativa. Processo comercial confuso, equipe sem padrão, leads se perdem por falta de follow-up.",
     recomendacao:
-      "Implante funil comercial completo. Padronize atendimento, implemente CRM funcional, crie rotina de reativação, treine a equipe e defina metas claras. Foco: previsibilidade, não apenas operação.",
+      "Implante funil comercial completo. Padronize atendimento, implemente CRM funcional, crie rotina de reativação, treine a equipe e defina metas claras.",
   },
   D: {
     titulo: 'EMPRESA DESORGANIZADA ("BALDE FURADO")',
@@ -69,9 +93,9 @@ export const CLASSIFICACOES = {
     emoji: "🚨",
     range: "Abaixo de 49%",
     cenario:
-      "Situação crítica. Sem processo comercial estruturado, sem CRM, atendimento reativo e informal. Investimento em mídia é desperdiçado. Leads entram, mas não são convertidos. Equipe sem direção.",
+      "Situação crítica. Sem processo comercial estruturado, sem CRM, atendimento informal. Investimento em mídia é desperdiçado.",
     recomendacao:
-      "Recomeçar pela base: implementar CRM, capacitar equipe, padronizar scripts e fluxos, estruturar rotina comercial com metas e indicadores. Antes de investir em mídia, corrija a base — evite desperdiçar dinheiro e reputação.",
+      "Recomeçar pela base: implementar CRM, capacitar equipe, padronizar scripts e fluxos, estruturar rotina comercial com metas e indicadores.",
   },
 } as const;
 
@@ -112,6 +136,24 @@ export function usePerguntas() {
   });
 }
 
+/** Perguntas extras específicas do segmento da empresa */
+export function usePerguntasSegmento(segmento?: string | null) {
+  return useQuery({
+    queryKey: ["diag_perguntas_seg", segmento],
+    enabled: !!segmento,
+    queryFn: async (): Promise<Pergunta[]> => {
+      const { data, error } = await supabase
+        .from("diagnostico_perguntas_segmento" as any)
+        .select("*")
+        .eq("segmento", segmento!)
+        .order("ordem");
+      if (error) throw error;
+      return (data || []) as unknown as Pergunta[];
+    },
+    staleTime: 5 * 60_000,
+  });
+}
+
 export function useUltimoDiagnostico() {
   return useQuery({
     queryKey: ["diag_ultimo"],
@@ -143,13 +185,66 @@ export function useHistoricoDiagnostico() {
   });
 }
 
+/** Detecta gargalos a partir das respostas + dores */
+export function detectarGargalos(
+  alavancas: Alavanca[],
+  pontuacoes: Record<string, number>,
+  dores: DoresDesejos
+): GargaloDetectado[] {
+  const out: GargaloDetectado[] = [];
+
+  alavancas.forEach((a) => {
+    const score = pontuacoes[a.id] || 0;
+    if (score < 4) {
+      out.push({
+        key: `alavanca_${a.numero}_critico`,
+        titulo: `${a.nome} crítica (${score}/10)`,
+        alavanca_id: a.id,
+        severidade: "alta",
+      });
+    } else if (score < 6) {
+      out.push({
+        key: `alavanca_${a.numero}_atencao`,
+        titulo: `${a.nome} precisa de atenção (${score}/10)`,
+        alavanca_id: a.id,
+        severidade: "media",
+      });
+    }
+  });
+
+  if (dores.faturamento_atual && dores.meta_faturamento) {
+    const gap = dores.meta_faturamento - dores.faturamento_atual;
+    if (gap > dores.faturamento_atual) {
+      out.push({
+        key: "meta_agressiva",
+        titulo: `Meta agressiva: ${Math.round((gap / dores.faturamento_atual) * 100)}% acima do faturamento atual`,
+        severidade: "alta",
+      });
+    }
+  }
+  if (dores.principal_dor && dores.principal_dor.length > 10) {
+    out.push({
+      key: "dor_principal",
+      titulo: `Dor crítica reportada: ${dores.principal_dor.slice(0, 80)}${dores.principal_dor.length > 80 ? "..." : ""}`,
+      severidade: "alta",
+    });
+  }
+
+  return out;
+}
+
 export function useSalvarDiagnostico() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (input: {
       pontuacoes: Record<string, number>;
       respostas_perguntas: Record<string, boolean>;
+      dores?: DoresDesejos;
+      segmento?: string | null;
+      gargalos?: GargaloDetectado[];
     }) => {
+      const dores = input.dores || {};
+      const gargalos = input.gargalos || [];
       const { data: companyId } = await supabase.rpc("get_my_company_id");
       const { data: userData } = await supabase.auth.getUser();
 
@@ -170,12 +265,29 @@ export function useSalvarDiagnostico() {
           percentual,
           nota,
           classificacao,
+          segmento: input.segmento,
+          gargalos_detectados: gargalos as any,
+          ...dores,
         })
         .select()
         .single();
       if (error) throw error;
 
-      // Chama IA para gerar plano
+      // Persistir gargalos como itens rastreáveis
+      if (gargalos.length) {
+        await supabase.from("diagnostico_gargalos_corrigidos" as any).insert(
+          gargalos.map((g) => ({
+            company_id: companyId,
+            diagnostico_id: (saved as any).id,
+            gargalo_key: g.key,
+            gargalo_titulo: g.titulo,
+            alavanca_id: g.alavanca_id || null,
+            status: "pendente",
+          }))
+        );
+      }
+
+      // Chama IA para gerar plano + dispara roadmap em paralelo
       try {
         const { data: ai } = await supabase.functions.invoke("advisor-ai", {
           body: {
@@ -185,6 +297,9 @@ export function useSalvarDiagnostico() {
               percentual,
               nota,
               classificacao,
+              segmento: input.segmento,
+              dores,
+              gargalos,
             },
           },
         });
@@ -204,6 +319,47 @@ export function useSalvarDiagnostico() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["diag_ultimo"] });
       qc.invalidateQueries({ queryKey: ["diag_historico"] });
+      qc.invalidateQueries({ queryKey: ["diag_gargalos"] });
     },
+  });
+}
+
+// ============== GARGALOS — Acompanhamento ==============
+export function useGargalos(diagnosticoId?: string) {
+  return useQuery({
+    queryKey: ["diag_gargalos", diagnosticoId],
+    enabled: !!diagnosticoId,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("diagnostico_gargalos_corrigidos" as any)
+        .select("*")
+        .eq("diagnostico_id", diagnosticoId!)
+        .order("created_at");
+      if (error) throw error;
+      return (data || []) as any[];
+    },
+  });
+}
+
+export function useUpdateGargaloStatus() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, status, evidencia }: { id: string; status: string; evidencia?: string }) => {
+      const { data: userData } = await supabase.auth.getUser();
+      const patch: any = { status };
+      if (status === "corrigido") {
+        patch.corrigido_em = new Date().toISOString();
+        patch.corrigido_por = userData.user?.id;
+      } else {
+        patch.corrigido_em = null;
+      }
+      if (evidencia !== undefined) patch.evidencia = evidencia;
+      const { error } = await supabase
+        .from("diagnostico_gargalos_corrigidos" as any)
+        .update(patch)
+        .eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["diag_gargalos"] }),
   });
 }

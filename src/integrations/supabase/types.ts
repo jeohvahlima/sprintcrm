@@ -2716,6 +2716,66 @@ export type Database = {
         }
         Relationships: []
       }
+      diagnostico_gargalos_corrigidos: {
+        Row: {
+          alavanca_id: string | null
+          company_id: string
+          corrigido_em: string | null
+          corrigido_por: string | null
+          created_at: string
+          diagnostico_id: string | null
+          evidencia: string | null
+          gargalo_key: string
+          gargalo_titulo: string
+          id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          alavanca_id?: string | null
+          company_id: string
+          corrigido_em?: string | null
+          corrigido_por?: string | null
+          created_at?: string
+          diagnostico_id?: string | null
+          evidencia?: string | null
+          gargalo_key: string
+          gargalo_titulo: string
+          id?: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          alavanca_id?: string | null
+          company_id?: string
+          corrigido_em?: string | null
+          corrigido_por?: string | null
+          created_at?: string
+          diagnostico_id?: string | null
+          evidencia?: string | null
+          gargalo_key?: string
+          gargalo_titulo?: string
+          id?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "diagnostico_gargalos_corrigidos_alavanca_id_fkey"
+            columns: ["alavanca_id"]
+            isOneToOne: false
+            referencedRelation: "diagnostico_alavancas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "diagnostico_gargalos_corrigidos_diagnostico_id_fkey"
+            columns: ["diagnostico_id"]
+            isOneToOne: false
+            referencedRelation: "diagnostico_respostas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       diagnostico_perguntas: {
         Row: {
           alavanca_id: string
@@ -2751,18 +2811,69 @@ export type Database = {
           },
         ]
       }
+      diagnostico_perguntas_segmento: {
+        Row: {
+          alavanca_id: string
+          created_at: string
+          id: string
+          ordem: number
+          pergunta: string
+          peso: number
+          segmento: string
+        }
+        Insert: {
+          alavanca_id: string
+          created_at?: string
+          id?: string
+          ordem?: number
+          pergunta: string
+          peso?: number
+          segmento: string
+        }
+        Update: {
+          alavanca_id?: string
+          created_at?: string
+          id?: string
+          ordem?: number
+          pergunta?: string
+          peso?: number
+          segmento?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "diagnostico_perguntas_segmento_alavanca_id_fkey"
+            columns: ["alavanca_id"]
+            isOneToOne: false
+            referencedRelation: "diagnostico_alavancas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       diagnostico_respostas: {
         Row: {
           classificacao: string | null
           company_id: string
           created_at: string
           diagnostico_ia: string | null
+          faturamento_atual: number | null
+          gargalos_detectados: Json | null
           id: string
+          meta_faturamento: number | null
           nota: string
+          o_que_travou: string | null
+          observacoes_alavanca: Json | null
           percentual: number
           plano_acao_ia: Json | null
           pontuacoes: Json
+          prazo_meta_meses: number | null
+          principal_desejo: string | null
+          principal_dor: string | null
           respostas_perguntas: Json | null
+          segmento: string | null
+          swot_ameacas: string | null
+          swot_forcas: string | null
+          swot_fraquezas: string | null
+          swot_oportunidades: string | null
           total_score: number
           user_id: string | null
         }
@@ -2771,12 +2882,25 @@ export type Database = {
           company_id: string
           created_at?: string
           diagnostico_ia?: string | null
+          faturamento_atual?: number | null
+          gargalos_detectados?: Json | null
           id?: string
+          meta_faturamento?: number | null
           nota?: string
+          o_que_travou?: string | null
+          observacoes_alavanca?: Json | null
           percentual?: number
           plano_acao_ia?: Json | null
           pontuacoes?: Json
+          prazo_meta_meses?: number | null
+          principal_desejo?: string | null
+          principal_dor?: string | null
           respostas_perguntas?: Json | null
+          segmento?: string | null
+          swot_ameacas?: string | null
+          swot_forcas?: string | null
+          swot_fraquezas?: string | null
+          swot_oportunidades?: string | null
           total_score?: number
           user_id?: string | null
         }
@@ -2785,12 +2909,25 @@ export type Database = {
           company_id?: string
           created_at?: string
           diagnostico_ia?: string | null
+          faturamento_atual?: number | null
+          gargalos_detectados?: Json | null
           id?: string
+          meta_faturamento?: number | null
           nota?: string
+          o_que_travou?: string | null
+          observacoes_alavanca?: Json | null
           percentual?: number
           plano_acao_ia?: Json | null
           pontuacoes?: Json
+          prazo_meta_meses?: number | null
+          principal_desejo?: string | null
+          principal_dor?: string | null
           respostas_perguntas?: Json | null
+          segmento?: string | null
+          swot_ameacas?: string | null
+          swot_forcas?: string | null
+          swot_fraquezas?: string | null
+          swot_oportunidades?: string | null
           total_score?: number
           user_id?: string | null
         }
