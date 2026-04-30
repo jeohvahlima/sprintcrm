@@ -1,13 +1,15 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { Scale, Plus, ChevronDown, Gavel, Calendar, DollarSign, Pencil } from "lucide-react";
+import { Scale, Plus, ChevronDown, Gavel, Calendar, DollarSign, Pencil, Upload, FileText, Trash2, Download, Video, MapPin, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -30,7 +32,50 @@ interface LegalProcess {
   valor_causa: number | null;
   data_audiencia: string | null;
   data_distribuicao: string | null;
+  audiencia_modalidade?: string | null;
+  audiencia_local?: string | null;
+  audiencia_sala?: string | null;
+  audiencia_link?: string | null;
+  audiencia_observacoes?: string | null;
+  juiz?: string | null;
+  forum_tribunal?: string | null;
+  advogado_adversario?: string | null;
+  oab_adversario?: string | null;
 }
+
+interface ProcessDocument {
+  id: string;
+  file_name: string;
+  file_path: string;
+  file_size: number | null;
+  mime_type: string | null;
+  document_type: string | null;
+  description: string | null;
+  created_at: string;
+}
+
+const DOCUMENT_TYPES: Record<string, string> = {
+  peticao_inicial: "Petição Inicial",
+  procuracao: "Procuração",
+  contestacao: "Contestação",
+  contrato: "Contrato",
+  rg_cpf: "RG / CPF",
+  comprovante_residencia: "Comprovante de Residência",
+  comprovante_pagamento: "Comprovante de Pagamento",
+  laudo_pericial: "Laudo Pericial",
+  sentenca: "Sentença / Decisão",
+  recurso: "Recurso",
+  ata_audiencia: "Ata de Audiência",
+  documento_pessoal: "Documento Pessoal",
+  prova: "Prova / Evidência",
+  outro: "Outro",
+};
+
+const AUDIENCIA_MODALIDADES: Record<string, string> = {
+  presencial: "Presencial",
+  virtual: "Virtual / Videoconferência",
+  hibrida: "Híbrida",
+};
 
 const STATUS_COLORS: Record<string, string> = {
   pre_processual: "bg-slate-500/10 text-slate-600 border-slate-500/20",
