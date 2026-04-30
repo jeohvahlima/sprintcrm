@@ -307,9 +307,71 @@ Para agendar, o visitante precisa informar:
       };
 
       const qualifConfig = companySegmento ? QUALIFICACAO_POR_SEGMENTO[companySegmento] : null;
+
+      // ============================================
+      // Configurações personalizadas do Bot IA do Site
+      // ============================================
+      const captureCfg: any = (globalThis as any).__captureCfg || {};
+      const botCfg: any = captureCfg.bot_ia_site || {};
+
+      // Verificar se está dentro do horário de funcionamento
+      let foraDoHorario = false;
+      if (botCfg.horario_funcionamento?.ativo) {
+        const agora = new Date();
+        const diaAtual = agora.getDay();
+        const horaAtual = agora.getHours() * 60 + agora.getMinutes();
+        const dias = botCfg.horario_funcionamento.dias || [1,2,3,4,5];
+        const [hi, mi] = (botCfg.horario_funcionamento.inicio || '08:00').split(':').map(Number);
+        const [hf, mf] = (botCfg.horario_funcionamento.fim || '18:00').split(':').map(Number);
+        const inicio = hi * 60 + mi;
+        const fim = hf * 60 + mf;
+        if (!dias.includes(diaAtual) || horaAtual < inicio || horaAtual > fim) {
+          foraDoHorario = true;
+        }
+      }
+
+      const tomMap: Record<string, string> = {
+        amigavel: 'Tom AMIGÁVEL: próximo, caloroso, use "você", emojis pontuais (🙂 ✨), como uma recepcionista querida.',
+        consultivo: 'Tom CONSULTIVO: postura de especialista que orienta, traz dados, faz perguntas estratégicas. Sem emojis demais.',
+        formal: 'Tom FORMAL: profissional, respeitoso, tratamento por "senhor(a)" no início. Sem gírias nem emojis.',
+        descontraido: 'Tom DESCONTRAÍDO: leve, criativo, usa emojis (😄 🚀 💡), linguagem casual sem perder credibilidade.',
+        empatico: 'Tom EMPÁTICO: acolhedor, validando sentimentos. Ideal para saúde, jurídico, situações sensíveis.',
+      };
+
+      const personaBlock = botCfg.persona
+        ? `\n\n=== PERSONA ===\n${botCfg.persona}`
+        : '';
+
+      const tomBlock = botCfg.tom_de_voz
+        ? `\n\n=== TOM DE VOZ ===\n${tomMap[botCfg.tom_de_voz] || tomMap.amigavel}`
+        : '';
+
+      const conhecimentoBlock = botCfg.base_conhecimento
+        ? `\n\n=== BASE DE CONHECIMENTO DA EMPRESA ===\n${botCfg.base_conhecimento}\n\nUse essas informações como verdade absoluta. Se a pergunta não estiver coberta, ofereça transferir para humano.`
+        : '';
+
+      const perguntasExtrasBlock = botCfg.perguntas_extras?.length
+        ? `\n\n=== PERGUNTAS EXTRAS DESTE NEGÓCIO ===\nAlém das do segmento, encaixe naturalmente:\n${botCfg.perguntas_extras.map((p: any, i: number) => `${i + 1}. ${p.pergunta}${p.obrigatoria ? ' [OBRIGATÓRIA]' : ''}`).join('\n')}`
+        : '';
+
+      const bloqueioBlock = botCfg.bloquear_topicos?.length
+        ? `\n\n=== TÓPICOS PROIBIDOS ===\nNUNCA fale sobre: ${botCfg.bloquear_topicos.join(', ')}. Se perguntarem, redirecione gentilmente para outro assunto.`
+        : '';
+
+      const offlineBlock = foraDoHorario
+        ? `\n\n=== ATENÇÃO: FORA DO HORÁRIO ===\nO atendimento humano está fora do expediente. ${botCfg.mensagem_offline || 'Avise que retornaremos em breve e capture nome + WhatsApp para que o time entre em contato no próximo expediente.'} NÃO prometa retorno imediato.`
+        : '';
+
+      const scoreMin = botCfg.score_minimo_qualificado ?? 60;
+      const acaoQuente = botCfg.acao_lead_quente || 'criar_lead';
+      const permitirAgendamento = botCfg.permitir_agendamento !== false;
+      const permitirTransferencia = botCfg.permitir_transferencia_humana !== false;
+
+      const nomeBot = botCfg.nome_bot || 'assistente virtual';
+
       const blocoQualificacao = qualifConfig
-        ? `\n\n=== TRIAGEM E QUALIFICAÇÃO INTELIGENTE ===\n${qualifConfig.contexto}\n\nPERGUNTAS DE QUALIFICAÇÃO (faça 1 por mensagem, naturalmente, na ordem que fizer mais sentido pela conversa):\n${qualifConfig.perguntas.map((p, i) => `${i + 1}. ${p}`).join('\n')}\n\nCRITÉRIOS:\n${qualifConfig.criterios}\n\nREGRA: Não dispare todas as perguntas de uma vez. Faça uma, escute, e a próxima conforme o contexto. Sempre peça nome e WhatsApp em algum momento (não no início — depois de criar conexão).`
-        : '\n\n=== QUALIFICAÇÃO ===\nFaça perguntas naturais para entender: o que a pessoa busca, urgência, capacidade de decisão, prazo. Colete nome e WhatsApp em momento oportuno (não logo no início).';
+        ? `\n\n=== TRIAGEM E QUALIFICAÇÃO INTELIGENTE ===\n${qualifConfig.contexto}\n\nPERGUNTAS-BASE DO SEGMENTO (faça 1 por mensagem, naturalmente):\n${qualifConfig.perguntas.map((p, i) => `${i + 1}. ${p}`).join('\n')}\n\nCRITÉRIOS:\n${qualifConfig.criterios}\n\nREGRA: Não dispare todas as perguntas de uma vez. Faça uma, escute, e a próxima conforme o contexto. Sempre peça nome e WhatsApp em algum momento (não no início — depois de criar conexão).${perguntasExtrasBlock}\n\nSCORE MÍNIMO PARA QUALIFICAR: ${scoreMin}. Lead com score >= ${scoreMin} = QUALIFICADO.`
+        : `\n\n=== QUALIFICAÇÃO ===\nFaça perguntas naturais para entender: o que a pessoa busca, urgência, capacidade de decisão, prazo. Colete nome e WhatsApp em momento oportuno (não logo no início).${perguntasExtrasBlock}\n\nSCORE MÍNIMO PARA QUALIFICAR: ${scoreMin}.`;
 
       let systemPrompt = '';
 
