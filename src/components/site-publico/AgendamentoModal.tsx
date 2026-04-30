@@ -281,9 +281,17 @@ export function AgendamentoFlow({ slug, companyName, primary, onSuccess }: { slu
           </div>
 
           {/* Resumo */}
-          <Card className="p-3 bg-slate-50 space-y-1 text-sm">
+          <Card className="p-3 bg-slate-50 space-y-1.5 text-sm">
             <div className="flex items-center gap-2"><CalendarDays className="w-4 h-4" style={{ color: primary }} />{data && format(data, "dd/MM/yyyy", { locale: ptBR })} às {horario}</div>
             {profissional && <div className="flex items-center gap-2"><User className="w-4 h-4" style={{ color: primary }} />{profissional.nome}</div>}
+            {profissional?.duracao_consulta && (
+              <div className="flex items-center gap-2"><Clock className="w-4 h-4" style={{ color: primary }} />Duração: {profissional.duracao_consulta} minutos</div>
+            )}
+            {profissional?.valor_consulta != null && (
+              <div className="flex items-center gap-2 font-semibold" style={{ color: primary }}>
+                💰 Valor: {Number(profissional.valor_consulta).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+              </div>
+            )}
           </Card>
 
           <div>
