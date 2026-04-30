@@ -721,6 +721,13 @@ export const LeadCard = memo(function LeadCard({ lead, onDelete, onLeadMoved, is
                     Perdido
                   </Badge>
                 )}
+                {/* ✅ Origem (source) sempre visível ao lado do nome */}
+                {lead.source && (
+                  <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-5 font-medium border-primary/30 text-primary bg-primary/5">
+                    <Tag className="h-2.5 w-2.5 mr-0.5" />
+                    {lead.source}
+                  </Badge>
+                )}
               </div>
               
               {/* Título da negociação - editável inline */}
