@@ -159,92 +159,92 @@ button[data-conversation-menu="true"] * {
 
 @layer base {
   :root {
-    /* Base colors */
+    /* Base colors - Light mode (still aligned to Waze brand) */
     --background: 0 0% 100%;
-    --foreground: 217 33% 17%;
-    
-    /* Brand colors - Modern Blue */
-    --primary: 217 91% 60%;
+    --foreground: 160 20% 10%;
+
+    /* Brand colors - Waze Green */
+    --primary: 142 71% 45%;
     --primary-foreground: 0 0% 100%;
-    --primary-hover: 217 91% 50%;
-    --primary-glow: 217 91% 70%;
-    
-    /* Secondary - Deep Graphite */
-    --secondary: 217 33% 17%;
+    --primary-hover: 142 71% 38%;
+    --primary-glow: 142 76% 60%;
+
+    /* Secondary - Deep green-black */
+    --secondary: 160 25% 12%;
     --secondary-foreground: 0 0% 100%;
-    --secondary-hover: 217 33% 25%;
-    
-    /* Accent - Vibrant Blue */
-    --accent: 213 94% 68%;
-    --accent-foreground: 217 33% 17%;
-    --accent-light: 213 94% 85%;
-    
+    --secondary-hover: 160 25% 18%;
+
+    /* Accent - Lighter Waze Green */
+    --accent: 142 76% 55%;
+    --accent-foreground: 160 25% 10%;
+    --accent-light: 142 70% 88%;
+
     /* Muted */
-    --muted: 210 40% 96%;
-    --muted-foreground: 217 20% 45%;
-    
+    --muted: 150 20% 96%;
+    --muted-foreground: 160 15% 40%;
+
     /* Card */
     --card: 0 0% 100%;
-    --card-foreground: 217 33% 17%;
-    --card-hover: 210 40% 98%;
-    
+    --card-foreground: 160 20% 10%;
+    --card-hover: 150 20% 98%;
+
     /* Popover */
     --popover: 0 0% 100%;
-    --popover-foreground: 217 33% 17%;
-    
+    --popover-foreground: 160 20% 10%;
+
     /* Destructive */
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
-    
+
     /* Success */
-    --success: 142 76% 36%;
+    --success: 142 71% 45%;
     --success-foreground: 0 0% 100%;
-    --success-light: 142 76% 85%;
-    
+    --success-light: 142 70% 88%;
+
     /* Warning */
     --warning: 38 92% 50%;
     --warning-foreground: 0 0% 100%;
     --warning-light: 38 92% 85%;
-    
+
     /* Info */
-    --info: 213 94% 68%;
+    --info: 142 76% 55%;
     --info-foreground: 0 0% 100%;
-    --info-light: 213 94% 90%;
-    
+    --info-light: 142 70% 90%;
+
     /* Border & Input */
-    --border: 214 32% 91%;
-    --input: 214 32% 91%;
-    --ring: 217 91% 60%;
-    
+    --border: 150 15% 88%;
+    --input: 150 15% 88%;
+    --ring: 142 71% 45%;
+
     /* Radius */
     --radius: 0.75rem;
-    
-    /* Sidebar - Modern Dark */
-    --sidebar-background: 217 33% 14%;
-    --sidebar-foreground: 210 40% 98%;
-    --sidebar-primary: 217 91% 60%;
+
+    /* Sidebar - Deep green-black (matches Waze Sales OS proposal) */
+    --sidebar-background: 160 30% 7%;
+    --sidebar-foreground: 150 20% 92%;
+    --sidebar-primary: 142 71% 45%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 217 33% 20%;
-    --sidebar-accent-foreground: 210 40% 98%;
-    --sidebar-border: 217 33% 20%;
-    --sidebar-ring: 217 91% 60%;
-    
+    --sidebar-accent: 160 25% 12%;
+    --sidebar-accent-foreground: 150 20% 92%;
+    --sidebar-border: 160 20% 15%;
+    --sidebar-ring: 142 71% 45%;
+
     /* Gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(217 91% 60%) 0%, hsl(213 94% 68%) 100%);
-    --gradient-secondary: linear-gradient(135deg, hsl(217 33% 17%) 0%, hsl(217 33% 25%) 100%);
-    --gradient-subtle: linear-gradient(180deg, hsl(0 0% 100%) 0%, hsl(210 40% 98%) 100%);
-    --gradient-card: linear-gradient(135deg, hsl(0 0% 100%) 0%, hsl(210 40% 99%) 100%);
-    --gradient-success: linear-gradient(135deg, hsl(142 76% 36%) 0%, hsl(142 76% 45%) 100%);
+    --gradient-primary: linear-gradient(135deg, hsl(142 71% 45%) 0%, hsl(142 76% 55%) 100%);
+    --gradient-secondary: linear-gradient(135deg, hsl(160 25% 10%) 0%, hsl(160 25% 18%) 100%);
+    --gradient-subtle: linear-gradient(180deg, hsl(0 0% 100%) 0%, hsl(150 20% 98%) 100%);
+    --gradient-card: linear-gradient(135deg, hsl(0 0% 100%) 0%, hsl(150 20% 99%) 100%);
+    --gradient-success: linear-gradient(135deg, hsl(142 71% 45%) 0%, hsl(142 76% 55%) 100%);
     --gradient-warning: linear-gradient(135deg, hsl(38 92% 50%) 0%, hsl(38 92% 60%) 100%);
-    
+
     /* Shadows */
     --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
     --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
     --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
     --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
-    --shadow-glow: 0 0 20px hsl(217 91% 60% / 0.3);
+    --shadow-glow: 0 0 20px hsl(142 71% 45% / 0.35);
     --shadow-card: 0 2px 8px -2px rgb(0 0 0 / 0.08);
-    
+
     /* Transitions */
     --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     --transition-fast: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
