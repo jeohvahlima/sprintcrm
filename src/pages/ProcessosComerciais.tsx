@@ -106,9 +106,6 @@ export default function ProcessosComerciais() {
 
         <TabsContent value="ebooks">
           <PlaybooksCatalog />
-          <div className="mt-6">
-            <PlaybookAdoptionDashboard />
-          </div>
         </TabsContent>
 
       </Tabs>
