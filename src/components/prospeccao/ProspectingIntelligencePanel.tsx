@@ -33,7 +33,7 @@ export function ProspectingIntelligencePanel() {
         </TabsList>
         <TabsContent value="leads"><LeadScorePanel /></TabsContent>
         <TabsContent value="icp"><ICPDualBuilder /></TabsContent>
-        <TabsContent value="machine"><RevenueMixEngine /></TabsContent>
+        <TabsContent value="machine"><SalesMachineWizard /></TabsContent>
         <TabsContent value="ote">
           {isManagerLike ? (
             <CommissionCalculator />
