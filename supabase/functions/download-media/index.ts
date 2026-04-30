@@ -216,10 +216,11 @@ Deno.serve(async (req) => {
       );
       
       if (result.error) {
+        // Retornar 200 com error no body para que o client SDK não lance FunctionsHttpError
         return new Response(
           JSON.stringify(result),
           { 
-            status: 410,
+            status: 200,
             headers: { ...corsHeaders, 'Content-Type': 'application/json' }
           }
         );
