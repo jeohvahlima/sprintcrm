@@ -33,21 +33,43 @@ interface LegalProcess {
 }
 
 const STATUS_COLORS: Record<string, string> = {
+  pre_processual: "bg-slate-500/10 text-slate-600 border-slate-500/20",
+  protocolado: "bg-cyan-500/10 text-cyan-600 border-cyan-500/20",
   em_andamento: "bg-blue-500/10 text-blue-600 border-blue-500/20",
+  aguardando_citacao: "bg-indigo-500/10 text-indigo-600 border-indigo-500/20",
+  aguardando_contestacao: "bg-indigo-500/10 text-indigo-600 border-indigo-500/20",
   aguardando_audiencia: "bg-amber-500/10 text-amber-600 border-amber-500/20",
   aguardando_pericia: "bg-purple-500/10 text-purple-600 border-purple-500/20",
+  aguardando_sentenca: "bg-orange-500/10 text-orange-600 border-orange-500/20",
+  em_recurso: "bg-violet-500/10 text-violet-600 border-violet-500/20",
+  em_execucao: "bg-pink-500/10 text-pink-600 border-pink-500/20",
+  cumprimento_sentenca: "bg-fuchsia-500/10 text-fuchsia-600 border-fuchsia-500/20",
+  acordo: "bg-teal-500/10 text-teal-600 border-teal-500/20",
+  transito_julgado: "bg-emerald-500/10 text-emerald-600 border-emerald-500/20",
   suspenso: "bg-gray-500/10 text-gray-600 border-gray-500/20",
   arquivado: "bg-gray-500/10 text-gray-500 border-gray-500/20",
+  extinto: "bg-zinc-500/10 text-zinc-600 border-zinc-500/20",
   ganho: "bg-green-500/10 text-green-600 border-green-500/20",
   perdido: "bg-red-500/10 text-red-600 border-red-500/20",
 };
 
 const STATUS_LABELS: Record<string, string> = {
+  pre_processual: "Pré-Processual",
+  protocolado: "Protocolado / Distribuído",
   em_andamento: "Em Andamento",
+  aguardando_citacao: "Ag. Citação",
+  aguardando_contestacao: "Ag. Contestação",
   aguardando_audiencia: "Ag. Audiência",
   aguardando_pericia: "Ag. Perícia",
+  aguardando_sentenca: "Ag. Sentença",
+  em_recurso: "Em Recurso",
+  em_execucao: "Em Execução",
+  cumprimento_sentenca: "Cumprimento de Sentença",
+  acordo: "Acordo / Conciliação",
+  transito_julgado: "Trânsito em Julgado",
   suspenso: "Suspenso",
   arquivado: "Arquivado",
+  extinto: "Extinto",
   ganho: "Ganho",
   perdido: "Perdido",
 };
