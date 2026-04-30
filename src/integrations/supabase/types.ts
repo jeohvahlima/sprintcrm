@@ -1300,6 +1300,81 @@ export type Database = {
         }
         Relationships: []
       }
+      commercial_playbooks: {
+        Row: {
+          accent_color: string | null
+          category: string
+          company_id: string | null
+          cover_emoji: string | null
+          created_at: string
+          created_by: string | null
+          description: string | null
+          difficulty: string | null
+          estimated_time: string | null
+          id: string
+          is_global: boolean
+          parent_playbook_id: string | null
+          sections: Json
+          segment: string
+          tags: string[] | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          accent_color?: string | null
+          category: string
+          company_id?: string | null
+          cover_emoji?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          difficulty?: string | null
+          estimated_time?: string | null
+          id?: string
+          is_global?: boolean
+          parent_playbook_id?: string | null
+          sections?: Json
+          segment?: string
+          tags?: string[] | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          accent_color?: string | null
+          category?: string
+          company_id?: string | null
+          cover_emoji?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          difficulty?: string | null
+          estimated_time?: string | null
+          id?: string
+          is_global?: boolean
+          parent_playbook_id?: string | null
+          sections?: Json
+          segment?: string
+          tags?: string[] | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "commercial_playbooks_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "commercial_playbooks_parent_playbook_id_fkey"
+            columns: ["parent_playbook_id"]
+            isOneToOne: false
+            referencedRelation: "commercial_playbooks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       commercial_script_edges: {
         Row: {
           created_at: string
