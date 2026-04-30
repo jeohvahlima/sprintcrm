@@ -266,17 +266,17 @@ export function useSalvarDiagnostico() {
           nota,
           classificacao,
           segmento: input.segmento,
-          gargalos_detectados: input.gargalos as any,
-          ...input.dores,
+          gargalos_detectados: gargalos as any,
+          ...dores,
         })
         .select()
         .single();
       if (error) throw error;
 
       // Persistir gargalos como itens rastreáveis
-      if (input.gargalos.length) {
+      if (gargalos.length) {
         await supabase.from("diagnostico_gargalos_corrigidos" as any).insert(
-          input.gargalos.map((g) => ({
+          gargalos.map((g) => ({
             company_id: companyId,
             diagnostico_id: (saved as any).id,
             gargalo_key: g.key,
