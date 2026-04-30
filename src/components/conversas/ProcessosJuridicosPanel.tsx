@@ -585,92 +585,247 @@ export function ProcessosJuridicosPanel({ leadId, companyId, telefoneContato, no
       </Collapsible>
 
       <Dialog open={dialogOpen} onOpenChange={(open) => { setDialogOpen(open); if (!open) setEditingProcess(null); }}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Scale className="h-5 w-5" />
               {editingProcess ? "Editar Processo Jurídico" : "Novo Processo Jurídico"}
             </DialogTitle>
           </DialogHeader>
-          <div className="space-y-3">
-            <div>
-              <Label>Nº do Processo (CNJ) *</Label>
-              <Input value={form.numero_processo} onChange={e => setForm({ ...form, numero_processo: e.target.value })} placeholder="0000000-00.0000.0.00.0000" />
-            </div>
 
-            {/* Status - visível sempre, editável */}
-            <div>
-              <Label>Status</Label>
-              <Select value={form.status} onValueChange={v => setForm({ ...form, status: v })}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {Object.entries(STATUS_LABELS).map(([v, l]) => (
-                    <SelectItem key={v} value={v}>{l}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+          <Tabs defaultValue="processo" className="w-full">
+            <TabsList className="grid w-full grid-cols-3">
+              <TabsTrigger value="processo"><Gavel className="h-3.5 w-3.5 mr-1" /> Processo</TabsTrigger>
+              <TabsTrigger value="audiencia"><Calendar className="h-3.5 w-3.5 mr-1" /> Audiência</TabsTrigger>
+              <TabsTrigger value="documentos" disabled={!editingProcess}>
+                <FileText className="h-3.5 w-3.5 mr-1" /> Documentos {documents.length > 0 && `(${documents.length})`}
+              </TabsTrigger>
+            </TabsList>
 
-            <div>
-              <Label>Tipo</Label>
-              <Select value={form.tipo} onValueChange={v => setForm({ ...form, tipo: v })}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {Object.entries(TIPO_LABELS).map(([v, l]) => (
-                    <SelectItem key={v} value={v}>{l}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="grid grid-cols-2 gap-2">
+            {/* TAB PROCESSO */}
+            <TabsContent value="processo" className="space-y-3 mt-4">
               <div>
-                <Label>Vara</Label>
-                <Input value={form.vara} onChange={e => setForm({ ...form, vara: e.target.value })} placeholder="2ª Vara Cível" />
+                <Label>Nº do Processo (CNJ) *</Label>
+                <Input value={form.numero_processo} onChange={e => setForm({ ...form, numero_processo: e.target.value })} placeholder="0000000-00.0000.0.00.0000" />
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <Label>Status</Label>
+                  <Select value={form.status} onValueChange={v => setForm({ ...form, status: v })}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      {Object.entries(STATUS_LABELS).map(([v, l]) => (
+                        <SelectItem key={v} value={v}>{l}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label>Tipo</Label>
+                  <Select value={form.tipo} onValueChange={v => setForm({ ...form, tipo: v })}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      {Object.entries(TIPO_LABELS).map(([v, l]) => (
+                        <SelectItem key={v} value={v}>{l}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <Label>Vara</Label>
+                  <Input value={form.vara} onChange={e => setForm({ ...form, vara: e.target.value })} placeholder="2ª Vara Cível" />
+                </div>
+                <div>
+                  <Label>Comarca</Label>
+                  <Input value={form.comarca} onChange={e => setForm({ ...form, comarca: e.target.value })} placeholder="São Paulo/SP" />
+                </div>
               </div>
               <div>
-                <Label>Comarca</Label>
-                <Input value={form.comarca} onChange={e => setForm({ ...form, comarca: e.target.value })} placeholder="São Paulo/SP" />
+                <Label>Fórum / Tribunal</Label>
+                <Input value={form.forum_tribunal} onChange={e => setForm({ ...form, forum_tribunal: e.target.value })} placeholder="Fórum João Mendes Jr. / TJSP" />
               </div>
-            </div>
-            <div>
-              <Label>Parte Contrária</Label>
-              <Input value={form.parte_contraria} onChange={e => setForm({ ...form, parte_contraria: e.target.value })} placeholder="Nome da parte contrária" />
-            </div>
-            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <Label>Parte Contrária</Label>
+                <Input value={form.parte_contraria} onChange={e => setForm({ ...form, parte_contraria: e.target.value })} placeholder="Nome da parte contrária" />
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <Label>Advogado Adversário</Label>
+                  <Input value={form.advogado_adversario} onChange={e => setForm({ ...form, advogado_adversario: e.target.value })} placeholder="Dr. Fulano de Tal" />
+                </div>
+                <div>
+                  <Label>OAB Adversário</Label>
+                  <Input value={form.oab_adversario} onChange={e => setForm({ ...form, oab_adversario: e.target.value })} placeholder="Ex: SP 123.456" />
+                </div>
+              </div>
               <div>
                 <Label>Valor da Causa (R$)</Label>
                 <Input type="number" value={form.valor_causa} onChange={e => setForm({ ...form, valor_causa: e.target.value })} placeholder="0,00" />
               </div>
+            </TabsContent>
+
+            {/* TAB AUDIÊNCIA */}
+            <TabsContent value="audiencia" className="space-y-3 mt-4">
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <Label>Data e Hora da Audiência</Label>
+                  <Input type="datetime-local" value={form.data_audiencia} onChange={e => setForm({ ...form, data_audiencia: e.target.value })} />
+                </div>
+                <div>
+                  <Label>Modalidade</Label>
+                  <Select value={form.audiencia_modalidade} onValueChange={v => setForm({ ...form, audiencia_modalidade: v })}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      {Object.entries(AUDIENCIA_MODALIDADES).map(([v, l]) => (
+                        <SelectItem key={v} value={v}>{l}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              {(form.audiencia_modalidade === 'presencial' || form.audiencia_modalidade === 'hibrida') && (
+                <>
+                  <div>
+                    <Label className="flex items-center gap-1"><MapPin className="h-3 w-3" /> Local / Endereço</Label>
+                    <Input value={form.audiencia_local} onChange={e => setForm({ ...form, audiencia_local: e.target.value })} placeholder="Ex: Fórum Central, Av. Paulista 1000, 5º andar" />
+                  </div>
+                  <div>
+                    <Label>Sala</Label>
+                    <Input value={form.audiencia_sala} onChange={e => setForm({ ...form, audiencia_sala: e.target.value })} placeholder="Ex: Sala 504" />
+                  </div>
+                </>
+              )}
+
+              {(form.audiencia_modalidade === 'virtual' || form.audiencia_modalidade === 'hibrida') && (
+                <div>
+                  <Label className="flex items-center gap-1"><Video className="h-3 w-3" /> Link da Videoconferência</Label>
+                  <Input value={form.audiencia_link} onChange={e => setForm({ ...form, audiencia_link: e.target.value })} placeholder="https://meet.google.com/... ou link do Teams/Zoom" />
+                </div>
+              )}
+
               <div>
-                <Label>Data da Audiência</Label>
-                <Input type="datetime-local" value={form.data_audiencia} onChange={e => setForm({ ...form, data_audiencia: e.target.value })} />
+                <Label>Juiz(a) Responsável</Label>
+                <Input value={form.juiz} onChange={e => setForm({ ...form, juiz: e.target.value })} placeholder="Dr(a). Nome do juiz(a)" />
               </div>
-            </div>
-            {form.data_audiencia && !editingProcess && (
-              <div className="p-2 rounded-lg border border-amber-500/30 bg-amber-500/5 text-xs space-y-1">
-                <p className="font-medium text-amber-700">📅 Ao cadastrar com data de audiência:</p>
-                <ul className="text-amber-600 space-y-0.5 ml-3 list-disc">
-                  <li>Compromisso será criado automaticamente na Agenda</li>
-                  {telefoneContato && <li>Confirmação será enviada via WhatsApp</li>}
-                  {telefoneContato && <li>Lembretes automáticos (3 dias e 1 dia antes)</li>}
-                  {!telefoneContato && <li className="text-muted-foreground">Sem telefone — confirmação e lembretes não serão enviados</li>}
-                </ul>
+
+              <div>
+                <Label>Observações da Audiência</Label>
+                <Textarea
+                  value={form.audiencia_observacoes}
+                  onChange={e => setForm({ ...form, audiencia_observacoes: e.target.value })}
+                  placeholder="Levar testemunhas, documentos originais, instruções específicas..."
+                  rows={3}
+                />
               </div>
-            )}
-            {form.data_audiencia && editingProcess && form.data_audiencia !== (editingProcess.data_audiencia?.slice(0, 16) || "") && (
-              <div className="p-2 rounded-lg border border-amber-500/30 bg-amber-500/5 text-xs space-y-1">
-                <p className="font-medium text-amber-700">📅 Nova data de audiência detectada:</p>
-                <ul className="text-amber-600 space-y-0.5 ml-3 list-disc">
-                  <li>Novo compromisso será criado na Agenda</li>
-                  {telefoneContato && <li>Confirmação será enviada via WhatsApp</li>}
-                  {telefoneContato && <li>Novos lembretes automáticos serão criados</li>}
-                </ul>
-              </div>
-            )}
-            <Button className="w-full" onClick={handleSave} disabled={loading}>
-              {loading ? "Salvando..." : editingProcess ? "Salvar Alterações" : "Cadastrar Processo"}
-            </Button>
-          </div>
+
+              {form.data_audiencia && !editingProcess && (
+                <div className="p-2 rounded-lg border border-amber-500/30 bg-amber-500/5 text-xs space-y-1">
+                  <p className="font-medium text-amber-700">📅 Ao cadastrar com data de audiência:</p>
+                  <ul className="text-amber-600 space-y-0.5 ml-3 list-disc">
+                    <li>Compromisso será criado automaticamente na Agenda</li>
+                    {telefoneContato && <li>Confirmação via WhatsApp com modalidade, local e link</li>}
+                    {telefoneContato && <li>Lembretes automáticos (3 dias e 1 dia antes)</li>}
+                    {!telefoneContato && <li className="text-muted-foreground">Sem telefone — confirmação e lembretes não serão enviados</li>}
+                  </ul>
+                </div>
+              )}
+              {form.data_audiencia && editingProcess && form.data_audiencia !== (editingProcess.data_audiencia?.slice(0, 16) || "") && (
+                <div className="p-2 rounded-lg border border-amber-500/30 bg-amber-500/5 text-xs space-y-1">
+                  <p className="font-medium text-amber-700">📅 Nova data de audiência detectada:</p>
+                  <ul className="text-amber-600 space-y-0.5 ml-3 list-disc">
+                    <li>Novo compromisso será criado na Agenda</li>
+                    {telefoneContato && <li>Confirmação atualizada via WhatsApp</li>}
+                    {telefoneContato && <li>Novos lembretes automáticos serão criados</li>}
+                  </ul>
+                </div>
+              )}
+            </TabsContent>
+
+            {/* TAB DOCUMENTOS */}
+            <TabsContent value="documentos" className="space-y-3 mt-4">
+              {!editingProcess ? (
+                <p className="text-sm text-muted-foreground text-center py-6">
+                  Salve o processo primeiro para anexar documentos.
+                </p>
+              ) : (
+                <>
+                  <div className="rounded-lg border p-3 space-y-2 bg-muted/30">
+                    <p className="text-sm font-medium flex items-center gap-1"><Upload className="h-4 w-4" /> Anexar novo documento</p>
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <Label className="text-xs">Tipo</Label>
+                        <Select value={docType} onValueChange={setDocType}>
+                          <SelectTrigger><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            {Object.entries(DOCUMENT_TYPES).map(([v, l]) => (
+                              <SelectItem key={v} value={v}>{l}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <Label className="text-xs">Descrição (opcional)</Label>
+                        <Input value={docDescription} onChange={e => setDocDescription(e.target.value)} placeholder="Breve descrição" />
+                      </div>
+                    </div>
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      className="hidden"
+                      accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.heic,.xlsx,.xls,.txt"
+                      onChange={(e) => {
+                        const f = e.target.files?.[0];
+                        if (f && editingProcess) handleUploadDocument(f, editingProcess.id);
+                      }}
+                    />
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="w-full"
+                      disabled={uploadingDoc}
+                      onClick={() => fileInputRef.current?.click()}
+                    >
+                      {uploadingDoc ? <><Loader2 className="h-3 w-3 mr-1 animate-spin" /> Enviando...</> : <><Upload className="h-3 w-3 mr-1" /> Selecionar arquivo (até 25MB)</>}
+                    </Button>
+                  </div>
+
+                  <div className="space-y-2">
+                    {documents.length === 0 ? (
+                      <p className="text-xs text-muted-foreground text-center py-4">Nenhum documento anexado</p>
+                    ) : (
+                      documents.map(doc => (
+                        <div key={doc.id} className="flex items-center gap-2 p-2 rounded-lg border bg-card text-sm">
+                          <FileText className="h-4 w-4 text-primary shrink-0" />
+                          <div className="flex-1 min-w-0">
+                            <div className="font-medium truncate">{doc.file_name}</div>
+                            <div className="text-xs text-muted-foreground flex flex-wrap gap-2">
+                              {doc.document_type && <Badge variant="outline" className="text-[10px]">{DOCUMENT_TYPES[doc.document_type] || doc.document_type}</Badge>}
+                              {doc.file_size && <span>{formatFileSize(doc.file_size)}</span>}
+                              <span>{format(new Date(doc.created_at), "dd/MM/yyyy", { locale: ptBR })}</span>
+                            </div>
+                            {doc.description && <div className="text-xs text-muted-foreground italic mt-0.5">{doc.description}</div>}
+                          </div>
+                          <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => handleDownloadDocument(doc)}>
+                            <Download className="h-3.5 w-3.5" />
+                          </Button>
+                          <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive hover:text-destructive" onClick={() => handleDeleteDocument(doc)}>
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </Button>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </>
+              )}
+            </TabsContent>
+          </Tabs>
+
+          <Button className="w-full mt-4" onClick={handleSave} disabled={loading}>
+            {loading ? "Salvando..." : editingProcess ? "Salvar Alterações" : "Cadastrar Processo"}
+          </Button>
         </DialogContent>
       </Dialog>
     </>
