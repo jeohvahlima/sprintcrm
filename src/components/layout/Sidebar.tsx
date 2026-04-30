@@ -77,7 +77,8 @@ const navigation = [{
   name: "Mentoria",
   href: "/mentoria",
   icon: Sparkles,
-  menuKey: "mentoria"
+  menuKey: "mentoria",
+  masterOnly: true
 }, {
   name: "Financeiro",
   href: "/financeiro",
