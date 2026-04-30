@@ -4812,6 +4812,56 @@ export type Database = {
           },
         ]
       }
+      legal_process_documents: {
+        Row: {
+          company_id: string
+          created_at: string
+          description: string | null
+          document_type: string | null
+          file_name: string
+          file_path: string
+          file_size: number | null
+          id: string
+          legal_process_id: string
+          mime_type: string | null
+          uploaded_by: string | null
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          description?: string | null
+          document_type?: string | null
+          file_name: string
+          file_path: string
+          file_size?: number | null
+          id?: string
+          legal_process_id: string
+          mime_type?: string | null
+          uploaded_by?: string | null
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          description?: string | null
+          document_type?: string | null
+          file_name?: string
+          file_path?: string
+          file_size?: number | null
+          id?: string
+          legal_process_id?: string
+          mime_type?: string | null
+          uploaded_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "legal_process_documents_legal_process_id_fkey"
+            columns: ["legal_process_id"]
+            isOneToOne: false
+            referencedRelation: "legal_processes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       legal_process_events: {
         Row: {
           company_id: string
@@ -4869,15 +4919,24 @@ export type Database = {
       }
       legal_processes: {
         Row: {
+          advogado_adversario: string | null
+          audiencia_link: string | null
+          audiencia_local: string | null
+          audiencia_modalidade: string | null
+          audiencia_observacoes: string | null
+          audiencia_sala: string | null
           comarca: string | null
           company_id: string
           created_at: string
           data_audiencia: string | null
           data_distribuicao: string | null
           descricao: string | null
+          forum_tribunal: string | null
           id: string
+          juiz: string | null
           lead_id: string | null
           numero_processo: string | null
+          oab_adversario: string | null
           parte_contraria: string | null
           prioridade: string | null
           responsavel_id: string | null
@@ -4889,15 +4948,24 @@ export type Database = {
           vara: string | null
         }
         Insert: {
+          advogado_adversario?: string | null
+          audiencia_link?: string | null
+          audiencia_local?: string | null
+          audiencia_modalidade?: string | null
+          audiencia_observacoes?: string | null
+          audiencia_sala?: string | null
           comarca?: string | null
           company_id: string
           created_at?: string
           data_audiencia?: string | null
           data_distribuicao?: string | null
           descricao?: string | null
+          forum_tribunal?: string | null
           id?: string
+          juiz?: string | null
           lead_id?: string | null
           numero_processo?: string | null
+          oab_adversario?: string | null
           parte_contraria?: string | null
           prioridade?: string | null
           responsavel_id?: string | null
@@ -4909,15 +4977,24 @@ export type Database = {
           vara?: string | null
         }
         Update: {
+          advogado_adversario?: string | null
+          audiencia_link?: string | null
+          audiencia_local?: string | null
+          audiencia_modalidade?: string | null
+          audiencia_observacoes?: string | null
+          audiencia_sala?: string | null
           comarca?: string | null
           company_id?: string
           created_at?: string
           data_audiencia?: string | null
           data_distribuicao?: string | null
           descricao?: string | null
+          forum_tribunal?: string | null
           id?: string
+          juiz?: string | null
           lead_id?: string | null
           numero_processo?: string | null
+          oab_adversario?: string | null
           parte_contraria?: string | null
           prioridade?: string | null
           responsavel_id?: string | null
