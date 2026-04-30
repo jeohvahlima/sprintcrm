@@ -232,19 +232,22 @@ export function ChatCaptureWidget({
       </div>
 
       {/* Sugestões iniciais */}
-      {messages.length <= 1 && config.sugestoes_chat && config.sugestoes_chat.length > 0 && (
-        <div className="px-3 pt-2 flex flex-wrap gap-1 border-t bg-white">
-          {config.sugestoes_chat.map((s, i) => (
-            <button
-              key={i}
-              onClick={() => sendInput(s)}
-              className="text-xs px-2 py-1 rounded-full border hover:bg-slate-100"
-            >
-              {s}
-            </button>
-          ))}
-        </div>
-      )}
+      {(() => {
+        const sugestoes = botCfg.sugestoes_iniciais?.length ? botCfg.sugestoes_iniciais : config.sugestoes_chat;
+        return messages.length <= 1 && sugestoes && sugestoes.length > 0 && (
+          <div className="px-3 pt-2 flex flex-wrap gap-1 border-t bg-white">
+            {sugestoes.map((s, i) => (
+              <button
+                key={i}
+                onClick={() => sendInput(s)}
+                className="text-xs px-2 py-1 rounded-full border hover:bg-slate-100"
+              >
+                {s}
+              </button>
+            ))}
+          </div>
+        );
+      })()}
 
       {/* Input */}
       <form
