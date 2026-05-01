@@ -4812,6 +4812,195 @@ export type Database = {
           },
         ]
       }
+      legal_calculations: {
+        Row: {
+          company_id: string
+          created_at: string
+          created_by: string | null
+          descricao: string | null
+          id: string
+          inputs: Json
+          legal_process_id: string | null
+          resultado: Json
+          tipo: string
+          valor_total: number | null
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          created_by?: string | null
+          descricao?: string | null
+          id?: string
+          inputs?: Json
+          legal_process_id?: string | null
+          resultado?: Json
+          tipo: string
+          valor_total?: number | null
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          created_by?: string | null
+          descricao?: string | null
+          id?: string
+          inputs?: Json
+          legal_process_id?: string | null
+          resultado?: Json
+          tipo?: string
+          valor_total?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "legal_calculations_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "legal_calculations_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "legal_calculations_legal_process_id_fkey"
+            columns: ["legal_process_id"]
+            isOneToOne: false
+            referencedRelation: "legal_processes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      legal_deadlines: {
+        Row: {
+          alerta_d1: boolean
+          alerta_d3: boolean
+          alerta_d7: boolean
+          company_id: string
+          contagem: string
+          created_at: string
+          cumprido_em: string | null
+          cumprido_por: string | null
+          data_inicial: string
+          data_limite: string | null
+          descricao: string
+          id: string
+          legal_process_id: string | null
+          observacoes: string | null
+          prazo_dias: number
+          prazo_dobrado: boolean
+          responsavel_id: string | null
+          status: string
+          tipo: string
+          updated_at: string
+        }
+        Insert: {
+          alerta_d1?: boolean
+          alerta_d3?: boolean
+          alerta_d7?: boolean
+          company_id: string
+          contagem?: string
+          created_at?: string
+          cumprido_em?: string | null
+          cumprido_por?: string | null
+          data_inicial: string
+          data_limite?: string | null
+          descricao: string
+          id?: string
+          legal_process_id?: string | null
+          observacoes?: string | null
+          prazo_dias?: number
+          prazo_dobrado?: boolean
+          responsavel_id?: string | null
+          status?: string
+          tipo?: string
+          updated_at?: string
+        }
+        Update: {
+          alerta_d1?: boolean
+          alerta_d3?: boolean
+          alerta_d7?: boolean
+          company_id?: string
+          contagem?: string
+          created_at?: string
+          cumprido_em?: string | null
+          cumprido_por?: string | null
+          data_inicial?: string
+          data_limite?: string | null
+          descricao?: string
+          id?: string
+          legal_process_id?: string | null
+          observacoes?: string | null
+          prazo_dias?: number
+          prazo_dobrado?: boolean
+          responsavel_id?: string | null
+          status?: string
+          tipo?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "legal_deadlines_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "legal_deadlines_cumprido_por_fkey"
+            columns: ["cumprido_por"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "legal_deadlines_legal_process_id_fkey"
+            columns: ["legal_process_id"]
+            isOneToOne: false
+            referencedRelation: "legal_processes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "legal_deadlines_responsavel_id_fkey"
+            columns: ["responsavel_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      legal_holidays: {
+        Row: {
+          abrangencia: string
+          comarca: string | null
+          created_at: string
+          data: string
+          descricao: string
+          id: string
+          uf: string | null
+        }
+        Insert: {
+          abrangencia?: string
+          comarca?: string | null
+          created_at?: string
+          data: string
+          descricao: string
+          id?: string
+          uf?: string | null
+        }
+        Update: {
+          abrangencia?: string
+          comarca?: string | null
+          created_at?: string
+          data?: string
+          descricao?: string
+          id?: string
+          uf?: string | null
+        }
+        Relationships: []
+      }
       legal_process_documents: {
         Row: {
           company_id: string
@@ -9070,6 +9259,15 @@ export type Database = {
         Args: { p_company_id: string; p_end_date: string; p_start_date: string }
         Returns: Json
       }
+      calculate_deadline_date: {
+        Args: {
+          p_contagem?: string
+          p_dias: number
+          p_dobrado?: boolean
+          p_inicio: string
+        }
+        Returns: string
+      }
       calculate_wmi_score: { Args: { p_company_id?: string }; Returns: Json }
       claim_next_queue_lead: {
         Args: { _queue_id: string; _user_id: string }
@@ -9088,6 +9286,10 @@ export type Database = {
         }[]
       }
       claim_quest_reward: { Args: { p_progress_id: string }; Returns: Json }
+      count_business_days: {
+        Args: { p_end: string; p_start: string }
+        Returns: number
+      }
       create_attendance_protocol: {
         Args: {
           p_attending_user_id?: string

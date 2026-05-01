@@ -10,6 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Scale, Plus, ChevronDown, Gavel, Calendar, DollarSign, Pencil, Upload, FileText, Trash2, Download, Video, MapPin, Loader2 } from "lucide-react";
+import ProcessTimeline from "@/components/juridico/ProcessTimeline";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -594,13 +595,22 @@ export function ProcessosJuridicosPanel({ leadId, companyId, telefoneContato, no
           </DialogHeader>
 
           <Tabs defaultValue="processo" className="w-full">
-            <TabsList className="grid w-full grid-cols-3">
+            <TabsList className="grid w-full grid-cols-4">
               <TabsTrigger value="processo"><Gavel className="h-3.5 w-3.5 mr-1" /> Processo</TabsTrigger>
               <TabsTrigger value="audiencia"><Calendar className="h-3.5 w-3.5 mr-1" /> Audiência</TabsTrigger>
               <TabsTrigger value="documentos" disabled={!editingProcess}>
                 <FileText className="h-3.5 w-3.5 mr-1" /> Documentos {documents.length > 0 && `(${documents.length})`}
               </TabsTrigger>
+              <TabsTrigger value="timeline" disabled={!editingProcess}>
+                <Calendar className="h-3.5 w-3.5 mr-1" /> Andamentos
+              </TabsTrigger>
             </TabsList>
+
+            <TabsContent value="timeline" className="mt-4">
+              {editingProcess && companyId && (
+                <ProcessTimeline processId={editingProcess.id} companyId={companyId} />
+              )}
+            </TabsContent>
 
             {/* TAB PROCESSO */}
             <TabsContent value="processo" className="space-y-3 mt-4">

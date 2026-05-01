@@ -1,9 +1,12 @@
 import { useEffect, useState } from "react";
 import { Navigate } from "react-router-dom";
 import { Scale } from "lucide-react";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { useCompanySegmento } from "@/hooks/useCompanySegmento";
 import JuridicoAnalytics from "@/components/analytics/JuridicoAnalytics";
+import CalculadoraProcessos from "@/components/juridico/CalculadoraProcessos";
+import GestaoPrazos from "@/components/juridico/GestaoPrazos";
 
 export default function Juridico() {
   const { isJuridico, isMasterAccount, loading } = useCompanySegmento();
@@ -29,7 +32,6 @@ export default function Juridico() {
     );
   }
 
-  // Apenas contas jurídicas (ou master) acessam esse módulo
   if (!isJuridico && !isMasterAccount) {
     return <Navigate to="/analytics" replace />;
   }
@@ -45,12 +47,30 @@ export default function Juridico() {
             Jurídico
           </h1>
           <p className="text-muted-foreground mt-1">
-            Painel exclusivo para escritórios de advocacia: processos, audiências, honorários e análises do jurídico
+            Painel completo para escritórios de advocacia: processos, prazos, audiências, honorários e análises
           </p>
         </div>
       </div>
 
-      <JuridicoAnalytics userCompanyId={userCompanyId} />
+      <Tabs defaultValue="overview" className="space-y-6">
+        <TabsList className="flex flex-wrap h-auto">
+          <TabsTrigger value="overview">Visão Geral</TabsTrigger>
+          <TabsTrigger value="prazos">Prazos</TabsTrigger>
+          <TabsTrigger value="calculadora">Calculadora</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="overview">
+          <JuridicoAnalytics userCompanyId={userCompanyId} />
+        </TabsContent>
+
+        <TabsContent value="prazos">
+          <GestaoPrazos companyId={userCompanyId} />
+        </TabsContent>
+
+        <TabsContent value="calculadora">
+          <CalculadoraProcessos companyId={userCompanyId} />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
