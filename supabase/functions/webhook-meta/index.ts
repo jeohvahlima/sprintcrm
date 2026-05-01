@@ -941,8 +941,32 @@ serve(async (req) => {
             // Solução: usar /{ig-page-id}/conversations?user_id={igsid}&platform=instagram
             let instagramUsername = instagramUserId; // Default: ID numérico
             let instagramProfilePic: string | null = null;
-            const igAccessToken = connection.meta_access_token || connection.instagram_access_token;
-            const igAccountId = connection.instagram_account_id || msg.instagram_account_id;
+
+            // ⚡ PRIORIZAR token IGAA (Instagram Business Login) de tenant_integrations.
+            // O token EAA (Facebook user/page) NÃO funciona para lookup de IGSID.
+            let igAccessToken: string | null = null;
+            let igAccountId: string | null = connection.instagram_account_id || msg.instagram_account_id || null;
+            let igTokenIsIgBusiness = false;
+            try {
+              const { data: tenantInt } = await supabase
+                .from('tenant_integrations')
+                .select('meta_access_token, instagram_ig_id')
+                .eq('company_id', company_id)
+                .maybeSingle();
+              if (tenantInt?.meta_access_token && tenantInt.meta_access_token.startsWith('IGAA')) {
+                igAccessToken = tenantInt.meta_access_token;
+                igTokenIsIgBusiness = true;
+                igAccountId = tenantInt.instagram_ig_id || igAccountId;
+              }
+            } catch (_) { /* ignore */ }
+            if (!igAccessToken) {
+              igAccessToken = connection.meta_access_token || connection.instagram_access_token;
+              igTokenIsIgBusiness = !!igAccessToken && igAccessToken.startsWith('IGAA');
+            }
+            const igApiBase = igTokenIsIgBusiness
+              ? 'https://graph.instagram.com/v23.0'
+              : 'https://graph.facebook.com/v23.0';
+            const igAccountRef = igTokenIsIgBusiness ? 'me' : igAccountId;
             
             // Método 0 (CACHE): Buscar nome de conversa anterior no banco
             // ⚡ CORREÇÃO: Rejeitar nomes fallback "Instagram XXXXXX" do cache
