@@ -163,6 +163,9 @@ interface Message {
   replyTo?: string;
   edited?: boolean;
   sentBy?: string; // Nome do responsável que enviou
+  participantName?: string;
+  participantPhone?: string;
+  participantAvatarUrl?: string;
   contactData?: {
     name: string;
     phone: string;
@@ -1872,6 +1875,9 @@ function Conversas() {
           fileSize: extractFileSizeFromMediaUrl(novaMensagem.midia_url),
           mimeType: novaMensagem.tipo_mensagem === 'video' ? 'video/mp4' : novaMensagem.tipo_mensagem === 'audio' ? 'audio/mpeg' : novaMensagem.tipo_mensagem === 'image' ? 'image/jpeg' : novaMensagem.tipo_mensagem === 'document' || novaMensagem.tipo_mensagem === 'pdf' ? 'application/pdf' : undefined,
           sentBy: sentBy,
+          participantName: novaMensagem.group_participant_name || undefined,
+          participantPhone: novaMensagem.group_participant_phone || undefined,
+          participantAvatarUrl: novaMensagem.group_participant_avatar_url || undefined,
           contactData: contactDataParsed
         };
 
@@ -1886,6 +1892,8 @@ function Conversas() {
           const isMatch = isInstagramMessage 
             ? (convId === igUserId || convPhone === igUserId || prevSelected.id === telefone ||
                (prevSelected.channel === 'instagram' && convId === igUserId))
+            : isGroupMessage
+              ? (prevSelected.id === telefone || prevSelected.phoneNumber === telefone)
             : (prevSelected.phoneNumber || prevSelected.id || '').replace(/[^0-9]/g, '') === telefone;
           if (isMatch) {
             // ⚡ DEDUPLICAÇÃO: Verificar se mensagem já existe por ID
@@ -1933,6 +1941,9 @@ function Conversas() {
                      convPhone === igUserId || 
                      c.phoneNumber === telefoneKey ||
                      (c.channel === 'instagram' && convId === igUserId);
+            }
+            if (isGroupMessage) {
+              return c.id === telefoneKey || c.phoneNumber === telefoneKey;
             }
             const tel = (c.phoneNumber || c.id || '').replace(/[^0-9]/g, '');
             return tel === telefoneKey;
@@ -2000,8 +2011,9 @@ function Conversas() {
             // Criar nova conversa para TODOS os usuários
             console.log('✅ [REALTIME-MULTIUSER] Criando nova conversa para TODOS:', telefoneKey);
             const novaConversa: Conversation = {
-              id: isInstagramMessage ? telefoneKey : (novaMensagem.lead_id || `conv-${telefoneKey}`),
+              id: isGroupMessage || isInstagramMessage ? telefoneKey : (novaMensagem.lead_id || `conv-${telefoneKey}`),
               contactName: (() => {
+                if (isGroupMessage) return novaMensagem.group_subject || novaMensagem.nome_contato || 'Grupo';
                 // Para nova conversa, usar nome_contato apenas se NÃO for um número puro e NÃO for fallback
                 const nome = novaMensagem.nome_contato || '';
                 const isFallback = isInstagramPlaceholderName(nome);
@@ -2020,7 +2032,7 @@ function Conversas() {
               unread: novaMensagemObj.sender === 'contact' ? 1 : 0,
               messages: [novaMensagemObj],
               tags: [],
-              phoneNumber: isInstagramMessage ? telefoneKey : (novaMensagem.telefone_formatado || novaMensagem.numero || telefoneKey),
+              phoneNumber: isGroupMessage || isInstagramMessage ? telefoneKey : (novaMensagem.telefone_formatado || novaMensagem.numero || telefoneKey),
               isGroup: novaMensagem.is_group || /@g\.us$/.test(novaMensagem.numero || ''),
               origemApi: isInstagramMessage ? 'meta' : undefined,
               avatarUrl: `https://ui-avatars.com/api/?name=${encodeURIComponent((novaMensagem.nome_contato || telefoneKey).substring(0, 2))}&background=0ea5e9&color=fff`
@@ -3253,7 +3265,7 @@ function Conversas() {
 
       // ⚡ OTIMIZAÇÃO: Query com campos essenciais (midia_url necessário para exibir mídias)
       // ⚡ CORREÇÃO: Incluir campos read e delivered para exibir status de visualização
-      let query = supabase.from('conversas').select('id, numero, telefone_formatado, mensagem, nome_contato, tipo_mensagem, status, created_at, is_group, fromme, sent_by, owner_id, arquivo_nome, midia_url, read, delivered, origem, origem_api').eq('company_id', companyId).order('created_at', {
+      let query = supabase.from('conversas').select('id, numero, telefone_formatado, mensagem, nome_contato, tipo_mensagem, status, created_at, is_group, fromme, sent_by, owner_id, arquivo_nome, midia_url, read, delivered, origem, origem_api, group_participant_name, group_participant_phone, group_participant_avatar_url').eq('company_id', companyId).order('created_at', {
         ascending: false
       });
 
@@ -3869,6 +3881,9 @@ function Conversas() {
             fileSize: extractFileSizeFromMediaUrl(m.midia_url),
             mimeType: m.tipo_mensagem === 'video' ? 'video/mp4' : m.tipo_mensagem === 'audio' ? 'audio/mpeg' : m.tipo_mensagem === 'image' ? 'image/jpeg' : m.tipo_mensagem === 'document' || m.tipo_mensagem === 'pdf' ? 'application/pdf' : undefined,
             sentBy: sentBy,
+            participantName: m.group_participant_name || undefined,
+            participantPhone: m.group_participant_phone || undefined,
+            participantAvatarUrl: m.group_participant_avatar_url || undefined,
             contactData: contactDataParsed3
           };
         });
@@ -4482,6 +4497,9 @@ function Conversas() {
             mediaUrl: m.midia_url,
             fileName: m.arquivo_nome,
             sentBy: sentBy,
+            participantName: m.group_participant_name || undefined,
+            participantPhone: m.group_participant_phone || undefined,
+            participantAvatarUrl: m.group_participant_avatar_url || undefined,
             contactData: contactDataParsed4
           };
         })

@@ -24,6 +24,8 @@ export interface Message {
   fileName?: string;
   sentBy?: string; // ⚡ Nome do usuário que enviou a mensagem
   participantName?: string; // 👥 Nome do participante que enviou (apenas em grupos)
+  participantPhone?: string;
+  participantAvatarUrl?: string;
 }
 
 export interface Conversation {
@@ -165,7 +167,7 @@ export const useConversationsCache = (companyId: string | null) => {
       while (hasMore) {
         const { data: batch, error } = await supabase
           .from('conversas')
-          .select('id, numero, telefone_formatado, mensagem, nome_contato, tipo_mensagem, status, created_at, is_group, fromme, arquivo_nome, sent_by, owner_id, midia_url, origem, origem_api, group_subject, group_participant_name')
+          .select('id, numero, telefone_formatado, mensagem, nome_contato, tipo_mensagem, status, created_at, is_group, fromme, arquivo_nome, sent_by, owner_id, midia_url, origem, origem_api, group_subject, group_participant_name, group_participant_phone, group_participant_avatar_url')
           .eq('company_id', companyId)
           .order('created_at', { ascending: false })
           .range(offset, offset + batchSize - 1);
@@ -353,6 +355,8 @@ export const useConversationsCache = (companyId: string | null) => {
               read: m.read === true, // ⚡ CORREÇÃO: Usar campo read do banco (true = contato visualizou)
               sentBy: sentBy, // ⚡ CORREÇÃO: Incluir assinatura do banco com fallback
               participantName: (m as any).group_participant_name || undefined, // 👥 Remetente em grupos
+              participantPhone: (m as any).group_participant_phone || undefined,
+              participantAvatarUrl: (m as any).group_participant_avatar_url || undefined,
             };
           });
 

@@ -141,6 +141,9 @@ const webhookPayloadSchema = z.object({
   fromMe: z.boolean().optional(),
   remoteJidAlt: z.string().nullable().optional(), // 🔥 Número alternativo real da Evolution API
   group_participant_name: z.string().max(100).nullable().optional(),
+  group_participant_jid: z.string().max(160).nullable().optional(),
+  group_participant_phone: z.string().max(30).nullable().optional(),
+  group_participant_avatar_url: z.string().nullable().optional(),
 });
 
 // Verify webhook signature for security
@@ -181,6 +184,31 @@ async function verifyWebhookSignature(
 function isEvolutionAPIPayload(body: any): boolean {
   const event = (body.event || '').toLowerCase();
   return event === 'messages.upsert' && body.data?.key?.remoteJid;
+}
+
+function extractGroupParticipantJid(data: any): string | null {
+  const contextInfo = data?.message?.extendedTextMessage?.contextInfo
+    || data?.message?.imageMessage?.contextInfo
+    || data?.message?.videoMessage?.contextInfo
+    || data?.message?.audioMessage?.contextInfo
+    || data?.message?.documentMessage?.contextInfo
+    || data?.message?.stickerMessage?.contextInfo
+    || data?.message?.contactMessage?.contextInfo;
+  const candidates = [
+    data?.key?.participant,
+    data?.participant,
+    data?.message?.participant,
+    contextInfo?.participant,
+  ];
+  return candidates.find((value) => typeof value === 'string' && value.includes('@')) || null;
+}
+
+function normalizeParticipantPhone(participantJid: string | null): string | null {
+  if (!participantJid || participantJid.includes('@lid')) return null;
+  const digits = participantJid.replace(/@.*/, '').replace(/[^0-9]/g, '');
+  if (!digits) return null;
+  if (digits.length >= 10 && digits.length <= 11 && !digits.startsWith('55')) return `55${digits}`;
+  return digits;
 }
 
 // Transformar payload da Evolution API para formato do CRM
@@ -268,6 +296,8 @@ async function transformEvolutionPayload(body: any, supabase: any) {
   // 👥 GRUPOS: pushName em mensagens de grupo é o NOME DO PARTICIPANTE (remetente),
   // NÃO é o nome do grupo. Capturar separadamente.
   let group_participant_name: string | null = null;
+  const group_participant_jid = isGroup && !fromMe ? extractGroupParticipantJid(data) : null;
+  const group_participant_phone = normalizeParticipantPhone(group_participant_jid);
   if (!fromMe) {
     if (isGroup) {
       // Em grupos, pushName = nome do participante que enviou
@@ -498,6 +528,8 @@ async function transformEvolutionPayload(body: any, supabase: any) {
     midia_url,
     nome_contato, // Null para mensagens enviadas, pushName para recebidas (NÃO grupos)
     group_participant_name, // 👥 Nome do participante que enviou em grupos
+    group_participant_jid,
+    group_participant_phone,
     arquivo_nome,
     replied_to_message,
     status, // 'Enviada' se fromMe=true, 'Recebida' se fromMe=false
@@ -606,6 +638,94 @@ async function resolveGroupSubject(
     console.error('❌ [GROUP] Erro ao resolver subject do grupo:', error);
     return null;
   }
+}
+
+async function resolveGroupParticipantProfile(
+  supabase: any,
+  companyId: string | null | undefined,
+  groupJid: string,
+  participantJid: string | null | undefined,
+  participantName: string | null | undefined,
+  participantPhone: string | null | undefined,
+): Promise<{ phone: string | null; avatarUrl: string | null; name: string | null }> {
+  if (!companyId || !groupJid || !participantJid) {
+    return { phone: participantPhone || null, avatarUrl: null, name: participantName || null };
+  }
+
+  try {
+    const { data: cached } = await supabase
+      .from('whatsapp_group_participants_cache')
+      .select('participant_phone, participant_name, avatar_url, last_synced_at')
+      .eq('company_id', companyId)
+      .eq('group_jid', groupJid)
+      .eq('participant_jid', participantJid)
+      .maybeSingle();
+
+    if (cached) {
+      const synced = cached.last_synced_at ? new Date(cached.last_synced_at).getTime() : 0;
+      if (Date.now() - synced < 24 * 60 * 60 * 1000) {
+        return {
+          phone: cached.participant_phone || participantPhone || null,
+          avatarUrl: cached.avatar_url || null,
+          name: cached.participant_name || participantName || null,
+        };
+      }
+    }
+  } catch (e) {
+    console.warn('⚠️ [GROUP-PARTICIPANT] Erro ao ler cache:', e);
+  }
+
+  let avatarUrl: string | null = null;
+  const phone = participantPhone || normalizeParticipantPhone(participantJid);
+
+  if (phone) {
+    try {
+      const { data: connection } = await supabase
+        .from('whatsapp_connections')
+        .select('instance_name, evolution_api_key, evolution_api_url')
+        .eq('company_id', companyId)
+        .limit(1)
+        .maybeSingle();
+
+      const evolutionUrl = connection?.evolution_api_url || Deno.env.get('EVOLUTION_API_URL');
+      const apiKey = connection?.evolution_api_key || Deno.env.get('EVOLUTION_API_KEY');
+      const instanceName = connection?.instance_name || Deno.env.get('EVOLUTION_INSTANCE');
+
+      if (evolutionUrl && apiKey && instanceName) {
+        const response = await fetch(`${evolutionUrl}/chat/fetchProfilePictureUrl/${instanceName}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'apikey': apiKey },
+          body: JSON.stringify({ number: phone }),
+        });
+        if (response.ok) {
+          const data = await response.json();
+          const url = data.profilePictureUrl || data.url || data.profilePicture || data.picture || data.imgUrl || data.profileUrl;
+          if (typeof url === 'string' && url.startsWith('http')) avatarUrl = url;
+        }
+      }
+    } catch (e) {
+      console.warn('⚠️ [GROUP-PARTICIPANT] Erro ao buscar foto:', e);
+    }
+  }
+
+  try {
+    await supabase
+      .from('whatsapp_group_participants_cache')
+      .upsert({
+        company_id: companyId,
+        group_jid: groupJid,
+        participant_jid: participantJid,
+        participant_phone: phone,
+        participant_name: participantName || null,
+        avatar_url: avatarUrl,
+        last_synced_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      }, { onConflict: 'company_id,group_jid,participant_jid' });
+  } catch (e) {
+    console.warn('⚠️ [GROUP-PARTICIPANT] Erro ao salvar cache:', e);
+  }
+
+  return { phone, avatarUrl, name: participantName || null };
 }
 
 // ==============================
@@ -1573,6 +1693,17 @@ serve(async (req) => {
         }
       }
     }
+
+    const participantProfile = isGroup && validatedData.fromMe !== true
+      ? await resolveGroupParticipantProfile(
+          supabase,
+          companyId,
+          validatedData.numero,
+          validatedData.group_participant_jid || null,
+          validatedData.group_participant_name || null,
+          validatedData.group_participant_phone || null,
+        )
+      : { phone: null, avatarUrl: null, name: null };
     
     // ⚡ GARANTIA FINAL: Se ainda não tem nome (caso extremo), usar o número original
     if (!nomeContatoFinal) {
@@ -1695,7 +1826,9 @@ serve(async (req) => {
       whatsapp_message_id: body?.data?.key?.id || null, // 🔥 Salvar ID da mensagem do WhatsApp para edição/exclusão
       // 👥 GRUPOS: identificação adequada
       group_subject: isGroup ? (groupSubjectFinal || nomeContatoFinal) : null,
-      group_participant_name: isGroup ? (validatedData.group_participant_name || null) : null,
+      group_participant_name: isGroup ? (participantProfile.name || validatedData.group_participant_name || null) : null,
+      group_participant_phone: isGroup ? (participantProfile.phone || validatedData.group_participant_phone || null) : null,
+      group_participant_avatar_url: isGroup ? (participantProfile.avatarUrl || validatedData.group_participant_avatar_url || null) : null,
     };
     
     // ⚡ CORREÇÃO DEFINITIVA: Se mensagem foi enviada (fromMe = true), verificar se já existe no banco
