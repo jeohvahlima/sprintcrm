@@ -352,6 +352,7 @@ export const useConversationsCache = (companyId: string | null) => {
               delivered: m.delivered === true || m.status === 'Enviada',
               read: m.read === true, // ⚡ CORREÇÃO: Usar campo read do banco (true = contato visualizou)
               sentBy: sentBy, // ⚡ CORREÇÃO: Incluir assinatura do banco com fallback
+              participantName: (m as any).group_participant_name || undefined, // 👥 Remetente em grupos
             };
           });
 
