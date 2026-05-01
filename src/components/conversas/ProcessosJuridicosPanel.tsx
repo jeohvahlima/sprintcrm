@@ -607,8 +607,8 @@ export function ProcessosJuridicosPanel({ leadId, companyId, telefoneContato, no
             </TabsList>
 
             <TabsContent value="timeline" className="mt-4">
-              {editingProcess && (
-                <ProcessTimeline processId={editingProcess.id} companyId={editingProcess.company_id} />
+              {editingProcess && companyId && (
+                <ProcessTimeline processId={editingProcess.id} companyId={companyId} />
               )}
             </TabsContent>
 
