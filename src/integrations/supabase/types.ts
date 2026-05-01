@@ -2161,7 +2161,9 @@ export type Database = {
           delivered: boolean | null
           fila_id: string | null
           fromme: boolean | null
+          group_participant_avatar_url: string | null
           group_participant_name: string | null
+          group_participant_phone: string | null
           group_subject: string | null
           id: string
           is_group: boolean | null
@@ -2197,7 +2199,9 @@ export type Database = {
           delivered?: boolean | null
           fila_id?: string | null
           fromme?: boolean | null
+          group_participant_avatar_url?: string | null
           group_participant_name?: string | null
+          group_participant_phone?: string | null
           group_subject?: string | null
           id?: string
           is_group?: boolean | null
@@ -2233,7 +2237,9 @@ export type Database = {
           delivered?: boolean | null
           fila_id?: string | null
           fromme?: boolean | null
+          group_participant_avatar_url?: string | null
           group_participant_name?: string | null
+          group_participant_phone?: string | null
           group_subject?: string | null
           id?: string
           is_group?: boolean | null
@@ -8840,6 +8846,45 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      whatsapp_group_participants_cache: {
+        Row: {
+          avatar_url: string | null
+          company_id: string
+          created_at: string
+          group_jid: string
+          id: string
+          last_synced_at: string | null
+          participant_jid: string
+          participant_name: string | null
+          participant_phone: string | null
+          updated_at: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          company_id: string
+          created_at?: string
+          group_jid: string
+          id?: string
+          last_synced_at?: string | null
+          participant_jid: string
+          participant_name?: string | null
+          participant_phone?: string | null
+          updated_at?: string
+        }
+        Update: {
+          avatar_url?: string | null
+          company_id?: string
+          created_at?: string
+          group_jid?: string
+          id?: string
+          last_synced_at?: string | null
+          participant_jid?: string
+          participant_name?: string | null
+          participant_phone?: string | null
+          updated_at?: string
+        }
+        Relationships: []
       }
       whatsapp_groups_cache: {
         Row: {
