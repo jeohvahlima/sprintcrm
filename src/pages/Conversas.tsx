@@ -163,6 +163,9 @@ interface Message {
   replyTo?: string;
   edited?: boolean;
   sentBy?: string; // Nome do responsável que enviou
+  participantName?: string;
+  participantPhone?: string;
+  participantAvatarUrl?: string;
   contactData?: {
     name: string;
     phone: string;
@@ -3253,7 +3256,7 @@ function Conversas() {
 
       // ⚡ OTIMIZAÇÃO: Query com campos essenciais (midia_url necessário para exibir mídias)
       // ⚡ CORREÇÃO: Incluir campos read e delivered para exibir status de visualização
-      let query = supabase.from('conversas').select('id, numero, telefone_formatado, mensagem, nome_contato, tipo_mensagem, status, created_at, is_group, fromme, sent_by, owner_id, arquivo_nome, midia_url, read, delivered, origem, origem_api').eq('company_id', companyId).order('created_at', {
+      let query = supabase.from('conversas').select('id, numero, telefone_formatado, mensagem, nome_contato, tipo_mensagem, status, created_at, is_group, fromme, sent_by, owner_id, arquivo_nome, midia_url, read, delivered, origem, origem_api, group_participant_name, group_participant_phone, group_participant_avatar_url').eq('company_id', companyId).order('created_at', {
         ascending: false
       });
 
@@ -3869,6 +3872,9 @@ function Conversas() {
             fileSize: extractFileSizeFromMediaUrl(m.midia_url),
             mimeType: m.tipo_mensagem === 'video' ? 'video/mp4' : m.tipo_mensagem === 'audio' ? 'audio/mpeg' : m.tipo_mensagem === 'image' ? 'image/jpeg' : m.tipo_mensagem === 'document' || m.tipo_mensagem === 'pdf' ? 'application/pdf' : undefined,
             sentBy: sentBy,
+            participantName: m.group_participant_name || undefined,
+            participantPhone: m.group_participant_phone || undefined,
+            participantAvatarUrl: m.group_participant_avatar_url || undefined,
             contactData: contactDataParsed3
           };
         });
