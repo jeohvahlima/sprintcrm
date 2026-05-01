@@ -264,9 +264,19 @@ async function transformEvolutionPayload(body: any, supabase: any) {
   // CRÍTICO: Para mensagens enviadas (fromMe=true), NÃO usar pushName
   // pois ele contém o nome do remetente, não do destinatário
   let nome_contato = null;
+  // 👥 GRUPOS: pushName em mensagens de grupo é o NOME DO PARTICIPANTE (remetente),
+  // NÃO é o nome do grupo. Capturar separadamente.
+  let group_participant_name: string | null = null;
   if (!fromMe) {
-    // Mensagem recebida: usar pushName do contato
-    nome_contato = data.pushName || null;
+    if (isGroup) {
+      // Em grupos, pushName = nome do participante que enviou
+      group_participant_name = data.pushName || null;
+      // nome_contato será resolvido posteriormente como o SUBJECT do grupo
+      nome_contato = null;
+    } else {
+      // Mensagem recebida individual: usar pushName do contato
+      nome_contato = data.pushName || null;
+    }
   }
   // Para mensagens enviadas: deixar nome_contato como null para ser
   // preenchido posteriormente com o nome do lead ou número
