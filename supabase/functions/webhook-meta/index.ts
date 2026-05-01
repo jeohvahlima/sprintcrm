@@ -995,13 +995,12 @@ serve(async (req) => {
             }
             
             // Se não encontrou no cache, tentar via API
-            if (instagramUsername === instagramUserId && igAccessToken && instagramUserId !== 'instagram_user' && igAccountId) {
+            if (instagramUsername === instagramUserId && igAccessToken && instagramUserId !== 'instagram_user' && igAccountRef) {
               try {
-                console.log('📸 [INSTAGRAM] Buscando nome para IGSID:', instagramUserId);
+                console.log('📸 [INSTAGRAM] Buscando nome para IGSID:', instagramUserId, '| token:', igTokenIsIgBusiness ? 'IGAA' : 'EAA');
                 
-                // Método 1: Buscar via conversations API do Instagram
-                const convUrl = `https://graph.facebook.com/v23.0/${igAccountId}/conversations?user_id=${instagramUserId}&platform=instagram&fields=participants{id,username,name,profile_pic},name&access_token=${igAccessToken}`;
-                console.log('📸 [INSTAGRAM] Conversations URL:', convUrl.replace(igAccessToken, '***'));
+                // Método 1: Listar conversas e procurar o participante pelo ID
+                const convUrl = `${igApiBase}/${igAccountRef}/conversations?platform=instagram&fields=participants&limit=100&access_token=${igAccessToken}`;
                 const convRes = await fetch(convUrl);
                 
                 if (convRes.ok) {
