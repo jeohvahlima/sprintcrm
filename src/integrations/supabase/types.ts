@@ -2161,6 +2161,8 @@ export type Database = {
           delivered: boolean | null
           fila_id: string | null
           fromme: boolean | null
+          group_participant_name: string | null
+          group_subject: string | null
           id: string
           is_group: boolean | null
           lead_id: string | null
@@ -2195,6 +2197,8 @@ export type Database = {
           delivered?: boolean | null
           fila_id?: string | null
           fromme?: boolean | null
+          group_participant_name?: string | null
+          group_subject?: string | null
           id?: string
           is_group?: boolean | null
           lead_id?: string | null
@@ -2229,6 +2233,8 @@ export type Database = {
           delivered?: boolean | null
           fila_id?: string | null
           fromme?: boolean | null
+          group_participant_name?: string | null
+          group_subject?: string | null
           id?: string
           is_group?: boolean | null
           lead_id?: string | null
@@ -8834,6 +8840,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      whatsapp_groups_cache: {
+        Row: {
+          company_id: string
+          created_at: string
+          group_jid: string
+          group_subject: string | null
+          id: string
+          last_synced_at: string
+          participants_count: number | null
+          picture_url: string | null
+          updated_at: string
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          group_jid: string
+          group_subject?: string | null
+          id?: string
+          last_synced_at?: string
+          participants_count?: number | null
+          picture_url?: string | null
+          updated_at?: string
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          group_jid?: string
+          group_subject?: string | null
+          id?: string
+          last_synced_at?: string
+          participants_count?: number | null
+          picture_url?: string | null
+          updated_at?: string
+        }
+        Relationships: []
       }
       whatsapp_message_logs: {
         Row: {
