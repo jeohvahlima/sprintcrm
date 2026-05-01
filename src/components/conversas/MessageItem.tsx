@@ -339,6 +339,15 @@ function MessageItemComponent({
               </Badge>
             </div>
           )}
+
+          {/* 👥 GRUPO: Nome do participante que enviou (apenas para mensagens recebidas em grupos) */}
+          {message.sender === "contact" && message.participantName && (
+            <div className="flex items-center gap-1 mb-1">
+              <span className="text-[11px] font-semibold text-primary">
+                {message.participantName}
+              </span>
+            </div>
+          )}
           
           {!hideFloatingActions && (
             <div className={`absolute -top-1 ${message.sender === "user" ? "-left-9" : "-right-9"} opacity-0 group-hover:opacity-100 transition-opacity`}>
