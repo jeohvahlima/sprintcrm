@@ -1826,7 +1826,7 @@ serve(async (req) => {
       whatsapp_message_id: body?.data?.key?.id || null, // 🔥 Salvar ID da mensagem do WhatsApp para edição/exclusão
       // 👥 GRUPOS: identificação adequada
       group_subject: isGroup ? (groupSubjectFinal || nomeContatoFinal) : null,
-      group_participant_name: isGroup ? (validatedData.group_participant_name || null) : null,
+      group_participant_name: isGroup ? (participantProfile.name || validatedData.group_participant_name || null) : null,
       group_participant_phone: isGroup ? (participantProfile.phone || validatedData.group_participant_phone || null) : null,
       group_participant_avatar_url: isGroup ? (participantProfile.avatarUrl || validatedData.group_participant_avatar_url || null) : null,
     };
