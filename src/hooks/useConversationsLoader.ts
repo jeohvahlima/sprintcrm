@@ -422,7 +422,30 @@ export const useConversationsLoader = () => {
       setLoadingConversations(false);
       // ⚡ OTIMIZAÇÃO: Habilitar paginação se houver mais conversas
       setHasMoreConversations(conversasData.length >= MESSAGES_TO_FETCH);
-      
+
+      // 📸 [INSTAGRAM] Resolver nomes placeholder em background via edge function
+      try {
+        const placeholderRegex = /^(Contato\s+Instagram|Instagram\s+\d+)$/i;
+        const igPlaceholders = novasConversas.filter(c =>
+          c.channel === 'instagram' && placeholderRegex.test(String(c.contactName || '').trim())
+        );
+        if (igPlaceholders.length > 0) {
+          console.log(`📸 [LOAD] Disparando resolve-instagram-name para ${igPlaceholders.length} conversas`);
+          // Não bloqueia o carregamento — fire-and-forget com pequeno escalonamento
+          igPlaceholders.slice(0, 25).forEach((conv, idx) => {
+            const igUserId = String(conv.phoneNumber || '').replace(/^ig_/, '').replace(/[^0-9]/g, '');
+            if (!igUserId || igUserId.length < 10) return;
+            setTimeout(() => {
+              supabase.functions.invoke('resolve-instagram-name', {
+                body: { company_id: userCompanyId, instagram_user_id: igUserId },
+              }).catch(() => {});
+            }, idx * 250);
+          });
+        }
+      } catch (e) {
+        console.warn('📸 [LOAD] Falha ao agendar resolve-instagram-name:', e);
+      }
+
       console.log(`✅ [LOAD] ${novasConversas.length} conversas carregadas (${conversasData.length} mensagens processadas)`);
       return novasConversas;
     } catch (error) {
