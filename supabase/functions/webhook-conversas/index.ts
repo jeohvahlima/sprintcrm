@@ -495,7 +495,8 @@ async function transformEvolutionPayload(body: any, supabase: any) {
     origem: 'WhatsApp',
     tipo_mensagem,
     midia_url,
-    nome_contato, // Null para mensagens enviadas, pushName para recebidas
+    nome_contato, // Null para mensagens enviadas, pushName para recebidas (NÃO grupos)
+    group_participant_name, // 👥 Nome do participante que enviou em grupos
     arquivo_nome,
     replied_to_message,
     status, // 'Enviada' se fromMe=true, 'Recebida' se fromMe=false
