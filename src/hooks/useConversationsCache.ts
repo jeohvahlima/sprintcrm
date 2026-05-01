@@ -23,6 +23,7 @@ export interface Message {
   mediaUrl?: string;
   fileName?: string;
   sentBy?: string; // ⚡ Nome do usuário que enviou a mensagem
+  participantName?: string; // 👥 Nome do participante que enviou (apenas em grupos)
 }
 
 export interface Conversation {
