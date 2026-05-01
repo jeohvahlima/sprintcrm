@@ -1658,12 +1658,7 @@ export default function Analytics() {
           </TabsContent>
         )}
 
-        {/* Processos Jurídicos - Apenas para segmento advocacia */}
-        {(isMasterAccount || isSegmentoJuridico(companySegmento)) && (
-          <TabsContent value="juridico" className="space-y-6">
-            <JuridicoAnalytics userCompanyId={userCompanyId} />
-          </TabsContent>
-        )}
+
 
         <TabsContent value="campaigns" className="space-y-6">
           <CampaignAnalytics userCompanyId={userCompanyId} globalFilters={globalFilters} />
