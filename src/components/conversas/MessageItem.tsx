@@ -23,6 +23,7 @@ import {
 import { MessageActions } from "./MessageActions";
 import { PDFPreview } from "./PDFPreview";
 import { PdfViewerDialog } from "./PdfViewerDialog";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 import { toast } from "@/hooks/use-toast";
 import { getMediaUrl, isPermanentUrl, MediaExpiredError } from "@/utils/mediaLoader";
@@ -48,6 +49,8 @@ interface Message {
   edited?: boolean;
   sentBy?: string; // Nome do responsável que enviou
   participantName?: string; // 👥 Nome do participante remetente em grupos
+  participantPhone?: string; // 👥 Telefone do participante remetente em grupos
+  participantAvatarUrl?: string; // 👥 Foto do participante remetente em grupos
   contactData?: {
     name: string;
     phone: string;
