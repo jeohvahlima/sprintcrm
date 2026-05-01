@@ -941,8 +941,32 @@ serve(async (req) => {
             // Solução: usar /{ig-page-id}/conversations?user_id={igsid}&platform=instagram
             let instagramUsername = instagramUserId; // Default: ID numérico
             let instagramProfilePic: string | null = null;
-            const igAccessToken = connection.meta_access_token || connection.instagram_access_token;
-            const igAccountId = connection.instagram_account_id || msg.instagram_account_id;
+
+            // ⚡ PRIORIZAR token IGAA (Instagram Business Login) de tenant_integrations.
+            // O token EAA (Facebook user/page) NÃO funciona para lookup de IGSID.
+            let igAccessToken: string | null = null;
+            let igAccountId: string | null = connection.instagram_account_id || msg.instagram_account_id || null;
+            let igTokenIsIgBusiness = false;
+            try {
+              const { data: tenantInt } = await supabase
+                .from('tenant_integrations')
+                .select('meta_access_token, instagram_ig_id')
+                .eq('company_id', company_id)
+                .maybeSingle();
+              if (tenantInt?.meta_access_token && tenantInt.meta_access_token.startsWith('IGAA')) {
+                igAccessToken = tenantInt.meta_access_token;
+                igTokenIsIgBusiness = true;
+                igAccountId = tenantInt.instagram_ig_id || igAccountId;
+              }
+            } catch (_) { /* ignore */ }
+            if (!igAccessToken) {
+              igAccessToken = connection.meta_access_token || connection.instagram_access_token;
+              igTokenIsIgBusiness = !!igAccessToken && igAccessToken.startsWith('IGAA');
+            }
+            const igApiBase = igTokenIsIgBusiness
+              ? 'https://graph.instagram.com/v23.0'
+              : 'https://graph.facebook.com/v23.0';
+            const igAccountRef = igTokenIsIgBusiness ? 'me' : igAccountId;
             
             // Método 0 (CACHE): Buscar nome de conversa anterior no banco
             // ⚡ CORREÇÃO: Rejeitar nomes fallback "Instagram XXXXXX" do cache
@@ -971,59 +995,47 @@ serve(async (req) => {
             }
             
             // Se não encontrou no cache, tentar via API
-            if (instagramUsername === instagramUserId && igAccessToken && instagramUserId !== 'instagram_user' && igAccountId) {
+            if (instagramUsername === instagramUserId && igAccessToken && instagramUserId !== 'instagram_user' && igAccountRef) {
               try {
-                console.log('📸 [INSTAGRAM] Buscando nome para IGSID:', instagramUserId);
+                console.log('📸 [INSTAGRAM] Buscando nome para IGSID:', instagramUserId, '| token:', igTokenIsIgBusiness ? 'IGAA' : 'EAA');
                 
-                // Método 1: Buscar via conversations API do Instagram
-                const convUrl = `https://graph.facebook.com/v23.0/${igAccountId}/conversations?user_id=${instagramUserId}&platform=instagram&fields=participants{id,username,name,profile_pic},name&access_token=${igAccessToken}`;
-                console.log('📸 [INSTAGRAM] Conversations URL:', convUrl.replace(igAccessToken, '***'));
+                // Método 1: Listar conversas e procurar o participante pelo ID
+                const convUrl = `${igApiBase}/${igAccountRef}/conversations?platform=instagram&fields=participants&limit=100&access_token=${igAccessToken}`;
                 const convRes = await fetch(convUrl);
                 
                 if (convRes.ok) {
                   const convData = await convRes.json();
-                  console.log('📸 [INSTAGRAM] Conversations data:', JSON.stringify(convData));
-                  
-                  if (convData.data && convData.data.length > 0) {
-                    const conversation = convData.data[0];
-                    const participants = conversation.participants?.data || conversation.participants || [];
-                    const otherParticipant = participants.find((p: any) => String(p.id) !== String(igAccountId));
-                    if (otherParticipant) {
-                      instagramUsername = otherParticipant.username || otherParticipant.name || instagramUserId;
-                      if (otherParticipant.profile_pic && !instagramProfilePic) {
-                        instagramProfilePic = otherParticipant.profile_pic;
-                      }
+                  // Procurar a conversa que contém o participant alvo
+                  for (const conversation of convData.data ?? []) {
+                    const participants = conversation.participants?.data ?? [];
+                    const match = participants.find((p: any) => String(p.id) === String(instagramUserId));
+                    if (match) {
+                      instagramUsername = match.username || match.name || instagramUserId;
                       console.log('📸 [INSTAGRAM] Nome encontrado via conversations:', instagramUsername);
-                    }
-                    if (instagramUsername === instagramUserId && conversation.name) {
-                      instagramUsername = conversation.name;
+                      break;
                     }
                   }
                 } else {
                   const errText = await convRes.text();
-                  console.warn('⚠️ [INSTAGRAM] Conversations API falhou:', errText);
+                  console.warn('⚠️ [INSTAGRAM] Conversations API falhou:', errText.substring(0, 300));
                 }
                 
-                // Método 2 (fallback): user_id direto
+                // Método 2 (fallback): lookup direto do IGSID
                 if (instagramUsername === instagramUserId) {
                   try {
-                    const userUrl = `https://graph.facebook.com/v23.0/${instagramUserId}?fields=name,username,profile_pic&access_token=${igAccessToken}`;
+                    const userUrl = `${igApiBase}/${instagramUserId}?fields=name,username&access_token=${igAccessToken}`;
                     const userRes = await fetch(userUrl);
                     if (userRes.ok) {
                       const userData = await userRes.json();
                       console.log('📸 [INSTAGRAM] User data (fallback):', JSON.stringify(userData));
-                      if (userData.name) instagramUsername = userData.name;
-                      else if (userData.username) instagramUsername = userData.username;
-                      // ⚡ Capturar foto de perfil do Instagram
-                      if (userData.profile_pic) {
-                        instagramProfilePic = userData.profile_pic;
-                        console.log('📸 [INSTAGRAM] Foto de perfil encontrada:', instagramProfilePic?.substring(0, 80));
-                      }
+                      if (userData.username) instagramUsername = userData.username;
+                      else if (userData.name) instagramUsername = userData.name;
                     } else {
-                      await userRes.text();
+                      const errText = await userRes.text();
+                      console.warn('⚠️ [INSTAGRAM] User fallback falhou:', errText.substring(0, 200));
                     }
                   } catch (e) {
-                    console.warn('⚠️ [INSTAGRAM] User fallback falhou');
+                    console.warn('⚠️ [INSTAGRAM] User fallback falhou:', e);
                   }
                 }
                 
