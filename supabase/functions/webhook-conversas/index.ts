@@ -140,6 +140,7 @@ const webhookPayloadSchema = z.object({
   is_group: z.boolean().optional(),
   fromMe: z.boolean().optional(),
   remoteJidAlt: z.string().nullable().optional(), // 🔥 Número alternativo real da Evolution API
+  group_participant_name: z.string().max(100).nullable().optional(),
 });
 
 // Verify webhook signature for security
@@ -264,9 +265,19 @@ async function transformEvolutionPayload(body: any, supabase: any) {
   // CRÍTICO: Para mensagens enviadas (fromMe=true), NÃO usar pushName
   // pois ele contém o nome do remetente, não do destinatário
   let nome_contato = null;
+  // 👥 GRUPOS: pushName em mensagens de grupo é o NOME DO PARTICIPANTE (remetente),
+  // NÃO é o nome do grupo. Capturar separadamente.
+  let group_participant_name: string | null = null;
   if (!fromMe) {
-    // Mensagem recebida: usar pushName do contato
-    nome_contato = data.pushName || null;
+    if (isGroup) {
+      // Em grupos, pushName = nome do participante que enviou
+      group_participant_name = data.pushName || null;
+      // nome_contato será resolvido posteriormente como o SUBJECT do grupo
+      nome_contato = null;
+    } else {
+      // Mensagem recebida individual: usar pushName do contato
+      nome_contato = data.pushName || null;
+    }
   }
   // Para mensagens enviadas: deixar nome_contato como null para ser
   // preenchido posteriormente com o nome do lead ou número
@@ -485,7 +496,8 @@ async function transformEvolutionPayload(body: any, supabase: any) {
     origem: 'WhatsApp',
     tipo_mensagem,
     midia_url,
-    nome_contato, // Null para mensagens enviadas, pushName para recebidas
+    nome_contato, // Null para mensagens enviadas, pushName para recebidas (NÃO grupos)
+    group_participant_name, // 👥 Nome do participante que enviou em grupos
     arquivo_nome,
     replied_to_message,
     status, // 'Enviada' se fromMe=true, 'Recebida' se fromMe=false
@@ -493,6 +505,107 @@ async function transformEvolutionPayload(body: any, supabase: any) {
     fromMe,
     remoteJidAlt: data.key.remoteJidAlt || null, // 🔥 Número alternativo real da Evolution API
   };
+}
+
+// ==============================
+// GROUP SUBJECT RESOLVER (with cache)
+// ==============================
+async function resolveGroupSubject(
+  supabase: any,
+  companyId: string | null,
+  groupJid: string
+): Promise<string | null> {
+  if (!companyId || !groupJid) return null;
+
+  // 1) Verificar cache
+  try {
+    const { data: cached } = await supabase
+      .from('whatsapp_groups_cache')
+      .select('group_subject, last_synced_at')
+      .eq('company_id', companyId)
+      .eq('group_jid', groupJid)
+      .maybeSingle();
+
+    if (cached?.group_subject) {
+      // Cache válido se atualizado há menos de 24h
+      const synced = cached.last_synced_at ? new Date(cached.last_synced_at).getTime() : 0;
+      const ageMs = Date.now() - synced;
+      if (ageMs < 24 * 60 * 60 * 1000) {
+        return cached.group_subject;
+      }
+    }
+  } catch (e) {
+    console.warn('⚠️ [GROUP] Erro ao ler cache de grupo:', e);
+  }
+
+  // 2) Buscar via Evolution API
+  try {
+    const { data: connection } = await supabase
+      .from('whatsapp_connections')
+      .select('instance_name, evolution_api_key, evolution_api_url')
+      .eq('company_id', companyId)
+      .limit(1)
+      .maybeSingle();
+
+    const evolutionUrl = connection?.evolution_api_url || Deno.env.get('EVOLUTION_API_URL');
+    const apiKey = connection?.evolution_api_key || Deno.env.get('EVOLUTION_API_KEY');
+    const instanceName = connection?.instance_name || Deno.env.get('EVOLUTION_INSTANCE');
+
+    if (!evolutionUrl || !apiKey || !instanceName) {
+      console.log('⚠️ [GROUP] Configuração da Evolution API incompleta para resolver grupo');
+      return null;
+    }
+
+    // Tentar endpoint específico primeiro
+    let subject: string | null = null;
+    try {
+      const r = await fetch(
+        `${evolutionUrl}/group/findGroupInfos/${instanceName}?groupJid=${encodeURIComponent(groupJid)}`,
+        { method: 'GET', headers: { 'apikey': apiKey, 'Content-Type': 'application/json' } }
+      );
+      if (r.ok) {
+        const info = await r.json();
+        subject = info?.subject || info?.name || null;
+      }
+    } catch {}
+
+    // Fallback: fetchAllGroups
+    if (!subject) {
+      try {
+        const r = await fetch(`${evolutionUrl}/group/fetchAllGroups/${instanceName}?getParticipants=false`, {
+          method: 'GET',
+          headers: { 'apikey': apiKey, 'Content-Type': 'application/json' }
+        });
+        if (r.ok) {
+          const groups = await r.json();
+          const found = Array.isArray(groups) ? groups.find((g: any) => g.id === groupJid || g.remoteJid === groupJid) : null;
+          subject = found?.subject || found?.name || null;
+        }
+      } catch {}
+    }
+
+    if (subject) {
+      // 3) Salvar no cache (upsert)
+      await supabase
+        .from('whatsapp_groups_cache')
+        .upsert({
+          company_id: companyId,
+          group_jid: groupJid,
+          group_subject: subject,
+          last_synced_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        }, { onConflict: 'company_id,group_jid' });
+
+      console.log('✅ [GROUP] Subject resolvido e cacheado:', { groupJid, subject });
+      return subject;
+    }
+
+    console.log('⚠️ [GROUP] Não foi possível resolver subject do grupo:', groupJid);
+    return null;
+  } catch (error) {
+    console.error('❌ [GROUP] Erro ao resolver subject do grupo:', error);
+    return null;
+  }
 }
 
 // ==============================
@@ -1429,10 +1542,36 @@ serve(async (req) => {
       console.log('⚠️ Usando telefone como nome:', nomeContatoFinal);
     }
     
-    // Para grupos, usar o JID como nome se não tiver outro
-    if (!nomeContatoFinal && isGroup) {
-      nomeContatoFinal = validatedData.numero;
-      console.log('👥 Usando JID do grupo como nome');
+    // 👥 GRUPOS: resolver SUBJECT real do grupo (com cache) e usar como nome_contato
+    let groupSubjectFinal: string | null = null;
+    if (isGroup) {
+      groupSubjectFinal = await resolveGroupSubject(supabase, companyId, validatedData.numero);
+      if (groupSubjectFinal) {
+        nomeContatoFinal = groupSubjectFinal;
+        console.log('👥 [GROUP] Usando subject do grupo como nome_contato:', groupSubjectFinal);
+      } else if (!nomeContatoFinal) {
+        // Fallback: tentar buscar nome existente no banco para esse grupo
+        try {
+          const { data: existingConv } = await supabase
+            .from('conversas')
+            .select('group_subject, nome_contato')
+            .eq('numero', validatedData.numero)
+            .eq('is_group', true)
+            .not('group_subject', 'is', null)
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .maybeSingle();
+          if (existingConv?.group_subject) {
+            groupSubjectFinal = existingConv.group_subject;
+            nomeContatoFinal = existingConv.group_subject;
+            console.log('👥 [GROUP] Subject recuperado do banco:', groupSubjectFinal);
+          }
+        } catch {}
+        if (!nomeContatoFinal) {
+          nomeContatoFinal = 'Grupo';
+          console.log('👥 [GROUP] Subject não resolvido, usando "Grupo" como fallback');
+        }
+      }
     }
     
     // ⚡ GARANTIA FINAL: Se ainda não tem nome (caso extremo), usar o número original
@@ -1554,6 +1693,9 @@ serve(async (req) => {
       delivered: validatedData.fromMe === true ? true : false, // Mensagens enviadas começam como entregues
       read: false, // Mensagens começam como não lidas
       whatsapp_message_id: body?.data?.key?.id || null, // 🔥 Salvar ID da mensagem do WhatsApp para edição/exclusão
+      // 👥 GRUPOS: identificação adequada
+      group_subject: isGroup ? (groupSubjectFinal || nomeContatoFinal) : null,
+      group_participant_name: isGroup ? (validatedData.group_participant_name || null) : null,
     };
     
     // ⚡ CORREÇÃO DEFINITIVA: Se mensagem foi enviada (fromMe = true), verificar se já existe no banco

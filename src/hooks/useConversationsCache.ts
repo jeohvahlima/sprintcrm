@@ -23,6 +23,7 @@ export interface Message {
   mediaUrl?: string;
   fileName?: string;
   sentBy?: string; // ⚡ Nome do usuário que enviou a mensagem
+  participantName?: string; // 👥 Nome do participante que enviou (apenas em grupos)
 }
 
 export interface Conversation {
@@ -164,7 +165,7 @@ export const useConversationsCache = (companyId: string | null) => {
       while (hasMore) {
         const { data: batch, error } = await supabase
           .from('conversas')
-          .select('id, numero, telefone_formatado, mensagem, nome_contato, tipo_mensagem, status, created_at, is_group, fromme, arquivo_nome, sent_by, owner_id, midia_url, origem, origem_api')
+          .select('id, numero, telefone_formatado, mensagem, nome_contato, tipo_mensagem, status, created_at, is_group, fromme, arquivo_nome, sent_by, owner_id, midia_url, origem, origem_api, group_subject, group_participant_name')
           .eq('company_id', companyId)
           .order('created_at', { ascending: false })
           .range(offset, offset + batchSize - 1);
@@ -351,6 +352,7 @@ export const useConversationsCache = (companyId: string | null) => {
               delivered: m.delivered === true || m.status === 'Enviada',
               read: m.read === true, // ⚡ CORREÇÃO: Usar campo read do banco (true = contato visualizou)
               sentBy: sentBy, // ⚡ CORREÇÃO: Incluir assinatura do banco com fallback
+              participantName: (m as any).group_participant_name || undefined, // 👥 Remetente em grupos
             };
           });
 
@@ -386,9 +388,19 @@ export const useConversationsCache = (companyId: string | null) => {
         const leadName = leadData?.name;
         const hasGoodLeadName = leadName && !isInstagramPlaceholderName(leadName) && !/^\d{10,}$/.test(leadName.trim());
         
-        const contactName = (hasGoodLeadName ? leadName : null)
+        // 👥 GRUPOS: priorizar group_subject (nome real do grupo) sobre nome_contato
+        let groupSubject: string | undefined;
+        if (isGroup) {
+          const subjects = mensagens
+            .map((m: any) => (m.group_subject || '').trim())
+            .filter((s: string) => s);
+          groupSubject = subjects[subjects.length - 1] || subjects[0];
+        }
+
+        const contactName = (isGroup && groupSubject ? groupSubject : null)
+          || (hasGoodLeadName ? leadName : null)
           || bestNamedMessage?.nome_contato
-          || (isInstagramConversation ? 'Contato Instagram' : telefone);
+          || (isGroup ? 'Grupo' : isInstagramConversation ? 'Contato Instagram' : telefone);
          
         const ultimaMensagem = messagensFormatadas[messagensFormatadas.length - 1];
          

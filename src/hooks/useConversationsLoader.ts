@@ -54,7 +54,7 @@ export const useConversationsLoader = () => {
       // ⚡ OTIMIZAÇÃO: Query com campos essenciais + origem/origem_api para identificação visual
       let query = supabase
         .from('conversas')
-        .select('id, numero, telefone_formatado, mensagem, nome_contato, tipo_mensagem, status, created_at, is_group, fromme, company_id, sent_by, assigned_user_id, owner_id, midia_url, origem, origem_api')
+        .select('id, numero, telefone_formatado, mensagem, nome_contato, tipo_mensagem, status, created_at, is_group, fromme, company_id, sent_by, assigned_user_id, owner_id, midia_url, origem, origem_api, group_subject, group_participant_name')
         .eq('company_id', userCompanyId)
         .order('created_at', { ascending: false });
       
@@ -271,6 +271,16 @@ export const useConversationsLoader = () => {
             contactName = undefined;
           }
           
+          // 👥 GRUPOS: priorizar group_subject (nome real do grupo)
+          if (isGroup) {
+            const subjects = mensagens
+              .map((m: any) => m.group_subject?.trim())
+              .filter((s: string) => s && s.length > 0);
+            if (subjects.length > 0) {
+              contactName = subjects[subjects.length - 1] || subjects[0];
+            }
+          }
+
           // Se não tem lead ou nome é inválido, buscar melhor nome nas mensagens
           if (!contactName || contactName === telefone || contactName.trim() === '') {
             // ⚡ PRIORIDADE 2: Buscar o nome mais completo nas mensagens
@@ -305,7 +315,7 @@ export const useConversationsLoader = () => {
           // MELHORIA: Carregar TODAS as mensagens carregadas do banco
           const messagensFormatadas: Message[] = mensagens
             .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime())
-            .map(m => {
+            .map((m: any) => {
               const isFromMe = m.fromme === true || String(m.fromme) === 'true';
               // ⚡ CORREÇÃO DEFINITIVA: Usar sent_by do banco, com fallback pelo owner_id
               let sentBy = m.sent_by || undefined;
@@ -326,6 +336,7 @@ export const useConversationsLoader = () => {
                 read: m.read === true, // ⚡ CORREÇÃO: Usar campo read do banco (true = contato visualizou)
                 mediaUrl: m.midia_url,
                 sentBy: sentBy, // ✅ CORREÇÃO: Incluir assinatura com fallback correto
+                participantName: (m as any).group_participant_name || undefined, // 👥 Nome do remetente em grupos
               };
             });
 

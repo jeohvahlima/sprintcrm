@@ -47,6 +47,7 @@ interface Message {
   replyTo?: string;
   edited?: boolean;
   sentBy?: string; // Nome do responsável que enviou
+  participantName?: string; // 👥 Nome do participante remetente em grupos
   contactData?: {
     name: string;
     phone: string;
@@ -336,6 +337,15 @@ function MessageItemComponent({
                 <UserIcon className="h-2.5 w-2.5 mr-0.5" />
                 {message.sentBy || "WhatsApp"}
               </Badge>
+            </div>
+          )}
+
+          {/* 👥 GRUPO: Nome do participante que enviou (apenas para mensagens recebidas em grupos) */}
+          {message.sender === "contact" && message.participantName && (
+            <div className="flex items-center gap-1 mb-1">
+              <span className="text-[11px] font-semibold text-primary">
+                {message.participantName}
+              </span>
             </div>
           )}
           
