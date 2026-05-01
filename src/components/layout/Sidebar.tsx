@@ -13,6 +13,7 @@ import { useConversasNotifications } from "@/hooks/useConversasNotifications";
 import { useTarefasNotifications } from "@/hooks/useTarefasNotifications";
 import { useAgendaNotifications } from "@/hooks/useAgendaNotifications";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useCompanySegmento } from "@/hooks/useCompanySegmento";
 
 const navigation = [{
   name: "Relatórios",
