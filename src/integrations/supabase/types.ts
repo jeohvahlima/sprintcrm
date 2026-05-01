@@ -4612,6 +4612,7 @@ export type Database = {
           endereco_estado: string | null
           endereco_logradouro: string | null
           endereco_numero: string | null
+          engagement_type: string | null
           etapa_id: string | null
           expected_close_date: string | null
           form_id: string | null
@@ -4620,6 +4621,8 @@ export type Database = {
           govbr_senha: string | null
           icp_score: number | null
           id: string
+          intent_level: string | null
+          last_engagement_at: string | null
           last_prospected_at: string | null
           lead_origem_id: string | null
           lead_source_type: string | null
@@ -4627,6 +4630,8 @@ export type Database = {
           loss_reason: string | null
           lost_at: string | null
           name: string
+          next_action: string | null
+          next_action_at: string | null
           notes: string | null
           owner_id: string | null
           phone: string | null
@@ -4639,6 +4644,7 @@ export type Database = {
           responsavel_id: string | null
           segmentacao: string | null
           servico: string | null
+          social_score: number
           source: string | null
           stage: string | null
           status: string | null
@@ -4674,6 +4680,7 @@ export type Database = {
           endereco_estado?: string | null
           endereco_logradouro?: string | null
           endereco_numero?: string | null
+          engagement_type?: string | null
           etapa_id?: string | null
           expected_close_date?: string | null
           form_id?: string | null
@@ -4682,6 +4689,8 @@ export type Database = {
           govbr_senha?: string | null
           icp_score?: number | null
           id?: string
+          intent_level?: string | null
+          last_engagement_at?: string | null
           last_prospected_at?: string | null
           lead_origem_id?: string | null
           lead_source_type?: string | null
@@ -4689,6 +4698,8 @@ export type Database = {
           loss_reason?: string | null
           lost_at?: string | null
           name: string
+          next_action?: string | null
+          next_action_at?: string | null
           notes?: string | null
           owner_id?: string | null
           phone?: string | null
@@ -4701,6 +4712,7 @@ export type Database = {
           responsavel_id?: string | null
           segmentacao?: string | null
           servico?: string | null
+          social_score?: number
           source?: string | null
           stage?: string | null
           status?: string | null
@@ -4736,6 +4748,7 @@ export type Database = {
           endereco_estado?: string | null
           endereco_logradouro?: string | null
           endereco_numero?: string | null
+          engagement_type?: string | null
           etapa_id?: string | null
           expected_close_date?: string | null
           form_id?: string | null
@@ -4744,6 +4757,8 @@ export type Database = {
           govbr_senha?: string | null
           icp_score?: number | null
           id?: string
+          intent_level?: string | null
+          last_engagement_at?: string | null
           last_prospected_at?: string | null
           lead_origem_id?: string | null
           lead_source_type?: string | null
@@ -4751,6 +4766,8 @@ export type Database = {
           loss_reason?: string | null
           lost_at?: string | null
           name?: string
+          next_action?: string | null
+          next_action_at?: string | null
           notes?: string | null
           owner_id?: string | null
           phone?: string | null
@@ -4763,6 +4780,7 @@ export type Database = {
           responsavel_id?: string | null
           segmentacao?: string | null
           servico?: string | null
+          social_score?: number
           source?: string | null
           stage?: string | null
           status?: string | null
@@ -7743,6 +7761,89 @@ export type Database = {
         }
         Relationships: []
       }
+      social_selling_actions: {
+        Row: {
+          action_label: string
+          action_type: string
+          cadence_day: number
+          company_id: string
+          created_at: string
+          done_at: string | null
+          done_by: string | null
+          id: string
+          lead_id: string
+          notes: string | null
+          scheduled_for: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          action_label: string
+          action_type: string
+          cadence_day: number
+          company_id: string
+          created_at?: string
+          done_at?: string | null
+          done_by?: string | null
+          id?: string
+          lead_id: string
+          notes?: string | null
+          scheduled_for?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          action_label?: string
+          action_type?: string
+          cadence_day?: number
+          company_id?: string
+          created_at?: string
+          done_at?: string | null
+          done_by?: string | null
+          id?: string
+          lead_id?: string
+          notes?: string | null
+          scheduled_for?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "social_selling_actions_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      social_selling_keywords: {
+        Row: {
+          active: boolean
+          company_id: string | null
+          created_at: string
+          id: string
+          intent_level: string
+          keyword: string
+        }
+        Insert: {
+          active?: boolean
+          company_id?: string | null
+          created_at?: string
+          id?: string
+          intent_level?: string
+          keyword: string
+        }
+        Update: {
+          active?: boolean
+          company_id?: string | null
+          created_at?: string
+          id?: string
+          intent_level?: string
+          keyword?: string
+        }
+        Relationships: []
+      }
       support_conversations: {
         Row: {
           created_at: string
@@ -9373,6 +9474,7 @@ export type Database = {
         }[]
       }
       claim_quest_reward: { Args: { p_progress_id: string }; Returns: Json }
+      compute_social_score: { Args: { p_lead_id: string }; Returns: number }
       count_business_days: {
         Args: { p_end: string; p_start: string }
         Returns: number
@@ -9391,6 +9493,18 @@ export type Database = {
           id: string
           protocol_number: string
         }[]
+      }
+      create_social_selling_cadence: {
+        Args: { p_lead_id: string }
+        Returns: number
+      }
+      create_social_selling_funnel: {
+        Args: { p_company_id: string }
+        Returns: string
+      }
+      detect_social_intent: {
+        Args: { p_company_id: string; p_text: string }
+        Returns: string
       }
       distribute_queue_leads: { Args: { _queue_id: string }; Returns: number }
       elevate_self_to_super_admin: { Args: never; Returns: Json }

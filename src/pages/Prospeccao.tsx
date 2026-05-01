@@ -42,6 +42,7 @@ import { GoalProgressHUD } from "@/components/prospeccao/comercial/GoalProgressH
 import { CloserInbox } from "@/components/prospeccao/comercial/CloserInbox";
 import { ManagerCommandCenter } from "@/components/prospeccao/comercial/ManagerCommandCenter";
 import { SDRQueuePanel } from "@/components/prospeccao/comercial/SDRQueuePanel";
+import { SocialSellingPanel } from "@/components/prospeccao/SocialSellingPanel";
 import { usePermissions } from "@/hooks/usePermissions";
 
 const RPG_KEY = "prospeccao_rpg_mode";
@@ -52,7 +53,7 @@ export default function Prospeccao() {
   const isMobile = useIsMobile();
   const [rpgMode, setRpgMode] = useState<boolean>(() => localStorage.getItem(RPG_KEY) !== "false");
   const [soundOn, setSoundOn] = useState<boolean>(() => localStorage.getItem(SOUND_KEY) === "true");
-  const [activeTab, setActiveTab] = useState<"organic" | "paid" | "followup" | "arena" | "coldcall" | "instagram" | "whatsapp" | "funil" | "closer" | "comando" | "fila" | "intel">("organic");
+  const [activeTab, setActiveTab] = useState<"organic" | "paid" | "followup" | "arena" | "coldcall" | "instagram" | "whatsapp" | "funil" | "closer" | "comando" | "fila" | "intel" | "social">("organic");
   const [subTab, setSubTab] = useState<"registros" | "interacoes">("registros");
   const [channelView, setChannelView] = useState<"prospect" | "chat">("prospect");
   const [period, setPeriod] = useState("30");
@@ -78,7 +79,8 @@ export default function Prospeccao() {
   const isComandoTab = activeTab === "comando";
   const isFilaTab = activeTab === "fila";
   const isIntelTab = activeTab === "intel";
-  const channelType = activeTab === "followup" || activeTab === "arena" || isChannelTab || isFunilTab || isCloserTab || isComandoTab || isFilaTab || isIntelTab ? "organic" : activeTab;
+  const isSocialTab = activeTab === "social";
+  const channelType = activeTab === "followup" || activeTab === "arena" || isChannelTab || isFunilTab || isCloserTab || isComandoTab || isFilaTab || isIntelTab || isSocialTab ? "organic" : activeTab;
   const { data, isLoading, refetch } = useProspeccaoData(channelType as "organic" | "paid", parseInt(period));
   const { data: followUpData, isLoading: followUpLoading, refetch: followUpRefetch } = useFollowUpData(parseInt(period));
 
@@ -168,6 +170,7 @@ export default function Prospeccao() {
     comando: "Painel do Gestor",
     fila: "Minha Fila",
     intel: "Inteligência",
+    social: "Social Selling",
   };
 
   return (
