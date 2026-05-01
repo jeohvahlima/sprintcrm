@@ -165,7 +165,7 @@ export const useConversationsCache = (companyId: string | null) => {
       while (hasMore) {
         const { data: batch, error } = await supabase
           .from('conversas')
-          .select('id, numero, telefone_formatado, mensagem, nome_contato, tipo_mensagem, status, created_at, is_group, fromme, arquivo_nome, sent_by, owner_id, midia_url, origem, origem_api')
+          .select('id, numero, telefone_formatado, mensagem, nome_contato, tipo_mensagem, status, created_at, is_group, fromme, arquivo_nome, sent_by, owner_id, midia_url, origem, origem_api, group_subject, group_participant_name')
           .eq('company_id', companyId)
           .order('created_at', { ascending: false })
           .range(offset, offset + batchSize - 1);
