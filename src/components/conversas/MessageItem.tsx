@@ -168,6 +168,8 @@ function MessageItemComponent({
   const normalizedStatus = (message.status || "").toLowerCase();
   const isFailedMessage = normalizedStatus === "falhou" || normalizedStatus === "failed";
   const isProcessingMessage = normalizedStatus === "processando" || normalizedStatus === "processing";
+  const participantDisplayName = message.participantName || message.participantPhone || "Contato";
+  const participantInitial = participantDisplayName.trim().charAt(0).toUpperCase() || "?";
 
   // Estado para mídia expirada
   const [mediaExpired, setMediaExpired] = useState(false);
@@ -343,12 +345,27 @@ function MessageItemComponent({
             </div>
           )}
 
-          {/* 👥 GRUPO: Nome do participante que enviou (apenas para mensagens recebidas em grupos) */}
-          {message.sender === "contact" && message.participantName && (
-            <div className="flex items-center gap-1 mb-1">
-              <span className="text-[11px] font-semibold text-primary">
-                {message.participantName}
-              </span>
+          {/* 👥 GRUPO: Identificação do participante que enviou */}
+          {message.sender === "contact" && (message.participantName || message.participantPhone || message.participantAvatarUrl) && (
+            <div className="flex items-center gap-2 mb-1.5 min-w-0">
+              <Avatar className="h-6 w-6 border border-border/60">
+                {message.participantAvatarUrl && (
+                  <AvatarImage src={message.participantAvatarUrl} alt={participantDisplayName} />
+                )}
+                <AvatarFallback className="text-[10px] font-semibold bg-primary/10 text-primary">
+                  {participantInitial}
+                </AvatarFallback>
+              </Avatar>
+              <div className="min-w-0 leading-tight">
+                <p className="truncate text-[12px] font-semibold text-primary max-w-[220px]">
+                  {participantDisplayName}
+                </p>
+                {message.participantPhone && message.participantPhone !== message.participantName && (
+                  <p className="truncate text-[10px] text-muted-foreground max-w-[220px]">
+                    {message.participantPhone}
+                  </p>
+                )}
+              </div>
             </div>
           )}
           
