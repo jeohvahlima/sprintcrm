@@ -36,10 +36,18 @@ interface LegalProcess {
 }
 
 const KANBAN_COLUMNS = [
+  { id: "pre_processual", label: "Pré-Processual", color: "hsl(200, 50%, 60%)", borderColor: "border-sky-500/30" },
+  { id: "peticao_inicial", label: "Petição Inicial", color: "hsl(190, 70%, 50%)", borderColor: "border-cyan-500/30" },
+  { id: "aguardando_citacao", label: "Ag. Citação", color: "hsl(180, 50%, 50%)", borderColor: "border-teal-500/30" },
   { id: "em_andamento", label: "Em Andamento", color: "hsl(210, 80%, 55%)", borderColor: "border-blue-500/30" },
   { id: "aguardando_audiencia", label: "Ag. Audiência", color: "hsl(40, 90%, 55%)", borderColor: "border-amber-500/30" },
   { id: "aguardando_pericia", label: "Ag. Perícia", color: "hsl(270, 60%, 55%)", borderColor: "border-purple-500/30" },
+  { id: "em_negociacao", label: "Em Negociação", color: "hsl(50, 90%, 55%)", borderColor: "border-yellow-500/30" },
+  { id: "sentenciado", label: "Sentenciado", color: "hsl(290, 60%, 55%)", borderColor: "border-fuchsia-500/30" },
+  { id: "recurso", label: "Recurso / 2ª Inst.", color: "hsl(310, 60%, 55%)", borderColor: "border-pink-500/30" },
+  { id: "execucao", label: "Execução", color: "hsl(160, 65%, 45%)", borderColor: "border-emerald-500/30" },
   { id: "suspenso", label: "Suspenso", color: "hsl(0, 0%, 60%)", borderColor: "border-gray-500/30" },
+  { id: "acordo_cumprido", label: "Acordo Cumprido", color: "hsl(142, 60%, 50%)", borderColor: "border-green-400/30" },
   { id: "ganho", label: "Ganho", color: "hsl(142, 70%, 45%)", borderColor: "border-green-500/30" },
   { id: "perdido", label: "Perdido", color: "hsl(0, 70%, 50%)", borderColor: "border-red-500/30" },
   { id: "arquivado", label: "Arquivado", color: "hsl(220, 10%, 70%)", borderColor: "border-gray-400/30" },
