@@ -79,7 +79,8 @@ export default function Prospeccao() {
   const isComandoTab = activeTab === "comando";
   const isFilaTab = activeTab === "fila";
   const isIntelTab = activeTab === "intel";
-  const channelType = activeTab === "followup" || activeTab === "arena" || isChannelTab || isFunilTab || isCloserTab || isComandoTab || isFilaTab || isIntelTab ? "organic" : activeTab;
+  const isSocialTab = activeTab === "social";
+  const channelType = activeTab === "followup" || activeTab === "arena" || isChannelTab || isFunilTab || isCloserTab || isComandoTab || isFilaTab || isIntelTab || isSocialTab ? "organic" : activeTab;
   const { data, isLoading, refetch } = useProspeccaoData(channelType as "organic" | "paid", parseInt(period));
   const { data: followUpData, isLoading: followUpLoading, refetch: followUpRefetch } = useFollowUpData(parseInt(period));
 
