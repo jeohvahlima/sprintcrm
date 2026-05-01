@@ -203,24 +203,35 @@ serve(async (req) => {
       };
     }
 
-    const endpoints: Array<{ url: string; token: string }> = [];
-    
+    const endpoints: Array<{ url: string; token: string; label: string }> = [];
+
+    // Endpoint 1: Instagram Login API (graph.instagram.com) com IG User Access Token
+    // Este é o endpoint OFICIAL para Instagram Messaging API (não-Facebook-linked)
+    if (igToken && accountId) {
+      endpoints.push({
+        url: `${INSTAGRAM_API_BASE_URL}/${META_API_VERSION}/${accountId}/messages`,
+        token: igToken,
+        label: 'instagram-graph-with-account-id',
+      });
+    }
     if (igToken) {
-      endpoints.push({ 
-        url: `${INSTAGRAM_API_BASE_URL}/${META_API_VERSION}/me/messages`, 
-        token: igToken 
+      endpoints.push({
+        url: `${INSTAGRAM_API_BASE_URL}/${META_API_VERSION}/me/messages`,
+        token: igToken,
+        label: 'instagram-graph-me',
       });
     }
+    // Endpoint 2: Facebook Graph com Page Access Token (Instagram via Facebook Page)
     if (metaToken && accountId) {
-      endpoints.push({ 
-        url: `${META_API_BASE_URL}/${META_API_VERSION}/${accountId}/messages`, 
-        token: metaToken 
+      endpoints.push({
+        url: `${META_API_BASE_URL}/${META_API_VERSION}/${accountId}/messages`,
+        token: metaToken,
+        label: 'facebook-graph-with-account-id',
       });
-    }
-    if (metaToken) {
-      endpoints.push({ 
-        url: `${META_API_BASE_URL}/${META_API_VERSION}/me/messages`, 
-        token: metaToken 
+      endpoints.push({
+        url: `${META_API_BASE_URL}/${META_API_VERSION}/me/messages`,
+        token: metaToken,
+        label: 'facebook-graph-me',
       });
     }
 
@@ -290,10 +301,28 @@ serve(async (req) => {
     }
 
     console.error('❌ [INSTAGRAM-SEND] Todos os endpoints falharam. Último erro:', JSON.stringify(lastError));
+
+    const errMsg = lastError?.error?.message || '';
+    const errCode = lastError?.error?.code;
+    const errSubcode = lastError?.error?.error_subcode;
+
+    let userFriendly = 'Erro ao enviar mensagem via Instagram.';
+    if (errCode === 100 && errSubcode === 33) {
+      userFriendly = 'Token do Instagram inválido ou sem permissão para esta conta. Reconecte o Instagram nas configurações.';
+    } else if (errCode === 3) {
+      userFriendly = 'O app Meta não tem a capacidade "instagram_business_manage_messages" aprovada. Reconecte ou solicite a permissão no Meta Developer.';
+    } else if (errSubcode === 2534014) {
+      userFriendly = 'Destinatário não encontrado. A janela de 24h pode ter expirado ou o usuário não enviou mensagem recentemente.';
+    } else if (errMsg) {
+      userFriendly = errMsg;
+    }
+
     return new Response(
-      JSON.stringify({ 
-        error: lastError?.error?.message || 'Erro ao enviar mensagem via Instagram. Verifique as permissões do app Meta.',
-        details: lastError 
+      JSON.stringify({
+        error: userFriendly,
+        provider: 'instagram',
+        needs_reconnect: errCode === 100 || errCode === 190 || errCode === 3,
+        details: lastError,
       }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
