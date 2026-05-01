@@ -228,6 +228,12 @@ export function Sidebar({
               return false;
             }
 
+            // Jurídico só aparece para contas com segmento de advocacia (ou master)
+            if ((item as any).juridicoOnly) {
+              if (segmentoLoading) return false;
+              if (!isMasterAccount && !isJuridico) return false;
+            }
+
             // Verificar se é módulo premium
             const isPremiumModule = premiumModules.includes(item.menuKey);
             if (isPremiumModule && !isMasterAccount) {
