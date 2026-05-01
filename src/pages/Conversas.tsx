@@ -1875,6 +1875,9 @@ function Conversas() {
           fileSize: extractFileSizeFromMediaUrl(novaMensagem.midia_url),
           mimeType: novaMensagem.tipo_mensagem === 'video' ? 'video/mp4' : novaMensagem.tipo_mensagem === 'audio' ? 'audio/mpeg' : novaMensagem.tipo_mensagem === 'image' ? 'image/jpeg' : novaMensagem.tipo_mensagem === 'document' || novaMensagem.tipo_mensagem === 'pdf' ? 'application/pdf' : undefined,
           sentBy: sentBy,
+          participantName: novaMensagem.group_participant_name || undefined,
+          participantPhone: novaMensagem.group_participant_phone || undefined,
+          participantAvatarUrl: novaMensagem.group_participant_avatar_url || undefined,
           contactData: contactDataParsed
         };
 
@@ -1889,6 +1892,8 @@ function Conversas() {
           const isMatch = isInstagramMessage 
             ? (convId === igUserId || convPhone === igUserId || prevSelected.id === telefone ||
                (prevSelected.channel === 'instagram' && convId === igUserId))
+            : isGroupMessage
+              ? (prevSelected.id === telefone || prevSelected.phoneNumber === telefone)
             : (prevSelected.phoneNumber || prevSelected.id || '').replace(/[^0-9]/g, '') === telefone;
           if (isMatch) {
             // ⚡ DEDUPLICAÇÃO: Verificar se mensagem já existe por ID
@@ -1936,6 +1941,9 @@ function Conversas() {
                      convPhone === igUserId || 
                      c.phoneNumber === telefoneKey ||
                      (c.channel === 'instagram' && convId === igUserId);
+            }
+            if (isGroupMessage) {
+              return c.id === telefoneKey || c.phoneNumber === telefoneKey;
             }
             const tel = (c.phoneNumber || c.id || '').replace(/[^0-9]/g, '');
             return tel === telefoneKey;
