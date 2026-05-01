@@ -1168,7 +1168,7 @@ export default function Analytics() {
       </Card>
 
       <Tabs defaultValue="overview" className="w-full">
-        <TabsList className={`grid w-full h-auto p-1`} style={{ gridTemplateColumns: `repeat(${4 + (isMasterAccount || isSegmentoFinanceiro(companySegmento) ? 1 : 0) + (isMasterAccount || isSegmentoJuridico(companySegmento) ? 1 : 0)}, minmax(0, 1fr))` }}>
+        <TabsList className={`grid w-full h-auto p-1`} style={{ gridTemplateColumns: `repeat(${4 + (isMasterAccount || isSegmentoFinanceiro(companySegmento) ? 1 : 0)}, minmax(0, 1fr))` }}>
           <TabsTrigger value="overview" className="gap-2 py-3">
             <Eye className="h-4 w-4" />
             <span className="hidden sm:inline">Visão Geral</span>
@@ -1181,12 +1181,6 @@ export default function Analytics() {
             <TabsTrigger value="propostas" className="gap-2 py-3">
               <Building2 className="h-4 w-4" />
               <span className="hidden sm:inline">Propostas</span>
-            </TabsTrigger>
-          )}
-          {(isMasterAccount || isSegmentoJuridico(companySegmento)) && (
-            <TabsTrigger value="juridico" className="gap-2 py-3">
-              <Scale className="h-4 w-4" />
-              <span className="hidden sm:inline">Jurídico</span>
             </TabsTrigger>
           )}
           <TabsTrigger value="campaigns" className="gap-2 py-3">
