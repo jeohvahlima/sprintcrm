@@ -1005,48 +1005,37 @@ serve(async (req) => {
                 
                 if (convRes.ok) {
                   const convData = await convRes.json();
-                  console.log('📸 [INSTAGRAM] Conversations data:', JSON.stringify(convData));
-                  
-                  if (convData.data && convData.data.length > 0) {
-                    const conversation = convData.data[0];
-                    const participants = conversation.participants?.data || conversation.participants || [];
-                    const otherParticipant = participants.find((p: any) => String(p.id) !== String(igAccountId));
-                    if (otherParticipant) {
-                      instagramUsername = otherParticipant.username || otherParticipant.name || instagramUserId;
-                      if (otherParticipant.profile_pic && !instagramProfilePic) {
-                        instagramProfilePic = otherParticipant.profile_pic;
-                      }
+                  // Procurar a conversa que contém o participant alvo
+                  for (const conversation of convData.data ?? []) {
+                    const participants = conversation.participants?.data ?? [];
+                    const match = participants.find((p: any) => String(p.id) === String(instagramUserId));
+                    if (match) {
+                      instagramUsername = match.username || match.name || instagramUserId;
                       console.log('📸 [INSTAGRAM] Nome encontrado via conversations:', instagramUsername);
-                    }
-                    if (instagramUsername === instagramUserId && conversation.name) {
-                      instagramUsername = conversation.name;
+                      break;
                     }
                   }
                 } else {
                   const errText = await convRes.text();
-                  console.warn('⚠️ [INSTAGRAM] Conversations API falhou:', errText);
+                  console.warn('⚠️ [INSTAGRAM] Conversations API falhou:', errText.substring(0, 300));
                 }
                 
-                // Método 2 (fallback): user_id direto
+                // Método 2 (fallback): lookup direto do IGSID
                 if (instagramUsername === instagramUserId) {
                   try {
-                    const userUrl = `https://graph.facebook.com/v23.0/${instagramUserId}?fields=name,username,profile_pic&access_token=${igAccessToken}`;
+                    const userUrl = `${igApiBase}/${instagramUserId}?fields=name,username&access_token=${igAccessToken}`;
                     const userRes = await fetch(userUrl);
                     if (userRes.ok) {
                       const userData = await userRes.json();
                       console.log('📸 [INSTAGRAM] User data (fallback):', JSON.stringify(userData));
-                      if (userData.name) instagramUsername = userData.name;
-                      else if (userData.username) instagramUsername = userData.username;
-                      // ⚡ Capturar foto de perfil do Instagram
-                      if (userData.profile_pic) {
-                        instagramProfilePic = userData.profile_pic;
-                        console.log('📸 [INSTAGRAM] Foto de perfil encontrada:', instagramProfilePic?.substring(0, 80));
-                      }
+                      if (userData.username) instagramUsername = userData.username;
+                      else if (userData.name) instagramUsername = userData.name;
                     } else {
-                      await userRes.text();
+                      const errText = await userRes.text();
+                      console.warn('⚠️ [INSTAGRAM] User fallback falhou:', errText.substring(0, 200));
                     }
                   } catch (e) {
-                    console.warn('⚠️ [INSTAGRAM] User fallback falhou');
+                    console.warn('⚠️ [INSTAGRAM] User fallback falhou:', e);
                   }
                 }
                 
