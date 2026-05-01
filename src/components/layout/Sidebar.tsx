@@ -75,6 +75,12 @@ const navigation = [{
   icon: Activity,
   menuKey: "maturidade"
 }, {
+  name: "Jurídico",
+  href: "/juridico",
+  icon: Scale,
+  menuKey: "juridico",
+  juridicoOnly: true
+}, {
   name: "Mentoria",
   href: "/mentoria",
   icon: Sparkles,
