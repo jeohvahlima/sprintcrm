@@ -1854,6 +1854,11 @@ export default function Agenda() {
   };
   const deletarCompromisso = async (id: string) => {
     try {
+      // 🗓️ Remover do Google Calendar antes de deletar
+      supabase.functions.invoke("google-calendar-event", {
+        body: { action: "delete", compromisso_id: id }
+      }).catch((e) => console.warn("[gcal] delete skipped:", e?.message));
+
       // Primeiro deletar lembretes associados
       await supabase.from('lembretes').delete().eq('compromisso_id', id);
 
