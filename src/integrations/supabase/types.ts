@@ -2033,15 +2033,20 @@ export type Database = {
           agenda_id: string | null
           company_id: string | null
           compromisso_origem_id: string | null
+          convidar_lead_email: boolean | null
           created_at: string | null
           custo_estimado: number | null
           data_hora_fim: string
           data_hora_inicio: string
           duracao: number | null
+          google_calendar_synced_at: string | null
+          google_event_id: string | null
+          google_sync_source: string | null
           id: string
           lead_id: string | null
           legal_process_id: string | null
           lembrete_enviado: boolean | null
+          lembretes_config: Json | null
           observacoes: string | null
           owner_id: string
           paciente: string | null
@@ -2057,15 +2062,20 @@ export type Database = {
           agenda_id?: string | null
           company_id?: string | null
           compromisso_origem_id?: string | null
+          convidar_lead_email?: boolean | null
           created_at?: string | null
           custo_estimado?: number | null
           data_hora_fim: string
           data_hora_inicio: string
           duracao?: number | null
+          google_calendar_synced_at?: string | null
+          google_event_id?: string | null
+          google_sync_source?: string | null
           id?: string
           lead_id?: string | null
           legal_process_id?: string | null
           lembrete_enviado?: boolean | null
+          lembretes_config?: Json | null
           observacoes?: string | null
           owner_id: string
           paciente?: string | null
@@ -2081,15 +2091,20 @@ export type Database = {
           agenda_id?: string | null
           company_id?: string | null
           compromisso_origem_id?: string | null
+          convidar_lead_email?: boolean | null
           created_at?: string | null
           custo_estimado?: number | null
           data_hora_fim?: string
           data_hora_inicio?: string
           duracao?: number | null
+          google_calendar_synced_at?: string | null
+          google_event_id?: string | null
+          google_sync_source?: string | null
           id?: string
           lead_id?: string | null
           legal_process_id?: string | null
           lembrete_enviado?: boolean | null
+          lembretes_config?: Json | null
           observacoes?: string | null
           owner_id?: string
           paciente?: string | null
@@ -3290,6 +3305,60 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      google_calendar_integrations: {
+        Row: {
+          access_token: string
+          active: boolean
+          calendar_id: string
+          company_id: string | null
+          created_at: string
+          google_email: string | null
+          google_user_id: string | null
+          id: string
+          last_sync_at: string | null
+          refresh_token: string
+          scope: string | null
+          sync_token: string | null
+          token_expires_at: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          access_token: string
+          active?: boolean
+          calendar_id?: string
+          company_id?: string | null
+          created_at?: string
+          google_email?: string | null
+          google_user_id?: string | null
+          id?: string
+          last_sync_at?: string | null
+          refresh_token: string
+          scope?: string | null
+          sync_token?: string | null
+          token_expires_at: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          access_token?: string
+          active?: boolean
+          calendar_id?: string
+          company_id?: string | null
+          created_at?: string
+          google_email?: string | null
+          google_user_id?: string | null
+          id?: string
+          last_sync_at?: string | null
+          refresh_token?: string
+          scope?: string | null
+          sync_token?: string | null
+          token_expires_at?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       ia_cadence_rules: {
         Row: {

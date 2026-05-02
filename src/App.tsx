@@ -33,6 +33,7 @@ import ConfiguracoesGamificacao from "./pages/ConfiguracoesGamificacao";
 import ConfiguracoesComercial from "./pages/ConfiguracoesComercial";
 import OAuthCallback from "./pages/OAuthCallback";
 import GmailCallback from "./pages/GmailCallback";
+import GoogleCalendarCallback from "./pages/GoogleCalendarCallback";
 import InstallApp from "./pages/InstallApp";
 import { MainLayout } from "./components/layout/MainLayout";
 import NotFound from "./pages/NotFound";
@@ -84,6 +85,7 @@ const App = () => (
             <Route path="/install" element={<InstallApp />} />
             <Route path="/oauth/callback" element={<OAuthCallback />} />
             <Route path="/oauth/gmail/callback" element={<GmailCallback />} />
+            <Route path="/google-calendar-callback" element={<GoogleCalendarCallback />} />
             <Route path="/agenda/:slug" element={<AgendaPublica />} />
             <Route path="/meeting/:meetingId" element={<PublicMeeting />} />
             <Route path="/captura/:companyId" element={<CapturaPublica />} />

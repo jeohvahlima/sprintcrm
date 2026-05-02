@@ -1377,6 +1377,17 @@ export default function Agenda() {
       }
       console.log('✅ [DEBUG] Compromisso criado com sucesso:', compromisso?.id);
 
+      // 🗓️ Auto-push para Google Calendar (não-bloqueante, ignora erros)
+      if (compromisso?.id) {
+        supabase.functions
+          .invoke("google-calendar-event", { body: { action: "create", compromisso_id: compromisso.id } })
+          .then(({ error: gcalErr }) => {
+            if (gcalErr) console.warn("[gcal] sync skipped:", gcalErr.message);
+          })
+          .catch((e) => console.warn("[gcal] sync skipped:", e?.message));
+      }
+
+
       // ⚡ CRIAR LEMBRETE AUTOMATICAMENTE PARA TODO COMPROMISSO (OBRIGATÓRIO)
       if (compromisso) {
         console.log('📝 [LEMBRETE] Criando lembrete automaticamente para compromisso:', compromisso.id);
@@ -1730,6 +1741,12 @@ export default function Agenda() {
       }).eq('id', id);
       if (error) throw error;
 
+      // 🗓️ Sync para Google: delete se cancelado, update caso contrário
+      supabase.functions.invoke("google-calendar-event", {
+        body: { action: novoStatus === "cancelado" ? "delete" : "update", compromisso_id: id }
+      }).catch((e) => console.warn("[gcal] sync skipped:", e?.message));
+
+
       // Enviar notificação de cancelamento se status mudou para 'cancelado' e tiver lead
       if (novoStatus === 'cancelado' && compromissoAtual?.lead_id) {
         try {
@@ -1837,6 +1854,11 @@ export default function Agenda() {
   };
   const deletarCompromisso = async (id: string) => {
     try {
+      // 🗓️ Remover do Google Calendar antes de deletar
+      supabase.functions.invoke("google-calendar-event", {
+        body: { action: "delete", compromisso_id: id }
+      }).catch((e) => console.warn("[gcal] delete skipped:", e?.message));
+
       // Primeiro deletar lembretes associados
       await supabase.from('lembretes').delete().eq('compromisso_id', id);
 

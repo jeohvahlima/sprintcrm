@@ -41,6 +41,7 @@ import { MetaIntegrationsConfig } from "@/components/configuracoes/MetaIntegrati
 import { SubcontasManager } from "@/components/configuracoes/SubcontasManager";
 import { LeadAdsFormsConfig } from "@/components/configuracoes/LeadAdsFormsConfig";
 import { GmailConfig } from "@/components/configuracoes/GmailConfig";
+import { GoogleCalendarSettings } from "@/components/configuracoes/GoogleCalendarSettings";
 import { ProdutosServicosManager } from "@/components/configuracoes/ProdutosServicosManager";
 import { cleanAllConversationsHistory } from "@/utils/cleanConversationsHistory";
 import { WebhooksConfig } from "@/components/configuracoes/WebhooksConfig";
@@ -1123,6 +1124,9 @@ export default function Configuracoes() {
           
           {/* Gmail Integration */}
           {currentCompany?.id && <GmailConfig companyId={currentCompany.id} />}
+
+          {/* Google Calendar Integration (por usuário) */}
+          <GoogleCalendarSettings />
 
           {/* Lead Ads Forms - Rastreamento de Tráfego Pago */}
           <Card>
