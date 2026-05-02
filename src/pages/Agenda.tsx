@@ -1377,6 +1377,17 @@ export default function Agenda() {
       }
       console.log('✅ [DEBUG] Compromisso criado com sucesso:', compromisso?.id);
 
+      // 🗓️ Auto-push para Google Calendar (não-bloqueante, ignora erros)
+      if (compromisso?.id) {
+        supabase.functions
+          .invoke("google-calendar-event", { body: { action: "create", compromisso_id: compromisso.id } })
+          .then(({ error: gcalErr }) => {
+            if (gcalErr) console.warn("[gcal] sync skipped:", gcalErr.message);
+          })
+          .catch((e) => console.warn("[gcal] sync skipped:", e?.message));
+      }
+
+
       // ⚡ CRIAR LEMBRETE AUTOMATICAMENTE PARA TODO COMPROMISSO (OBRIGATÓRIO)
       if (compromisso) {
         console.log('📝 [LEMBRETE] Criando lembrete automaticamente para compromisso:', compromisso.id);
