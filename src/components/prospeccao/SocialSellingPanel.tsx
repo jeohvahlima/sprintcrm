@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Sparkles, Instagram, Flame, MessageSquare, Calendar, TrendingUp, Zap, RefreshCw } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Progress } from "@/components/ui/progress";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Link } from "react-router-dom";
@@ -31,8 +32,8 @@ const intentBadge = (level: string | null) => {
   if (level === "baixa") return <Badge variant="secondary">Baixa</Badge>;
   return <Badge variant="outline">—</Badge>;
 };
-
 export function SocialSellingPanel() {
+  const [funilOpen, setFunilOpen] = useState(false);
   const [companyId, setCompanyId] = useState<string | null>(null);
   const [funilId, setFunilId] = useState<string | null>(null);
   const [leads, setLeads] = useState<SocialLead[]>([]);
@@ -199,10 +200,8 @@ export function SocialSellingPanel() {
           <Button variant="outline" size="sm" onClick={refresh} disabled={loading}>
             <RefreshCw className={`h-4 w-4 mr-1 ${loading ? "animate-spin" : ""}`} /> Atualizar
           </Button>
-          <Button variant="outline" size="sm" asChild>
-            <Link to="/kanban" target="_blank" rel="noreferrer">
-              Ver funil
-            </Link>
+          <Button variant="outline" size="sm" onClick={() => setFunilOpen(true)}>
+            Ver funil
           </Button>
         </div>
       </div>
@@ -290,6 +289,20 @@ export function SocialSellingPanel() {
           )}
         </CardContent>
       </Card>
+
+      {/* Modal Funil Social Selling */}
+      <Dialog open={funilOpen} onOpenChange={setFunilOpen}>
+        <DialogContent className="max-w-[95vw] w-[95vw] h-[90vh] p-0 overflow-hidden">
+          <DialogHeader className="px-4 py-2 border-b">
+            <DialogTitle className="text-base">🚀 Funil de Social Selling</DialogTitle>
+          </DialogHeader>
+          <iframe
+            src={`/kanban?embed=1${funilId ? `&funil=${funilId}` : "&funil_nome=Social%20Selling"}`}
+            className="w-full h-full border-0"
+            title="Funil Social Selling"
+          />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
