@@ -56,6 +56,7 @@ export default function Prospeccao() {
   const [activeTab, setActiveTab] = useState<"organic" | "paid" | "followup" | "arena" | "coldcall" | "instagram" | "whatsapp" | "funil" | "closer" | "comando" | "fila" | "intel" | "social">("organic");
   const [subTab, setSubTab] = useState<"registros" | "interacoes">("registros");
   const [channelView, setChannelView] = useState<"prospect" | "chat">("prospect");
+  const [instagramSub, setInstagramSub] = useState<"chat" | "social">("chat");
   const [period, setPeriod] = useState("30");
   const [showForm, setShowForm] = useState(false);
   const [showFollowUpForm, setShowFollowUpForm] = useState(false);
@@ -253,7 +254,6 @@ export default function Prospeccao() {
               <TabsTrigger value="closer">{labels.closer}</TabsTrigger>
               {isManagerLike && <TabsTrigger value="comando">{labels.comando}</TabsTrigger>}
               <TabsTrigger value="intel">✨ {labels.intel}</TabsTrigger>
-              <TabsTrigger value="social">🚀 {labels.social}</TabsTrigger>
               {gamificationOn && <TabsTrigger value="arena">{labels.arena}</TabsTrigger>}
             </TabsList>
 
@@ -301,12 +301,30 @@ export default function Prospeccao() {
             ) : isChannelTab ? (
               <div className="mt-4 space-y-3">
                 {activeTab === "instagram" ? (
-                  <div className="flex items-center justify-end gap-2 flex-wrap">
-                    <Button variant="outline" size="sm" asChild>
-                      <Link to="/conversas?channel=instagram" target="_blank" rel="noopener noreferrer">
-                        Abrir em nova aba
-                      </Link>
-                    </Button>
+                  <div className="flex items-center justify-between gap-2 flex-wrap">
+                    <div className="flex gap-1">
+                      <Button
+                        variant={instagramSub === "chat" ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => setInstagramSub("chat")}
+                      >
+                        💬 Bate-papo
+                      </Button>
+                      <Button
+                        variant={instagramSub === "social" ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => setInstagramSub("social")}
+                      >
+                        🚀 Social Selling
+                      </Button>
+                    </div>
+                    {instagramSub === "chat" && (
+                      <Button variant="outline" size="sm" asChild>
+                        <Link to="/conversas?channel=instagram" target="_blank" rel="noopener noreferrer">
+                          Abrir em nova aba
+                        </Link>
+                      </Button>
+                    )}
                   </div>
                 ) : activeTab === "whatsapp" && (
                   <div className="flex items-center justify-between gap-2 flex-wrap">
@@ -339,13 +357,15 @@ export default function Prospeccao() {
                     )}
                   </div>
                 )}
-                {activeTab === "instagram" || (channelView === "chat" && activeTab === "whatsapp") ? (
+                {activeTab === "instagram" && instagramSub === "social" ? (
+                  <SocialSellingPanel />
+                ) : activeTab === "instagram" || (channelView === "chat" && activeTab === "whatsapp") ? (
                   <div
                     className="rounded-lg border border-border overflow-hidden bg-background"
                     style={{ height: "calc(100vh - 360px)", minHeight: 600 }}
                   >
                     <iframe
-                      src={`/conversas?channel=${activeTab === "instagram" ? "instagram" : "whatsapp"}&embedded=1`}
+                      src={`/conversas?channel=${activeTab === "instagram" ? "instagram" : "whatsapp"}&embed=1`}
                       title={`Bate-papo ${activeTab}`}
                       className="w-full h-full border-0"
                     />
