@@ -139,7 +139,7 @@ export function CriarTarefaAoMoverDialog({
         lead_id: leadId,
         owner_id: user.id,
         company_id: userRole.company_id,
-        assigned_to: user.id,
+        assignee_id: user.id,
         board_id: selectedBoardId || null,
         column_id: selectedColumnId || null,
       });
