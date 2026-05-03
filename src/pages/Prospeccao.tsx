@@ -366,6 +366,8 @@ export default function Prospeccao() {
                 )}
                 {activeTab === "instagram" && instagramSub === "social" ? (
                   <SocialSellingPanel />
+                ) : activeTab === "instagram" && instagramSub === "prospect" ? (
+                  <ChannelProspectPanel channel="instagram" />
                 ) : activeTab === "instagram" || (channelView === "chat" && activeTab === "whatsapp") ? (
                   <div
                     className="rounded-lg border border-border overflow-hidden bg-background"
