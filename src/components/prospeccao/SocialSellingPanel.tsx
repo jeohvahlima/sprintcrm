@@ -49,9 +49,10 @@ export function SocialSellingPanel() {
   const [bootstrapping, setBootstrapping] = useState(false);
 
   const loadCompany = async () => {
-    const { data } = await supabase.from("user_roles").select("company_id").maybeSingle();
-    setCompanyId(data?.company_id ?? null);
-    return data?.company_id as string | undefined;
+    const { data, error } = await supabase.rpc("get_my_company_id");
+    if (error) console.error("[SocialSelling] get_my_company_id", error);
+    setCompanyId((data as string) ?? null);
+    return (data as string) ?? undefined;
   };
 
   const loadFunnel = async (cid: string) => {
