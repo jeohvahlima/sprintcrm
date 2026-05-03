@@ -254,7 +254,6 @@ export default function Prospeccao() {
               <TabsTrigger value="closer">{labels.closer}</TabsTrigger>
               {isManagerLike && <TabsTrigger value="comando">{labels.comando}</TabsTrigger>}
               <TabsTrigger value="intel">✨ {labels.intel}</TabsTrigger>
-              <TabsTrigger value="social">🚀 {labels.social}</TabsTrigger>
               {gamificationOn && <TabsTrigger value="arena">{labels.arena}</TabsTrigger>}
             </TabsList>
 
