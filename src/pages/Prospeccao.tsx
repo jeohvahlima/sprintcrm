@@ -56,7 +56,7 @@ export default function Prospeccao() {
   const [activeTab, setActiveTab] = useState<"organic" | "paid" | "followup" | "arena" | "coldcall" | "instagram" | "whatsapp" | "funil" | "closer" | "comando" | "fila" | "intel" | "social">("organic");
   const [subTab, setSubTab] = useState<"registros" | "interacoes">("registros");
   const [channelView, setChannelView] = useState<"prospect" | "chat">("prospect");
-  const [instagramSub, setInstagramSub] = useState<"chat" | "social">("chat");
+  const [instagramSub, setInstagramSub] = useState<"chat" | "social" | "prospect">("chat");
   const [period, setPeriod] = useState("30");
   const [showForm, setShowForm] = useState(false);
   const [showFollowUpForm, setShowFollowUpForm] = useState(false);
@@ -311,6 +311,13 @@ export default function Prospeccao() {
                         💬 Bate-papo
                       </Button>
                       <Button
+                        variant={instagramSub === "prospect" ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => setInstagramSub("prospect")}
+                      >
+                        🎯 Prospecção
+                      </Button>
+                      <Button
                         variant={instagramSub === "social" ? "default" : "outline"}
                         size="sm"
                         onClick={() => setInstagramSub("social")}
@@ -359,6 +366,8 @@ export default function Prospeccao() {
                 )}
                 {activeTab === "instagram" && instagramSub === "social" ? (
                   <SocialSellingPanel />
+                ) : activeTab === "instagram" && instagramSub === "prospect" ? (
+                  <ChannelProspectPanel channel="instagram" />
                 ) : activeTab === "instagram" || (channelView === "chat" && activeTab === "whatsapp") ? (
                   <div
                     className="rounded-lg border border-border overflow-hidden bg-background"
