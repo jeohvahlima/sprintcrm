@@ -311,6 +311,13 @@ export default function Prospeccao() {
                         💬 Bate-papo
                       </Button>
                       <Button
+                        variant={instagramSub === "prospect" ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => setInstagramSub("prospect")}
+                      >
+                        🎯 Prospecção
+                      </Button>
+                      <Button
                         variant={instagramSub === "social" ? "default" : "outline"}
                         size="sm"
                         onClick={() => setInstagramSub("social")}
