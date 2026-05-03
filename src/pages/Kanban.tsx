@@ -220,9 +220,21 @@ export default function KanbanPage() {
         const loadedFunis = funisData || [];
         setFunis(loadedFunis);
 
-        // Selecionar primeiro funil se necessário
+        // Selecionar funil via URL (?funil=ID ou ?funil_nome=Nome) ou primeiro
         if (loadedFunis.length > 0 && !selectedFunil) {
-          setSelectedFunil(loadedFunis[0].id);
+          const params = new URLSearchParams(window.location.search);
+          const funilParamId = params.get("funil");
+          const funilParamNome = params.get("funil_nome");
+          let escolhido: string | undefined;
+          if (funilParamId && loadedFunis.find((f: any) => f.id === funilParamId)) {
+            escolhido = funilParamId;
+          } else if (funilParamNome) {
+            const match = loadedFunis.find((f: any) =>
+              (f.nome || "").toLowerCase() === funilParamNome.toLowerCase()
+            );
+            escolhido = match?.id;
+          }
+          setSelectedFunil(escolhido || loadedFunis[0].id);
         }
 
         // Carregar etapas
