@@ -32,8 +32,8 @@ const intentBadge = (level: string | null) => {
   if (level === "baixa") return <Badge variant="secondary">Baixa</Badge>;
   return <Badge variant="outline">—</Badge>;
 };
-
-const [funilOpen, setFunilOpen] = useState(false);
+export function SocialSellingPanel() {
+  const [funilOpen, setFunilOpen] = useState(false);
   const [companyId, setCompanyId] = useState<string | null>(null);
   const [funilId, setFunilId] = useState<string | null>(null);
   const [leads, setLeads] = useState<SocialLead[]>([]);
