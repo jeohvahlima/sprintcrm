@@ -103,17 +103,17 @@ export function SalesMachineWizard() {
                 <Sparkles className="h-4 w-4 text-primary" /> Construção da Máquina de Vendas
               </h3>
               <p className="text-xs text-muted-foreground">
-                Diagnóstico → Meta & Prazo → Plano de Ação → Acompanhamento. Faça uma fase de cada vez.
+                Diagnóstico → Meta & Prazo → Plano de Ação → Acompanhamento → Performance Hub.
               </p>
             </div>
-            <Badge variant="outline">Fase {phase} de 4</Badge>
+            <Badge variant="outline">Fase {phase} de 5</Badge>
           </div>
-          <Progress value={(parseInt(phase) / 4) * 100} className="h-2" />
+          <Progress value={(parseInt(phase) / 5) * 100} className="h-2" />
         </CardContent>
       </Card>
 
       <Tabs value={phase} onValueChange={(v) => setPhase(v as any)}>
-        <TabsList className="grid grid-cols-4 w-full">
+        <TabsList className="grid grid-cols-5 w-full">
           <TabsTrigger value="1" className="text-xs sm:text-sm gap-1.5">
             <Stethoscope className="h-4 w-4" /> 1. Diagnóstico
           </TabsTrigger>
@@ -125,6 +125,9 @@ export function SalesMachineWizard() {
           </TabsTrigger>
           <TabsTrigger value="4" className="text-xs sm:text-sm gap-1.5">
             <LineChartIcon className="h-4 w-4" /> 4. Acompanhamento
+          </TabsTrigger>
+          <TabsTrigger value="5" className="text-xs sm:text-sm gap-1.5">
+            <Trophy className="h-4 w-4" /> 5. Performance Hub
           </TabsTrigger>
         </TabsList>
 
