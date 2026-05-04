@@ -184,9 +184,8 @@ export function PerformanceHubPanel({ meta }: Props) {
         </CardContent>
       </Card>
 
-      {/* Plano de Carreira — Funil de avanço SDR/Closer (drag-and-drop) */}
-      <PerformanceRankBoard
-        players={ranking.map<RankPlayer>((r) => ({
+      {(() => {
+        const rankPlayers: RankPlayer[] = ranking.map((r) => ({
           user_id: r.user_id,
           name: memberName(r.user_id),
           role: r.role || "vendedor",
@@ -195,8 +194,16 @@ export function PerformanceHubPanel({ meta }: Props) {
           reunioes: r.reunioes,
           leads: r.leads,
           meta: ranking.length > 0 ? Math.round((meta || 0) / ranking.length) : 0,
-        }))}
-      />
+        }));
+        return (
+          <>
+            {/* Arena: pódio + árvore genealógica + escada de evolução */}
+            <PerformanceArena players={rankPlayers} />
+            {/* Plano de Carreira — Funil de avanço SDR/Closer (drag-and-drop) */}
+            <PerformanceRankBoard players={rankPlayers} />
+          </>
+        );
+      })()}
 
       <div className="grid lg:grid-cols-2 gap-4">
         {/* Ranking SDR */}
