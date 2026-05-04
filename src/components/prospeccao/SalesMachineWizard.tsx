@@ -461,6 +461,11 @@ export function SalesMachineWizard() {
         <TabsContent value="4" className="space-y-4 mt-4">
           <AccompanyPanel meta={diag.meta_faturamento} />
         </TabsContent>
+
+        {/* ==================== FASE 5 — PERFORMANCE HUB ==================== */}
+        <TabsContent value="5" className="space-y-4 mt-4">
+          <PerformanceHubPanel meta={diag.meta_faturamento} />
+        </TabsContent>
       </Tabs>
     </div>
   );
