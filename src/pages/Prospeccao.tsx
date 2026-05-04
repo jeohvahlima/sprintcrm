@@ -243,8 +243,7 @@ export default function Prospeccao() {
         <div className="flex-1 min-w-0">
           <Tabs value={activeTab} onValueChange={(v) => { setActiveTab(v as any); setSubTab("registros"); }}>
             <TabsList className="flex flex-wrap h-auto">
-              <TabsTrigger value="organic">{labels.organic}</TabsTrigger>
-              <TabsTrigger value="paid">{labels.paid}</TabsTrigger>
+              {/* Visão Geral e Pipeline Pago ocultos — métricas estão em Inteligência */}
               <TabsTrigger value="followup">{labels.followup}</TabsTrigger>
               <TabsTrigger value="fila">{labels.fila}</TabsTrigger>
               <TabsTrigger value="coldcall">{labels.coldcall}</TabsTrigger>
