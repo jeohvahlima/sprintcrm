@@ -53,7 +53,7 @@ export default function Prospeccao() {
   const isMobile = useIsMobile();
   const [rpgMode, setRpgMode] = useState<boolean>(() => localStorage.getItem(RPG_KEY) !== "false");
   const [soundOn, setSoundOn] = useState<boolean>(() => localStorage.getItem(SOUND_KEY) === "true");
-  const [activeTab, setActiveTab] = useState<"organic" | "paid" | "followup" | "arena" | "coldcall" | "instagram" | "whatsapp" | "funil" | "closer" | "comando" | "fila" | "intel" | "social">("organic");
+  const [activeTab, setActiveTab] = useState<"organic" | "paid" | "followup" | "arena" | "coldcall" | "instagram" | "whatsapp" | "funil" | "closer" | "comando" | "fila" | "intel" | "social">("followup");
   const [subTab, setSubTab] = useState<"registros" | "interacoes">("registros");
   const [channelView, setChannelView] = useState<"prospect" | "chat" | "funil">("prospect");
   const [instagramSub, setInstagramSub] = useState<"chat" | "social" | "prospect">("chat");
@@ -243,8 +243,7 @@ export default function Prospeccao() {
         <div className="flex-1 min-w-0">
           <Tabs value={activeTab} onValueChange={(v) => { setActiveTab(v as any); setSubTab("registros"); }}>
             <TabsList className="flex flex-wrap h-auto">
-              <TabsTrigger value="organic">{labels.organic}</TabsTrigger>
-              <TabsTrigger value="paid">{labels.paid}</TabsTrigger>
+              {/* Visão Geral e Pipeline Pago ocultos — métricas estão em Inteligência */}
               <TabsTrigger value="followup">{labels.followup}</TabsTrigger>
               <TabsTrigger value="fila">{labels.fila}</TabsTrigger>
               <TabsTrigger value="coldcall">{labels.coldcall}</TabsTrigger>
