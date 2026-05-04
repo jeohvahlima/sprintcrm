@@ -249,8 +249,7 @@ export default function Prospeccao() {
               <TabsTrigger value="coldcall">{labels.coldcall}</TabsTrigger>
               <TabsTrigger value="instagram">{labels.instagram}</TabsTrigger>
               <TabsTrigger value="whatsapp">{labels.whatsapp}</TabsTrigger>
-              <TabsTrigger value="funil">{labels.funil}</TabsTrigger>
-              <TabsTrigger value="closer">{labels.closer}</TabsTrigger>
+              {/* Funil de Vendas e Leads Qualificados ocultos */}
               {isManagerLike && <TabsTrigger value="comando">{labels.comando}</TabsTrigger>}
               <TabsTrigger value="intel">✨ {labels.intel}</TabsTrigger>
               {gamificationOn && <TabsTrigger value="arena">{labels.arena}</TabsTrigger>}
