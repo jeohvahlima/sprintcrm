@@ -72,7 +72,7 @@ function missionsForSegmento(seg: string | null): { title: string; metric: strin
 export function PerformanceHubPanel({ meta }: Props) {
   const { data: teamLogs } = useTeamLogs(30);
   const { members } = useTeamMembers();
-  const { companyId, userId, profile } = usePlayerProfile();
+  const { companyId, userId } = usePlayerProfile();
   const { segmento } = useCompanySegmento();
   const { data: quests = [] } = useActiveQuests(userId, companyId);
   const { data: leaderboard = [] } = useLeaderboard(companyId, 5);
