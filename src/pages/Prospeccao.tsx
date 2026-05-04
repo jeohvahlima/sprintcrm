@@ -251,7 +251,7 @@ export default function Prospeccao() {
               <TabsTrigger value="whatsapp">{labels.whatsapp}</TabsTrigger>
               {/* Funil de Vendas e Leads Qualificados ocultos */}
               {isManagerLike && <TabsTrigger value="comando">{labels.comando}</TabsTrigger>}
-              <TabsTrigger value="intel">✨ {labels.intel}</TabsTrigger>
+              <TabsTrigger value="intel">🎯 {labels.intel}</TabsTrigger>
               {gamificationOn && <TabsTrigger value="arena">{labels.arena}</TabsTrigger>}
             </TabsList>
 
