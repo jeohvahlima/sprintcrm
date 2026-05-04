@@ -11,6 +11,7 @@ import { useLeaderboard } from "@/hooks/useLeaderboard";
 import { useCompanySegmento } from "@/hooks/useCompanySegmento";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
+import { PerformanceRankBoard, type RankPlayer } from "./PerformanceRankBoard";
 
 const money = (n: number) =>
   new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 }).format(n || 0);
