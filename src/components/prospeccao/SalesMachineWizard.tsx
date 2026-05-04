@@ -18,6 +18,7 @@ import {
   ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid, ReferenceDot,
 } from "recharts";
 import { RevenueMixEngine } from "./RevenueMixEngine";
+import { PerformanceHubPanel } from "./PerformanceHubPanel";
 import { useTeamMembers } from "@/hooks/useTeamMembers";
 import {
   useDiagnostico, DEFAULT_DIAGNOSTICO, type DiagnosticoMaquina, detectGargalos,
@@ -41,7 +42,7 @@ const ATIVIDADES_LIST = [
 const FERRAMENTAS_LIST = ["CRM", "Discador", "WhatsApp Business", "E-mail marketing", "LinkedIn Sales Navigator", "Planilhas"];
 
 export function SalesMachineWizard() {
-  const [phase, setPhase] = useState<"1" | "2" | "3" | "4">("1");
+  const [phase, setPhase] = useState<"1" | "2" | "3" | "4" | "5">("1");
   const { data: diagDb, upsert } = useDiagnostico();
   const [diag, setDiag] = useState<DiagnosticoMaquina>(DEFAULT_DIAGNOSTICO);
 
@@ -102,17 +103,17 @@ export function SalesMachineWizard() {
                 <Sparkles className="h-4 w-4 text-primary" /> Construção da Máquina de Vendas
               </h3>
               <p className="text-xs text-muted-foreground">
-                Diagnóstico → Meta & Prazo → Plano de Ação → Acompanhamento. Faça uma fase de cada vez.
+                Diagnóstico → Meta & Prazo → Plano de Ação → Acompanhamento → Performance Hub.
               </p>
             </div>
-            <Badge variant="outline">Fase {phase} de 4</Badge>
+            <Badge variant="outline">Fase {phase} de 5</Badge>
           </div>
-          <Progress value={(parseInt(phase) / 4) * 100} className="h-2" />
+          <Progress value={(parseInt(phase) / 5) * 100} className="h-2" />
         </CardContent>
       </Card>
 
       <Tabs value={phase} onValueChange={(v) => setPhase(v as any)}>
-        <TabsList className="grid grid-cols-4 w-full">
+        <TabsList className="grid grid-cols-5 w-full">
           <TabsTrigger value="1" className="text-xs sm:text-sm gap-1.5">
             <Stethoscope className="h-4 w-4" /> 1. Diagnóstico
           </TabsTrigger>
@@ -124,6 +125,9 @@ export function SalesMachineWizard() {
           </TabsTrigger>
           <TabsTrigger value="4" className="text-xs sm:text-sm gap-1.5">
             <LineChartIcon className="h-4 w-4" /> 4. Acompanhamento
+          </TabsTrigger>
+          <TabsTrigger value="5" className="text-xs sm:text-sm gap-1.5">
+            <Trophy className="h-4 w-4" /> 5. Performance Hub
           </TabsTrigger>
         </TabsList>
 
@@ -456,6 +460,11 @@ export function SalesMachineWizard() {
         {/* ==================== FASE 4 — ACOMPANHAMENTO ==================== */}
         <TabsContent value="4" className="space-y-4 mt-4">
           <AccompanyPanel meta={diag.meta_faturamento} />
+        </TabsContent>
+
+        {/* ==================== FASE 5 — PERFORMANCE HUB ==================== */}
+        <TabsContent value="5" className="space-y-4 mt-4">
+          <PerformanceHubPanel meta={diag.meta_faturamento} />
         </TabsContent>
       </Tabs>
     </div>
