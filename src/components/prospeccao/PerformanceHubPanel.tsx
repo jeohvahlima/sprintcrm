@@ -183,6 +183,20 @@ export function PerformanceHubPanel({ meta }: Props) {
         </CardContent>
       </Card>
 
+      {/* Plano de Carreira — Funil de avanço SDR/Closer (drag-and-drop) */}
+      <PerformanceRankBoard
+        players={ranking.map<RankPlayer>((r) => ({
+          user_id: r.user_id,
+          name: memberName(r.user_id),
+          role: r.role || "vendedor",
+          faturamento: r.faturamento,
+          vendas: r.vendas,
+          reunioes: r.reunioes,
+          leads: r.leads,
+          meta: ranking.length > 0 ? Math.round((meta || 0) / ranking.length) : 0,
+        }))}
+      />
+
       <div className="grid lg:grid-cols-2 gap-4">
         {/* Ranking SDR */}
         <Card>
