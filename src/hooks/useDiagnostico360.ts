@@ -361,6 +361,8 @@ export function useSalvarDiagnostico() {
               segmento: input.segmento,
               dores,
               gargalos,
+              revenue_leak: revenueLeak,
+              prazo_meses: dores.prazo_meta_meses || 3,
             },
           },
         });
