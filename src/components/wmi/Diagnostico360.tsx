@@ -23,6 +23,7 @@ import {
 } from "@/hooks/useDiagnostico360";
 import { useWMIRoadmap, useUpdateRoadmapItem } from "@/hooks/useWMI";
 import { PlanoIARenderer } from "./PlanoIARenderer";
+import { ImpactoFinanceiroExpandido } from "./ImpactoFinanceiroExpandido";
 import { useNavigate } from "react-router-dom";
 import { useCompanySegmento } from "@/hooks/useCompanySegmento";
 import { SEGMENTOS_EMPRESA } from "@/lib/segmentos";
@@ -672,6 +673,9 @@ function ResultadoDiagnostico({
 
       {/* === CUSTO DA INAÇÃO (Revenue Leak Engine) === */}
       <RevenueLeakCard result={result} />
+
+      {/* === IMPACTO FINANCEIRO EXPANDIDO — risco, 4 escalas, custos invisíveis, cenários e CTA === */}
+      <ImpactoFinanceiroExpandido result={result} />
 
       {/* ALAVANCAS - Cards */}
       <div className="grid md:grid-cols-2 lg:grid-cols-5 gap-3">
