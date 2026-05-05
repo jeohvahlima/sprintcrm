@@ -56,7 +56,7 @@ export function Diagnostico360() {
   const { segmento: segmentoEmpresa } = useCompanySegmento();
   const { data: ultimo } = useUltimoDiagnostico();
   const salvar = useSalvarDiagnostico();
-  const genRoadmap = useGenerateRoadmap();
+  const genRoadmap = useGerarRoadmapDiagnostico();
   const { data: roadmap } = useWMIRoadmap();
   const updateRoadmap = useUpdateRoadmapItem();
 
