@@ -12,7 +12,7 @@ import {
   ClipboardCheck, ChevronLeft, ChevronRight, Sparkles, Loader2, Trophy,
   AlertTriangle, RotateCcw, Target, TrendingUp, Heart, Users, BarChart3,
   Flame, Lightbulb, ShieldCheck, ShieldAlert, CheckCircle2, Circle, Clock,
-  Zap, DollarSign, Calendar, Map,
+  Zap, DollarSign, Calendar, Map, Settings,
 } from "lucide-react";
 import {
   useAlavancas, usePerguntas, usePerguntasSegmento, useUltimoDiagnostico,
