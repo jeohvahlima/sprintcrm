@@ -670,6 +670,9 @@ function ResultadoDiagnostico({
         </Card>
       )}
 
+      {/* === CUSTO DA INAÇÃO (Revenue Leak Engine) === */}
+      <RevenueLeakCard result={result} />
+
       {/* ALAVANCAS - Cards */}
       <div className="grid md:grid-cols-2 lg:grid-cols-5 gap-3">
         {alavancas.map((a) => {
