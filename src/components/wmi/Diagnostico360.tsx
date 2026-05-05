@@ -24,6 +24,7 @@ import {
 import { useWMIRoadmap, useUpdateRoadmapItem } from "@/hooks/useWMI";
 import { PlanoIARenderer } from "./PlanoIARenderer";
 import { ImpactoFinanceiroExpandido } from "./ImpactoFinanceiroExpandido";
+import { CurvaABCEditor } from "./CurvaABCEditor";
 import { useNavigate } from "react-router-dom";
 import { useCompanySegmento } from "@/hooks/useCompanySegmento";
 import { SEGMENTOS_EMPRESA } from "@/lib/segmentos";
