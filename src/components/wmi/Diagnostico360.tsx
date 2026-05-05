@@ -234,7 +234,7 @@ export function Diagnostico360() {
             />
           </div>
 
-          <div className="grid sm:grid-cols-3 gap-3">
+          <div className="grid sm:grid-cols-2 gap-3">
             <div className="space-y-2">
               <Label className="flex items-center gap-1"><DollarSign className="h-3 w-3" /> Faturamento atual / mês</Label>
               <Input
@@ -249,14 +249,6 @@ export function Diagnostico360() {
                 type="number" placeholder="R$ 200.000"
                 value={dores.meta_faturamento ?? ""}
                 onChange={(e) => setDores({ ...dores, meta_faturamento: Number(e.target.value) || undefined })}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label className="flex items-center gap-1"><Calendar className="h-3 w-3" /> Prazo (meses)</Label>
-              <Input
-                type="number" placeholder="6"
-                value={dores.prazo_meta_meses ?? ""}
-                onChange={(e) => setDores({ ...dores, prazo_meta_meses: Number(e.target.value) || undefined })}
               />
             </div>
           </div>
