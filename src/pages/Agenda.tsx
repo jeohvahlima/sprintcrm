@@ -357,8 +357,10 @@ export default function Agenda() {
     horas_antecedencia_minutos: "0",
     destinatario_lembrete: "lead",
     enviar_confirmacao: false,
-    // Nova opção: enviar confirmação imediata
-    notificar_responsavel: true // Nova opção: notificar responsável via push
+    notificar_responsavel: true,
+    convidar_lead_email: false, // Convida o lead como participante no Google Calendar
+    lembrete_email_24h: true, // Lembrete extra por e-mail 24h antes
+    lembrete_whatsapp_24h: true, // Lembrete extra por WhatsApp 24h antes
   });
   const [leadSearch, setLeadSearch] = useState("");
   const [selectedLeadName, setSelectedLeadName] = useState("");
