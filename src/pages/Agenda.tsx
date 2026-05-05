@@ -1233,6 +1233,9 @@ export default function Agenda() {
       // Preencher titulo com tipo_servico formatado
       compromissoData.titulo = tipoServicoFinal.charAt(0).toUpperCase() + tipoServicoFinal.slice(1);
 
+      // Convidar lead por e-mail no Google Calendar (opcional)
+      compromissoData.convidar_lead_email = !!formData.convidar_lead_email;
+
       // Preencher paciente e telefone com dados do lead para compatibilidade com app Waze Agenda
       if (leadSelecionadoData) {
         compromissoData.paciente = leadSelecionadoData.name;
