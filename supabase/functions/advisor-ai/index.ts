@@ -77,67 +77,74 @@ Gere um roadmap evolutivo de 3 semanas. Retorne APENAS via tool call.`;
         tool_choice: { type: "function", function: { name: "generate_roadmap" } },
       };
     } else if (mode === "diagnostico_360") {
-      // Plano Comercial Executivo Completo
+      const prazoMeses = diagnostic?.prazo_meses || diagnostic?.dores?.prazo_meta_meses || 3;
+      const leak = diagnostic?.revenue_leak;
+      const leakBlock = leak ? `
+DADOS FINANCEIROS DO MOTOR "CUSTO DA INAÇÃO" (Revenue Leak Engine):
+- Receita potencial mensal: R$ ${Math.round(leak.receita_potencial).toLocaleString("pt-BR")}
+- Receita atual estimada: R$ ${Math.round(leak.receita_atual_estimada).toLocaleString("pt-BR")}
+- PERDA mensal: R$ ${Math.round(leak.perda_mensal).toLocaleString("pt-BR")}
+- PERDA diária: R$ ${Math.round(leak.perda_diaria).toLocaleString("pt-BR")}
+- PERDA projetada em ${leak.prazo_meses} meses: R$ ${Math.round(leak.perda_projetada).toLocaleString("pt-BR")}
+- Capacidade comercial usada hoje: ${leak.capacidade_uso_pct}%
+- Leads atuais/mês: ${leak.leads_atuais_mes} | Ideais/mês: ${leak.leads_ideais_mes}
+- Clientes atuais/mês: ${Math.round(leak.clientes_atuais)} | Potenciais: ${Math.round(leak.clientes_potenciais)}
+` : "(Sem dados financeiros — peça ao usuário para informar ticket médio, taxa de conversão e prospecções/dia.)";
+
       const userPrompt = `Resultado do Diagnóstico 360 da empresa:
 ${JSON.stringify(diagnostic, null, 2)}
 
 A empresa obteve nota ${diagnostic?.nota} (${diagnostic?.percentual}%) — classificação: ${diagnostic?.classificacao}.
+Prazo definido pelo cliente para atingir a meta: ${prazoMeses} meses.
 
-Gere um **PLANO COMERCIAL EXECUTIVO COMPLETO E PRONTO PARA EXECUÇÃO**, em markdown rico, contendo TODAS as seções abaixo de forma específica, detalhada e mensurável (sem genericismos):
+${leakBlock}
 
-## 🎯 1. Diagnóstico Executivo
-2-3 parágrafos analisando cenário atual, "balde furado" mais crítico e impacto financeiro estimado.
+Gere um **PLANO COMERCIAL EXECUTIVO AGRESSIVO E ACIONÁVEL**, em markdown rico, focado em **gerar urgência financeira + caminho claro de execução**. Use OBRIGATORIAMENTE os números do Revenue Leak acima ao longo de todo o plano. Estrutura:
 
-## 🚨 2. Top 3 Gargalos Críticos
-As 3 alavancas mais fracas, com causa-raiz e perda estimada em R$/leads/mês.
+## 💸 1. Custo da Inação (Diagnóstico Financeiro)
+Use os números reais do Revenue Leak. Mostre quanto a empresa perde por mês, por dia e em ${prazoMeses} meses se nada mudar. Frases curtas e impactantes.
 
-## ⚙️ 3. Processos Comerciais
-- Fluxo de qualificação ideal (BANT/SPIN/MEDDIC adaptado)
-- Etapas do funil recomendadas (com critérios de avanço)
-- SLAs por etapa (tempo de resposta, follow-up, etc.)
+## 🎯 2. Diagnóstico Executivo
+2 parágrafos. Aponte o "balde furado" principal cruzando os pilares mais fracos com o gap financeiro.
 
-## 📞 4. Atendimento
-- Padrão de abordagem (script de abertura)
-- Tempo de primeira resposta (meta em minutos)
-- Cadência de follow-up (D+0, D+1, D+3, D+7, D+14, D+30)
-- Tom de voz e quebra de objeções principais
+## 🚨 3. Top 3 Gargalos com Impacto Financeiro
+Para cada um: causa-raiz + perda em R$/leads/mês + qual módulo Waze resolve.
 
-## 💰 5. Vendas
-- Processo de descoberta de dor
-- Estrutura de apresentação de proposta
-- Técnicas de fechamento adequadas ao ticket
-- Negociação e ancoragem de preço
+## ⚙️ 4. Plano de Ação por Pilar (NÃO genérico)
+Para cada pilar fraco, escreva 3-5 ações ESPECÍFICAS, com:
+- Número-meta (ex: "passar de 5 para 30 prospecções/dia")
+- KPI de medição
+- **Módulo Waze recomendado** (Prospecção, Processos Comerciais, Funil, Conversas, Discador, IA, Analytics, Gamificação)
 
-## 📚 6. Playbooks Recomendados (entregar conteúdo, não apenas título)
-Para cada playbook abaixo, escreva um resumo executivo de 3-5 bullets prontos para uso:
-- Playbook de Prospecção Outbound
-- Playbook de Qualificação Inbound
-- Playbook de Reativação de Leads Frios
-- Playbook de Upsell/Cross-sell
+## 📊 5. Metas de Recuperação no Prazo (${prazoMeses} meses)
+Tabela: Métrica | Hoje | Mês 1 | Mês ${Math.ceil(prazoMeses/2)} | Mês ${prazoMeses}
+Inclua: prospecções/dia, leads/mês, taxa de conversão, ticket médio, faturamento.
+**As metas devem fechar o gap financeiro identificado.**
 
-## 🎯 7. Metas e Objetivos (próximos 90 dias)
-Tabela com: Métrica | Atual estimado | Meta 30d | Meta 60d | Meta 90d
-Inclua: leads/mês, taxa de conversão, ticket médio, ciclo de venda, MRR/faturamento.
+## ⚡ 6. Roadmap Executivo (${prazoMeses} ${prazoMeses === 1 ? "mês" : "meses"})
+Divida em 3 fases proporcionais ao prazo:
+- **Quick Wins** (primeiro terço): 5 ações para parar a hemorragia
+- **Estruturação** (segundo terço): processos e cadências
+- **Escala** (terço final): otimização e previsibilidade
+Cada item: ação | responsável | KPI | módulo Waze.
 
-## 📊 8. KPIs e Indicadores de Acompanhamento
-Lista de 8-10 KPIs operacionais e estratégicos com fórmula e frequência de medição (diária/semanal/mensal).
+## 🔗 7. Conexão com a Plataforma
+Mapeie EXPLICITAMENTE cada gargalo → módulo do sistema:
+- Prospecção fraca → Cadências em /prospeccao
+- Atendimento fraco → Scripts em /processos e /conversas
+- Gestão fraca → /analytics
+- Ligações → /discador
+- Conversão fraca → Funil em /funil
 
-## ⚡ 9. Plano de Ação 30/60/90 dias
-- **Dias 1-30 (Quick Wins)**: 5 ações com responsável sugerido, prazo e KPI
-- **Dias 31-60 (Estruturação)**: 4 iniciativas
-- **Dias 61-90 (Otimização)**: 3 iniciativas
+## 🔥 8. Frases de Impacto (1 linha cada)
+Pelo menos 3 frases curtas e diretas que reforcem urgência (ex: "O problema não é crescer — é parar de perder R$ X/dia").
 
-## 🏆 10. Visão de 6 meses
-Onde a empresa estará se executar o plano (números esperados).
-
-## 🛠 11. Módulos Waze recomendados
-Mapeamento gargalo → módulo: Funil, Cadências IA, Discador, Automações, Conversas, Analytics, Mentoria, Processos Comerciais. Justifique cada um.
-
-REGRAS:
-- Seja **específico, direto e mensurável**. Use números, percentuais e prazos.
-- NÃO entregue genericismos. NÃO escreva "considere", "talvez", "avalie".
-- Linguagem de consultor sênior (McKinsey/Falconi).
-- Adapte o nível de complexidade à classificação atual da empresa (${diagnostic?.classificacao}).`;
+REGRAS OBRIGATÓRIAS:
+- Use os VALORES REAIS do Revenue Leak — nunca diga "estima-se", "considere", "talvez".
+- Linguagem de consultor sênior + tom agressivo de urgência financeira.
+- Toda recomendação deve apontar PARA UM MÓDULO específico do sistema Waze.
+- O prazo é ${prazoMeses} meses (NÃO use "90 dias" se o prazo for diferente).
+- Adapte o discurso ao pior pilar: prospecção → falta de volume; conversão → desperdício; processo → desorganização; gestão → imprevisibilidade.`;
       payload = {
         model: "google/gemini-2.5-pro",
         messages: [
