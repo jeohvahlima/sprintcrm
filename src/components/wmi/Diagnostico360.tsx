@@ -983,6 +983,7 @@ function RevenueLeakCard({ result }: { result: any }) {
   const [idealDia, setIdealDia] = useState(defaults.ideal);
   const [prazo, setPrazo] = useState(defaults.prazo);
   const [showConfig, setShowConfig] = useState(false);
+  const [extraVendas, setExtraVendas] = useState(10);
 
   useEffect(() => {
     setTicket(defaults.ticket);
