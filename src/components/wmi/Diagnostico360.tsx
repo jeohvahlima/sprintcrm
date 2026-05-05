@@ -50,6 +50,7 @@ const EMPTY_DORES: DoresDesejos = {
   swot_oportunidades: "",
   swot_ameacas: "",
   observacoes_alavanca: {},
+  curva_abc: [],
 };
 
 export function Diagnostico360() {
