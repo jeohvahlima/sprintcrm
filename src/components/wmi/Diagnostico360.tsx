@@ -17,10 +17,11 @@ import {
 import {
   useAlavancas, usePerguntas, usePerguntasSegmento, useUltimoDiagnostico,
   useSalvarDiagnostico, useGargalos, useUpdateGargaloStatus,
-  detectarGargalos, CLASSIFICACOES,
-  type Pergunta, type DoresDesejos, type GargaloDetectado,
+  detectarGargalos, calcularRevenueLeak, CLASSIFICACOES,
+  type Pergunta, type DoresDesejos, type GargaloDetectado, type RevenueLeak,
 } from "@/hooks/useDiagnostico360";
 import { useGenerateRoadmap, useWMIRoadmap, useUpdateRoadmapItem } from "@/hooks/useWMI";
+import { useNavigate } from "react-router-dom";
 import { useCompanySegmento } from "@/hooks/useCompanySegmento";
 import { SEGMENTOS_EMPRESA } from "@/lib/segmentos";
 import ReactMarkdown from "react-markdown";
