@@ -111,6 +111,7 @@ export interface DiagnosticoResposta extends DoresDesejos {
   diagnostico_ia: string | null;
   plano_acao_ia: any;
   gargalos_detectados?: GargaloDetectado[];
+  revenue_leak?: RevenueLeak | null;
   created_at: string;
 }
 
