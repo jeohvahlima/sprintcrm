@@ -16,11 +16,13 @@ import {
 } from "lucide-react";
 import {
   useAlavancas, usePerguntas, usePerguntasSegmento, useUltimoDiagnostico,
-  useSalvarDiagnostico, useGargalos, useUpdateGargaloStatus,
+  useSalvarDiagnostico, useGargalos, useUpdateGargaloStatus, useGerarRoadmapDiagnostico,
   detectarGargalos, calcularRevenueLeak, CLASSIFICACOES,
   type Pergunta, type DoresDesejos, type GargaloDetectado, type RevenueLeak,
+  type DiagnosticoResposta,
 } from "@/hooks/useDiagnostico360";
-import { useGenerateRoadmap, useWMIRoadmap, useUpdateRoadmapItem } from "@/hooks/useWMI";
+import { useWMIRoadmap, useUpdateRoadmapItem } from "@/hooks/useWMI";
+import { PlanoIARenderer } from "./PlanoIARenderer";
 import { useNavigate } from "react-router-dom";
 import { useCompanySegmento } from "@/hooks/useCompanySegmento";
 import { SEGMENTOS_EMPRESA } from "@/lib/segmentos";
