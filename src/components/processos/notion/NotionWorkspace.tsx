@@ -372,6 +372,10 @@ export function NotionWorkspace({ companyId }: NotionWorkspaceProps) {
               companyId={companyId} 
               onCreateFromTemplate={handleCreateFromTemplate} 
             />
+            <ImportDocumentDialog
+              companyId={companyId}
+              onCreated={handleCreateFromTemplate}
+            />
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button size="sm">
