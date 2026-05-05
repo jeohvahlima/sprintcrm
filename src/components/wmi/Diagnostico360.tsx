@@ -873,3 +873,149 @@ function ResultadoDiagnostico({
     </div>
   );
 }
+
+// ============================================================
+// 💰 REVENUE LEAK CARD — Custo da Inação
+// ============================================================
+const MODULOS_LINK: Record<string, { label: string; route: string }> = {
+  prospeccao: { label: "Ir para Prospecção", route: "/prospeccao" },
+  processos:  { label: "Ir para Processos Comerciais", route: "/processos" },
+  gestao:     { label: "Ir para Analytics", route: "/analytics" },
+  automacao:  { label: "Ir para IA & Automações", route: "/ia" },
+  pessoas:    { label: "Ir para Gamificação", route: "/configuracoes/gamificacao" },
+};
+
+function RevenueLeakCard({ result }: { result: any }) {
+  const navigate = useNavigate();
+  const leak: RevenueLeak | null =
+    (result?.revenue_leak as RevenueLeak) || calcularRevenueLeak(result || {});
+
+  // Identifica gargalo principal (alavanca com menor score)
+  const piorPilar = useMemo(() => {
+    if (!result?.pontuacoes) return null;
+    const entries = Object.entries(result.pontuacoes as Record<string, number>);
+    if (!entries.length) return null;
+    return entries.sort((a, b) => a[1] - b[1])[0];
+  }, [result]);
+
+  if (!leak) {
+    return (
+      <Card className="border-dashed">
+        <CardContent className="p-6 text-sm text-muted-foreground text-center">
+          <DollarSign className="h-5 w-5 mx-auto mb-2 opacity-50" />
+          Para calcular o <strong>Custo da Inação</strong>, refaça o diagnóstico
+          informando ticket médio, taxa de conversão e prospecções/dia.
+        </CardContent>
+      </Card>
+    );
+  }
+
+  const fmt = (n: number) => `R$ ${Math.round(n).toLocaleString("pt-BR")}`;
+
+  // Discurso adaptativo conforme pior pilar
+  const piorKey = piorPilar?.[0] || "";
+  const focoMensagem = (() => {
+    const kpi = piorKey.includes("prospec")
+      ? "volume de prospecção" : piorKey.includes("processo")
+      ? "padronização de processos" : piorKey.includes("gest")
+      ? "controle e gestão" : piorKey.includes("automa")
+      ? "automação e IA" : piorKey.includes("pesso")
+      ? "performance de pessoas" : "execução comercial";
+    return `Seu principal gargalo é falta de ${kpi}. Hoje você opera com apenas ${leak.capacidade_uso_pct}% da sua capacidade comercial.`;
+  })();
+
+  // Mapeia pior pilar -> módulo da plataforma
+  const moduloRecomendado = piorKey.includes("prospec") ? MODULOS_LINK.prospeccao
+    : piorKey.includes("processo") ? MODULOS_LINK.processos
+    : piorKey.includes("gest") ? MODULOS_LINK.gestao
+    : piorKey.includes("automa") ? MODULOS_LINK.automacao
+    : piorKey.includes("pesso") ? MODULOS_LINK.pessoas
+    : MODULOS_LINK.prospeccao;
+
+  return (
+    <Card className="border-2 border-rose-500/40 overflow-hidden">
+      <div className="h-2 bg-gradient-to-r from-rose-600 via-rose-500 to-orange-500" />
+      <CardHeader className="pb-3">
+        <div className="flex items-center gap-2">
+          <Badge className="bg-rose-500 text-white border-0">💸 Custo da Inação</Badge>
+          <Badge variant="outline" className="text-[10px]">Revenue Leak Engine</Badge>
+        </div>
+        <CardTitle className="text-lg flex items-center gap-2">
+          <Flame className="h-5 w-5 text-rose-500" />
+          Quanto sua empresa deixa de faturar todos os dias
+        </CardTitle>
+        <CardDescription>
+          Cálculo baseado em ticket médio, taxa de conversão e prospecção atual vs. ideal.
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        {/* Cards de impacto */}
+        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
+          <div className="rounded-lg p-3 bg-emerald-500/5 border border-emerald-500/30">
+            <div className="text-[10px] uppercase text-muted-foreground">Receita potencial</div>
+            <div className="text-xl font-bold text-emerald-600">{fmt(leak.receita_potencial)}</div>
+            <div className="text-[10px] text-muted-foreground mt-1">
+              {Math.round(leak.clientes_potenciais)} clientes/mês
+            </div>
+          </div>
+          <div className="rounded-lg p-3 bg-muted/40 border">
+            <div className="text-[10px] uppercase text-muted-foreground">Receita atual estimada</div>
+            <div className="text-xl font-bold">{fmt(leak.receita_atual_estimada)}</div>
+            <div className="text-[10px] text-muted-foreground mt-1">
+              {Math.round(leak.clientes_atuais)} clientes/mês
+            </div>
+          </div>
+          <div className="rounded-lg p-3 bg-rose-500/10 border border-rose-500/30">
+            <div className="text-[10px] uppercase text-rose-600 font-semibold">🚨 Perda mensal</div>
+            <div className="text-xl font-bold text-rose-600">{fmt(leak.perda_mensal)}</div>
+            <div className="text-[10px] text-muted-foreground mt-1">
+              ≈ {fmt(leak.perda_diaria)}/dia
+            </div>
+          </div>
+          <div className="rounded-lg p-3 bg-gradient-to-br from-rose-500/15 to-rose-700/10 border-2 border-rose-500/50">
+            <div className="text-[10px] uppercase text-rose-700 font-semibold">⏳ Em {leak.prazo_meses} {leak.prazo_meses === 1 ? "mês" : "meses"}</div>
+            <div className="text-2xl font-bold text-rose-700">{fmt(leak.perda_projetada)}</div>
+            <div className="text-[10px] text-rose-600 mt-1 font-medium">
+              deixados na mesa
+            </div>
+          </div>
+        </div>
+
+        {/* Capacidade usada */}
+        <div className="rounded-lg p-3 border bg-gradient-to-r from-amber-500/5 to-rose-500/5">
+          <div className="flex items-center justify-between text-xs mb-1.5">
+            <span className="font-semibold">Capacidade comercial usada</span>
+            <span className="font-mono">{leak.capacidade_uso_pct}%</span>
+          </div>
+          <Progress value={leak.capacidade_uso_pct} className="h-2" />
+          <div className="text-[11px] text-muted-foreground mt-2">
+            {leak.leads_atuais_mes} leads/mês atuais ↔ {leak.leads_ideais_mes} leads/mês necessários
+          </div>
+        </div>
+
+        {/* Frase de impacto + diagnóstico interpretativo */}
+        <div className="rounded-lg p-4 bg-gradient-to-br from-rose-500/10 to-orange-500/5 border border-rose-500/30">
+          <p className="text-sm font-semibold text-foreground">
+            "Você não está faturando pouco — está deixando dinheiro na mesa todos os dias."
+          </p>
+          <p className="text-xs text-muted-foreground mt-2">{focoMensagem}</p>
+        </div>
+
+        {/* CTA — Ação direta no módulo certo */}
+        <div className="flex flex-col sm:flex-row gap-2 items-stretch sm:items-center justify-between p-3 rounded-lg border-2 border-primary/40 bg-primary/5">
+          <div className="text-sm">
+            <div className="font-semibold flex items-center gap-1">
+              <Zap className="h-4 w-4 text-primary" /> Ação imediata recomendada
+            </div>
+            <div className="text-xs text-muted-foreground mt-0.5">
+              Resolva o gargalo principal direto no módulo correspondente.
+            </div>
+          </div>
+          <Button onClick={() => navigate(moduloRecomendado.route)} className="gap-2">
+            {moduloRecomendado.label} <ChevronRight className="h-4 w-4" />
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
