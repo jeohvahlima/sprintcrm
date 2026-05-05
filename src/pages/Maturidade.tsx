@@ -232,28 +232,7 @@ export default function Maturidade() {
         </TabsContent>
       </Tabs>
 
-      {/* UPSELL MENTORIA */}
-      {score.total_score < 70 && (
-        <Card className="border-2 border-primary/30 bg-gradient-to-br from-primary/5 to-primary/10 overflow-hidden">
-          <CardContent className="p-6">
-            <div className="flex flex-col md:flex-row items-start md:items-center gap-4">
-              <div className="p-4 rounded-xl bg-gradient-to-br from-primary to-primary/70 text-primary-foreground">
-                <GraduationCap className="h-8 w-8" />
-              </div>
-              <div className="flex-1">
-                <h3 className="text-lg font-bold">Acelere para o nível Escalável com Waze Advisory</h3>
-                <p className="text-sm text-muted-foreground mt-1">
-                  Mentores sêniores Waze ajudam você a destravar os pilares fracos. Sessões 1:1, trilhas, biblioteca de playbooks e máquina de vendas.
-                </p>
-              </div>
-              <Button onClick={() => navigate("/mentoria")} className="gap-2">
-                <Sparkles className="h-4 w-4" />
-                Conhecer Advisory
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      )}
+      {/* UPSELL MENTORIA — oculto enquanto o módulo Advisory estiver indisponível para subcontas */}
     </div>
   );
 }
