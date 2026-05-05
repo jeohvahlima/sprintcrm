@@ -31,6 +31,64 @@ export interface DoresDesejos {
   swot_oportunidades?: string;
   swot_ameacas?: string;
   observacoes_alavanca?: Record<string, string>;
+  // KPIs operacionais para o motor "Custo da Inação"
+  ticket_medio?: number;
+  taxa_conversao?: number; // 0-100 (%)
+  prospeccoes_dia_atual?: number;
+  prospeccoes_dia_ideal?: number;
+  dias_uteis_mes?: number;
+}
+
+export interface RevenueLeak {
+  receita_potencial: number;
+  receita_atual_estimada: number;
+  perda_mensal: number;
+  perda_diaria: number;
+  perda_projetada: number; // no prazo escolhido
+  capacidade_uso_pct: number;
+  prazo_meses: number;
+  leads_ideais_mes: number;
+  leads_atuais_mes: number;
+  clientes_potenciais: number;
+  clientes_atuais: number;
+}
+
+/** Calcula o "Revenue Leak Engine" com base nos KPIs informados */
+export function calcularRevenueLeak(d: DoresDesejos): RevenueLeak | null {
+  const ticket = Number(d.ticket_medio) || 0;
+  const conv = (Number(d.taxa_conversao) || 0) / 100;
+  const dias = Number(d.dias_uteis_mes) || 20;
+  const atualDia = Number(d.prospeccoes_dia_atual) || 0;
+  const idealDia = Number(d.prospeccoes_dia_ideal) || 0;
+  const prazo = Number(d.prazo_meta_meses) || 3;
+  if (!ticket || !conv || (!atualDia && !idealDia)) return null;
+
+  const leadsIdeaisMes = idealDia * dias;
+  const leadsAtuaisMes = atualDia * dias;
+  const clientesPotenciais = leadsIdeaisMes * conv;
+  const clientesAtuais = leadsAtuaisMes * conv;
+  const receitaPotencial = clientesPotenciais * ticket;
+  const receitaAtualEst = clientesAtuais * ticket;
+  const perdaMensal = Math.max(0, receitaPotencial - receitaAtualEst);
+  const perdaDiaria = perdaMensal / dias;
+  const perdaProjetada = perdaMensal * prazo;
+  const capacidadePct = receitaPotencial > 0
+    ? Math.round((receitaAtualEst / receitaPotencial) * 100)
+    : 0;
+
+  return {
+    receita_potencial: receitaPotencial,
+    receita_atual_estimada: receitaAtualEst,
+    perda_mensal: perdaMensal,
+    perda_diaria: perdaDiaria,
+    perda_projetada: perdaProjetada,
+    capacidade_uso_pct: capacidadePct,
+    prazo_meses: prazo,
+    leads_ideais_mes: leadsIdeaisMes,
+    leads_atuais_mes: leadsAtuaisMes,
+    clientes_potenciais: clientesPotenciais,
+    clientes_atuais: clientesAtuais,
+  };
 }
 
 export interface GargaloDetectado {
@@ -53,6 +111,7 @@ export interface DiagnosticoResposta extends DoresDesejos {
   diagnostico_ia: string | null;
   plano_acao_ia: any;
   gargalos_detectados?: GargaloDetectado[];
+  revenue_leak?: RevenueLeak | null;
   created_at: string;
 }
 
@@ -253,6 +312,7 @@ export function useSalvarDiagnostico() {
       const percentual = max > 0 ? Math.round((total / max) * 100) : 0;
       const nota = calcularNota(percentual);
       const classificacao = CLASSIFICACOES[nota].titulo;
+      const revenueLeak = calcularRevenueLeak(dores);
 
       const { data: saved, error } = await supabase
         .from("diagnostico_respostas" as any)
@@ -267,6 +327,7 @@ export function useSalvarDiagnostico() {
           classificacao,
           segmento: input.segmento,
           gargalos_detectados: gargalos as any,
+          revenue_leak: revenueLeak as any,
           ...dores,
         })
         .select()
@@ -300,6 +361,8 @@ export function useSalvarDiagnostico() {
               segmento: input.segmento,
               dores,
               gargalos,
+              revenue_leak: revenueLeak,
+              prazo_meses: dores.prazo_meta_meses || 3,
             },
           },
         });

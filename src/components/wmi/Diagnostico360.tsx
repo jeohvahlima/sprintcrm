@@ -17,10 +17,11 @@ import {
 import {
   useAlavancas, usePerguntas, usePerguntasSegmento, useUltimoDiagnostico,
   useSalvarDiagnostico, useGargalos, useUpdateGargaloStatus,
-  detectarGargalos, CLASSIFICACOES,
-  type Pergunta, type DoresDesejos, type GargaloDetectado,
+  detectarGargalos, calcularRevenueLeak, CLASSIFICACOES,
+  type Pergunta, type DoresDesejos, type GargaloDetectado, type RevenueLeak,
 } from "@/hooks/useDiagnostico360";
 import { useGenerateRoadmap, useWMIRoadmap, useUpdateRoadmapItem } from "@/hooks/useWMI";
+import { useNavigate } from "react-router-dom";
 import { useCompanySegmento } from "@/hooks/useCompanySegmento";
 import { SEGMENTOS_EMPRESA } from "@/lib/segmentos";
 import ReactMarkdown from "react-markdown";
@@ -233,7 +234,7 @@ export function Diagnostico360() {
             />
           </div>
 
-          <div className="grid sm:grid-cols-3 gap-3">
+          <div className="grid sm:grid-cols-2 gap-3">
             <div className="space-y-2">
               <Label className="flex items-center gap-1"><DollarSign className="h-3 w-3" /> Faturamento atual / mês</Label>
               <Input
@@ -250,14 +251,6 @@ export function Diagnostico360() {
                 onChange={(e) => setDores({ ...dores, meta_faturamento: Number(e.target.value) || undefined })}
               />
             </div>
-            <div className="space-y-2">
-              <Label className="flex items-center gap-1"><Calendar className="h-3 w-3" /> Prazo (meses)</Label>
-              <Input
-                type="number" placeholder="6"
-                value={dores.prazo_meta_meses ?? ""}
-                onChange={(e) => setDores({ ...dores, prazo_meta_meses: Number(e.target.value) || undefined })}
-              />
-            </div>
           </div>
 
           {dores.faturamento_atual && dores.meta_faturamento && dores.meta_faturamento > dores.faturamento_atual && (
@@ -271,6 +264,82 @@ export function Diagnostico360() {
               </div>
             </div>
           )}
+
+          {/* === KPIs operacionais — alimenta o motor "Custo da Inação" === */}
+          <div className="border-2 border-rose-500/30 rounded-lg p-4 space-y-3 bg-gradient-to-br from-rose-500/5 to-orange-500/5">
+            <div className="flex items-center gap-2">
+              <DollarSign className="h-4 w-4 text-rose-500" />
+              <Label className="text-sm font-semibold">KPIs operacionais (motor Custo da Inação)</Label>
+            </div>
+            <p className="text-[11px] text-muted-foreground -mt-1">
+              Esses números são usados para calcular <strong>quanto sua empresa deixa de faturar por dia</strong> com a operação atual.
+            </p>
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              <div className="space-y-1">
+                <Label className="text-xs">Ticket médio (R$)</Label>
+                <Input type="number" placeholder="1500"
+                  value={dores.ticket_medio ?? ""}
+                  onChange={(e) => setDores({ ...dores, ticket_medio: Number(e.target.value) || undefined })} />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs">Taxa de conversão (%)</Label>
+                <Input type="number" placeholder="20"
+                  value={dores.taxa_conversao ?? ""}
+                  onChange={(e) => setDores({ ...dores, taxa_conversao: Number(e.target.value) || undefined })} />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs">Dias úteis / mês</Label>
+                <Input type="number" placeholder="20"
+                  value={dores.dias_uteis_mes ?? 20}
+                  onChange={(e) => setDores({ ...dores, dias_uteis_mes: Number(e.target.value) || undefined })} />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs">Prospecções/dia <span className="text-muted-foreground">(atual)</span></Label>
+                <Input type="number" placeholder="5"
+                  value={dores.prospeccoes_dia_atual ?? ""}
+                  onChange={(e) => setDores({ ...dores, prospeccoes_dia_atual: Number(e.target.value) || undefined })} />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs">Prospecções/dia <span className="text-emerald-500">(ideal p/ meta)</span></Label>
+                <Input type="number" placeholder="30"
+                  value={dores.prospeccoes_dia_ideal ?? ""}
+                  onChange={(e) => setDores({ ...dores, prospeccoes_dia_ideal: Number(e.target.value) || undefined })} />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs">Prazo p/ atingir meta (meses)</Label>
+                <Input type="number" placeholder="3"
+                  value={dores.prazo_meta_meses ?? ""}
+                  onChange={(e) => setDores({ ...dores, prazo_meta_meses: Number(e.target.value) || undefined })} />
+              </div>
+            </div>
+
+            {/* Prévia do leak */}
+            {(() => {
+              const leak = calcularRevenueLeak(dores);
+              if (!leak) return (
+                <p className="text-[11px] text-muted-foreground italic">
+                  Preencha ticket médio, taxa de conversão e prospecções/dia para ver sua perda estimada.
+                </p>
+              );
+              return (
+                <div className="grid sm:grid-cols-3 gap-2 pt-2 border-t border-rose-500/20">
+                  <div className="text-center">
+                    <div className="text-[10px] text-muted-foreground uppercase">Perda mensal</div>
+                    <div className="text-lg font-bold text-rose-600">R$ {Math.round(leak.perda_mensal).toLocaleString("pt-BR")}</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-[10px] text-muted-foreground uppercase">Por dia</div>
+                    <div className="text-lg font-bold text-rose-500">R$ {Math.round(leak.perda_diaria).toLocaleString("pt-BR")}</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-[10px] text-muted-foreground uppercase">Em {leak.prazo_meses}m</div>
+                    <div className="text-lg font-bold text-rose-700">R$ {Math.round(leak.perda_projetada).toLocaleString("pt-BR")}</div>
+                  </div>
+                </div>
+              );
+            })()}
+          </div>
+
 
           <div className="flex justify-between pt-2 gap-2">
             <Button variant="outline" onClick={() => setStep("intro")} className="gap-2">
@@ -601,6 +670,9 @@ function ResultadoDiagnostico({
         </Card>
       )}
 
+      {/* === CUSTO DA INAÇÃO (Revenue Leak Engine) === */}
+      <RevenueLeakCard result={result} />
+
       {/* ALAVANCAS - Cards */}
       <div className="grid md:grid-cols-2 lg:grid-cols-5 gap-3">
         {alavancas.map((a) => {
@@ -710,15 +782,19 @@ function ResultadoDiagnostico({
         </Card>
       )}
 
-      {/* ROADMAP 90 DIAS */}
+      {/* ROADMAP — prazo dinâmico definido pela empresa */}
+      {(() => {
+        const meses = result.prazo_meta_meses || 3;
+        const semanas = Math.max(3, Math.round(meses * 4));
+        return (
       <Card className="border-2 border-primary/30">
         <CardHeader>
           <div className="flex items-center justify-between gap-3 flex-wrap">
             <div>
               <CardTitle className="text-base flex items-center gap-2">
-                <Map className="h-5 w-5 text-primary" /> Roadmap 90 dias
+                <Map className="h-5 w-5 text-primary" /> Roadmap {meses} {meses === 1 ? "mês" : "meses"}
               </CardTitle>
-              <CardDescription>Plano semanal de correção dos gargalos.</CardDescription>
+              <CardDescription>Plano semanal alinhado ao seu prazo para atingir a meta ({semanas} semanas).</CardDescription>
             </div>
             <Button size="sm" onClick={onGerarRoadmap} disabled={isGenerating} className="gap-2">
               {isGenerating ? <Loader2 className="h-3 w-3 animate-spin" /> : <Sparkles className="h-3 w-3" />}
@@ -786,6 +862,8 @@ function ResultadoDiagnostico({
           )}
         </CardContent>
       </Card>
+        );
+      })()}
 
       <div className="flex gap-2">
         <Button variant="outline" onClick={onRefazer} className="gap-2">
@@ -793,5 +871,151 @@ function ResultadoDiagnostico({
         </Button>
       </div>
     </div>
+  );
+}
+
+// ============================================================
+// 💰 REVENUE LEAK CARD — Custo da Inação
+// ============================================================
+const MODULOS_LINK: Record<string, { label: string; route: string }> = {
+  prospeccao: { label: "Ir para Prospecção", route: "/prospeccao" },
+  processos:  { label: "Ir para Processos Comerciais", route: "/processos" },
+  gestao:     { label: "Ir para Analytics", route: "/analytics" },
+  automacao:  { label: "Ir para IA & Automações", route: "/ia" },
+  pessoas:    { label: "Ir para Gamificação", route: "/configuracoes/gamificacao" },
+};
+
+function RevenueLeakCard({ result }: { result: any }) {
+  const navigate = useNavigate();
+  const leak: RevenueLeak | null =
+    (result?.revenue_leak as RevenueLeak) || calcularRevenueLeak(result || {});
+
+  // Identifica gargalo principal (alavanca com menor score)
+  const piorPilar = useMemo(() => {
+    if (!result?.pontuacoes) return null;
+    const entries = Object.entries(result.pontuacoes as Record<string, number>);
+    if (!entries.length) return null;
+    return entries.sort((a, b) => a[1] - b[1])[0];
+  }, [result]);
+
+  if (!leak) {
+    return (
+      <Card className="border-dashed">
+        <CardContent className="p-6 text-sm text-muted-foreground text-center">
+          <DollarSign className="h-5 w-5 mx-auto mb-2 opacity-50" />
+          Para calcular o <strong>Custo da Inação</strong>, refaça o diagnóstico
+          informando ticket médio, taxa de conversão e prospecções/dia.
+        </CardContent>
+      </Card>
+    );
+  }
+
+  const fmt = (n: number) => `R$ ${Math.round(n).toLocaleString("pt-BR")}`;
+
+  // Discurso adaptativo conforme pior pilar
+  const piorKey = piorPilar?.[0] || "";
+  const focoMensagem = (() => {
+    const kpi = piorKey.includes("prospec")
+      ? "volume de prospecção" : piorKey.includes("processo")
+      ? "padronização de processos" : piorKey.includes("gest")
+      ? "controle e gestão" : piorKey.includes("automa")
+      ? "automação e IA" : piorKey.includes("pesso")
+      ? "performance de pessoas" : "execução comercial";
+    return `Seu principal gargalo é falta de ${kpi}. Hoje você opera com apenas ${leak.capacidade_uso_pct}% da sua capacidade comercial.`;
+  })();
+
+  // Mapeia pior pilar -> módulo da plataforma
+  const moduloRecomendado = piorKey.includes("prospec") ? MODULOS_LINK.prospeccao
+    : piorKey.includes("processo") ? MODULOS_LINK.processos
+    : piorKey.includes("gest") ? MODULOS_LINK.gestao
+    : piorKey.includes("automa") ? MODULOS_LINK.automacao
+    : piorKey.includes("pesso") ? MODULOS_LINK.pessoas
+    : MODULOS_LINK.prospeccao;
+
+  return (
+    <Card className="border-2 border-rose-500/40 overflow-hidden">
+      <div className="h-2 bg-gradient-to-r from-rose-600 via-rose-500 to-orange-500" />
+      <CardHeader className="pb-3">
+        <div className="flex items-center gap-2">
+          <Badge className="bg-rose-500 text-white border-0">💸 Custo da Inação</Badge>
+          <Badge variant="outline" className="text-[10px]">Revenue Leak Engine</Badge>
+        </div>
+        <CardTitle className="text-lg flex items-center gap-2">
+          <Flame className="h-5 w-5 text-rose-500" />
+          Quanto sua empresa deixa de faturar todos os dias
+        </CardTitle>
+        <CardDescription>
+          Cálculo baseado em ticket médio, taxa de conversão e prospecção atual vs. ideal.
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        {/* Cards de impacto */}
+        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
+          <div className="rounded-lg p-3 bg-emerald-500/5 border border-emerald-500/30">
+            <div className="text-[10px] uppercase text-muted-foreground">Receita potencial</div>
+            <div className="text-xl font-bold text-emerald-600">{fmt(leak.receita_potencial)}</div>
+            <div className="text-[10px] text-muted-foreground mt-1">
+              {Math.round(leak.clientes_potenciais)} clientes/mês
+            </div>
+          </div>
+          <div className="rounded-lg p-3 bg-muted/40 border">
+            <div className="text-[10px] uppercase text-muted-foreground">Receita atual estimada</div>
+            <div className="text-xl font-bold">{fmt(leak.receita_atual_estimada)}</div>
+            <div className="text-[10px] text-muted-foreground mt-1">
+              {Math.round(leak.clientes_atuais)} clientes/mês
+            </div>
+          </div>
+          <div className="rounded-lg p-3 bg-rose-500/10 border border-rose-500/30">
+            <div className="text-[10px] uppercase text-rose-600 font-semibold">🚨 Perda mensal</div>
+            <div className="text-xl font-bold text-rose-600">{fmt(leak.perda_mensal)}</div>
+            <div className="text-[10px] text-muted-foreground mt-1">
+              ≈ {fmt(leak.perda_diaria)}/dia
+            </div>
+          </div>
+          <div className="rounded-lg p-3 bg-gradient-to-br from-rose-500/15 to-rose-700/10 border-2 border-rose-500/50">
+            <div className="text-[10px] uppercase text-rose-700 font-semibold">⏳ Em {leak.prazo_meses} {leak.prazo_meses === 1 ? "mês" : "meses"}</div>
+            <div className="text-2xl font-bold text-rose-700">{fmt(leak.perda_projetada)}</div>
+            <div className="text-[10px] text-rose-600 mt-1 font-medium">
+              deixados na mesa
+            </div>
+          </div>
+        </div>
+
+        {/* Capacidade usada */}
+        <div className="rounded-lg p-3 border bg-gradient-to-r from-amber-500/5 to-rose-500/5">
+          <div className="flex items-center justify-between text-xs mb-1.5">
+            <span className="font-semibold">Capacidade comercial usada</span>
+            <span className="font-mono">{leak.capacidade_uso_pct}%</span>
+          </div>
+          <Progress value={leak.capacidade_uso_pct} className="h-2" />
+          <div className="text-[11px] text-muted-foreground mt-2">
+            {leak.leads_atuais_mes} leads/mês atuais ↔ {leak.leads_ideais_mes} leads/mês necessários
+          </div>
+        </div>
+
+        {/* Frase de impacto + diagnóstico interpretativo */}
+        <div className="rounded-lg p-4 bg-gradient-to-br from-rose-500/10 to-orange-500/5 border border-rose-500/30">
+          <p className="text-sm font-semibold text-foreground">
+            "Você não está faturando pouco — está deixando dinheiro na mesa todos os dias."
+          </p>
+          <p className="text-xs text-muted-foreground mt-2">{focoMensagem}</p>
+        </div>
+
+        {/* CTA — Ação direta no módulo certo */}
+        <div className="flex flex-col sm:flex-row gap-2 items-stretch sm:items-center justify-between p-3 rounded-lg border-2 border-primary/40 bg-primary/5">
+          <div className="text-sm">
+            <div className="font-semibold flex items-center gap-1">
+              <Zap className="h-4 w-4 text-primary" /> Ação imediata recomendada
+            </div>
+            <div className="text-xs text-muted-foreground mt-0.5">
+              Resolva o gargalo principal direto no módulo correspondente.
+            </div>
+          </div>
+          <Button onClick={() => navigate(moduloRecomendado.route)} className="gap-2">
+            {moduloRecomendado.label} <ChevronRight className="h-4 w-4" />
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
   );
 }
