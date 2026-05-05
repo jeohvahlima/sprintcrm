@@ -273,6 +273,82 @@ export function Diagnostico360() {
             </div>
           )}
 
+          {/* === KPIs operacionais — alimenta o motor "Custo da Inação" === */}
+          <div className="border-2 border-rose-500/30 rounded-lg p-4 space-y-3 bg-gradient-to-br from-rose-500/5 to-orange-500/5">
+            <div className="flex items-center gap-2">
+              <DollarSign className="h-4 w-4 text-rose-500" />
+              <Label className="text-sm font-semibold">KPIs operacionais (motor Custo da Inação)</Label>
+            </div>
+            <p className="text-[11px] text-muted-foreground -mt-1">
+              Esses números são usados para calcular <strong>quanto sua empresa deixa de faturar por dia</strong> com a operação atual.
+            </p>
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              <div className="space-y-1">
+                <Label className="text-xs">Ticket médio (R$)</Label>
+                <Input type="number" placeholder="1500"
+                  value={dores.ticket_medio ?? ""}
+                  onChange={(e) => setDores({ ...dores, ticket_medio: Number(e.target.value) || undefined })} />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs">Taxa de conversão (%)</Label>
+                <Input type="number" placeholder="20"
+                  value={dores.taxa_conversao ?? ""}
+                  onChange={(e) => setDores({ ...dores, taxa_conversao: Number(e.target.value) || undefined })} />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs">Dias úteis / mês</Label>
+                <Input type="number" placeholder="20"
+                  value={dores.dias_uteis_mes ?? 20}
+                  onChange={(e) => setDores({ ...dores, dias_uteis_mes: Number(e.target.value) || undefined })} />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs">Prospecções/dia <span className="text-muted-foreground">(atual)</span></Label>
+                <Input type="number" placeholder="5"
+                  value={dores.prospeccoes_dia_atual ?? ""}
+                  onChange={(e) => setDores({ ...dores, prospeccoes_dia_atual: Number(e.target.value) || undefined })} />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs">Prospecções/dia <span className="text-emerald-500">(ideal p/ meta)</span></Label>
+                <Input type="number" placeholder="30"
+                  value={dores.prospeccoes_dia_ideal ?? ""}
+                  onChange={(e) => setDores({ ...dores, prospeccoes_dia_ideal: Number(e.target.value) || undefined })} />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs">Prazo p/ atingir meta (meses)</Label>
+                <Input type="number" placeholder="3"
+                  value={dores.prazo_meta_meses ?? ""}
+                  onChange={(e) => setDores({ ...dores, prazo_meta_meses: Number(e.target.value) || undefined })} />
+              </div>
+            </div>
+
+            {/* Prévia do leak */}
+            {(() => {
+              const leak = calcularRevenueLeak(dores);
+              if (!leak) return (
+                <p className="text-[11px] text-muted-foreground italic">
+                  Preencha ticket médio, taxa de conversão e prospecções/dia para ver sua perda estimada.
+                </p>
+              );
+              return (
+                <div className="grid sm:grid-cols-3 gap-2 pt-2 border-t border-rose-500/20">
+                  <div className="text-center">
+                    <div className="text-[10px] text-muted-foreground uppercase">Perda mensal</div>
+                    <div className="text-lg font-bold text-rose-600">R$ {Math.round(leak.perda_mensal).toLocaleString("pt-BR")}</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-[10px] text-muted-foreground uppercase">Por dia</div>
+                    <div className="text-lg font-bold text-rose-500">R$ {Math.round(leak.perda_diaria).toLocaleString("pt-BR")}</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-[10px] text-muted-foreground uppercase">Em {leak.prazo_meses}m</div>
+                    <div className="text-lg font-bold text-rose-700">R$ {Math.round(leak.perda_projetada).toLocaleString("pt-BR")}</div>
+                  </div>
+                </div>
+              );
+            })()}
+          </div>
+
+
           <div className="flex justify-between pt-2 gap-2">
             <Button variant="outline" onClick={() => setStep("intro")} className="gap-2">
               <ChevronLeft className="h-4 w-4" /> Voltar
