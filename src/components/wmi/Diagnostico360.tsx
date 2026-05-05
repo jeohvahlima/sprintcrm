@@ -983,6 +983,7 @@ function RevenueLeakCard({ result }: { result: any }) {
   const [idealDia, setIdealDia] = useState(defaults.ideal);
   const [prazo, setPrazo] = useState(defaults.prazo);
   const [showConfig, setShowConfig] = useState(false);
+  const [extraVendas, setExtraVendas] = useState(10);
 
   useEffect(() => {
     setTicket(defaults.ticket);
@@ -1154,6 +1155,57 @@ function RevenueLeakCard({ result }: { result: any }) {
               ≈ <b>{Math.round(leak.clientes_potenciais)} clientes/mês</b> · {leak.leads_ideais_mes} leads/mês
             </div>
           </div>
+        </div>
+
+        {/* ====== SIMULADOR RÁPIDO: "E SE eu vendesse +X clientes?" ====== */}
+        <div className="rounded-lg border-2 border-primary/40 bg-primary/5 p-3">
+          <div className="flex items-center gap-2 mb-2">
+            <Badge className="bg-primary text-primary-foreground border-0 text-[10px]">🧮 SIMULADOR RÁPIDO</Badge>
+            <span className="text-xs font-semibold">E se eu fizesse mais vendas no mesmo ticket?</span>
+          </div>
+          <div className="grid sm:grid-cols-3 gap-3 items-end">
+            <div className="space-y-1">
+              <Label className="text-[11px]">Vendas extras / mês</Label>
+              <Input
+                type="number"
+                min={0}
+                value={extraVendas}
+                onChange={(e) => setExtraVendas(Math.max(0, Number(e.target.value) || 0))}
+              />
+              <div className="flex gap-1 pt-1">
+                {[5, 10, 20, 50].map((n) => (
+                  <Button
+                    key={n}
+                    size="sm"
+                    variant={extraVendas === n ? "default" : "outline"}
+                    onClick={() => setExtraVendas(n)}
+                    className="flex-1 h-7 text-[11px]"
+                  >+{n}</Button>
+                ))}
+              </div>
+            </div>
+            <div className="rounded-lg p-3 border bg-background">
+              <div className="text-[10px] uppercase font-bold text-muted-foreground">Receita extra / mês</div>
+              <div className="text-2xl font-black text-emerald-600">{fmt(extraVendas * ticket)}</div>
+              <div className="text-[10px] text-muted-foreground">
+                {extraVendas} vendas × {fmt(ticket)} ticket
+              </div>
+            </div>
+            <div className="rounded-lg p-3 border bg-background">
+              <div className="text-[10px] uppercase font-bold text-muted-foreground">Novo faturamento / mês</div>
+              <div className="text-2xl font-black text-foreground">
+                {fmt(leak.receita_atual_estimada + extraVendas * ticket)}
+              </div>
+              <div className="text-[10px] text-muted-foreground">
+                Em {prazo}m: <b className="text-emerald-600">{fmt((leak.receita_atual_estimada + extraVendas * ticket) * prazo)}</b>
+              </div>
+            </div>
+          </div>
+          <p className="text-[11px] text-muted-foreground mt-2">
+            💡 Para conquistar <b>{extraVendas} clientes a mais</b> com sua conversão de <b>{conv}%</b>, você precisa de
+            {" "}<b>≈ {Math.ceil(extraVendas / Math.max(0.01, conv / 100))} leads extras/mês</b>
+            {" "}({Math.ceil(extraVendas / Math.max(0.01, conv / 100) / defaults.dias)} prospecções/dia a mais).
+          </p>
         </div>
 
         {/* ====== HEMORRAGIA EM LINHAS DE TEMPO ====== */}
