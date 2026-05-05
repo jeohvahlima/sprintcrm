@@ -43,6 +43,7 @@ import { CloserInbox } from "@/components/prospeccao/comercial/CloserInbox";
 import { ManagerCommandCenter } from "@/components/prospeccao/comercial/ManagerCommandCenter";
 import { SDRQueuePanel } from "@/components/prospeccao/comercial/SDRQueuePanel";
 import { SocialSellingPanel } from "@/components/prospeccao/SocialSellingPanel";
+import { RotinaInteligente } from "@/components/prospeccao/RotinaInteligente";
 import { usePermissions } from "@/hooks/usePermissions";
 
 const RPG_KEY = "prospeccao_rpg_mode";
@@ -53,7 +54,7 @@ export default function Prospeccao() {
   const isMobile = useIsMobile();
   const [rpgMode, setRpgMode] = useState<boolean>(() => localStorage.getItem(RPG_KEY) !== "false");
   const [soundOn, setSoundOn] = useState<boolean>(() => localStorage.getItem(SOUND_KEY) === "true");
-  const [activeTab, setActiveTab] = useState<"organic" | "paid" | "followup" | "arena" | "coldcall" | "instagram" | "whatsapp" | "funil" | "closer" | "comando" | "fila" | "intel" | "social">("followup");
+  const [activeTab, setActiveTab] = useState<"organic" | "paid" | "followup" | "arena" | "coldcall" | "instagram" | "whatsapp" | "funil" | "closer" | "comando" | "fila" | "intel" | "social" | "rotina">("followup");
   const [subTab, setSubTab] = useState<"registros" | "interacoes">("registros");
   const [channelView, setChannelView] = useState<"prospect" | "chat" | "funil">("prospect");
   const [instagramSub, setInstagramSub] = useState<"chat" | "social" | "prospect">("chat");
@@ -81,7 +82,8 @@ export default function Prospeccao() {
   const isFilaTab = activeTab === "fila";
   const isIntelTab = activeTab === "intel";
   const isSocialTab = activeTab === "social";
-  const channelType = activeTab === "followup" || activeTab === "arena" || isChannelTab || isFunilTab || isCloserTab || isComandoTab || isFilaTab || isIntelTab || isSocialTab ? "organic" : activeTab;
+  const isRotinaTab = activeTab === "rotina";
+  const channelType = activeTab === "followup" || activeTab === "arena" || isChannelTab || isFunilTab || isCloserTab || isComandoTab || isFilaTab || isIntelTab || isSocialTab || isRotinaTab ? "organic" : activeTab;
   const { data, isLoading, refetch } = useProspeccaoData(channelType as "organic" | "paid", parseInt(period));
   const { data: followUpData, isLoading: followUpLoading, refetch: followUpRefetch } = useFollowUpData(parseInt(period));
 
@@ -172,6 +174,7 @@ export default function Prospeccao() {
     fila: "Minha Fila",
     intel: "Metas e Vendas",
     social: "Social Selling",
+    rotina: "Rotina Inteligente",
   };
 
   return (
@@ -252,12 +255,17 @@ export default function Prospeccao() {
               {/* Funil de Vendas e Leads Qualificados ocultos */}
               {isManagerLike && <TabsTrigger value="comando">{labels.comando}</TabsTrigger>}
               <TabsTrigger value="intel">🎯 {labels.intel}</TabsTrigger>
+              <TabsTrigger value="rotina">🧠 {labels.rotina}</TabsTrigger>
               {gamificationOn && <TabsTrigger value="arena">{labels.arena}</TabsTrigger>}
             </TabsList>
 
             {/* Sub-abas Registros/Interações ocultas conforme solicitado */}
 
-            {isSocialTab ? (
+            {isRotinaTab ? (
+              <div className="mt-4">
+                <RotinaInteligente />
+              </div>
+            ) : isSocialTab ? (
               <div className="mt-4">
                 <SocialSellingPanel />
               </div>
