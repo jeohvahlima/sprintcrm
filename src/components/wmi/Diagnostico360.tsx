@@ -411,6 +411,12 @@ export function Diagnostico360() {
             })}
           </div>
 
+          {/* Curva ABC integrada */}
+          <CurvaABCEditor
+            value={(dores.curva_abc as any) || []}
+            onChange={(curva_abc) => setDores({ ...dores, curva_abc } as any)}
+          />
+
           <div className="flex justify-between pt-2 gap-2">
             <Button variant="outline" onClick={() => setStep("dores")} className="gap-2">
               <ChevronLeft className="h-4 w-4" /> Voltar
