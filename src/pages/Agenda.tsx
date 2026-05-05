@@ -1507,8 +1507,6 @@ export default function Agenda() {
               console.log('📅 [LEMBRETE] Data do compromisso:', dataHoraInicio.toISOString());
               console.log('⏰ [LEMBRETE] Antecedência:', tempoAntecedenciaDecimal, 'horas');
               console.log('🔗 [LEMBRETE] Vinculado ao compromisso:', compromisso.id);
-            } else {
-              console.log('✅ [LEMBRETE] Lembrete principal criado:', lembreteCriado?.id);
             }
 
             // 🔁 Lembretes ADICIONAIS — WhatsApp 24h antes + E-mail 24h antes
