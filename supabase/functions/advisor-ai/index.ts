@@ -106,6 +106,22 @@ DADOS FINANCEIROS DO MOTOR "CUSTO DA INAÇÃO" (Revenue Leak Engine):
 - Clientes atuais/mês: ${Math.round(leak.clientes_atuais)} | Potenciais: ${Math.round(leak.clientes_potenciais)}
 ` : "(Sem dados financeiros — peça ao usuário para informar ticket médio, taxa de conversão e prospecções/dia.)";
 
+      const curva = diagnostic?.curva_abc || diagnostic?.dores?.curva_abc || [];
+      const totalABC = curva.reduce((s: number, p: any) => s + Number(p.receita_mensal || 0), 0);
+      const grupoA = curva.filter((p: any) => p.curva === "A");
+      const grupoB = curva.filter((p: any) => p.curva === "B");
+      const grupoC = curva.filter((p: any) => p.curva === "C");
+      const topProduto = grupoA[0];
+      const concentracaoTop = topProduto && totalABC ? (topProduto.receita_mensal / totalABC) * 100 : 0;
+      const abcBlock = curva.length ? `
+ANÁLISE CURVA ABC (concentração de receita por produto):
+- Total mapeado: R$ ${Math.round(totalABC).toLocaleString("pt-BR")}/mês em ${curva.length} produtos
+- Curva A (${grupoA.length} produtos · gera ~80% da receita): ${grupoA.map((p: any) => `${p.nome} (${(p.pct_receita || 0).toFixed(0)}%${p.margem_pct != null ? `, margem ${p.margem_pct.toFixed(0)}%` : ""})`).join(", ") || "—"}
+- Curva B (${grupoB.length} produtos · ~15% da receita): ${grupoB.map((p: any) => p.nome).join(", ") || "—"}
+- Curva C (${grupoC.length} produtos · ~5% da receita): ${grupoC.map((p: any) => p.nome).join(", ") || "—"}
+${concentracaoTop > 60 ? `⚠️ RISCO: o produto "${topProduto.nome}" sozinho concentra ${concentracaoTop.toFixed(0)}% da receita — recomendar diversificação.` : ""}
+` : "(Curva ABC não preenchida — sugira ao cliente mapear seus produtos.)";
+
       const userPrompt = `Resultado do Diagnóstico 360 da empresa:
 ${JSON.stringify(diagnostic, null, 2)}
 
@@ -113,6 +129,8 @@ A empresa obteve nota ${diagnostic?.nota} (${diagnostic?.percentual}%) — class
 Prazo definido pelo cliente para atingir a meta: ${prazoMeses} meses.
 
 ${leakBlock}
+
+${abcBlock}
 
 Gere um **PLANO COMERCIAL EXECUTIVO AGRESSIVO E ACIONÁVEL**, em markdown rico, focado em **gerar urgência financeira + caminho claro de execução**. Use OBRIGATORIAMENTE os números do Revenue Leak acima ao longo de todo o plano. Estrutura:
 
@@ -151,7 +169,15 @@ Mapeie EXPLICITAMENTE cada gargalo → módulo do sistema:
 - Ligações → /discador
 - Conversão fraca → Funil em /funil
 
-## 🔥 8. Frases de Impacto (1 linha cada)
+## 📦 8. Análise da Curva ABC (Mix de Produtos)
+${curva.length ? `Use os dados ABC mapeados acima. Entregue:
+- **Riscos de concentração**: se algum produto da curva A passa de 60%, alerte e proponha diversificação.
+- **Oportunidades na Curva B**: produtos B com boa margem que podem ser escalados (cite-os pelo nome).
+- **Decisões na Curva C**: produtos a descontinuar, repreciar ou usar como porta de entrada (cross-sell).
+- **Foco do esforço comercial**: time deve priorizar produtos A (defesa de receita) + B (alavanca de crescimento).
+- Se houver margens calculadas, prefira produtos com **alta margem mesmo se na curva B**.` : "Pule esta seção e recomende explicitamente que o cliente preencha a Curva ABC no próximo diagnóstico."}
+
+## 🔥 9. Frases de Impacto (1 linha cada)
 Pelo menos 3 frases curtas e diretas que reforcem urgência (ex: "O problema não é crescer — é parar de perder R$ X/dia").
 
 REGRAS OBRIGATÓRIAS:

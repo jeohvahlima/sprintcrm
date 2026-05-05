@@ -24,6 +24,7 @@ import {
 import { useWMIRoadmap, useUpdateRoadmapItem } from "@/hooks/useWMI";
 import { PlanoIARenderer } from "./PlanoIARenderer";
 import { ImpactoFinanceiroExpandido } from "./ImpactoFinanceiroExpandido";
+import { CurvaABCEditor } from "./CurvaABCEditor";
 import { useNavigate } from "react-router-dom";
 import { useCompanySegmento } from "@/hooks/useCompanySegmento";
 import { SEGMENTOS_EMPRESA } from "@/lib/segmentos";
@@ -49,6 +50,7 @@ const EMPTY_DORES: DoresDesejos = {
   swot_oportunidades: "",
   swot_ameacas: "",
   observacoes_alavanca: {},
+  curva_abc: [],
 };
 
 export function Diagnostico360() {
@@ -408,6 +410,12 @@ export function Diagnostico360() {
               );
             })}
           </div>
+
+          {/* Curva ABC integrada */}
+          <CurvaABCEditor
+            value={(dores.curva_abc as any) || []}
+            onChange={(curva_abc) => setDores({ ...dores, curva_abc } as any)}
+          />
 
           <div className="flex justify-between pt-2 gap-2">
             <Button variant="outline" onClick={() => setStep("dores")} className="gap-2">

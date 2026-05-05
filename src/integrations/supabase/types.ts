@@ -2956,6 +2956,7 @@ export type Database = {
           classificacao: string | null
           company_id: string
           created_at: string
+          curva_abc: Json | null
           diagnostico_ia: string | null
           dias_uteis_mes: number | null
           faturamento_atual: number | null
@@ -2989,6 +2990,7 @@ export type Database = {
           classificacao?: string | null
           company_id: string
           created_at?: string
+          curva_abc?: Json | null
           diagnostico_ia?: string | null
           dias_uteis_mes?: number | null
           faturamento_atual?: number | null
@@ -3022,6 +3024,7 @@ export type Database = {
           classificacao?: string | null
           company_id?: string
           created_at?: string
+          curva_abc?: Json | null
           diagnostico_ia?: string | null
           dias_uteis_mes?: number | null
           faturamento_atual?: number | null
