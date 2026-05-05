@@ -169,7 +169,15 @@ Mapeie EXPLICITAMENTE cada gargalo → módulo do sistema:
 - Ligações → /discador
 - Conversão fraca → Funil em /funil
 
-## 🔥 8. Frases de Impacto (1 linha cada)
+## 📦 8. Análise da Curva ABC (Mix de Produtos)
+${curva.length ? `Use os dados ABC mapeados acima. Entregue:
+- **Riscos de concentração**: se algum produto da curva A passa de 60%, alerte e proponha diversificação.
+- **Oportunidades na Curva B**: produtos B com boa margem que podem ser escalados (cite-os pelo nome).
+- **Decisões na Curva C**: produtos a descontinuar, repreciar ou usar como porta de entrada (cross-sell).
+- **Foco do esforço comercial**: time deve priorizar produtos A (defesa de receita) + B (alavanca de crescimento).
+- Se houver margens calculadas, prefira produtos com **alta margem mesmo se na curva B**.` : "Pule esta seção e recomende explicitamente que o cliente preencha a Curva ABC no próximo diagnóstico."}
+
+## 🔥 9. Frases de Impacto (1 linha cada)
 Pelo menos 3 frases curtas e diretas que reforcem urgência (ex: "O problema não é crescer — é parar de perder R$ X/dia").
 
 REGRAS OBRIGATÓRIAS:
