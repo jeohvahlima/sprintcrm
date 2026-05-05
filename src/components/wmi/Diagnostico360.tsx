@@ -12,15 +12,17 @@ import {
   ClipboardCheck, ChevronLeft, ChevronRight, Sparkles, Loader2, Trophy,
   AlertTriangle, RotateCcw, Target, TrendingUp, Heart, Users, BarChart3,
   Flame, Lightbulb, ShieldCheck, ShieldAlert, CheckCircle2, Circle, Clock,
-  Zap, DollarSign, Calendar, Map,
+  Zap, DollarSign, Calendar, Map, Settings,
 } from "lucide-react";
 import {
   useAlavancas, usePerguntas, usePerguntasSegmento, useUltimoDiagnostico,
-  useSalvarDiagnostico, useGargalos, useUpdateGargaloStatus,
+  useSalvarDiagnostico, useGargalos, useUpdateGargaloStatus, useGerarRoadmapDiagnostico,
   detectarGargalos, calcularRevenueLeak, CLASSIFICACOES,
   type Pergunta, type DoresDesejos, type GargaloDetectado, type RevenueLeak,
+  type DiagnosticoResposta,
 } from "@/hooks/useDiagnostico360";
-import { useGenerateRoadmap, useWMIRoadmap, useUpdateRoadmapItem } from "@/hooks/useWMI";
+import { useWMIRoadmap, useUpdateRoadmapItem } from "@/hooks/useWMI";
+import { PlanoIARenderer } from "./PlanoIARenderer";
 import { useNavigate } from "react-router-dom";
 import { useCompanySegmento } from "@/hooks/useCompanySegmento";
 import { SEGMENTOS_EMPRESA } from "@/lib/segmentos";
@@ -54,7 +56,7 @@ export function Diagnostico360() {
   const { segmento: segmentoEmpresa } = useCompanySegmento();
   const { data: ultimo } = useUltimoDiagnostico();
   const salvar = useSalvarDiagnostico();
-  const genRoadmap = useGenerateRoadmap();
+  const genRoadmap = useGerarRoadmapDiagnostico();
   const { data: roadmap } = useWMIRoadmap();
   const updateRoadmap = useUpdateRoadmapItem();
 
@@ -530,12 +532,11 @@ export function Diagnostico360() {
                       gargalos,
                     },
                     {
-                      onSuccess: async () => {
-                        toast.success("Diagnóstico salvo! Gerando roadmap de 90 dias...");
+                      onSuccess: async (saved) => {
+                        toast.success("Diagnóstico salvo! Gerando roadmap...");
                         setStep("result");
-                        // Dispara roadmap automaticamente
                         try {
-                          await genRoadmap.mutateAsync();
+                          await genRoadmap.mutateAsync(saved as DiagnosticoResposta);
                           toast.success("Roadmap gerado!");
                         } catch (e: any) {
                           toast.error("Roadmap: " + (e.message || "falha"));
@@ -559,10 +560,9 @@ export function Diagnostico360() {
   // ============ STEP: RESULT ============
   return <ResultadoDiagnostico
     onRefazer={() => { setRespostasMap({}); setDores(EMPTY_DORES); setCurrentAlavanca(0); setStep("dores"); }}
-    onGerarRoadmap={() => genRoadmap.mutate()}
+    genRoadmap={genRoadmap}
     roadmap={roadmap}
     updateRoadmap={updateRoadmap}
-    isGenerating={genRoadmap.isPending}
   />;
 }
 
@@ -570,14 +570,14 @@ export function Diagnostico360() {
 // RESULTADO + GARGALOS + ROADMAP
 // ============================================================
 function ResultadoDiagnostico({
-  onRefazer, onGerarRoadmap, roadmap, updateRoadmap, isGenerating,
+  onRefazer, genRoadmap, roadmap, updateRoadmap,
 }: {
   onRefazer: () => void;
-  onGerarRoadmap: () => void;
+  genRoadmap: ReturnType<typeof useGerarRoadmapDiagnostico>;
   roadmap: any[] | undefined;
   updateRoadmap: ReturnType<typeof useUpdateRoadmapItem>;
-  isGenerating: boolean;
 }) {
+  const isGenerating = genRoadmap.isPending;
   const { data: result } = useUltimoDiagnostico();
   const { data: alavancas } = useAlavancas();
   const { data: gargalos } = useGargalos(result?.id);
@@ -758,21 +758,15 @@ function ResultadoDiagnostico({
         </Card>
       )}
 
-      {/* PLANO IA */}
+      {/* PLANO IA — renderização rica seccionada */}
       {result.diagnostico_ia ? (
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base flex items-center gap-2">
-              <Sparkles className="h-5 w-5 text-primary" />
-              Plano de Ação gerado pelo Waze Advisor IA
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="prose prose-sm dark:prose-invert max-w-none">
-              <ReactMarkdown>{result.diagnostico_ia}</ReactMarkdown>
-            </div>
-          </CardContent>
-        </Card>
+        <div className="space-y-3">
+          <div className="flex items-center gap-2 px-1">
+            <Sparkles className="h-5 w-5 text-primary" />
+            <h3 className="text-base font-bold">Plano de Ação — Waze Advisor IA</h3>
+          </div>
+          <PlanoIARenderer markdown={result.diagnostico_ia} />
+        </div>
       ) : (
         <Card>
           <CardContent className="p-6 text-center text-sm text-muted-foreground">
@@ -782,86 +776,141 @@ function ResultadoDiagnostico({
         </Card>
       )}
 
-      {/* ROADMAP — prazo dinâmico definido pela empresa */}
+      {/* ROADMAP — prazo dinâmico definido pela empresa, agrupado por fase */}
       {(() => {
         const meses = result.prazo_meta_meses || 3;
-        const semanas = Math.max(3, Math.round(meses * 4));
+        const totalSemanas = Math.max(4, Math.round(meses * 4));
+        const fase1End = Math.ceil(totalSemanas / 3);
+        const fase2End = Math.ceil((totalSemanas * 2) / 3);
+        const FASES = [
+          { key: "quick", label: "Quick Wins", desc: "Parar a hemorragia", icon: Flame, color: "from-rose-500 to-orange-500", border: "border-rose-500/30", from: 1, to: fase1End },
+          { key: "estrut", label: "Estruturação", desc: "Processos e cadências", icon: Settings as any, color: "from-blue-500 to-cyan-500", border: "border-blue-500/30", from: fase1End + 1, to: fase2End },
+          { key: "escala", label: "Escala", desc: "Otimização e previsibilidade", icon: TrendingUp, color: "from-emerald-500 to-teal-500", border: "border-emerald-500/30", from: fase2End + 1, to: totalSemanas },
+        ];
+        const concluidos = (roadmap || []).filter((r: any) => r.status === "done").length;
+        const totalItens = roadmap?.length || 0;
+        const pctRoad = totalItens > 0 ? Math.round((concluidos / totalItens) * 100) : 0;
+
         return (
-      <Card className="border-2 border-primary/30">
-        <CardHeader>
-          <div className="flex items-center justify-between gap-3 flex-wrap">
-            <div>
-              <CardTitle className="text-base flex items-center gap-2">
-                <Map className="h-5 w-5 text-primary" /> Roadmap {meses} {meses === 1 ? "mês" : "meses"}
-              </CardTitle>
-              <CardDescription>Plano semanal alinhado ao seu prazo para atingir a meta ({semanas} semanas).</CardDescription>
-            </div>
-            <Button size="sm" onClick={onGerarRoadmap} disabled={isGenerating} className="gap-2">
-              {isGenerating ? <Loader2 className="h-3 w-3 animate-spin" /> : <Sparkles className="h-3 w-3" />}
-              {roadmap?.length ? "Regenerar" : "Gerar roadmap"}
-            </Button>
-          </div>
-        </CardHeader>
-        <CardContent>
-          {!roadmap?.length ? (
-            <div className="text-center py-8 text-sm text-muted-foreground">
-              {isGenerating ? "Gerando..." : "Clique em 'Gerar roadmap' para criar o plano de 12 semanas."}
-            </div>
-          ) : (
-            <div className="space-y-2 max-h-96 overflow-y-auto">
-              {roadmap.map((item: any) => (
-                <div
-                  key={item.id}
-                  className={cn(
-                    "flex items-start gap-3 p-3 rounded-lg border transition",
-                    item.status === "done" && "bg-emerald-500/5 border-emerald-500/30",
-                    item.status === "in_progress" && "bg-amber-500/5 border-amber-500/30"
-                  )}
-                >
-                  <button
-                    onClick={() => {
-                      const next = item.status === "done" ? "pending"
-                        : item.status === "pending" ? "in_progress" : "done";
-                      updateRoadmap.mutate({ id: item.id, status: next });
-                    }}
-                  >
-                    {item.status === "done" ? (
-                      <CheckCircle2 className="h-5 w-5 text-emerald-500" />
-                    ) : item.status === "in_progress" ? (
-                      <Clock className="h-5 w-5 text-amber-500" />
-                    ) : (
-                      <Circle className="h-5 w-5 text-muted-foreground" />
-                    )}
-                  </button>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap mb-1">
-                      <Badge variant="outline" className="text-[10px]">Semana {item.week}</Badge>
-                      <Badge variant="secondary" className="text-[10px] capitalize">{item.pillar}</Badge>
-                      <Badge className={cn(
-                        "text-[10px]",
-                        item.priority === "high" && "bg-rose-500",
-                        item.priority === "medium" && "bg-amber-500",
-                        item.priority === "low" && "bg-emerald-500",
-                      )}>
-                        {item.priority}
-                      </Badge>
-                    </div>
-                    <div className={cn("text-sm font-medium", item.status === "done" && "line-through text-muted-foreground")}>
-                      {item.title}
-                    </div>
-                    {item.description && (
-                      <div className="text-xs text-muted-foreground mt-0.5">{item.description}</div>
-                    )}
-                    {item.expected_impact && (
-                      <div className="text-xs text-emerald-600 mt-1">📈 {item.expected_impact}</div>
-                    )}
-                  </div>
+          <Card className="border-2 border-primary/30">
+            <CardHeader>
+              <div className="flex items-center justify-between gap-3 flex-wrap">
+                <div>
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <Map className="h-5 w-5 text-primary" /> Roadmap Executivo — {meses} {meses === 1 ? "mês" : "meses"} ({totalSemanas} semanas)
+                  </CardTitle>
+                  <CardDescription>
+                    Plano semanal alinhado ao prazo da sua meta, dividido em 3 fases.
+                    {totalItens > 0 && <> · <span className="text-emerald-600 font-medium">{concluidos}/{totalItens} concluídos ({pctRoad}%)</span></>}
+                  </CardDescription>
                 </div>
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+                <Button
+                  size="sm"
+                  onClick={() => genRoadmap.mutate(result)}
+                  disabled={isGenerating}
+                  className="gap-2"
+                >
+                  {isGenerating ? <Loader2 className="h-3 w-3 animate-spin" /> : <Sparkles className="h-3 w-3" />}
+                  {totalItens ? "Regenerar" : "Gerar roadmap"}
+                </Button>
+              </div>
+              {totalItens > 0 && <Progress value={pctRoad} className="h-1.5 mt-2" />}
+            </CardHeader>
+            <CardContent>
+              {!totalItens ? (
+                <div className="text-center py-8 text-sm text-muted-foreground">
+                  {isGenerating ? (
+                    <><Loader2 className="h-5 w-5 animate-spin mx-auto mb-2" />Gerando seu roadmap personalizado…</>
+                  ) : (
+                    <>Clique em <strong>Gerar roadmap</strong> para criar o plano de {totalSemanas} semanas baseado no seu diagnóstico.</>
+                  )}
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {FASES.map((fase) => {
+                    const itensFase = (roadmap || [])
+                      .filter((r: any) => r.week >= fase.from && r.week <= fase.to)
+                      .sort((a: any, b: any) => a.week - b.week);
+                    if (!itensFase.length) return null;
+                    const FaseIcon = fase.icon;
+                    return (
+                      <div key={fase.key} className={cn("rounded-lg border-2 overflow-hidden", fase.border)}>
+                        <div className={cn("bg-gradient-to-r p-3 flex items-center justify-between text-white", fase.color)}>
+                          <div className="flex items-center gap-3">
+                            <div className="p-1.5 rounded-md bg-white/20">
+                              <FaseIcon className="h-4 w-4" />
+                            </div>
+                            <div>
+                              <div className="text-sm font-bold">{fase.label}</div>
+                              <div className="text-[11px] opacity-90">{fase.desc}</div>
+                            </div>
+                          </div>
+                          <Badge className="bg-white/20 text-white border-0 text-[10px]">
+                            Semanas {fase.from}–{fase.to} · {itensFase.length} ações
+                          </Badge>
+                        </div>
+                        <div className="p-3 space-y-2 bg-card">
+                          {itensFase.map((item: any) => (
+                            <div
+                              key={item.id}
+                              className={cn(
+                                "flex items-start gap-3 p-3 rounded-lg border transition",
+                                item.status === "done" && "bg-emerald-500/5 border-emerald-500/30",
+                                item.status === "in_progress" && "bg-amber-500/5 border-amber-500/30",
+                                item.status === "pending" && "hover:bg-muted/30"
+                              )}
+                            >
+                              <button
+                                onClick={() => {
+                                  const next = item.status === "done" ? "pending"
+                                    : item.status === "pending" ? "in_progress" : "done";
+                                  updateRoadmap.mutate({ id: item.id, status: next });
+                                }}
+                                className="mt-0.5"
+                              >
+                                {item.status === "done" ? (
+                                  <CheckCircle2 className="h-5 w-5 text-emerald-500" />
+                                ) : item.status === "in_progress" ? (
+                                  <Clock className="h-5 w-5 text-amber-500" />
+                                ) : (
+                                  <Circle className="h-5 w-5 text-muted-foreground" />
+                                )}
+                              </button>
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-2 flex-wrap mb-1">
+                                  <Badge variant="outline" className="text-[10px] font-mono">S{item.week}</Badge>
+                                  <Badge variant="secondary" className="text-[10px] capitalize">{item.pillar}</Badge>
+                                  <Badge className={cn(
+                                    "text-[10px] border-0",
+                                    item.priority === "high" && "bg-rose-500 text-white",
+                                    item.priority === "medium" && "bg-amber-500 text-white",
+                                    item.priority === "low" && "bg-emerald-500 text-white",
+                                  )}>
+                                    {item.priority === "high" ? "Alta" : item.priority === "medium" ? "Média" : "Baixa"}
+                                  </Badge>
+                                </div>
+                                <div className={cn("text-sm font-semibold", item.status === "done" && "line-through text-muted-foreground")}>
+                                  {item.title}
+                                </div>
+                                {item.description && (
+                                  <div className="text-xs text-muted-foreground mt-1 leading-relaxed">{item.description}</div>
+                                )}
+                                {item.expected_impact && (
+                                  <div className="text-xs text-emerald-600 mt-1.5 flex items-center gap-1">
+                                    <TrendingUp className="h-3 w-3" /> {item.expected_impact}
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </CardContent>
+          </Card>
         );
       })()}
 

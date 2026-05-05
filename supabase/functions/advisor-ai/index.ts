@@ -33,11 +33,26 @@ Deno.serve(async (req) => {
     let payload: any;
 
     if (mode === "roadmap") {
-      // Gerar roadmap estruturado a partir do assessment
+      // Prazo dinâmico (em meses) → semanas
+      const prazoMeses = Math.max(1, Math.min(12, Number(assessment?.prazo_meses) || Number(assessment?.dores?.prazo_meta_meses) || 3));
+      const totalSemanas = Math.max(4, Math.round(prazoMeses * 4));
+      const fase1End = Math.ceil(totalSemanas / 3);
+      const fase2End = Math.ceil((totalSemanas * 2) / 3);
+
       const userPrompt = `Dados do diagnóstico de maturidade da empresa:
 ${JSON.stringify(assessment, null, 2)}
 
-Gere um roadmap evolutivo de 3 semanas. Retorne APENAS via tool call.`;
+Prazo definido pelo cliente: ${prazoMeses} ${prazoMeses === 1 ? "mês" : "meses"} (${totalSemanas} semanas).
+
+Gere um roadmap executivo COMPLETO de ${totalSemanas} semanas, dividido em 3 fases:
+- Quick Wins: semanas 1 a ${fase1End} (parar a hemorragia / fundação)
+- Estruturação: semanas ${fase1End + 1} a ${fase2End} (processos + cadências)
+- Escala: semanas ${fase2End + 1} a ${totalSemanas} (otimização + previsibilidade)
+
+Distribua entre 12 e 24 itens no total, cobrindo TODAS as semanas (sem pular semanas), priorizando os pilares mais fracos do score.
+Cada item deve ter título acionável, descrição com número-meta e impacto esperado em R$, %, leads ou tempo.
+
+Retorne APENAS via tool call.`;
 
       payload = {
         model: "google/gemini-2.5-pro",
@@ -49,7 +64,7 @@ Gere um roadmap evolutivo de 3 semanas. Retorne APENAS via tool call.`;
           type: "function",
           function: {
             name: "generate_roadmap",
-            description: "Gera plano evolutivo estruturado de 3 semanas",
+            description: `Gera plano evolutivo estruturado de ${totalSemanas} semanas`,
             parameters: {
               type: "object",
               properties: {
@@ -59,9 +74,9 @@ Gere um roadmap evolutivo de 3 semanas. Retorne APENAS via tool call.`;
                   items: {
                     type: "object",
                     properties: {
-                      week: { type: "number", enum: [1, 2, 3] },
+                      week: { type: "number", description: `Semana entre 1 e ${totalSemanas}` },
                       pillar: { type: "string", enum: ["processos", "prospeccao", "gestao", "automacao", "pessoas"] },
-                      priority: { type: "string", enum: ["critical", "high", "medium"] },
+                      priority: { type: "string", enum: ["critical", "high", "medium", "low"] },
                       title: { type: "string" },
                       description: { type: "string" },
                       expected_impact: { type: "string" },

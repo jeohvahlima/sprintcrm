@@ -426,3 +426,59 @@ export function useUpdateGargaloStatus() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ["diag_gargalos"] }),
   });
 }
+
+// ============== ROADMAP — gerar a partir do diagnóstico (prazo dinâmico) ==============
+export function useGerarRoadmapDiagnostico() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (diagnostico: DiagnosticoResposta) => {
+      const { data: companyId } = await supabase.rpc("get_my_company_id");
+      const prazoMeses = diagnostico.prazo_meta_meses || 3;
+
+      const assessment = {
+        prazo_meses: prazoMeses,
+        nota: diagnostico.nota,
+        percentual: diagnostico.percentual,
+        classificacao: diagnostico.classificacao,
+        pontuacoes: diagnostico.pontuacoes,
+        revenue_leak: diagnostico.revenue_leak,
+        dores: {
+          principal_dor: diagnostico.principal_dor,
+          principal_desejo: diagnostico.principal_desejo,
+          faturamento_atual: diagnostico.faturamento_atual,
+          meta_faturamento: diagnostico.meta_faturamento,
+          prazo_meta_meses: prazoMeses,
+        },
+      };
+
+      const { data: ai, error } = await supabase.functions.invoke("advisor-ai", {
+        body: { mode: "roadmap", assessment },
+      });
+      if (error) throw error;
+      if (ai?.error) throw new Error(ai.error);
+
+      const items = ai?.tool?.items || [];
+
+      // Limpa roadmap antigo "pending" da empresa
+      await supabase.from("wmi_roadmap_items" as any).delete().eq("company_id", companyId).eq("status", "pending");
+
+      if (items.length) {
+        await supabase.from("wmi_roadmap_items" as any).insert(
+          items.map((i: any) => ({
+            company_id: companyId,
+            week: i.week,
+            pillar: i.pillar,
+            priority: i.priority === "critical" ? "high" : i.priority,
+            title: i.title,
+            description: i.description,
+            expected_impact: i.expected_impact,
+          }))
+        );
+      }
+      return items;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["wmi_roadmap"] });
+    },
+  });
+}
