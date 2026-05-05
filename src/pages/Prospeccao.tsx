@@ -43,6 +43,7 @@ import { CloserInbox } from "@/components/prospeccao/comercial/CloserInbox";
 import { ManagerCommandCenter } from "@/components/prospeccao/comercial/ManagerCommandCenter";
 import { SDRQueuePanel } from "@/components/prospeccao/comercial/SDRQueuePanel";
 import { SocialSellingPanel } from "@/components/prospeccao/SocialSellingPanel";
+import { RotinaInteligente } from "@/components/prospeccao/RotinaInteligente";
 import { usePermissions } from "@/hooks/usePermissions";
 
 const RPG_KEY = "prospeccao_rpg_mode";
