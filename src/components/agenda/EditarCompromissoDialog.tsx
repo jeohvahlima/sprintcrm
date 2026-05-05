@@ -616,6 +616,11 @@ export function EditarCompromissoDialog({
         }
       }
 
+      // 🗓️ Sincronizar com Google Calendar (atualiza evento existente ou cria se ainda não existe)
+      supabase.functions
+        .invoke("google-calendar-event", { body: { action: "update", compromisso_id: compromisso.id } })
+        .catch((e) => console.warn("[gcal] update skipped:", e?.message));
+
       toast.success("Compromisso atualizado com sucesso!");
       setOpen(false);
       setErrors({});
