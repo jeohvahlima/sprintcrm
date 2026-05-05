@@ -1154,6 +1154,7 @@ function RevenueLeakCard({ result }: { result: any }) {
             <div className="text-xs mt-2">
               ≈ <b>{Math.round(leak.clientes_potenciais)} clientes/mês</b> · {leak.leads_ideais_mes} leads/mês
             </div>
+          </div>
         </div>
 
         {/* ====== SIMULADOR RÁPIDO: "E SE eu vendesse +X clientes?" ====== */}
