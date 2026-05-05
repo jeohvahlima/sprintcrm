@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { RadarPilares } from "@/components/wmi/RadarPilares";
-import { PlanoComercialCompleto } from "@/components/wmi/PlanoComercialCompleto";
 import { WMIAlertsPanel } from "@/components/wmi/WMIAlertsPanel";
 import { SegmentBenchmarkCard } from "@/components/wmi/SegmentBenchmarkCard";
 import { PillarEvolutionChart } from "@/components/wmi/PillarEvolutionChart";
@@ -144,24 +143,16 @@ export default function Maturidade() {
       <Tabs defaultValue="diagnostico" className="space-y-4">
         <TabsList className="flex-wrap h-auto">
           <TabsTrigger value="diagnostico" className="gap-2">
-            <Sparkles className="h-4 w-4" /> Diagnóstico 360° + SWOT
-          </TabsTrigger>
-          <TabsTrigger value="plano" className="gap-2">
-            <ClipboardCheck className="h-4 w-4" /> Plano Comercial Completo
+            <Sparkles className="h-4 w-4" /> Diagnóstico 360° + Plano de Ação IA
           </TabsTrigger>
           <TabsTrigger value="pilares" className="gap-2">
             <TrendingUp className="h-4 w-4" /> Pilares & Evolução
           </TabsTrigger>
         </TabsList>
 
-        {/* DIAGNÓSTICO 360 ESTRATÉGICO (SWOT + segmento + roadmap) */}
+        {/* DIAGNÓSTICO 360 ESTRATÉGICO — fluxo único: SWOT + Plano IA estruturado + Roadmap + acompanhamento */}
         <TabsContent value="diagnostico">
           <Diagnostico360 />
-        </TabsContent>
-
-        {/* PLANO COMERCIAL UNIFICADO */}
-        <TabsContent value="plano">
-          <PlanoComercialCompleto score={score} />
         </TabsContent>
 
         {/* PILARES + EVOLUÇÃO */}
