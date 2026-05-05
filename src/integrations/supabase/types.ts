@@ -2957,6 +2957,7 @@ export type Database = {
           company_id: string
           created_at: string
           diagnostico_ia: string | null
+          dias_uteis_mes: number | null
           faturamento_atual: number | null
           gargalos_detectados: Json | null
           id: string
@@ -2970,12 +2971,17 @@ export type Database = {
           prazo_meta_meses: number | null
           principal_desejo: string | null
           principal_dor: string | null
+          prospeccoes_dia_atual: number | null
+          prospeccoes_dia_ideal: number | null
           respostas_perguntas: Json | null
+          revenue_leak: Json | null
           segmento: string | null
           swot_ameacas: string | null
           swot_forcas: string | null
           swot_fraquezas: string | null
           swot_oportunidades: string | null
+          taxa_conversao: number | null
+          ticket_medio: number | null
           total_score: number
           user_id: string | null
         }
@@ -2984,6 +2990,7 @@ export type Database = {
           company_id: string
           created_at?: string
           diagnostico_ia?: string | null
+          dias_uteis_mes?: number | null
           faturamento_atual?: number | null
           gargalos_detectados?: Json | null
           id?: string
@@ -2997,12 +3004,17 @@ export type Database = {
           prazo_meta_meses?: number | null
           principal_desejo?: string | null
           principal_dor?: string | null
+          prospeccoes_dia_atual?: number | null
+          prospeccoes_dia_ideal?: number | null
           respostas_perguntas?: Json | null
+          revenue_leak?: Json | null
           segmento?: string | null
           swot_ameacas?: string | null
           swot_forcas?: string | null
           swot_fraquezas?: string | null
           swot_oportunidades?: string | null
+          taxa_conversao?: number | null
+          ticket_medio?: number | null
           total_score?: number
           user_id?: string | null
         }
@@ -3011,6 +3023,7 @@ export type Database = {
           company_id?: string
           created_at?: string
           diagnostico_ia?: string | null
+          dias_uteis_mes?: number | null
           faturamento_atual?: number | null
           gargalos_detectados?: Json | null
           id?: string
@@ -3024,12 +3037,17 @@ export type Database = {
           prazo_meta_meses?: number | null
           principal_desejo?: string | null
           principal_dor?: string | null
+          prospeccoes_dia_atual?: number | null
+          prospeccoes_dia_ideal?: number | null
           respostas_perguntas?: Json | null
+          revenue_leak?: Json | null
           segmento?: string | null
           swot_ameacas?: string | null
           swot_forcas?: string | null
           swot_fraquezas?: string | null
           swot_oportunidades?: string | null
+          taxa_conversao?: number | null
+          ticket_medio?: number | null
           total_score?: number
           user_id?: string | null
         }
