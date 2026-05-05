@@ -560,10 +560,9 @@ export function Diagnostico360() {
   // ============ STEP: RESULT ============
   return <ResultadoDiagnostico
     onRefazer={() => { setRespostasMap({}); setDores(EMPTY_DORES); setCurrentAlavanca(0); setStep("dores"); }}
-    onGerarRoadmap={() => genRoadmap.mutate()}
+    genRoadmap={genRoadmap}
     roadmap={roadmap}
     updateRoadmap={updateRoadmap}
-    isGenerating={genRoadmap.isPending}
   />;
 }
 
