@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { NotionSidebar } from "./NotionSidebar";
 import { NotionPage } from "./NotionPage";
 import { TemplateLibrary } from "./TemplateLibrary";
+import { ImportDocumentDialog } from "./ImportDocumentDialog";
 import { ProcessCalendar } from "./ProcessCalendar";
 import { Button } from "@/components/ui/button";
 import { 
@@ -271,6 +272,10 @@ export function NotionWorkspace({ companyId }: NotionWorkspaceProps) {
                   companyId={companyId}
                   onCreateFromTemplate={handleCreateFromTemplate}
                 />
+                <ImportDocumentDialog
+                  companyId={companyId}
+                  onCreated={handleCreateFromTemplate}
+                />
               </div>
             </div>
           </div>
@@ -366,6 +371,10 @@ export function NotionWorkspace({ companyId }: NotionWorkspaceProps) {
             <TemplateLibrary 
               companyId={companyId} 
               onCreateFromTemplate={handleCreateFromTemplate} 
+            />
+            <ImportDocumentDialog
+              companyId={companyId}
+              onCreated={handleCreateFromTemplate}
             />
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
