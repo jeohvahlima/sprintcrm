@@ -273,7 +273,7 @@ serve(async (req) => {
         },
         metrics,
         chart_data: chartData,
-        campaigns: campaigns || [],
+        campaigns,
         meta_analytics: metaAnalytics
       }),
       { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
