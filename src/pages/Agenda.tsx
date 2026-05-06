@@ -2611,6 +2611,44 @@ export default function Agenda() {
                     </div>
                   </>}
 
+                {/* Lembretes adicionais e convite por e-mail */}
+                {formData.lead_id && (() => {
+                  const leadSel = leads.find(l => l.id === formData.lead_id);
+                  const leadEmail = leadSel?.email;
+                  const leadTel = leadSel?.phone || leadSel?.telefone;
+                  return <>
+                    <div className="flex items-center justify-between p-4 border rounded-lg">
+                      <div className="space-y-1">
+                        <Label>Lembrete WhatsApp 24h antes</Label>
+                        <p className="text-xs text-muted-foreground">
+                          {leadTel ? 'Lembrete adicional via WhatsApp 24h antes do compromisso' : 'Lead sem telefone cadastrado'}
+                        </p>
+                      </div>
+                      <Switch checked={formData.lembrete_whatsapp_24h && !!leadTel} disabled={!leadTel} onCheckedChange={checked => setFormData({ ...formData, lembrete_whatsapp_24h: checked })} />
+                    </div>
+
+                    <div className="flex items-center justify-between p-4 border rounded-lg">
+                      <div className="space-y-1">
+                        <Label>Lembrete por e-mail 24h antes</Label>
+                        <p className="text-xs text-muted-foreground">
+                          {leadEmail ? `Será enviado para ${leadEmail}` : 'Lead sem e-mail cadastrado — canal será ignorado'}
+                        </p>
+                      </div>
+                      <Switch checked={formData.lembrete_email_24h && !!leadEmail} disabled={!leadEmail} onCheckedChange={checked => setFormData({ ...formData, lembrete_email_24h: checked })} />
+                    </div>
+
+                    <div className="flex items-center justify-between p-4 border rounded-lg">
+                      <div className="space-y-1">
+                        <Label>Convidar lead por e-mail (Google Agenda)</Label>
+                        <p className="text-xs text-muted-foreground">
+                          {leadEmail ? 'O lead receberá o convite nativo do Google Calendar' : 'Lead sem e-mail cadastrado'}
+                        </p>
+                      </div>
+                      <Switch checked={formData.convidar_lead_email && !!leadEmail} disabled={!leadEmail} onCheckedChange={checked => setFormData({ ...formData, convidar_lead_email: checked })} />
+                    </div>
+                  </>;
+                })()}
+
                 <Button className="w-full" onClick={criarCompromisso} disabled={!formData.data || !formData.hora_inicio}>
                   {!formData.data || !formData.hora_inicio ? "Preencha os campos obrigatórios (data, horário e duração)" : "Criar Agendamento"}
                 </Button>
