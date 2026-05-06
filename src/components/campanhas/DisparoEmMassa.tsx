@@ -276,6 +276,19 @@ export function DisparoEmMassa() {
       );
     }
 
+    // Filtro por histórico de disparo
+    if (disparoFilter !== "all") {
+      const now = Date.now();
+      filtered = filtered.filter((lead) => {
+        const last = lead.last_disparo_at ? new Date(lead.last_disparo_at).getTime() : null;
+        if (disparoFilter === "never") return !last;
+        if (disparoFilter === "received") return !!last;
+        if (disparoFilter === "older_7") return !last || (now - last) > 7 * 86400000;
+        if (disparoFilter === "older_30") return !last || (now - last) > 30 * 86400000;
+        return true;
+      });
+    }
+
     setFilteredLeads(filtered);
   };
 
