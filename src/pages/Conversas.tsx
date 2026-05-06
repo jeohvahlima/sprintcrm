@@ -1521,13 +1521,21 @@ function Conversas() {
             // Atualizar lastMessage e status com base na mensagem mais recente do banco
             const latestMsg = finalMessages[finalMessages.length - 1];
             
+            // ✅ Buscar dados existentes do lead (tags, funnelStage, valor, leadId) para não piscar
+            const existingConv = prev.find(p => (p.phoneNumber || p.id) === phoneKey);
+
             return {
               ...conv,
               messages: finalMessages,
               lastMessage: latestMsg?.content || conv.lastMessage,
               avatarUrl: existingAvatar || conv.avatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(conv.contactName)}&background=0ea5e9&color=fff`,
               assignedUser: conv.assignedUser || existingAssignedUser,
-              responsavel: conv.responsavel || existingResponsavel
+              responsavel: conv.responsavel || existingResponsavel,
+              // ✅ FIX: Preservar enriquecimento de lead (tags/funil/valor) — evita pisca-pisca
+              tags: (conv.tags && conv.tags.length > 0) ? conv.tags : (existingConv?.tags ?? []),
+              funnelStage: conv.funnelStage ?? existingConv?.funnelStage,
+              valor: conv.valor ?? existingConv?.valor,
+              leadId: conv.leadId ?? existingConv?.leadId,
             };
           });
 
