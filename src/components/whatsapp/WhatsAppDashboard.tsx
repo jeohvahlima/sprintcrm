@@ -58,6 +58,7 @@ interface Analytics {
   campaigns: Array<{
     id: string;
     campaign_name: string;
+    template_name?: string;
     total_sent: number;
     total_delivered: number;
     total_read: number;
