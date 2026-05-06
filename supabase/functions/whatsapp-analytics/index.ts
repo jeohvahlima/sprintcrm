@@ -146,6 +146,17 @@ serve(async (req) => {
 
     const logs = [...messageLogs, ...fallbackLogs];
 
+    const inboundReplies = await fetchAllRows((from, to) => supabase
+      .from('conversas')
+      .select('numero, telefone_formatado, created_at')
+      .eq('company_id', companyId)
+      .eq('fromme', false)
+      .gte('created_at', dateStart.toISOString())
+      .lte('created_at', dateEnd.toISOString())
+      .range(from, to));
+
+    const replyPhones = new Set(inboundReplies.map((reply: any) => normalizePhone(reply.telefone_formatado || reply.numero)));
+
     // Calcular métricas
     const metrics = {
       total_sent: logs.filter(l => l.status !== 'pending').length,
@@ -153,8 +164,10 @@ serve(async (req) => {
       total_read: logs.filter(l => l.status === 'read').length,
       total_failed: logs.filter(l => l.status === 'failed').length,
       total_pending: logs.filter(l => l.status === 'pending').length,
+      total_replied: logs.filter(l => replyPhones.has(normalizePhone(l.phone_number))).length,
       delivery_rate: 0,
       read_rate: 0,
+      reply_rate: 0,
       estimated_cost: logs.reduce((sum, l) => sum + (Number(l.cost_estimate) || 0), 0),
       by_provider: {
         meta: logs.filter(l => l.provider === 'meta').length,
@@ -167,6 +180,7 @@ serve(async (req) => {
     if (metrics.total_sent > 0) {
       metrics.delivery_rate = Math.round((metrics.total_delivered / metrics.total_sent) * 100);
       metrics.read_rate = Math.round((metrics.total_read / metrics.total_delivered) * 100) || 0;
+      metrics.reply_rate = Math.round((metrics.total_replied / metrics.total_sent) * 100) || 0;
     }
 
     // Agrupar por template
@@ -195,17 +209,33 @@ serve(async (req) => {
       .map(([date, data]) => ({ date, ...data }))
       .sort((a, b) => a.date.localeCompare(b.date));
 
-    // === Buscar analytics de campanhas ===
-    const { data: campaigns, error: campaignsError } = await supabase
-      .from('whatsapp_campaigns_analytics')
-      .select('*')
+    // === Consolidar campanhas recentes direto dos disparos e logs ===
+    const { data: recentCampaigns, error: campaignsError } = await supabase
+      .from('disparo_campaigns')
+      .select('id, campaign_name, sent_count, error_count, created_at, completed_at')
       .eq('company_id', companyId)
+      .gte('created_at', dateStart.toISOString())
+      .lte('created_at', dateEnd.toISOString())
       .order('created_at', { ascending: false })
       .limit(10);
 
-    if (campaignsError) {
-      console.error('Erro ao buscar campanhas:', campaignsError);
-    }
+    if (campaignsError) console.error('Erro ao buscar campanhas:', campaignsError);
+
+    const campaigns = (recentCampaigns || []).map((campaign: any) => {
+      const campaignLogs = logs.filter((log: any) => String(log.campaign_id || '') === String(campaign.id));
+      return {
+        id: campaign.id,
+        campaign_name: campaign.campaign_name,
+        total_sent: campaignLogs.length || Number(campaign.sent_count || 0),
+        total_delivered: campaignLogs.filter((log: any) => log.status === 'delivered' || log.status === 'read').length || Number(campaign.sent_count || 0),
+        total_read: campaignLogs.filter((log: any) => log.status === 'read').length,
+        total_failed: campaignLogs.filter((log: any) => log.status === 'failed').length || Number(campaign.error_count || 0),
+        total_replied: campaignLogs.filter((log: any) => replyPhones.has(normalizePhone(log.phone_number))).length,
+        estimated_cost: campaignLogs.reduce((sum: number, log: any) => sum + (Number(log.cost_estimate) || 0), 0),
+        created_at: campaign.created_at,
+        completed_at: campaign.completed_at,
+      };
+    });
 
     // === Tentar buscar métricas da Meta API (se disponível) ===
     let metaAnalytics = null;
