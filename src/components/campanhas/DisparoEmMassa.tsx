@@ -94,7 +94,7 @@ export function DisparoEmMassa() {
   // Filtrar leads quando filtros mudarem
   useEffect(() => {
     filterLeads();
-  }, [leads, searchTerm, selectedStatus, selectedTag, selectedSegmentacao]);
+  }, [leads, searchTerm, selectedStatus, selectedTag, selectedSegmentacao, disparoFilter]);
 
   // Check for active campaigns on mount
   useEffect(() => {
