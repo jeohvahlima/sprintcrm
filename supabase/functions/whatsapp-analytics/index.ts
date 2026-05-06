@@ -102,20 +102,49 @@ serve(async (req) => {
 
     // === Buscar métricas do banco de dados ===
     
-    // Total de mensagens por status
-    const { data: messageLogs, error: logsError } = await supabase
+    // Total de mensagens por status. Fonte principal: whatsapp_message_logs.
+    // Fallback: conversas de campanhas antigas, criadas antes do log oficial existir.
+    const messageLogs = await fetchAllRows((from, to) => supabase
       .from('whatsapp_message_logs')
-      .select('status, provider, cost_estimate, template_name, sent_at')
+      .select('status, provider, cost_estimate, template_name, sent_at, campaign_id, campaign_name, phone_number')
       .eq('company_id', companyId)
       .gte('sent_at', dateStart.toISOString())
-      .lte('sent_at', dateEnd.toISOString());
+      .lte('sent_at', dateEnd.toISOString())
+      .range(from, to));
 
-    if (logsError) {
-      console.error('Erro ao buscar logs:', logsError);
-      throw logsError;
-    }
+    const campaignConversations = await fetchAllRows((from, to) => supabase
+      .from('conversas')
+      .select('id, numero, telefone_formatado, status, origem_api, tipo_mensagem, campanha_id, campanha_nome, whatsapp_message_id, delivered, read, created_at')
+      .eq('company_id', companyId)
+      .eq('fromme', true)
+      .not('campanha_id', 'is', null)
+      .gte('created_at', dateStart.toISOString())
+      .lte('created_at', dateEnd.toISOString())
+      .range(from, to));
 
-    const logs = messageLogs || [];
+    const loggedKeys = new Set(
+      messageLogs.map((log: any) => `${log.campaign_id || ''}:${normalizePhone(log.phone_number)}`)
+    );
+
+    const fallbackLogs = campaignConversations
+      .filter((row: any) => !loggedKeys.has(`${row.campanha_id || ''}:${normalizePhone(row.telefone_formatado || row.numero)}`))
+      .map((row: any) => {
+        const provider = inferConversationProvider(row);
+        const status = row.read ? 'read' : row.delivered ? 'delivered' : normalizeStatus(row.status);
+        const isTemplate = String(row.tipo_mensagem || '').toLowerCase() === 'template';
+        return {
+          status,
+          provider,
+          cost_estimate: provider === 'meta' ? (isTemplate ? 0.05 : 0.005) : 0,
+          template_name: isTemplate ? String(row.campanha_nome || '') : null,
+          sent_at: row.created_at,
+          campaign_id: row.campanha_id,
+          campaign_name: row.campanha_nome,
+          phone_number: row.telefone_formatado || row.numero,
+        };
+      });
+
+    const logs = [...messageLogs, ...fallbackLogs];
 
     // Calcular métricas
     const metrics = {
