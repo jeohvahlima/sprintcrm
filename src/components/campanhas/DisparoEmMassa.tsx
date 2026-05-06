@@ -701,6 +701,15 @@ export function DisparoEmMassa() {
                         <div className="text-sm text-muted-foreground truncate">
                           {lead.telefone || lead.phone || "Sem telefone"}
                         </div>
+                        {lead.last_disparo_at ? (
+                          <div className="text-xs text-amber-600 dark:text-amber-400 mt-0.5 truncate">
+                            Último disparo: {new Date(lead.last_disparo_at).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric" })}
+                            {lead.last_disparo_campaign ? ` · ${lead.last_disparo_campaign}` : ""}
+                            {lead.disparo_count && lead.disparo_count > 1 ? ` (${lead.disparo_count}x)` : ""}
+                          </div>
+                        ) : (
+                          <div className="text-xs text-muted-foreground/70 mt-0.5">Nunca recebeu disparo</div>
+                        )}
                       </div>
                       <div className="flex gap-2 flex-shrink-0">
                         {lead.tags && lead.tags.length > 0 && (
