@@ -66,6 +66,15 @@ interface Analytics {
     estimated_cost: number;
     created_at: string;
   }>;
+  meta_official?: {
+    messages_sent: number;
+    messages_delivered: number;
+    messages_received: number;
+    paid_delivered: number;
+    free_delivered: number;
+    total_cost: number;
+    by_category: Record<string, { delivered: number; cost: number }>;
+  } | null;
 }
 
 export function WhatsAppDashboard({ companyId }: DashboardProps) {
@@ -337,6 +346,61 @@ export function WhatsAppDashboard({ companyId }: DashboardProps) {
           </CardContent>
         </Card>
       </div>
+
+      {/* === Métricas Oficiais Meta (WhatsApp Manager) === */}
+      {analytics?.meta_official && (
+        <Card className="border-primary/20">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base flex items-center gap-2">
+              <BarChart3 className="h-4 w-4 text-primary" />
+              Dados Oficiais Meta (WhatsApp Manager)
+            </CardTitle>
+            <CardDescription>
+              Mesmas métricas que aparecem no painel oficial do WhatsApp Business — entregues, pagas, grátis e custo real por categoria.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+              <div className="rounded-lg border p-3">
+                <p className="text-xs text-muted-foreground">Enviadas (Meta)</p>
+                <p className="text-xl font-bold">{analytics.meta_official.messages_sent}</p>
+              </div>
+              <div className="rounded-lg border p-3">
+                <p className="text-xs text-muted-foreground">Entregues (Meta)</p>
+                <p className="text-xl font-bold">{analytics.meta_official.messages_delivered}</p>
+              </div>
+              <div className="rounded-lg border p-3">
+                <p className="text-xs text-muted-foreground">Pagas entregues</p>
+                <p className="text-xl font-bold">{analytics.meta_official.paid_delivered}</p>
+              </div>
+              <div className="rounded-lg border p-3">
+                <p className="text-xs text-muted-foreground">Grátis entregues</p>
+                <p className="text-xl font-bold">{analytics.meta_official.free_delivered}</p>
+              </div>
+              <div className="rounded-lg border p-3 bg-yellow-50 dark:bg-yellow-950/20">
+                <p className="text-xs text-muted-foreground">Cobrança Meta (USD)</p>
+                <p className="text-xl font-bold">${analytics.meta_official.total_cost.toFixed(2)}</p>
+              </div>
+            </div>
+
+            {Object.keys(analytics.meta_official.by_category || {}).length > 0 && (
+              <div>
+                <p className="text-sm font-medium mb-2">Por categoria</p>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+                  {Object.entries(analytics.meta_official.by_category).map(([cat, v]) => (
+                    <div key={cat} className="flex items-center justify-between rounded-md border px-3 py-2">
+                      <span className="text-sm capitalize">{cat}</span>
+                      <span className="text-xs text-muted-foreground">
+                        {v.delivered} msgs · ${v.cost.toFixed(2)}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
 
       {/* Gráficos */}
       <Tabs defaultValue="timeline" className="space-y-4">

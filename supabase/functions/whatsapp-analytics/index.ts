@@ -240,30 +240,102 @@ serve(async (req) => {
       };
     });
 
-    // === Tentar buscar métricas da Meta API (se disponível) ===
-    let metaAnalytics = null;
-    
+    // === Buscar métricas oficiais da Meta API (mesmas do WhatsApp Manager) ===
+    let metaAnalytics: any = null;
+    let metaPricing: any = null;
+    let metaOfficial: {
+      messages_sent: number;
+      messages_delivered: number;
+      messages_received: number;
+      paid_delivered: number;
+      free_delivered: number;
+      total_cost: number;
+      by_category: Record<string, { delivered: number; cost: number }>;
+    } | null = null;
+
     const { data: connection } = await supabase
       .from('whatsapp_connections')
       .select('meta_access_token, meta_business_account_id')
       .eq('company_id', companyId)
       .in('api_provider', ['meta', 'both'])
-      .single();
+      .maybeSingle();
 
     if (connection?.meta_access_token && connection?.meta_business_account_id) {
+      const startSec = Math.floor(dateStart.getTime() / 1000);
+      const endSec = Math.floor(dateEnd.getTime() / 1000);
+
+      // 1) Analytics de mensagens (enviadas/entregues/recebidas)
       try {
-        const metaUrl = `${META_API_BASE_URL}/${META_API_VERSION}/${connection.meta_business_account_id}?fields=analytics.start(${Math.floor(dateStart.getTime() / 1000)}).end(${Math.floor(dateEnd.getTime() / 1000)}).granularity(DAY)`;
-        
+        const metaUrl = `${META_API_BASE_URL}/${META_API_VERSION}/${connection.meta_business_account_id}?fields=analytics.start(${startSec}).end(${endSec}).granularity(DAY)`;
         const metaResponse = await fetch(metaUrl, {
           headers: { 'Authorization': `Bearer ${connection.meta_access_token}` }
         });
-
         if (metaResponse.ok) {
           metaAnalytics = await metaResponse.json();
-          console.log('Meta Analytics obtidos');
+        } else {
+          const errTxt = await metaResponse.text();
+          console.log('Meta analytics falhou:', metaResponse.status, errTxt.substring(0, 200));
         }
       } catch (e) {
-        console.log('Não foi possível obter analytics da Meta API');
+        console.log('Erro Meta analytics:', e);
+      }
+
+      // 2) Pricing analytics (custos por categoria — Marketing, Service, Authentication)
+      try {
+        const pricingUrl = `${META_API_BASE_URL}/${META_API_VERSION}/${connection.meta_business_account_id}/pricing_analytics?start=${startSec}&end=${endSec}&granularity=DAILY&pricing_model=PMP`;
+        const pricingRes = await fetch(pricingUrl, {
+          headers: { 'Authorization': `Bearer ${connection.meta_access_token}` }
+        });
+        if (pricingRes.ok) {
+          metaPricing = await pricingRes.json();
+        } else {
+          const errTxt = await pricingRes.text();
+          console.log('Meta pricing falhou:', pricingRes.status, errTxt.substring(0, 200));
+        }
+      } catch (e) {
+        console.log('Erro Meta pricing:', e);
+      }
+
+      // Consolidar números oficiais Meta
+      try {
+        const phoneRows = metaAnalytics?.analytics?.phone_numbers || [];
+        const dataPoints = metaAnalytics?.analytics?.data_points || [];
+        let sent = 0, delivered = 0;
+        for (const dp of dataPoints) {
+          sent += Number(dp.sent || 0);
+          delivered += Number(dp.delivered || 0);
+        }
+
+        const byCategory: Record<string, { delivered: number; cost: number }> = {};
+        let paidDelivered = 0;
+        let freeDelivered = 0;
+        let totalCost = 0;
+
+        const pricingPoints = metaPricing?.data || [];
+        for (const p of pricingPoints) {
+          const cat = String(p.category || p.tier || 'unknown').toLowerCase();
+          const vol = Number(p.volume || p.delivered_messages || 0);
+          const cost = Number(p.cost || p.amount || p.charge_amount || 0);
+          const isFree = Boolean(p.is_free_entry_point) || Boolean(p.free_tier) || cost === 0;
+          if (!byCategory[cat]) byCategory[cat] = { delivered: 0, cost: 0 };
+          byCategory[cat].delivered += vol;
+          byCategory[cat].cost += cost;
+          totalCost += cost;
+          if (isFree) freeDelivered += vol;
+          else paidDelivered += vol;
+        }
+
+        metaOfficial = {
+          messages_sent: sent,
+          messages_delivered: delivered,
+          messages_received: 0, // analytics endpoint nem sempre traz received; mantemos 0 e exibimos quando vier
+          paid_delivered: paidDelivered,
+          free_delivered: freeDelivered,
+          total_cost: totalCost,
+          by_category: byCategory,
+        };
+      } catch (e) {
+        console.log('Erro consolidando Meta oficial:', e);
       }
     }
 
@@ -277,7 +349,9 @@ serve(async (req) => {
         metrics,
         chart_data: chartData,
         campaigns,
-        meta_analytics: metaAnalytics
+        meta_analytics: metaAnalytics,
+        meta_pricing: metaPricing,
+        meta_official: metaOfficial,
       }),
       { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
