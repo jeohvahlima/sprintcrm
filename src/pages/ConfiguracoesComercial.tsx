@@ -330,10 +330,10 @@ function RoleRow({ member, teams, onUpdate }: any) {
               {ROLES.map((r) => <SelectItem key={r.value} value={r.value}>{r.label}</SelectItem>)}
             </SelectContent>
           </Select>
-          <Select value={teamId} onValueChange={setTeamId}>
+          <Select value={teamId || "none"} onValueChange={(v) => setTeamId(v === "none" ? "" : v)}>
             <SelectTrigger className="h-8 w-32"><SelectValue placeholder="Time" /></SelectTrigger>
             <SelectContent>
-              <SelectItem value="">Sem time</SelectItem>
+              <SelectItem value="none">Sem time</SelectItem>
               {teams.map((t: any) => <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>)}
             </SelectContent>
           </Select>
