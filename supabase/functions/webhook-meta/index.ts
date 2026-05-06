@@ -702,7 +702,7 @@ serve(async (req) => {
                 }
               }
 
-              // Atualizar também whatsapp_message_logs (Dashboard WhatsApp Meta)
+              // Atualizar/inserir whatsapp_message_logs (Dashboard WhatsApp Meta)
               try {
                 const normalized = String(deliveryStatus?.status || '').toLowerCase();
                 const logUpdate: Record<string, any> = { status: normalized };
@@ -711,16 +711,97 @@ serve(async (req) => {
                   : new Date().toISOString();
                 if (normalized === 'sent') logUpdate.sent_at = ts;
                 if (normalized === 'delivered') logUpdate.delivered_at = ts;
-                if (normalized === 'read') logUpdate.read_at = ts;
+                if (normalized === 'read') {
+                  logUpdate.read_at = ts;
+                  // Se Meta confirmou leitura, garantir que delivered_at tb esteja preenchido
+                  if (!logUpdate.delivered_at) logUpdate.delivered_at = ts;
+                }
                 if (normalized === 'failed') {
                   logUpdate.failed_at = ts;
                   logUpdate.error_code = errorInfo?.code ? String(errorInfo.code) : null;
                   logUpdate.error_message = errorInfo?.message || errorInfo?.title || null;
                 }
-                await supabase
+                const { data: updatedLogs, error: logUpdateErr } = await supabase
                   .from('whatsapp_message_logs')
                   .update(logUpdate)
-                  .eq('message_id_meta', deliveryStatus.id);
+                  .eq('message_id_meta', deliveryStatus.id)
+                  .select('id');
+
+                if (logUpdateErr) {
+                  console.error('⚠️ [META-STATUS] Erro UPDATE whatsapp_message_logs:', logUpdateErr);
+                }
+
+                // Se nenhum log existia para esse wamid, criar um (cobre disparos antigos sem log)
+                if (!updatedLogs?.length) {
+                  // Tentar achar conversa correspondente para puxar company_id, campanha, phone
+                  const { data: convRow } = await supabase
+                    .from('conversas')
+                    .select('id, company_id, lead_id, telefone_formatado, numero, campanha_id, campanha_nome, tipo_mensagem')
+                    .eq('whatsapp_message_id', deliveryStatus.id)
+                    .maybeSingle();
+
+                  // Fallback: localizar a conversa de campanha mais recente para esse recipient_id
+                  let convForLog = convRow;
+                  if (!convForLog && deliveryStatus?.recipient_id) {
+                    const phone = String(deliveryStatus.recipient_id);
+                    const { data: convByPhone } = await supabase
+                      .from('conversas')
+                      .select('id, company_id, lead_id, telefone_formatado, numero, campanha_id, campanha_nome, tipo_mensagem')
+                      .eq('fromme', true)
+                      .or(`telefone_formatado.eq.${phone},numero.eq.${phone}`)
+                      .not('campanha_id', 'is', null)
+                      .order('created_at', { ascending: false })
+                      .limit(1)
+                      .maybeSingle();
+                    convForLog = convByPhone || null;
+
+                    // Vincular wamid à conversa se ainda não tiver
+                    if (convForLog && !(convForLog as any).whatsapp_message_id) {
+                      await supabase
+                        .from('conversas')
+                        .update({ whatsapp_message_id: deliveryStatus.id, origem_api: 'meta' })
+                        .eq('id', (convForLog as any).id);
+                    }
+                  }
+
+                  const isTemplate = String((convForLog as any)?.tipo_mensagem || '').toLowerCase() === 'template';
+                  const insertPayload: Record<string, any> = {
+                    company_id: (convForLog as any)?.company_id || null,
+                    conversation_id: (convForLog as any)?.id || null,
+                    lead_id: (convForLog as any)?.lead_id || null,
+                    message_id_meta: deliveryStatus.id,
+                    provider: 'meta',
+                    direction: 'outbound',
+                    message_type: (convForLog as any)?.tipo_mensagem || 'text',
+                    phone_number:
+                      (convForLog as any)?.telefone_formatado ||
+                      (convForLog as any)?.numero ||
+                      deliveryStatus?.recipient_id ||
+                      null,
+                    status: normalized,
+                    cost_category: isTemplate ? 'marketing' : 'service',
+                    cost_estimate: isTemplate ? 0.05 : 0.005,
+                    campaign_id: (convForLog as any)?.campanha_id || null,
+                    campaign_name: (convForLog as any)?.campanha_nome || null,
+                    sent_at: ts,
+                    delivered_at: normalized === 'delivered' || normalized === 'read' ? ts : null,
+                    read_at: normalized === 'read' ? ts : null,
+                    failed_at: normalized === 'failed' ? ts : null,
+                    error_code: normalized === 'failed' ? (errorInfo?.code ? String(errorInfo.code) : null) : null,
+                    error_message: normalized === 'failed' ? (errorInfo?.message || errorInfo?.title || null) : null,
+                  };
+
+                  if (insertPayload.company_id) {
+                    const { error: insErr } = await supabase
+                      .from('whatsapp_message_logs')
+                      .insert(insertPayload);
+                    if (insErr) {
+                      console.error('⚠️ [META-STATUS] Erro INSERT whatsapp_message_logs:', insErr);
+                    } else {
+                      console.log('✅ [META-STATUS] Log criado para wamid', deliveryStatus.id, 'status', normalized);
+                    }
+                  }
+                }
               } catch (logErr) {
                 console.error('⚠️ [META-STATUS] Falha ao atualizar whatsapp_message_logs:', logErr);
               }
