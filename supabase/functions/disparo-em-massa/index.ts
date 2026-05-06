@@ -57,7 +57,15 @@ async function sendWhatsAppWithTimeout(
       throw new Error(`Falha no enviar-whatsapp (${response.status}): ${errorText}`);
     }
 
-    return await response.json().catch(() => ({}));
+    const json = await response.json().catch(() => ({} as any));
+    // Extrair message_id (wamid) e provider do retorno
+    const messageId =
+      json?.message_id ||
+      json?.data?.messages?.[0]?.id ||
+      json?.data?.key?.id ||
+      null;
+    const provider = json?.provider || null;
+    return { ...json, _message_id: messageId, _provider: provider };
   } catch (error) {
     if (error instanceof DOMException && error.name === 'AbortError') {
       throw new Error(`Timeout no enviar-whatsapp após ${Math.round(SEND_TIMEOUT_MS / 1000)}s`);
@@ -243,7 +251,9 @@ serve(async (req) => {
             }
           }
 
-          await sendWhatsAppWithTimeout(supabaseUrl, supabaseServiceKey, payload);
+          const sendResult = await sendWhatsAppWithTimeout(supabaseUrl, supabaseServiceKey, payload);
+          const wamid: string | null = sendResult?._message_id || null;
+          const usedProvider: string = sendResult?._provider || 'evolution';
 
           sentCount++;
 
@@ -281,12 +291,15 @@ serve(async (req) => {
             mensagemConteudo = '[Vídeo]';
           }
 
+          // Quando enviado via Meta, delivered/read só são confirmados pelo webhook.
+          const isMeta = usedProvider === 'meta';
+
           const conversaData: any = {
             numero: formattedPhone,
             telefone_formatado: formattedPhone,
             mensagem: mensagemConteudo,
             origem: 'WhatsApp',
-            status: 'Enviada',
+            status: isMeta ? 'Processando' : 'Enviada',
             tipo_mensagem: campaign.message_type,
             nome_contato: lead.name || 'Lead',
             company_id: campaign.company_id,
@@ -294,15 +307,58 @@ serve(async (req) => {
             campanha_nome: campaign.campaign_name,
             campanha_id: campaign_id,
             fromme: true,
-            delivered: true,
+            delivered: !isMeta,
+            read: false,
             is_group: false,
+            origem_api: usedProvider,
+            whatsapp_message_id: wamid,
           };
 
           if (campaign.media_storage_url && campaign.message_type !== 'text') {
             conversaData.midia_url = campaign.media_storage_url;
           }
 
-          await supabase.from('conversas').insert([conversaData]);
+          const { data: conversaRow } = await supabase
+            .from('conversas')
+            .insert([conversaData])
+            .select('id')
+            .single();
+
+          // Log para métricas/custos do Dashboard WhatsApp Meta
+          try {
+            // Custo estimado simples por categoria (aprox. — Marketing US$0,05/Service US$0,005)
+            let costEstimate = 0;
+            let costCategory: string | null = null;
+            if (isMeta) {
+              if (campaign.message_type === 'template') {
+                costEstimate = 0.05;
+                costCategory = 'marketing';
+              } else {
+                costEstimate = 0.005;
+                costCategory = 'service';
+              }
+            }
+            await supabase.from('whatsapp_message_logs').insert({
+              company_id: campaign.company_id,
+              conversation_id: conversaRow?.id || null,
+              lead_id: lead.id || null,
+              message_id_meta: isMeta ? wamid : null,
+              message_id_evolution: !isMeta ? wamid : null,
+              provider: isMeta ? 'meta' : 'evolution',
+              direction: 'outbound',
+              message_type: campaign.message_type || 'text',
+              template_name: campaign.template_name || null,
+              phone_number: formattedPhone,
+              status: isMeta ? 'sent' : 'delivered',
+              cost_category: costCategory,
+              cost_estimate: costEstimate,
+              campaign_id: campaign_id,
+              campaign_name: campaign.campaign_name || null,
+              sent_at: new Date().toISOString(),
+            });
+          } catch (logErr) {
+            console.error('⚠️ Falha ao gravar whatsapp_message_logs:', logErr);
+          }
 
           // Marcar lead como tendo recebido disparo (data + nome da campanha + contador)
           if (lead?.id) {

@@ -702,6 +702,29 @@ serve(async (req) => {
                 }
               }
 
+              // Atualizar também whatsapp_message_logs (Dashboard WhatsApp Meta)
+              try {
+                const normalized = String(deliveryStatus?.status || '').toLowerCase();
+                const logUpdate: Record<string, any> = { status: normalized };
+                const ts = deliveryStatus?.timestamp
+                  ? new Date(parseInt(deliveryStatus.timestamp) * 1000).toISOString()
+                  : new Date().toISOString();
+                if (normalized === 'sent') logUpdate.sent_at = ts;
+                if (normalized === 'delivered') logUpdate.delivered_at = ts;
+                if (normalized === 'read') logUpdate.read_at = ts;
+                if (normalized === 'failed') {
+                  logUpdate.failed_at = ts;
+                  logUpdate.error_code = errorInfo?.code ? String(errorInfo.code) : null;
+                  logUpdate.error_message = errorInfo?.message || errorInfo?.title || null;
+                }
+                await supabase
+                  .from('whatsapp_message_logs')
+                  .update(logUpdate)
+                  .eq('message_id_meta', deliveryStatus.id);
+              } catch (logErr) {
+                console.error('⚠️ [META-STATUS] Falha ao atualizar whatsapp_message_logs:', logErr);
+              }
+
               if (String(deliveryStatus?.status || '').toLowerCase() === 'failed') {
                 console.error('❌ [META-STATUS] Falha de entrega confirmada pela Meta:', JSON.stringify({
                   message_id: deliveryStatus.id,
