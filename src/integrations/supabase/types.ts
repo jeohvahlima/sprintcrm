@@ -4694,6 +4694,7 @@ export type Database = {
           cpf: string | null
           created_at: string | null
           data_nascimento: string | null
+          disparo_count: number
           email: string | null
           endereco_bairro: string | null
           endereco_cep: string | null
@@ -4712,6 +4713,8 @@ export type Database = {
           icp_score: number | null
           id: string
           intent_level: string | null
+          last_disparo_at: string | null
+          last_disparo_campaign: string | null
           last_engagement_at: string | null
           last_prospected_at: string | null
           lead_origem_id: string | null
@@ -4762,6 +4765,7 @@ export type Database = {
           cpf?: string | null
           created_at?: string | null
           data_nascimento?: string | null
+          disparo_count?: number
           email?: string | null
           endereco_bairro?: string | null
           endereco_cep?: string | null
@@ -4780,6 +4784,8 @@ export type Database = {
           icp_score?: number | null
           id?: string
           intent_level?: string | null
+          last_disparo_at?: string | null
+          last_disparo_campaign?: string | null
           last_engagement_at?: string | null
           last_prospected_at?: string | null
           lead_origem_id?: string | null
@@ -4830,6 +4836,7 @@ export type Database = {
           cpf?: string | null
           created_at?: string | null
           data_nascimento?: string | null
+          disparo_count?: number
           email?: string | null
           endereco_bairro?: string | null
           endereco_cep?: string | null
@@ -4848,6 +4855,8 @@ export type Database = {
           icp_score?: number | null
           id?: string
           intent_level?: string | null
+          last_disparo_at?: string | null
+          last_disparo_campaign?: string | null
           last_engagement_at?: string | null
           last_prospected_at?: string | null
           lead_origem_id?: string | null
