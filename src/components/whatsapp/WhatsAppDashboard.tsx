@@ -66,6 +66,15 @@ interface Analytics {
     estimated_cost: number;
     created_at: string;
   }>;
+  meta_official?: {
+    messages_sent: number;
+    messages_delivered: number;
+    messages_received: number;
+    paid_delivered: number;
+    free_delivered: number;
+    total_cost: number;
+    by_category: Record<string, { delivered: number; cost: number }>;
+  } | null;
 }
 
 export function WhatsAppDashboard({ companyId }: DashboardProps) {
