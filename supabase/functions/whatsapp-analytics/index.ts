@@ -9,6 +9,51 @@ const corsHeaders = {
 const META_API_VERSION = 'v18.0';
 const META_API_BASE_URL = 'https://graph.facebook.com';
 
+async function fetchAllRows(
+  queryFactory: (from: number, to: number) => any,
+  pageSize = 1000,
+) {
+  const rows: any[] = [];
+  let page = 0;
+
+  while (true) {
+    const from = page * pageSize;
+    const to = from + pageSize - 1;
+    const { data, error } = await queryFactory(from, to);
+
+    if (error) throw error;
+    if (!data?.length) break;
+
+    rows.push(...data);
+    if (data.length < pageSize) break;
+    page++;
+  }
+
+  return rows;
+}
+
+function normalizePhone(value?: string | null) {
+  return String(value || '').replace(/\D/g, '');
+}
+
+function normalizeStatus(status?: string | null) {
+  const normalized = String(status || '').toLowerCase();
+  if (normalized.includes('failed') || normalized.includes('falh') || normalized.includes('erro')) return 'failed';
+  if (normalized.includes('read') || normalized.includes('lida')) return 'read';
+  if (normalized.includes('delivered') || normalized.includes('entreg')) return 'delivered';
+  return normalized || 'sent';
+}
+
+function inferConversationProvider(row: any) {
+  const origemApi = String(row?.origem_api || '').toLowerCase();
+  const messageId = String(row?.whatsapp_message_id || '');
+  const messageType = String(row?.tipo_mensagem || '').toLowerCase();
+
+  if (origemApi === 'meta' || messageId.startsWith('wamid') || messageType === 'template') return 'meta';
+  if (origemApi === 'evolution') return 'evolution';
+  return 'meta';
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
