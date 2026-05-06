@@ -285,14 +285,14 @@ serve(async (req) => {
     });
 
     // Converter para array ordenado
-    const chartData = Object.entries(dailyData)
+    let chartData = Object.entries(dailyData)
       .map(([date, data]) => ({ date, ...data }))
       .sort((a, b) => a.date.localeCompare(b.date));
 
     // === Consolidar campanhas recentes direto dos disparos e logs ===
     const { data: recentCampaigns, error: campaignsError } = await supabase
       .from('disparo_campaigns')
-      .select('id, campaign_name, sent_count, error_count, created_at, completed_at')
+      .select('id, campaign_name, template_name, sent_count, error_count, created_at, completed_at')
       .eq('company_id', companyId)
       .gte('created_at', dateStart.toISOString())
       .lte('created_at', dateEnd.toISOString())
@@ -306,6 +306,7 @@ serve(async (req) => {
       return {
         id: campaign.id,
         campaign_name: campaign.campaign_name,
+        template_name: campaign.template_name,
         total_sent: campaignLogs.length || Number(campaign.sent_count || 0),
         total_delivered: campaignLogs.filter((log: any) => log.status === 'delivered' || log.status === 'read').length || Number(campaign.sent_count || 0),
         total_read: campaignLogs.filter((log: any) => log.status === 'read').length,
