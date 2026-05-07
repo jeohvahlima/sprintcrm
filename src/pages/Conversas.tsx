@@ -7171,6 +7171,7 @@ function Conversas() {
       setEmailConvidadoReuniao("");
       setHorasAntecedenciaReuniaoHoras("0"); // Reset para padrão
       setHorasAntecedenciaReuniaoMinutos("0"); // Reset para padrão
+      setMeetingLembretesAntecipados([]);
       setMeetingProfissionalId("");
 
       if (!enviarConfirmacaoReuniao) {
