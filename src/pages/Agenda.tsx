@@ -359,6 +359,7 @@ export default function Agenda() {
     enviar_confirmacao: false,
     notificar_responsavel: true,
     convidar_lead_email: false, // Convida o lead como participante no Google Calendar
+    email_convidado: "", // E-mail manual do convidado (usado se lead não tiver email)
     lembrete_email_24h: true, // Lembrete extra por e-mail 24h antes
     lembrete_whatsapp_24h: true, // Lembrete extra por WhatsApp 24h antes
   });
