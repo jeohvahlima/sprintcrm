@@ -2618,8 +2618,8 @@ export default function Agenda() {
                   </>}
 
                 {/* Lembretes adicionais e convite por e-mail */}
-                {formData.lead_id && (() => {
-                  const leadSel = leads.find(l => l.id === formData.lead_id);
+                {(() => {
+                  const leadSel = formData.lead_id ? leads.find(l => l.id === formData.lead_id) : null;
                   const leadEmail = leadSel?.email;
                   const leadTel = leadSel?.phone || leadSel?.telefone;
                   return <>
