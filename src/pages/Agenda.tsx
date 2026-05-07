@@ -362,7 +362,10 @@ export default function Agenda() {
     email_convidado: "", // E-mail manual do convidado (usado se lead não tiver email)
     lembrete_email_24h: true, // Lembrete extra por e-mail 24h antes
     lembrete_whatsapp_24h: true, // Lembrete extra por WhatsApp 24h antes
+    profissional_id: "", // Profissional/especialista responsável pelo atendimento
   });
+  const [profissionaisList, setProfissionaisList] = useState<Array<{ id: string; nome: string; especialidade?: string | null }>>([]);
+  const [companyNome, setCompanyNome] = useState<string>("");
   const [leadSearch, setLeadSearch] = useState("");
   const [selectedLeadName, setSelectedLeadName] = useState("");
 
