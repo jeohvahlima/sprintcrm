@@ -2002,6 +2002,7 @@ export default function Agenda() {
       enviar_confirmacao: false,
       notificar_responsavel: true,
       convidar_lead_email: false,
+      email_convidado: "",
       lembrete_email_24h: true,
       lembrete_whatsapp_24h: true,
     });
