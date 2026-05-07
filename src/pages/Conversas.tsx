@@ -6953,7 +6953,8 @@ function Conversas() {
         status: 'agendado',
         custo_estimado: meetingCustoEstimado ? parseFloat(meetingCustoEstimado) : null,
         convidar_lead_email: !!convidarPorEmailReuniao,
-        email_convidado: convidarPorEmailReuniao && emailConvidadoFinal ? emailConvidadoFinal : null
+        email_convidado: convidarPorEmailReuniao && emailConvidadoFinal ? emailConvidadoFinal : null,
+        profissional_id: meetingProfissionalId || null
       }).select().single();
       if (error) throw error;
       console.log('✅ [COMPROMISSO] Compromisso criado com sucesso:', compromisso?.id);
