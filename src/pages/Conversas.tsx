@@ -3012,13 +3012,17 @@ function Conversas() {
         // Buscar segmento e is_master_account da empresa
         const { data: companyData } = await supabase
           .from('companies')
-          .select('segmento, is_master_account')
+          .select('name, segmento, is_master_account')
           .eq('id', currentCompanyId)
           .maybeSingle();
         if (companyData) {
           setCompanySegmento(companyData.segmento);
           setIsMasterAccount(!!companyData.is_master_account);
+          if ((companyData as any).name) setMeetingCompanyNome((companyData as any).name);
         }
+        // Carregar profissionais para o popup Novo Compromisso
+        supabase.from('profissionais').select('id, nome, especialidade').order('nome')
+          .then(({ data }) => { if (data) setMeetingProfissionaisList(data as any); });
 
         // ⚡ Cache já foi carregado SINCRONAMENTE no useState inicial (instant-paint).
         // Aqui apenas validamos se o cache pertence à empresa correta.
