@@ -2460,6 +2460,32 @@ export default function Agenda() {
                 </div>
 
                 <div className="space-y-2">
+                  <Label className="flex items-center gap-2">
+                    <User className="h-4 w-4" />
+                    Profissional / Especialista (Opcional)
+                  </Label>
+                  <Select value={formData.profissional_id || "none"} onValueChange={value => setFormData({
+                    ...formData,
+                    profissional_id: value === "none" ? "" : value
+                  })}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione o profissional que vai atender" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">Nenhum / Sem preferência</SelectItem>
+                      {profissionaisList.map(p => (
+                        <SelectItem key={p.id} value={p.id}>
+                          {p.nome}{p.especialidade ? ` — ${p.especialidade}` : ''}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-muted-foreground">
+                    Será informado ao cliente nas mensagens de confirmação, alteração e cancelamento.
+                  </p>
+                </div>
+
+                <div className="space-y-2">
                   <Label>Cliente / Lead</Label>
                   <Input value={leadSearch} onChange={e => setLeadSearch(e.target.value)} placeholder="Buscar por nome, telefone ou tag..." />
                   {leadSearch && <div className="border rounded-md max-h-40 overflow-y-auto">
