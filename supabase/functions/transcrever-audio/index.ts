@@ -6,11 +6,12 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-async function fetchAudioAsBlob(audioUrl: string): Promise<Blob> {
+async function fetchAudioAsBlob(audioUrl: string, contentType = 'audio/ogg'): Promise<Blob> {
   const res = await fetch(audioUrl);
   if (!res.ok) throw new Error(`Erro ao baixar áudio: ${res.status} ${res.statusText}`);
   const arrayBuffer = await res.arrayBuffer();
-  return new Blob([arrayBuffer], { type: 'audio/ogg' });
+  const ct = res.headers.get('content-type') || contentType;
+  return new Blob([arrayBuffer], { type: ct });
 }
 
 function base64ToBlob(base64Data: string, contentType = 'audio/ogg'): Blob {
@@ -18,6 +19,16 @@ function base64ToBlob(base64Data: string, contentType = 'audio/ogg'): Blob {
   const bytes = new Uint8Array(binaryString.length);
   for (let i = 0; i < binaryString.length; i++) bytes[i] = binaryString.charCodeAt(i);
   return new Blob([bytes], { type: contentType });
+}
+
+function extFromMime(mime: string): string {
+  const m = (mime || '').toLowerCase();
+  if (m.includes('webm')) return 'webm';
+  if (m.includes('ogg')) return 'ogg';
+  if (m.includes('mp4') || m.includes('m4a')) return 'm4a';
+  if (m.includes('mpeg') || m.includes('mp3')) return 'mp3';
+  if (m.includes('wav')) return 'wav';
+  return 'webm';
 }
 
 serve(async (req) => {
