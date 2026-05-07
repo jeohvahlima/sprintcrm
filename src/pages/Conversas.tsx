@@ -6980,13 +6980,16 @@ function Conversas() {
               // Mensagem de confirmação formatada e personalizada
               const tipoServicoFormatado = meetingTipoServico.trim() ? meetingTipoServico.charAt(0).toUpperCase() + meetingTipoServico.slice(1) : 'Compromisso';
               const observacoes = meetingDescricao || meetingNotes;
-              const mensagemConfirmacao = `✅ *Compromisso Confirmado!*\n\n` + `Olá ${leadVinculado.name}! Seu compromisso foi agendado com sucesso.\n\n` + `📅 *Data:* ${format(dataHoraInicio, "dd/MM/yyyy", {
+              const profSel = meetingProfissionalId ? meetingProfissionaisList.find(p => p.id === meetingProfissionalId) : null;
+              const profLinha = profSel ? `👨‍⚕️ *Profissional:* ${profSel.nome}${profSel.especialidade ? ` (${profSel.especialidade})` : ''}\n` : '';
+              const empresaLinha = meetingCompanyNome ? `🏢 *Empresa:* ${meetingCompanyNome}\n` : '';
+              const mensagemConfirmacao = `✅ *Compromisso Confirmado!*\n\n` + `Olá ${leadVinculado.name}! Seu compromisso foi agendado com sucesso.\n\n` + empresaLinha + `📅 *Data:* ${format(dataHoraInicio, "dd/MM/yyyy", {
                 locale: ptBR
               })}\n` + `🕐 *Horário:* ${format(dataHoraInicio, "HH:mm", {
                 locale: ptBR
               })} às ${format(dataHoraFim, "HH:mm", {
                 locale: ptBR
-              })}\n` + `📋 *Tipo:* ${tipoServicoFormatado}\n` + (observacoes ? `\n💬 *Observações:*\n${observacoes}\n` : '') + `\n✅ *Status:* Agendado\n\n` + `Aguardamos você no dia e horário agendados!\n\n` + `_Esta é uma confirmação automática do seu agendamento._`;
+              })}\n` + `📋 *Tipo:* ${tipoServicoFormatado}\n` + profLinha + (observacoes ? `\n💬 *Observações:*\n${observacoes}\n` : '') + `\n✅ *Status:* Agendado\n\n` + `Aguardamos você no dia e horário agendados!\n\n` + `_Esta é uma confirmação automática do seu agendamento._`;
               console.log('📱 [CONFIRMAÇÃO] Enviando mensagem de confirmação imediata...');
               console.log('📱 [CONFIRMAÇÃO] Dados do envio:', {
                 numero: telefoneNormalizado,
