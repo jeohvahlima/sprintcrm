@@ -362,7 +362,10 @@ export default function Agenda() {
     email_convidado: "", // E-mail manual do convidado (usado se lead não tiver email)
     lembrete_email_24h: true, // Lembrete extra por e-mail 24h antes
     lembrete_whatsapp_24h: true, // Lembrete extra por WhatsApp 24h antes
+    profissional_id: "", // Profissional/especialista responsável pelo atendimento
   });
+  const [profissionaisList, setProfissionaisList] = useState<Array<{ id: string; nome: string; especialidade?: string | null }>>([]);
+  const [companyNome, setCompanyNome] = useState<string>("");
   const [leadSearch, setLeadSearch] = useState("");
   const [selectedLeadName, setSelectedLeadName] = useState("");
 
@@ -638,6 +641,8 @@ export default function Agenda() {
     carregarAgendas();
     carregarLembretes();
     carregarConfiguracoes(); // Carregar tempo médio padrão e outras configurações
+    carregarProfissionais();
+    carregarCompanyNome();
     // eslint-disable-next-line react-hooks/exhaustive-deps
 
     // Subscrever para atualizações em tempo real
@@ -760,6 +765,30 @@ export default function Agenda() {
       setAgendas((data || []) as any[]);
     } catch (error) {
       console.error('Erro ao carregar agendas:', error);
+    }
+  };
+  const carregarProfissionais = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('profissionais')
+        .select('id, nome, especialidade')
+        .order('nome');
+      if (error) throw error;
+      setProfissionaisList((data || []) as any[]);
+    } catch (error) {
+      console.error('Erro ao carregar profissionais:', error);
+    }
+  };
+  const carregarCompanyNome = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      const { data: userRole } = await supabase.from('user_roles').select('company_id').eq('user_id', user.id).maybeSingle();
+      if (!userRole?.company_id) return;
+      const { data: company } = await supabase.from('companies').select('name').eq('id', userRole.company_id).maybeSingle();
+      if (company?.name) setCompanyNome(company.name);
+    } catch (error) {
+      console.error('Erro ao carregar nome da empresa:', error);
     }
   };
   const carregarLembretes = async () => {
@@ -1211,6 +1240,11 @@ export default function Agenda() {
       } else {
         compromissoData.agenda_id = null; // Explicitamente null se vazio
       }
+      // Profissional escolhido manualmente no formulário tem prioridade
+      const profissionalIdManual = formData.profissional_id?.trim();
+      if (profissionalIdManual) {
+        compromissoData.profissional_id = profissionalIdManual;
+      }
       const leadId = formData.lead_id?.trim();
       if (leadId && leadId.length > 0) {
         compromissoData.lead_id = leadId;
@@ -1568,13 +1602,19 @@ export default function Agenda() {
             if (telefone) {
               // Mensagem de confirmação formatada e personalizada
               const tipoServicoFormatado = formData.tipo_servico?.trim() ? formData.tipo_servico.charAt(0).toUpperCase() + formData.tipo_servico.slice(1) : null;
-              const mensagemConfirmacao = `✅ *Compromisso Confirmado!*\n\n` + `Olá ${leadSelecionado.name}! Seu compromisso foi agendado com sucesso.\n\n` + `📅 *Data:* ${format(dataHoraInicio, "dd/MM/yyyy", {
+              const profissionalIdMsg = formData.profissional_id || formAgendaSelecionada?.responsavel_id;
+              const profissionalSel = profissionalIdMsg ? profissionaisList.find(p => p.id === profissionalIdMsg) : null;
+              const profissionalLinha = profissionalSel
+                ? `👨‍⚕️ *Profissional:* ${profissionalSel.nome}${profissionalSel.especialidade ? ` (${profissionalSel.especialidade})` : ''}\n`
+                : '';
+              const empresaLinha = companyNome ? `🏢 *Empresa:* ${companyNome}\n` : '';
+              const mensagemConfirmacao = `✅ *Compromisso Confirmado!*\n\n` + `Olá ${leadSelecionado.name}! Seu compromisso foi agendado com sucesso.\n\n` + empresaLinha + `📅 *Data:* ${format(dataHoraInicio, "dd/MM/yyyy", {
                 locale: ptBR
               })}\n` + `🕐 *Horário:* ${format(dataHoraInicio, "HH:mm", {
                 locale: ptBR
               })} às ${format(dataHoraFim, "HH:mm", {
                 locale: ptBR
-              })}\n` + (tipoServicoFormatado ? `📋 *Tipo:* ${tipoServicoFormatado}\n` : '') + (
+              })}\n` + (tipoServicoFormatado ? `📋 *Tipo:* ${tipoServicoFormatado}\n` : '') + profissionalLinha + (
               // Título removido - coluna não existe no banco
               formData.observacoes ? `\n💬 *Observações:*\n${formData.observacoes}\n` : '') + `\n✅ *Status:* Agendado\n\n` + `Aguardamos você no dia e horário agendados!\n\n` + `_Esta é uma confirmação automática do seu agendamento._`;
               console.log('📱 [CONFIRMAÇÃO] Enviando mensagem de confirmação imediata...');
@@ -1818,13 +1858,18 @@ export default function Agenda() {
                   const dataHoraInicio = new Date(compromissoAtual.data_hora_inicio);
                   const dataHoraFim = new Date(compromissoAtual.data_hora_fim);
                   const tipoServicoFormatado = compromissoAtual.tipo_servico ? compromissoAtual.tipo_servico.charAt(0).toUpperCase() + compromissoAtual.tipo_servico.slice(1) : 'Compromisso';
-                  const mensagemCancelamento = `❌ *Compromisso Cancelado*\n\n` + `Olá ${leadData.name}! Infelizmente seu compromisso foi cancelado.\n\n` + `📅 *Data:* ${format(dataHoraInicio, "dd/MM/yyyy", {
+                  const profCanc = compromissoAtual.profissional;
+                  const profissionalLinhaCanc = profCanc?.nome
+                    ? `👨‍⚕️ *Profissional:* ${profCanc.nome}${profCanc.especialidade ? ` (${profCanc.especialidade})` : ''}\n`
+                    : '';
+                  const empresaLinhaCanc = companyNome ? `🏢 *Empresa:* ${companyNome}\n` : '';
+                  const mensagemCancelamento = `❌ *Compromisso Cancelado*\n\n` + `Olá ${leadData.name}! Infelizmente seu compromisso foi cancelado.\n\n` + empresaLinhaCanc + `📅 *Data:* ${format(dataHoraInicio, "dd/MM/yyyy", {
                     locale: ptBR
                   })}\n` + `🕐 *Horário:* ${format(dataHoraInicio, "HH:mm", {
                     locale: ptBR
                   })} às ${format(dataHoraFim, "HH:mm", {
                     locale: ptBR
-                  })}\n` + `📋 *Tipo:* ${tipoServicoFormatado}\n` + `\n❌ *Status:* Cancelado\n\n` + `Entre em contato conosco se tiver dúvidas ou desejar reagendar.\n\n` + `_Esta é uma notificação automática de cancelamento._`;
+                  })}\n` + `📋 *Tipo:* ${tipoServicoFormatado}\n` + profissionalLinhaCanc + `\n❌ *Status:* Cancelado\n\n` + `Entre em contato conosco se tiver dúvidas ou desejar reagendar.\n\n` + `_Esta é uma notificação automática de cancelamento._`;
 
                   // Normalizar telefone
                   const normalizePhoneBR = (phone: string) => {
@@ -2009,6 +2054,7 @@ export default function Agenda() {
       email_convidado: "",
       lembrete_email_24h: true,
       lembrete_whatsapp_24h: true,
+      profissional_id: "",
     });
     setLeadSearch("");
     setSelectedLeadName("");
@@ -2411,6 +2457,32 @@ export default function Agenda() {
                     return agenda ? `Capacidade: ${agenda.capacidade_simultanea} simultâneos | Dias: ${agenda.disponibilidade?.dias?.join(', ')}` : '';
                   })()}
                     </p>}
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="flex items-center gap-2">
+                    <User className="h-4 w-4" />
+                    Profissional / Especialista (Opcional)
+                  </Label>
+                  <Select value={formData.profissional_id || "none"} onValueChange={value => setFormData({
+                    ...formData,
+                    profissional_id: value === "none" ? "" : value
+                  })}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione o profissional que vai atender" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">Nenhum / Sem preferência</SelectItem>
+                      {profissionaisList.map(p => (
+                        <SelectItem key={p.id} value={p.id}>
+                          {p.nome}{p.especialidade ? ` — ${p.especialidade}` : ''}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-muted-foreground">
+                    Será informado ao cliente nas mensagens de confirmação, alteração e cancelamento.
+                  </p>
                 </div>
 
                 <div className="space-y-2">

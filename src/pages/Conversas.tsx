@@ -2248,6 +2248,9 @@ function Conversas() {
   const [emailConvidadoReuniao, setEmailConvidadoReuniao] = useState(""); // ⚡ E-mail do convidado
   const [horasAntecedenciaReuniaoHoras, setHorasAntecedenciaReuniaoHoras] = useState("1"); // ⚡ 1 hora padrão
   const [horasAntecedenciaReuniaoMinutos, setHorasAntecedenciaReuniaoMinutos] = useState("0"); // ⚡ 0 minutos padrão
+  const [meetingProfissionalId, setMeetingProfissionalId] = useState<string>(""); // Profissional/especialista escolhido
+  const [meetingProfissionaisList, setMeetingProfissionaisList] = useState<Array<{ id: string; nome: string; especialidade?: string | null }>>([]);
+  const [meetingCompanyNome, setMeetingCompanyNome] = useState<string>("");
   const [newTag, setNewTag] = useState("");
   const [selectedFunnel, setSelectedFunnel] = useState("");
   const [newResponsavel, setNewResponsavel] = useState("");
@@ -3009,13 +3012,17 @@ function Conversas() {
         // Buscar segmento e is_master_account da empresa
         const { data: companyData } = await supabase
           .from('companies')
-          .select('segmento, is_master_account')
+          .select('name, segmento, is_master_account')
           .eq('id', currentCompanyId)
           .maybeSingle();
         if (companyData) {
           setCompanySegmento(companyData.segmento);
           setIsMasterAccount(!!companyData.is_master_account);
+          if ((companyData as any).name) setMeetingCompanyNome((companyData as any).name);
         }
+        // Carregar profissionais para o popup Novo Compromisso
+        supabase.from('profissionais').select('id, nome, especialidade').order('nome')
+          .then(({ data }) => { if (data) setMeetingProfissionaisList(data as any); });
 
         // ⚡ Cache já foi carregado SINCRONAMENTE no useState inicial (instant-paint).
         // Aqui apenas validamos se o cache pertence à empresa correta.
@@ -6946,7 +6953,8 @@ function Conversas() {
         status: 'agendado',
         custo_estimado: meetingCustoEstimado ? parseFloat(meetingCustoEstimado) : null,
         convidar_lead_email: !!convidarPorEmailReuniao,
-        email_convidado: convidarPorEmailReuniao && emailConvidadoFinal ? emailConvidadoFinal : null
+        email_convidado: convidarPorEmailReuniao && emailConvidadoFinal ? emailConvidadoFinal : null,
+        profissional_id: meetingProfissionalId || null
       }).select().single();
       if (error) throw error;
       console.log('✅ [COMPROMISSO] Compromisso criado com sucesso:', compromisso?.id);
@@ -6972,13 +6980,16 @@ function Conversas() {
               // Mensagem de confirmação formatada e personalizada
               const tipoServicoFormatado = meetingTipoServico.trim() ? meetingTipoServico.charAt(0).toUpperCase() + meetingTipoServico.slice(1) : 'Compromisso';
               const observacoes = meetingDescricao || meetingNotes;
-              const mensagemConfirmacao = `✅ *Compromisso Confirmado!*\n\n` + `Olá ${leadVinculado.name}! Seu compromisso foi agendado com sucesso.\n\n` + `📅 *Data:* ${format(dataHoraInicio, "dd/MM/yyyy", {
+              const profSel = meetingProfissionalId ? meetingProfissionaisList.find(p => p.id === meetingProfissionalId) : null;
+              const profLinha = profSel ? `👨‍⚕️ *Profissional:* ${profSel.nome}${profSel.especialidade ? ` (${profSel.especialidade})` : ''}\n` : '';
+              const empresaLinha = meetingCompanyNome ? `🏢 *Empresa:* ${meetingCompanyNome}\n` : '';
+              const mensagemConfirmacao = `✅ *Compromisso Confirmado!*\n\n` + `Olá ${leadVinculado.name}! Seu compromisso foi agendado com sucesso.\n\n` + empresaLinha + `📅 *Data:* ${format(dataHoraInicio, "dd/MM/yyyy", {
                 locale: ptBR
               })}\n` + `🕐 *Horário:* ${format(dataHoraInicio, "HH:mm", {
                 locale: ptBR
               })} às ${format(dataHoraFim, "HH:mm", {
                 locale: ptBR
-              })}\n` + `📋 *Tipo:* ${tipoServicoFormatado}\n` + (observacoes ? `\n💬 *Observações:*\n${observacoes}\n` : '') + `\n✅ *Status:* Agendado\n\n` + `Aguardamos você no dia e horário agendados!\n\n` + `_Esta é uma confirmação automática do seu agendamento._`;
+              })}\n` + `📋 *Tipo:* ${tipoServicoFormatado}\n` + profLinha + (observacoes ? `\n💬 *Observações:*\n${observacoes}\n` : '') + `\n✅ *Status:* Agendado\n\n` + `Aguardamos você no dia e horário agendados!\n\n` + `_Esta é uma confirmação automática do seu agendamento._`;
               console.log('📱 [CONFIRMAÇÃO] Enviando mensagem de confirmação imediata...');
               console.log('📱 [CONFIRMAÇÃO] Dados do envio:', {
                 numero: telefoneNormalizado,
@@ -7130,6 +7141,7 @@ function Conversas() {
       setEmailConvidadoReuniao("");
       setHorasAntecedenciaReuniaoHoras("0"); // Reset para padrão
       setHorasAntecedenciaReuniaoMinutos("0"); // Reset para padrão
+      setMeetingProfissionalId("");
 
       if (!enviarConfirmacaoReuniao) {
         toast.success("Reunião agendada e sincronizada com Agenda!");
@@ -11021,6 +11033,28 @@ function Conversas() {
                                     <Input id="custo_estimado" type="number" step="0.01" value={meetingCustoEstimado} onChange={e => setMeetingCustoEstimado(e.target.value)} placeholder="0.00" className="h-9" />
                                   </div>
                                 </div>
+
+                                {meetingProfissionaisList.length > 0 && (
+                                  <div>
+                                    <Label>Profissional / Especialista (Opcional)</Label>
+                                    <Select value={meetingProfissionalId || "none"} onValueChange={(v) => setMeetingProfissionalId(v === "none" ? "" : v)}>
+                                      <SelectTrigger className="h-9">
+                                        <SelectValue placeholder="Selecione o profissional" />
+                                      </SelectTrigger>
+                                      <SelectContent>
+                                        <SelectItem value="none">Nenhum / Sem preferência</SelectItem>
+                                        {meetingProfissionaisList.map(p => (
+                                          <SelectItem key={p.id} value={p.id}>
+                                            {p.nome}{p.especialidade ? ` — ${p.especialidade}` : ''}
+                                          </SelectItem>
+                                        ))}
+                                      </SelectContent>
+                                    </Select>
+                                    <p className="text-xs text-muted-foreground mt-1">
+                                      Aparecerá nas mensagens de confirmação e cancelamento.
+                                    </p>
+                                  </div>
+                                )}
                                 
                                 <div>
                                   <Label htmlFor="descricao">Descrição</Label>
