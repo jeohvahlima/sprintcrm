@@ -1236,6 +1236,10 @@ export default function Agenda() {
 
       // Convidar lead por e-mail no Google Calendar (opcional)
       compromissoData.convidar_lead_email = !!formData.convidar_lead_email;
+      const emailConvidadoFinal = (formData.email_convidado?.trim() || leadSelecionadoData?.email || '').trim();
+      if (formData.convidar_lead_email && emailConvidadoFinal) {
+        compromissoData.email_convidado = emailConvidadoFinal;
+      }
 
       // Preencher paciente e telefone com dados do lead para compatibilidade com app Waze Agenda
       if (leadSelecionadoData) {
