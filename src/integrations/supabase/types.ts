@@ -2039,6 +2039,7 @@ export type Database = {
           data_hora_fim: string
           data_hora_inicio: string
           duracao: number | null
+          email_convidado: string | null
           google_calendar_synced_at: string | null
           google_event_id: string | null
           google_sync_source: string | null
@@ -2068,6 +2069,7 @@ export type Database = {
           data_hora_fim: string
           data_hora_inicio: string
           duracao?: number | null
+          email_convidado?: string | null
           google_calendar_synced_at?: string | null
           google_event_id?: string | null
           google_sync_source?: string | null
@@ -2097,6 +2099,7 @@ export type Database = {
           data_hora_fim?: string
           data_hora_inicio?: string
           duracao?: number | null
+          email_convidado?: string | null
           google_calendar_synced_at?: string | null
           google_event_id?: string | null
           google_sync_source?: string | null

@@ -359,6 +359,7 @@ export default function Agenda() {
     enviar_confirmacao: false,
     notificar_responsavel: true,
     convidar_lead_email: false, // Convida o lead como participante no Google Calendar
+    email_convidado: "", // E-mail manual do convidado (usado se lead não tiver email)
     lembrete_email_24h: true, // Lembrete extra por e-mail 24h antes
     lembrete_whatsapp_24h: true, // Lembrete extra por WhatsApp 24h antes
   });
@@ -1235,6 +1236,10 @@ export default function Agenda() {
 
       // Convidar lead por e-mail no Google Calendar (opcional)
       compromissoData.convidar_lead_email = !!formData.convidar_lead_email;
+      const emailConvidadoFinal = (formData.email_convidado?.trim() || leadSelecionadoData?.email || '').trim();
+      if (formData.convidar_lead_email && emailConvidadoFinal) {
+        compromissoData.email_convidado = emailConvidadoFinal;
+      }
 
       // Preencher paciente e telefone com dados do lead para compatibilidade com app Waze Agenda
       if (leadSelecionadoData) {
@@ -2001,6 +2006,7 @@ export default function Agenda() {
       enviar_confirmacao: false,
       notificar_responsavel: true,
       convidar_lead_email: false,
+      email_convidado: "",
       lembrete_email_24h: true,
       lembrete_whatsapp_24h: true,
     });
@@ -2637,14 +2643,33 @@ export default function Agenda() {
                       <Switch checked={formData.lembrete_email_24h && !!leadEmail} disabled={!leadEmail} onCheckedChange={checked => setFormData({ ...formData, lembrete_email_24h: checked })} />
                     </div>
 
-                    <div className="flex items-center justify-between p-4 border rounded-lg">
-                      <div className="space-y-1">
-                        <Label>Convidar lead por e-mail (Google Agenda)</Label>
-                        <p className="text-xs text-muted-foreground">
-                          {leadEmail ? 'O lead receberá o convite nativo do Google Calendar' : 'Lead sem e-mail cadastrado'}
-                        </p>
+                    <div className="space-y-3 p-4 border rounded-lg">
+                      <div className="flex items-center justify-between">
+                        <div className="space-y-1">
+                          <Label>Convidar por e-mail (Google Agenda)</Label>
+                          <p className="text-xs text-muted-foreground">
+                            O convidado receberá o convite nativo do Google Calendar
+                          </p>
+                        </div>
+                        <Switch
+                          checked={formData.convidar_lead_email}
+                          onCheckedChange={checked => setFormData({ ...formData, convidar_lead_email: checked, email_convidado: checked && !formData.email_convidado && leadEmail ? leadEmail : formData.email_convidado })}
+                        />
                       </div>
-                      <Switch checked={formData.convidar_lead_email && !!leadEmail} disabled={!leadEmail} onCheckedChange={checked => setFormData({ ...formData, convidar_lead_email: checked })} />
+                      {formData.convidar_lead_email && (
+                        <div className="space-y-1">
+                          <Label className="text-xs">E-mail do convidado</Label>
+                          <Input
+                            type="email"
+                            placeholder={leadEmail || "exemplo@email.com"}
+                            value={formData.email_convidado}
+                            onChange={e => setFormData({ ...formData, email_convidado: e.target.value })}
+                          />
+                          {leadEmail && !formData.email_convidado && (
+                            <p className="text-xs text-muted-foreground">Padrão: e-mail do lead ({leadEmail})</p>
+                          )}
+                        </div>
+                      )}
                     </div>
                   </>;
                 })()}

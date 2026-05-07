@@ -63,9 +63,16 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Convidados (opcional)
+    // Convidados (opcional) - prioriza email_convidado manual, depois email do lead
     const attendees: string[] = [];
-    if (comp.convidar_lead_email && comp.lead?.email) attendees.push(comp.lead.email);
+    if (comp.convidar_lead_email) {
+      const emailManual = (comp.email_convidado || '').trim();
+      const emailLead = (comp.lead?.email || '').trim();
+      const emailFinal = emailManual || emailLead;
+      if (emailFinal && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailFinal)) {
+        attendees.push(emailFinal);
+      }
+    }
 
     // Título descritivo: "<Tipo de serviço> — <Nome do lead>"
     const tipoServ = (comp.tipo_servico || "Compromisso").charAt(0).toUpperCase() + (comp.tipo_servico || "Compromisso").slice(1);
