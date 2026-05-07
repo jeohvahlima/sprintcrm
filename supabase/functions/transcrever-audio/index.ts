@@ -105,6 +105,48 @@ async function transcribeWithLovableAI(audioBlob: Blob, language?: string) {
   return { text: result.choices?.[0]?.message?.content };
 }
 
+async function hasAudibleSignal(audioBlob: Blob): Promise<boolean> {
+  if (!(audioBlob.type || '').toLowerCase().includes('wav')) return true;
+
+  const buffer = await audioBlob.arrayBuffer();
+  if (buffer.byteLength < 44) return false;
+  const view = new DataView(buffer);
+  const readString = (offset: number, length: number) =>
+    Array.from({ length }, (_, i) => String.fromCharCode(view.getUint8(offset + i))).join('');
+
+  if (readString(0, 4) !== 'RIFF' || readString(8, 4) !== 'WAVE') return true;
+
+  let offset = 12;
+  let dataOffset = -1;
+  let dataSize = 0;
+  while (offset + 8 <= view.byteLength) {
+    const chunkId = readString(offset, 4);
+    const chunkSize = view.getUint32(offset + 4, true);
+    if (chunkId === 'data') {
+      dataOffset = offset + 8;
+      dataSize = chunkSize;
+      break;
+    }
+    offset += 8 + chunkSize + (chunkSize % 2);
+  }
+
+  if (dataOffset < 0 || dataSize < 2) return false;
+  const end = Math.min(dataOffset + dataSize, view.byteLength - 1);
+  let sumSquares = 0;
+  let count = 0;
+  let maxAbs = 0;
+  for (let i = dataOffset; i + 1 < end; i += 2) {
+    const sample = view.getInt16(i, true);
+    const abs = Math.abs(sample);
+    maxAbs = Math.max(maxAbs, abs);
+    sumSquares += sample * sample;
+    count++;
+  }
+
+  const rms = count ? Math.sqrt(sumSquares / count) : 0;
+  return maxAbs > 700 && rms > 120;
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
@@ -132,6 +174,13 @@ serve(async (req) => {
     const ext = extFromMime(audioBlob.type || effectiveMime);
     console.log(`[transcrever-audio] mime=${audioBlob.type} ext=${ext} size=${audioBlob.size}`);
 
+    if (!(await hasAudibleSignal(audioBlob))) {
+      return new Response(
+        JSON.stringify({ error: 'Não foi possível identificar fala clara no áudio', status: 'error' }),
+        { status: 422, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     let result = await transcribeWithOpenAI(audioBlob, ext, language).catch(async (error) => {
       console.warn(`[transcrever-audio] gpt-4o-mini-transcribe falhou, tentando whisper-1: ${error?.message || error}`);
       return await transcribeWithOpenAI(audioBlob, ext, language, 'whisper-1');
@@ -140,12 +189,9 @@ serve(async (req) => {
 
     if (isInvalidTranscription(text, durationSeconds)) {
       console.warn(`[transcrever-audio] resultado inválido recebido (${JSON.stringify(text)}), tentando gpt-4o-transcribe`);
-      result = await transcribeWithOpenAI(audioBlob, ext, language, 'gpt-4o-transcribe').catch(async (error) => {
-        console.warn(`[transcrever-audio] gpt-4o-transcribe falhou, tentando fallback Lovable AI: ${error?.message || error}`);
-        return await transcribeWithLovableAI(audioBlob, language).catch((fallbackError) => {
-          console.warn(`[transcrever-audio] fallback Lovable AI falhou: ${fallbackError?.message || fallbackError}`);
-          return { text: undefined };
-        });
+      result = await transcribeWithOpenAI(audioBlob, ext, language, 'gpt-4o-transcribe').catch((error) => {
+        console.warn(`[transcrever-audio] gpt-4o-transcribe falhou: ${error?.message || error}`);
+        return { text: undefined };
       });
       text = result.text;
     }
