@@ -9492,7 +9492,7 @@ function Conversas() {
                     }
                   }
                 }} className="flex-1 min-h-[40px] max-h-[200px] resize-none overflow-y-auto" rows={1} />
-                    <AudioRecorder onSendAudio={handleSendAudio} />
+                    <AudioRecorder onSendAudio={handleSendAudio} onTranscribed={(text) => setMessageInput(prev => prev ? `${prev} ${text}` : text)} />
                     
                     {/* Botão de Correção Automática */}
                     <Button 
