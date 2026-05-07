@@ -959,7 +959,7 @@ serve(async (req) => {
               fromme: msg.is_from_me || false,
               company_id: company_id,
               lead_id: leadId,
-              nome_contato: existingLead?.name || msg.contact_name || formattedNumber,
+              nome_contato: (isRealMetaName ? metaContactName : null) || (!isPlaceholderLeadName ? currentLeadName : null) || metaContactName || currentLeadName || formattedNumber,
               midia_url: msg.media_url || null,
               arquivo_nome: msg.file_name || null,
               is_group: false,
