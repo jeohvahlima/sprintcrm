@@ -2248,6 +2248,9 @@ function Conversas() {
   const [emailConvidadoReuniao, setEmailConvidadoReuniao] = useState(""); // ⚡ E-mail do convidado
   const [horasAntecedenciaReuniaoHoras, setHorasAntecedenciaReuniaoHoras] = useState("1"); // ⚡ 1 hora padrão
   const [horasAntecedenciaReuniaoMinutos, setHorasAntecedenciaReuniaoMinutos] = useState("0"); // ⚡ 0 minutos padrão
+  const [meetingProfissionalId, setMeetingProfissionalId] = useState<string>(""); // Profissional/especialista escolhido
+  const [meetingProfissionaisList, setMeetingProfissionaisList] = useState<Array<{ id: string; nome: string; especialidade?: string | null }>>([]);
+  const [meetingCompanyNome, setMeetingCompanyNome] = useState<string>("");
   const [newTag, setNewTag] = useState("");
   const [selectedFunnel, setSelectedFunnel] = useState("");
   const [newResponsavel, setNewResponsavel] = useState("");
