@@ -2720,6 +2720,14 @@ export default function Agenda() {
                     </div>
                   </>}
 
+                {/* Lembretes Antecipados (dias antes do compromisso) */}
+                <LembretesAntecipados
+                  lembretes={lembretesAntecipados}
+                  onChange={setLembretesAntecipados}
+                  dataCompromisso={formData.data && formData.hora_inicio ? `${formData.data}T${formData.hora_inicio}` : ""}
+                  nomeCliente={(formData.lead_id ? leads.find(l => l.id === formData.lead_id)?.name : "") || "Cliente"}
+                />
+
                 {/* Lembretes adicionais e convite por e-mail */}
                 {(() => {
                   const leadSel = formData.lead_id ? leads.find(l => l.id === formData.lead_id) : null;
