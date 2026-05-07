@@ -6,11 +6,12 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-async function fetchAudioAsBlob(audioUrl: string): Promise<Blob> {
+async function fetchAudioAsBlob(audioUrl: string, contentType = 'audio/ogg'): Promise<Blob> {
   const res = await fetch(audioUrl);
   if (!res.ok) throw new Error(`Erro ao baixar áudio: ${res.status} ${res.statusText}`);
   const arrayBuffer = await res.arrayBuffer();
-  return new Blob([arrayBuffer], { type: 'audio/ogg' });
+  const ct = res.headers.get('content-type') || contentType;
+  return new Blob([arrayBuffer], { type: ct });
 }
 
 function base64ToBlob(base64Data: string, contentType = 'audio/ogg'): Blob {
@@ -20,13 +21,23 @@ function base64ToBlob(base64Data: string, contentType = 'audio/ogg'): Blob {
   return new Blob([bytes], { type: contentType });
 }
 
+function extFromMime(mime: string): string {
+  const m = (mime || '').toLowerCase();
+  if (m.includes('webm')) return 'webm';
+  if (m.includes('ogg')) return 'ogg';
+  if (m.includes('mp4') || m.includes('m4a')) return 'm4a';
+  if (m.includes('mpeg') || m.includes('mp3')) return 'mp3';
+  if (m.includes('wav')) return 'wav';
+  return 'webm';
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
   }
 
   try {
-    const { audioUrl, audioBase64 } = await req.json();
+    const { audioUrl, audioBase64, mimeType, language } = await req.json();
 
     if (!audioUrl && !audioBase64) {
       return new Response(
@@ -43,18 +54,23 @@ serve(async (req) => {
       );
     }
 
-    // Preparar Blob do áudio
+    // Preparar Blob do áudio com MIME real (default webm — formato típico do MediaRecorder no browser)
+    const effectiveMime = (mimeType || 'audio/webm').split(';')[0].trim();
     let audioBlob: Blob;
     if (audioBase64) {
-      audioBlob = base64ToBlob(audioBase64, 'audio/ogg');
+      audioBlob = base64ToBlob(audioBase64, effectiveMime);
     } else {
-      audioBlob = await fetchAudioAsBlob(audioUrl);
+      audioBlob = await fetchAudioAsBlob(audioUrl, effectiveMime);
     }
+
+    const ext = extFromMime(audioBlob.type || effectiveMime);
+    console.log(`[transcrever-audio] mime=${audioBlob.type} ext=${ext} size=${audioBlob.size}`);
 
     // Montar FormData para Whisper
     const formData = new FormData();
-    formData.append('file', audioBlob, 'audio.ogg');
+    formData.append('file', audioBlob, `audio.${ext}`);
     formData.append('model', 'whisper-1');
+    formData.append('language', language || 'pt');
 
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 25000); // 25s timeout

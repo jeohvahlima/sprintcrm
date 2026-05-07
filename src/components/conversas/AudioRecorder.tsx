@@ -130,7 +130,7 @@ export function AudioRecorder({ onSendAudio, onTranscribed }: AudioRecorderProps
       });
 
       const { data, error } = await supabase.functions.invoke('transcrever-audio', {
-        body: { audioBase64: base64 },
+        body: { audioBase64: base64, mimeType: audioBlob.type || 'audio/webm', language: 'pt' },
       });
 
       if (error) throw error;
