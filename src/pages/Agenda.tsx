@@ -1602,13 +1602,19 @@ export default function Agenda() {
             if (telefone) {
               // Mensagem de confirmação formatada e personalizada
               const tipoServicoFormatado = formData.tipo_servico?.trim() ? formData.tipo_servico.charAt(0).toUpperCase() + formData.tipo_servico.slice(1) : null;
-              const mensagemConfirmacao = `✅ *Compromisso Confirmado!*\n\n` + `Olá ${leadSelecionado.name}! Seu compromisso foi agendado com sucesso.\n\n` + `📅 *Data:* ${format(dataHoraInicio, "dd/MM/yyyy", {
+              const profissionalIdMsg = formData.profissional_id || formAgendaSelecionada?.responsavel_id;
+              const profissionalSel = profissionalIdMsg ? profissionaisList.find(p => p.id === profissionalIdMsg) : null;
+              const profissionalLinha = profissionalSel
+                ? `👨‍⚕️ *Profissional:* ${profissionalSel.nome}${profissionalSel.especialidade ? ` (${profissionalSel.especialidade})` : ''}\n`
+                : '';
+              const empresaLinha = companyNome ? `🏢 *Empresa:* ${companyNome}\n` : '';
+              const mensagemConfirmacao = `✅ *Compromisso Confirmado!*\n\n` + `Olá ${leadSelecionado.name}! Seu compromisso foi agendado com sucesso.\n\n` + empresaLinha + `📅 *Data:* ${format(dataHoraInicio, "dd/MM/yyyy", {
                 locale: ptBR
               })}\n` + `🕐 *Horário:* ${format(dataHoraInicio, "HH:mm", {
                 locale: ptBR
               })} às ${format(dataHoraFim, "HH:mm", {
                 locale: ptBR
-              })}\n` + (tipoServicoFormatado ? `📋 *Tipo:* ${tipoServicoFormatado}\n` : '') + (
+              })}\n` + (tipoServicoFormatado ? `📋 *Tipo:* ${tipoServicoFormatado}\n` : '') + profissionalLinha + (
               // Título removido - coluna não existe no banco
               formData.observacoes ? `\n💬 *Observações:*\n${formData.observacoes}\n` : '') + `\n✅ *Status:* Agendado\n\n` + `Aguardamos você no dia e horário agendados!\n\n` + `_Esta é uma confirmação automática do seu agendamento._`;
               console.log('📱 [CONFIRMAÇÃO] Enviando mensagem de confirmação imediata...');
