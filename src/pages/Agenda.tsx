@@ -2012,6 +2012,7 @@ export default function Agenda() {
       email_convidado: "",
       lembrete_email_24h: true,
       lembrete_whatsapp_24h: true,
+      profissional_id: "",
     });
     setLeadSearch("");
     setSelectedLeadName("");
