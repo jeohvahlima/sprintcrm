@@ -641,6 +641,8 @@ export default function Agenda() {
     carregarAgendas();
     carregarLembretes();
     carregarConfiguracoes(); // Carregar tempo médio padrão e outras configurações
+    carregarProfissionais();
+    carregarCompanyNome();
     // eslint-disable-next-line react-hooks/exhaustive-deps
 
     // Subscrever para atualizações em tempo real
