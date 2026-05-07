@@ -115,6 +115,43 @@ export function AudioRecorder({ onSendAudio, onTranscribed }: AudioRecorderProps
     }
   };
 
+  const transcribeAndUseAsText = async () => {
+    if (!audioBlob || isTranscribing || isSending || !onTranscribed) return;
+    setIsTranscribing(true);
+    try {
+      const base64 = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          const result = reader.result as string;
+          resolve(result.split(',')[1] || '');
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(audioBlob);
+      });
+
+      const { data, error } = await supabase.functions.invoke('transcrever-audio', {
+        body: { audioBase64: base64 },
+      });
+
+      if (error) throw error;
+      const text = (data as any)?.transcription?.trim();
+      if (!text) {
+        toast.error("Não foi possível transcrever o áudio");
+        return;
+      }
+      onTranscribed(text);
+      toast.success("Áudio transcrito! Revise o texto antes de enviar.");
+      setAudioBlob(null);
+      setRecordingTime(0);
+      chunksRef.current = [];
+    } catch (err) {
+      console.error("Erro na transcrição:", err);
+      toast.error("Erro ao transcrever áudio");
+    } finally {
+      setIsTranscribing(false);
+    }
+  };
+
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
@@ -122,15 +159,27 @@ export function AudioRecorder({ onSendAudio, onTranscribed }: AudioRecorderProps
   };
 
   if (audioBlob) {
+    const busy = isSending || isTranscribing;
     return (
       <div className="flex items-center gap-2 bg-muted p-2 rounded-lg">
         <audio controls className="flex-1 h-8">
           <source src={URL.createObjectURL(audioBlob)} type={audioBlob.type || 'audio/webm'} />
         </audio>
-        <Button size="icon" variant="ghost" onClick={cancelRecording} disabled={isSending}>
+        <Button size="icon" variant="ghost" onClick={cancelRecording} disabled={busy} title="Cancelar">
           <X className="h-4 w-4" />
         </Button>
-        <Button size="icon" onClick={sendAudio} disabled={isSending} className="bg-[#25D366] hover:bg-[#128C7E]">
+        {onTranscribed && (
+          <Button
+            size="icon"
+            variant="outline"
+            onClick={transcribeAndUseAsText}
+            disabled={busy}
+            title="Transcrever áudio em texto"
+          >
+            {isTranscribing ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileText className="h-4 w-4" />}
+          </Button>
+        )}
+        <Button size="icon" onClick={sendAudio} disabled={busy} className="bg-[#25D366] hover:bg-[#128C7E]" title="Enviar áudio">
           <Send className="h-4 w-4" />
         </Button>
       </div>
