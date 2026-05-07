@@ -1,17 +1,20 @@
 import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
-import { Mic, Square, Send, X } from "lucide-react";
+import { Mic, Square, Send, X, FileText, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 interface AudioRecorderProps {
   onSendAudio: (audioBlob: Blob) => Promise<void>;
+  onTranscribed?: (text: string) => void;
 }
 
-export function AudioRecorder({ onSendAudio }: AudioRecorderProps) {
+export function AudioRecorder({ onSendAudio, onTranscribed }: AudioRecorderProps) {
   const [isRecording, setIsRecording] = useState(false);
   const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
   const [recordingTime, setRecordingTime] = useState(0);
   const [isSending, setIsSending] = useState(false);
+  const [isTranscribing, setIsTranscribing] = useState(false);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const chunksRef = useRef<Blob[]>([]);
