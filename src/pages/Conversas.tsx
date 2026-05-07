@@ -7129,6 +7129,35 @@ function Conversas() {
           } else {
             console.log('✅ [LEMBRETE] Lembrete criado com sucesso!');
           }
+
+          // Criar lembretes antecipados configurados
+          const lembretesAntecipAtivos = meetingLembretesAntecipados.filter(la => la.ativo);
+          if (lembretesAntecipAtivos.length > 0) {
+            const lembretesAntecipCriar = lembretesAntecipAtivos.map(la => {
+              const dataEnvioAnt = new Date(dataHoraInicio);
+              dataEnvioAnt.setDate(dataEnvioAnt.getDate() - la.dias);
+              const horasAnt = (dataHoraInicio.getTime() - dataEnvioAnt.getTime()) / (1000 * 60 * 60);
+              return {
+                compromisso_id: compromisso.id,
+                canal: 'whatsapp',
+                horas_antecedencia: horasAnt,
+                mensagem: la.mensagem,
+                status_envio: 'pendente',
+                data_envio: dataEnvioAnt.toISOString(),
+                destinatario: 'lead',
+                telefone_responsavel: leadVinculado?.phone || leadVinculado?.telefone || null,
+                company_id: companyId,
+                tipo_lembrete: 'antecipado'
+              };
+            });
+            const { error: antecipErr } = await supabase.from('lembretes').insert(lembretesAntecipCriar);
+            if (antecipErr) {
+              console.error('❌ [LEMBRETE] Erro ao criar lembretes antecipados:', antecipErr);
+              toast.warning("Houve erro ao criar lembretes antecipados");
+            } else {
+              console.log(`✅ [LEMBRETE] ${lembretesAntecipAtivos.length} lembretes antecipados criados`);
+            }
+          }
         } catch (error) {
           console.error('❌ [LEMBRETE] Erro ao criar lembrete:', error);
         }
