@@ -2244,6 +2244,8 @@ function Conversas() {
   const [meetingAgendaIdSelecionada, setMeetingAgendaIdSelecionada] = useState<string>("");
   const [enviarConfirmacaoReuniao, setEnviarConfirmacaoReuniao] = useState(true); // ⚡ Enviar confirmação por padrão
   const [enviarLembreteReuniao, setEnviarLembreteReuniao] = useState(true); // ⚡ Enviar lembrete por padrão
+  const [convidarPorEmailReuniao, setConvidarPorEmailReuniao] = useState(false); // ⚡ Convidar via Google Calendar
+  const [emailConvidadoReuniao, setEmailConvidadoReuniao] = useState(""); // ⚡ E-mail do convidado
   const [horasAntecedenciaReuniaoHoras, setHorasAntecedenciaReuniaoHoras] = useState("1"); // ⚡ 1 hora padrão
   const [horasAntecedenciaReuniaoMinutos, setHorasAntecedenciaReuniaoMinutos] = useState("0"); // ⚡ 0 minutos padrão
   const [newTag, setNewTag] = useState("");
@@ -6927,6 +6929,7 @@ function Conversas() {
       const dataHoraInicio = new Date(`${meetingData}T${meetingHoraInicio}`);
       const duracaoMinutos = parseInt(meetingDuracao) || 30;
       const dataHoraFim = new Date(dataHoraInicio.getTime() + duracaoMinutos * 60 * 1000);
+      const emailConvidadoFinal = (emailConvidadoReuniao?.trim() || leadVinculado?.email || '').trim();
       const {
         data: compromisso,
         error
@@ -6941,10 +6944,18 @@ function Conversas() {
         tipo_servico: meetingTipoServico,
         observacoes: meetingDescricao || meetingNotes,
         status: 'agendado',
-        custo_estimado: meetingCustoEstimado ? parseFloat(meetingCustoEstimado) : null
+        custo_estimado: meetingCustoEstimado ? parseFloat(meetingCustoEstimado) : null,
+        convidar_lead_email: !!convidarPorEmailReuniao,
+        email_convidado: convidarPorEmailReuniao && emailConvidadoFinal ? emailConvidadoFinal : null
       }).select().single();
       if (error) throw error;
       console.log('✅ [COMPROMISSO] Compromisso criado com sucesso:', compromisso?.id);
+
+      // 📅 Sincronizar com Google Calendar (envia convite por e-mail se habilitado)
+      if (compromisso?.id) {
+        supabase.functions.invoke("google-calendar-event", { body: { action: "create", compromisso_id: compromisso.id } })
+          .catch(err => console.warn('⚠️ [GCAL] Falha ao sincronizar com Google Calendar:', err));
+      }
 
       // ⚡ ENVIAR MENSAGEM DE CONFIRMAÇÃO IMEDIATA
       console.log('🔍 [DEBUG-CONFIRMAÇÃO] Estado enviarConfirmacaoReuniao:', enviarConfirmacaoReuniao);
@@ -7115,6 +7126,8 @@ function Conversas() {
       setMeetingNotes("");
       setEnviarConfirmacaoReuniao(true); // Reset para padrão
       setEnviarLembreteReuniao(true); // Reset para padrão
+      setConvidarPorEmailReuniao(false);
+      setEmailConvidadoReuniao("");
       setHorasAntecedenciaReuniaoHoras("0"); // Reset para padrão
       setHorasAntecedenciaReuniaoMinutos("0"); // Reset para padrão
 
@@ -11106,6 +11119,42 @@ function Conversas() {
                                          </div>
                                        </div>
                                     </div>}
+                                </div>
+
+                                {/* ⚡ CONVIDAR POR E-MAIL (GOOGLE CALENDAR) */}
+                                <div className="space-y-3 p-3 border rounded-lg bg-muted/30">
+                                  <div className="flex items-center justify-between">
+                                    <div className="space-y-0.5">
+                                      <Label className="text-sm font-medium">Convidar por e-mail (Google Agenda)</Label>
+                                      <p className="text-xs text-muted-foreground">
+                                        O convidado receberá o convite nativo do Google Calendar
+                                      </p>
+                                    </div>
+                                    <Switch
+                                      checked={convidarPorEmailReuniao}
+                                      onCheckedChange={(checked) => {
+                                        setConvidarPorEmailReuniao(checked);
+                                        if (checked && !emailConvidadoReuniao && leadVinculado?.email) {
+                                          setEmailConvidadoReuniao(leadVinculado.email);
+                                        }
+                                      }}
+                                    />
+                                  </div>
+                                  {convidarPorEmailReuniao && (
+                                    <div className="space-y-1">
+                                      <Label className="text-xs">E-mail do convidado</Label>
+                                      <Input
+                                        type="email"
+                                        placeholder={leadVinculado?.email || "exemplo@email.com"}
+                                        value={emailConvidadoReuniao}
+                                        onChange={(e) => setEmailConvidadoReuniao(e.target.value)}
+                                        className="h-9"
+                                      />
+                                      {leadVinculado?.email && !emailConvidadoReuniao && (
+                                        <p className="text-xs text-muted-foreground">Padrão: e-mail do lead ({leadVinculado.email})</p>
+                                      )}
+                                    </div>
+                                  )}
                                 </div>
                                 <Button onClick={async () => {
                             // CORREÇÃO: Garantir lead antes de agendar
