@@ -11191,7 +11191,7 @@ function Conversas() {
                                   lembretes={meetingLembretesAntecipados}
                                   onChange={setMeetingLembretesAntecipados}
                                   dataCompromisso={meetingData && meetingHoraInicio ? `${meetingData}T${meetingHoraInicio}` : ''}
-                                  nomeCliente={leadVinculado?.name || selectedConv?.name || 'Cliente'}
+                                  nomeCliente={leadVinculado?.name || selectedConv?.contactName || 'Cliente'}
                                 />
 
                                 {/* ⚡ CONVIDAR POR E-MAIL (GOOGLE CALENDAR) */}
