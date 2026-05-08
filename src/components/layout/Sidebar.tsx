@@ -198,7 +198,7 @@ export function Sidebar({
               <img src="/logo-waze.png" alt="GROW OS" className="h-10 w-10 object-contain" />
               <div>
                 <span className="text-sidebar-foreground font-bold text-lg block leading-tight">GROW OS </span>
-                <span className="text-sidebar-foreground/60 text-xs">Sistema inteligente de gestão comercial</span>
+                <span className="text-sidebar-foreground/60 text-xs">sistema operacional de crescimento comercial</span>
               </div>
             </div>
             {/* Botão fechar apenas em mobile */}
