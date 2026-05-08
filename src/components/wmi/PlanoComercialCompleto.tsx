@@ -298,7 +298,7 @@ export function PlanoComercialCompleto({ score }: { score?: WMIScore }) {
               <CardHeader>
                 <CardTitle className="text-base flex items-center gap-2">
                   <Sparkles className="h-5 w-5 text-primary" />
-                  Plano Comercial Executivo · Waze Advisor IA
+                  Plano Comercial Executivo · GROW Advisor IA
                 </CardTitle>
                 <CardDescription>
                   Processos · Atendimento · Vendas · Playbooks · Metas · KPIs
