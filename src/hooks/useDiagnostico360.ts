@@ -38,6 +38,119 @@ export interface DoresDesejos {
   prospeccoes_dia_ideal?: number;
   dias_uteis_mes?: number;
   curva_abc?: ProdutoABC[];
+  // === Time comercial (custo x produção x ROI) ===
+  qtd_sdrs?: number;
+  qtd_closers?: number;
+  custo_sdr_mes?: number;          // custo médio mensal por SDR/atendente (salário + encargos)
+  custo_closer_mes?: number;       // custo médio mensal por closer/vendedor
+  custo_estrutura_mes?: number;    // gestor, ferramentas, comissões fixas, etc.
+  prod_sdr_leads_dia?: number;     // leads prospectados/atendidos por SDR/dia
+  prod_closer_reunioes_dia?: number; // reuniões realizadas por closer/dia
+  prod_closer_vendas_mes?: number; // vendas fechadas por closer/mês
+}
+
+export interface TimeAnalysis {
+  qtd_total: number;
+  custo_mensal_time: number;
+  custo_anual_time: number;
+  // Produção
+  vendas_mes_total: number;
+  vendas_dia_total: number;
+  receita_mes_time: number;
+  receita_dia_time: number;
+  leads_mes_total: number;
+  reunioes_mes_total: number;
+  // Por pessoa
+  sdr_leads_dia: number;
+  sdr_leads_semana: number;
+  sdr_leads_mes: number;
+  closer_reunioes_dia: number;
+  closer_reunioes_semana: number;
+  closer_reunioes_mes: number;
+  closer_vendas_dia: number;
+  closer_vendas_semana: number;
+  closer_vendas_mes: number;
+  // Eficiência
+  custo_por_lead: number;
+  custo_por_reuniao: number;
+  custo_por_venda: number;
+  margem_mensal: number;            // receita - custo
+  roi_pct: number;                  // (receita - custo) / custo * 100
+  vale_a_pena: boolean;
+  // Gap para meta
+  vendas_meta_mes: number;
+  gap_vendas_mes: number;
+  closers_adicionais_necessarios: number;
+  receita_extra_necessaria: number;
+}
+
+export function calcularTimeAnalysis(d: DoresDesejos): TimeAnalysis | null {
+  const qtdSdr = Number(d.qtd_sdrs) || 0;
+  const qtdCloser = Number(d.qtd_closers) || 0;
+  if (qtdSdr + qtdCloser === 0) return null;
+
+  const dias = Number(d.dias_uteis_mes) || 20;
+  const ticket = Number(d.ticket_medio) || 0;
+  const custoSdr = Number(d.custo_sdr_mes) || 0;
+  const custoCloser = Number(d.custo_closer_mes) || 0;
+  const custoEstrut = Number(d.custo_estrutura_mes) || 0;
+
+  const custoMes = qtdSdr * custoSdr + qtdCloser * custoCloser + custoEstrut;
+
+  const sdrLeadsDia = Number(d.prod_sdr_leads_dia) || 0;
+  const closerReunioesDia = Number(d.prod_closer_reunioes_dia) || 0;
+  const closerVendasMes = Number(d.prod_closer_vendas_mes) || 0;
+
+  const sdrLeadsMes = sdrLeadsDia * dias;
+  const closerReunioesMes = closerReunioesDia * dias;
+  const closerVendasDia = dias > 0 ? closerVendasMes / dias : 0;
+
+  const leadsTotal = sdrLeadsMes * qtdSdr;
+  const reunioesTotal = closerReunioesMes * qtdCloser;
+  const vendasMes = closerVendasMes * qtdCloser;
+  const vendasDia = closerVendasDia * qtdCloser;
+  const receitaMes = vendasMes * ticket;
+  const receitaDia = vendasDia * ticket;
+
+  const margem = receitaMes - custoMes;
+  const roi = custoMes > 0 ? (margem / custoMes) * 100 : 0;
+
+  const meta = Number(d.meta_faturamento) || 0;
+  const vendasMetaMes = ticket > 0 ? meta / ticket : 0;
+  const gapVendas = Math.max(0, vendasMetaMes - vendasMes);
+  const closersExtras = closerVendasMes > 0 ? Math.ceil(gapVendas / closerVendasMes) : 0;
+  const receitaExtra = Math.max(0, meta - receitaMes);
+
+  return {
+    qtd_total: qtdSdr + qtdCloser,
+    custo_mensal_time: custoMes,
+    custo_anual_time: custoMes * 12,
+    vendas_mes_total: vendasMes,
+    vendas_dia_total: vendasDia,
+    receita_mes_time: receitaMes,
+    receita_dia_time: receitaDia,
+    leads_mes_total: leadsTotal,
+    reunioes_mes_total: reunioesTotal,
+    sdr_leads_dia: sdrLeadsDia,
+    sdr_leads_semana: sdrLeadsDia * 5,
+    sdr_leads_mes: sdrLeadsMes,
+    closer_reunioes_dia: closerReunioesDia,
+    closer_reunioes_semana: closerReunioesDia * 5,
+    closer_reunioes_mes: closerReunioesMes,
+    closer_vendas_dia: closerVendasDia,
+    closer_vendas_semana: closerVendasDia * 5,
+    closer_vendas_mes: closerVendasMes,
+    custo_por_lead: leadsTotal > 0 ? custoMes / leadsTotal : 0,
+    custo_por_reuniao: reunioesTotal > 0 ? custoMes / reunioesTotal : 0,
+    custo_por_venda: vendasMes > 0 ? custoMes / vendasMes : 0,
+    margem_mensal: margem,
+    roi_pct: roi,
+    vale_a_pena: margem > 0,
+    vendas_meta_mes: vendasMetaMes,
+    gap_vendas_mes: gapVendas,
+    closers_adicionais_necessarios: closersExtras,
+    receita_extra_necessaria: receitaExtra,
+  };
 }
 
 export interface ProdutoABC {
