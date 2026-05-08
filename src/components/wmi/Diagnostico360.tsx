@@ -113,7 +113,7 @@ export function Diagnostico360() {
               <ClipboardCheck className="h-8 w-8" />
             </div>
             <div className="flex-1">
-              <Badge variant="outline" className="mb-2">Avaliação 360° + SWOT · Metodologia Waze</Badge>
+              <Badge variant="outline" className="mb-2">Avaliação 360° + SWOT · Metodologia GROW</Badge>
               <h2 className="text-2xl font-bold">Diagnóstico Comercial Estratégico</h2>
               <p className="text-muted-foreground mt-2 max-w-2xl">
                 Em 4 etapas guiadas você terá: dores mapeadas, análise SWOT, score por pilar e plano de ação IA com roadmap de 90 dias gerado automaticamente.
