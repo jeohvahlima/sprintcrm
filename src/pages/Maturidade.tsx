@@ -70,7 +70,7 @@ export default function Maturidade() {
           Maturidade Comercial
         </h1>
         <p className="text-muted-foreground mt-1 max-w-2xl">
-          Diagnóstico estratégico 360° + plano de ação executivo gerado pela IA com base nos 5 pilares do Waze Sales OS.
+          Diagnóstico estratégico 360° + plano de ação executivo gerado pela IA com base nos 5 pilares do GROW OS.
         </p>
       </div>
 
