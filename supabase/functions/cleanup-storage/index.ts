@@ -106,13 +106,9 @@ Deno.serve(async (req) => {
 
     console.log(`📊 Referências coletadas: ${referenced.size}`);
 
-    // ========== List all storage objects via SQL (covers ALL folders) ==========
+    // ========== List all storage objects via RPC (covers ALL folders) ==========
     const { data: allObjects, error: objErr } = await supabase
-      .schema("storage" as any)
-      .from("objects")
-      .select("name, metadata, created_at")
-      .eq("bucket_id", "conversation-media")
-      .limit(100000);
+      .rpc("list_storage_objects", { p_bucket: "conversation-media" });
 
     if (objErr) {
       console.error("Erro ao listar storage.objects:", objErr);
@@ -135,7 +131,7 @@ Deno.serve(async (req) => {
         continue;
       }
 
-      const size = Number((obj.metadata as any)?.size || 0);
+      const size = Number((obj as any).size || 0);
       totalFiles++;
       totalBytes += size;
 
