@@ -57,7 +57,7 @@ export function AdvisorChat({ score }: { score?: WMIScore }) {
           <div className="p-1.5 rounded-lg bg-gradient-to-br from-primary to-primary/70 text-primary-foreground">
             <Sparkles className="h-4 w-4" />
           </div>
-          Waze Advisor IA
+          GROW Advisor IA
           <span className="text-xs font-normal text-muted-foreground ml-auto">Consultor comercial</span>
         </CardTitle>
       </CardHeader>
