@@ -46,7 +46,7 @@ import { SocialSellingPanel } from "@/components/prospeccao/SocialSellingPanel";
 import { RotinaInteligente } from "@/components/prospeccao/RotinaInteligente";
 import { PerformanceHubPanel } from "@/components/prospeccao/PerformanceHubPanel";
 import { usePermissions } from "@/hooks/usePermissions";
-import { useCompanyGoals } from "@/hooks/useCommercialGoals";
+
 
 const RPG_KEY = "prospeccao_rpg_mode";
 const SOUND_KEY = "prospeccao_rpg_sound";
