@@ -141,7 +141,7 @@ Use os números reais do Revenue Leak. Mostre quanto a empresa perde por mês, p
 2 parágrafos. Aponte o "balde furado" principal cruzando os pilares mais fracos com o gap financeiro.
 
 ## 🚨 3. Top 3 Gargalos com Impacto Financeiro
-Para cada um: causa-raiz + perda em R$/leads/mês + qual módulo Waze resolve.
+Para cada um: causa-raiz + perda em R$/leads/mês + qual módulo GROW resolve.
 
 ## ⚙️ 4. Plano de Ação por Pilar (NÃO genérico)
 Para cada pilar fraco, escreva 3-5 ações ESPECÍFICAS, com:
