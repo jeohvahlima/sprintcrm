@@ -159,7 +159,7 @@ Divida em 3 fases proporcionais ao prazo:
 - **Quick Wins** (primeiro terço): 5 ações para parar a hemorragia
 - **Estruturação** (segundo terço): processos e cadências
 - **Escala** (terço final): otimização e previsibilidade
-Cada item: ação | responsável | KPI | módulo Waze.
+Cada item: ação | responsável | KPI | módulo GROW.
 
 ## 🔗 7. Conexão com a Plataforma
 Mapeie EXPLICITAMENTE cada gargalo → módulo do sistema:
