@@ -195,7 +195,7 @@ export default function Maturidade() {
 
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">Evolução do WMI Score</CardTitle>
+              <CardTitle className="text-base">Evolução do GMI Score</CardTitle>
               <CardDescription>Histórico de avaliações geradas.</CardDescription>
             </CardHeader>
             <CardContent>
