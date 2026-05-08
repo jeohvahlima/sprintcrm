@@ -9738,6 +9738,14 @@ export type Database = {
         Returns: boolean
       }
       is_super_admin: { Args: never; Returns: boolean }
+      list_storage_objects: {
+        Args: { p_bucket: string }
+        Returns: {
+          created_at: string
+          name: string
+          size: number
+        }[]
+      }
       purge_automation_skip_logs: { Args: never; Returns: undefined }
       recalc_quest_progress: {
         Args: { p_company_id: string; p_user_id: string }
