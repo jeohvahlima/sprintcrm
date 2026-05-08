@@ -26,6 +26,7 @@ import { PlanoIARenderer } from "./PlanoIARenderer";
 import { ImpactoFinanceiroExpandido } from "./ImpactoFinanceiroExpandido";
 import { TimeComercialInputs, TimeComercialResultCard } from "./TimeComercialAnalysis";
 import { CurvaABCEditor } from "./CurvaABCEditor";
+import { ResumoExecutivoConsultivo } from "./ResumoExecutivoConsultivo";
 import { useNavigate } from "react-router-dom";
 import { useCompanySegmento } from "@/hooks/useCompanySegmento";
 import { SEGMENTOS_EMPRESA } from "@/lib/segmentos";
@@ -614,6 +615,9 @@ function ResultadoDiagnostico({
 
   return (
     <div className="space-y-4 animate-fade-in">
+      {/* RESUMO EXECUTIVO CONSULTIVO — risco, previsibilidade, dependência do dono, capacidade */}
+      <ResumoExecutivoConsultivo result={result} alavancas={alavancas} />
+
       {/* HEADER do resultado */}
       <Card className="border-2 overflow-hidden">
         <div className={`h-2 bg-gradient-to-r ${c.cor}`} />
