@@ -786,7 +786,7 @@ function ResultadoDiagnostico({
         <div className="space-y-3">
           <div className="flex items-center gap-2 px-1">
             <Sparkles className="h-5 w-5 text-primary" />
-            <h3 className="text-base font-bold">Plano de Ação — Waze Advisor IA</h3>
+            <h3 className="text-base font-bold">Plano de Ação — GROW Advisor IA</h3>
           </div>
           <PlanoIARenderer markdown={result.diagnostico_ia} />
         </div>
