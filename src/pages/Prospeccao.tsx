@@ -45,6 +45,7 @@ import { SDRQueuePanel } from "@/components/prospeccao/comercial/SDRQueuePanel";
 import { SocialSellingPanel } from "@/components/prospeccao/SocialSellingPanel";
 import { RotinaInteligente } from "@/components/prospeccao/RotinaInteligente";
 import { PerformanceHubPanel } from "@/components/prospeccao/PerformanceHubPanel";
+import { TopoFoco } from "@/components/prospeccao/foco/TopoFoco";
 import { usePermissions } from "@/hooks/usePermissions";
 
 
@@ -221,6 +222,9 @@ export default function Prospeccao() {
           )}
         </div>
       </div>
+
+      {/* Topo de Foco — meta do dia, perda estimada, posição */}
+      <TopoFoco onRecuperar={() => setActiveTab("followup")} />
 
       {/* Cards de Ação Rápida */}
       <QuickActionCards
