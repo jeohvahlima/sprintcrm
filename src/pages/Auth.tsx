@@ -271,7 +271,7 @@ export default function Auth() {
         <CardHeader className="space-y-1 text-center">
           <img src="/logo-waze.png" alt="GROW OS" className="mx-auto mb-4 h-16 w-16 object-contain" />
           <CardTitle className="text-2xl font-bold">GROW OS</CardTitle>
-          <CardDescription>Sistema inteligente de gestão comercial</CardDescription>
+          <CardDescription>sistema operacional de crescimento comercial</CardDescription>
         </CardHeader>
         <CardContent>
           {backendDown && <Alert variant="destructive" className="mb-4">
