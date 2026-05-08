@@ -2960,6 +2960,9 @@ export type Database = {
           company_id: string
           created_at: string
           curva_abc: Json | null
+          custo_closer_mes: number | null
+          custo_estrutura_mes: number | null
+          custo_sdr_mes: number | null
           diagnostico_ia: string | null
           dias_uteis_mes: number | null
           faturamento_atual: number | null
@@ -2975,8 +2978,13 @@ export type Database = {
           prazo_meta_meses: number | null
           principal_desejo: string | null
           principal_dor: string | null
+          prod_closer_reunioes_dia: number | null
+          prod_closer_vendas_mes: number | null
+          prod_sdr_leads_dia: number | null
           prospeccoes_dia_atual: number | null
           prospeccoes_dia_ideal: number | null
+          qtd_closers: number | null
+          qtd_sdrs: number | null
           respostas_perguntas: Json | null
           revenue_leak: Json | null
           segmento: string | null
@@ -2994,6 +3002,9 @@ export type Database = {
           company_id: string
           created_at?: string
           curva_abc?: Json | null
+          custo_closer_mes?: number | null
+          custo_estrutura_mes?: number | null
+          custo_sdr_mes?: number | null
           diagnostico_ia?: string | null
           dias_uteis_mes?: number | null
           faturamento_atual?: number | null
@@ -3009,8 +3020,13 @@ export type Database = {
           prazo_meta_meses?: number | null
           principal_desejo?: string | null
           principal_dor?: string | null
+          prod_closer_reunioes_dia?: number | null
+          prod_closer_vendas_mes?: number | null
+          prod_sdr_leads_dia?: number | null
           prospeccoes_dia_atual?: number | null
           prospeccoes_dia_ideal?: number | null
+          qtd_closers?: number | null
+          qtd_sdrs?: number | null
           respostas_perguntas?: Json | null
           revenue_leak?: Json | null
           segmento?: string | null
@@ -3028,6 +3044,9 @@ export type Database = {
           company_id?: string
           created_at?: string
           curva_abc?: Json | null
+          custo_closer_mes?: number | null
+          custo_estrutura_mes?: number | null
+          custo_sdr_mes?: number | null
           diagnostico_ia?: string | null
           dias_uteis_mes?: number | null
           faturamento_atual?: number | null
@@ -3043,8 +3062,13 @@ export type Database = {
           prazo_meta_meses?: number | null
           principal_desejo?: string | null
           principal_dor?: string | null
+          prod_closer_reunioes_dia?: number | null
+          prod_closer_vendas_mes?: number | null
+          prod_sdr_leads_dia?: number | null
           prospeccoes_dia_atual?: number | null
           prospeccoes_dia_ideal?: number | null
+          qtd_closers?: number | null
+          qtd_sdrs?: number | null
           respostas_perguntas?: Json | null
           revenue_leak?: Json | null
           segmento?: string | null
