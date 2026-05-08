@@ -67,7 +67,7 @@ export function PlanoComercialCompleto({ score }: { score?: WMIScore }) {
               <ClipboardCheck className="h-8 w-8" />
             </div>
             <div className="flex-1">
-              <Badge variant="outline" className="mb-2">Plano Comercial 360 · Metodologia Waze</Badge>
+              <Badge variant="outline" className="mb-2">Plano Comercial 360 · Metodologia GROW</Badge>
               <h2 className="text-2xl font-bold">Diagnóstico → Plano de Ação Pronto</h2>
               <p className="text-muted-foreground mt-2 max-w-3xl">
                 Em ~5 minutos: responda o diagnóstico das 5 alavancas, e a IA entrega um <strong>plano comercial executivo completo</strong> — processos comerciais, atendimento, vendas, playbooks, metas, KPIs, benchmark e roadmap evolutivo de 90 dias.
