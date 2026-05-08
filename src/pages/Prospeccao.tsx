@@ -167,6 +167,7 @@ export default function Prospeccao() {
     paid: "Pipeline Pago",
     followup: "Follow-ups",
     arena: "Ranking",
+    performance: "Performance Hub",
     coldcall: "Cold Call",
     instagram: "Instagram",
     whatsapp: "WhatsApp",
