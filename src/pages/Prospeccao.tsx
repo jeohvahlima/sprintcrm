@@ -260,6 +260,7 @@ export default function Prospeccao() {
               <TabsTrigger value="intel">🎯 {labels.intel}</TabsTrigger>
               <TabsTrigger value="rotina">🧠 {labels.rotina}</TabsTrigger>
               {gamificationOn && <TabsTrigger value="arena">{labels.arena}</TabsTrigger>}
+              <TabsTrigger value="performance">🏆 {labels.performance}</TabsTrigger>
             </TabsList>
 
             {/* Sub-abas Registros/Interações ocultas conforme solicitado */}
