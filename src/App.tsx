@@ -26,7 +26,7 @@ import ProcessosComerciais from "./pages/ProcessosComerciais";
 import Treinamento from "./pages/Treinamento";
 import Financeiro from "./pages/Financeiro";
 import Prospeccao from "./pages/Prospeccao";
-import RevenueEngine from "./pages/RevenueEngine";
+
 import Maturidade from "./pages/Maturidade";
 import Mentoria from "./pages/Mentoria";
 import Juridico from "./pages/Juridico";
@@ -109,7 +109,7 @@ const App = () => (
               <Route path="discador" element={<Discador />} />
               <Route path="processos" element={<ProcessosComerciais />} />
               <Route path="prospeccao" element={<Prospeccao />} />
-              <Route path="revenue-engine" element={<RevenueEngine />} />
+              <Route path="revenue-engine" element={<Navigate to="/analytics" replace />} />
               <Route path="maturidade" element={<Maturidade />} />
               <Route path="mentoria" element={<Mentoria />} />
               <Route path="juridico" element={<Juridico />} />

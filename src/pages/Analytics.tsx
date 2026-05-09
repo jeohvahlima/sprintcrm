@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { BarChart3, TrendingUp, Users, DollarSign, Target, MessageSquare, Calendar, CheckCircle, Bot, Activity, Trophy, XCircle, Download, Share2, Filter, Settings, Eye, PieChart, Clock, Zap, RefreshCw, CalendarDays, UserCheck, AlertTriangle, ArrowUpRight, ArrowDownRight, Megaphone, ExternalLink, Package, Cake, Gift, PartyPopper, Building2 } from "lucide-react";
 import CampaignAnalytics from "@/components/analytics/CampaignAnalytics";
+import RevenueEngine from "@/pages/RevenueEngine";
 import LeadsDrilldownModal, { DrilldownFilterType } from "@/components/analytics/LeadsDrilldownModal";
 import { PipelineFinanceiro } from "@/components/analytics/PipelineFinanceiro";
 import { LossReasonsReport } from "@/components/analytics/LossReasonsReport";
@@ -1184,7 +1185,7 @@ export default function Analytics() {
           )}
           <TabsTrigger value="campaigns" className="gap-2 py-3">
             <Megaphone className="h-4 w-4" />
-            <span className="hidden sm:inline">Campanhas</span>
+            <span className="hidden sm:inline">Revenue Engine</span>
           </TabsTrigger>
           <TabsTrigger value="customize" className="gap-2 py-3">
             <Cake className="h-4 w-4" />
@@ -1660,7 +1661,7 @@ export default function Analytics() {
 
 
         <TabsContent value="campaigns" className="space-y-6">
-          <CampaignAnalytics userCompanyId={userCompanyId} globalFilters={globalFilters} />
+          <RevenueEngine />
         </TabsContent>
 
         {/* Equipe & Operações removido */}
