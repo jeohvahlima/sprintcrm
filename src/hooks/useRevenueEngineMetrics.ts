@@ -51,7 +51,7 @@ export interface BottleneckRow {
   receita_potencial: number;
 }
 
-export function useRevenueEngine(companyId: string | null, days: number = 30) {
+export function useRevenueEngineMetrics(companyId: string | null, days: number = 30) {
   const [summary, setSummary] = useState<RevenueSummary | null>(null);
   const [campaigns, setCampaigns] = useState<CampaignMetric[]>([]);
   const [bottlenecks, setBottlenecks] = useState<BottleneckRow[]>([]);
@@ -79,7 +79,7 @@ export function useRevenueEngine(companyId: string | null, days: number = 30) {
       if (metRes.error) throw metRes.error;
       if (botRes.error) throw botRes.error;
 
-      setSummary(sumRes.data as RevenueSummary);
+      setSummary(sumRes.data as unknown as RevenueSummary);
       const baseCampaigns = (metRes.data || []) as CampaignMetric[];
 
       // Enrich with Meta Ads spend

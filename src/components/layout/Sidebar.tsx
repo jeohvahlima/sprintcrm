@@ -1,6 +1,6 @@
 import { NavLink, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
-import { LayoutDashboard, Users, MessageSquare, Calendar, Bot, Settings, LogOut, MessagesSquare, Video, PhoneCall, Target, Lock, X, Brain, DollarSign, GraduationCap, Activity, Sparkles, Scale } from "lucide-react";
+import { LayoutDashboard, Users, MessageSquare, Calendar, Bot, Settings, LogOut, MessagesSquare, Video, PhoneCall, Target, Lock, X, Brain, DollarSign, GraduationCap, Activity, Sparkles, Scale, Rocket } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
@@ -19,6 +19,11 @@ const navigation = [{
   name: "Relatórios",
   href: "/analytics",
   icon: LayoutDashboard,
+  menuKey: "analytics"
+}, {
+  name: "Revenue Engine",
+  href: "/revenue-engine",
+  icon: Rocket,
   menuKey: "analytics"
 }, {
   name: "Contatos",

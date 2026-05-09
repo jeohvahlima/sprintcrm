@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 export interface RevenueOffer {
   id?: string;
   config_id?: string;
+  produto_servico_id?: string | null;
   name: string;
   ticket: number;
   margin_pct: number;
@@ -16,6 +17,7 @@ export interface RevenueOffer {
   // computed
   receita?: number;
   margem_valor?: number;
+  lucro_liquido?: number;
   cac_total?: number;
   leads?: number;
   reunioes_agendadas?: number;
