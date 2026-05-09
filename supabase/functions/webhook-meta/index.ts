@@ -36,6 +36,94 @@ async function verifyWebhookSignature(payload: string, signature: string, appSec
   return computedSignature === signature;
 }
 
+// Dispara fluxos de automação que tenham gatilho compatível para o canal Instagram.
+async function triggerInstagramFlow(opts: {
+  supabase: any;
+  companyId: string;
+  canal: 'instagram_direct' | 'instagram_comment';
+  conversationNumber: string;
+  conversationId?: string | null;
+  leadId?: string | null;
+  message: string;
+  contactName?: string | null;
+}) {
+  const { supabase, companyId, canal, conversationNumber, conversationId, leadId, message, contactName } = opts;
+  try {
+    const { data: flows } = await supabase
+      .from('automation_flows')
+      .select('id, name, nodes, edges, active')
+      .eq('company_id', companyId)
+      .eq('active', true);
+
+    if (!flows || flows.length === 0) {
+      console.log('🤖 [IG-FLOW] Nenhum fluxo ativo para company', companyId);
+      return;
+    }
+
+    const msgLower = (message || '').toLowerCase().trim();
+
+    for (const flow of flows) {
+      const nodes: any[] = (flow as any).nodes || [];
+      const triggers = nodes.filter((n: any) => {
+        if (n.type !== 'trigger') return false;
+        const canais: string[] = n.data?.canais || ['whatsapp'];
+        return canais.includes(canal);
+      });
+
+      if (triggers.length === 0) continue;
+
+      let matched: any = null;
+      let matchedType = 'nova_mensagem';
+
+      const kwTrigger = triggers.find((n: any) =>
+        (n.data?.triggerType === 'palavra_chave' || n.data?.triggerType === 'comentario_instagram') &&
+        n.data?.keyword
+      );
+      if (kwTrigger) {
+        const kw = String(kwTrigger.data.keyword).toLowerCase().trim();
+        if (msgLower.includes(kw)) {
+          matched = kwTrigger;
+          matchedType = kwTrigger.data?.triggerType || 'palavra_chave';
+        }
+      }
+
+      if (!matched && canal === 'instagram_comment') {
+        matched = triggers.find((n: any) => n.data?.triggerType === 'comentario_instagram' && !n.data?.keyword) || null;
+        if (matched) matchedType = 'comentario_instagram';
+      }
+
+      if (!matched && canal === 'instagram_direct') {
+        matched = triggers.find((n: any) => n.data?.triggerType === 'nova_mensagem') || null;
+        if (matched) matchedType = 'nova_mensagem';
+      }
+
+      if (!matched) continue;
+
+      console.log(`🚀 [IG-FLOW] Disparando fluxo ${flow.id} (canal=${canal}, trigger=${matchedType})`);
+      const url = Deno.env.get('SUPABASE_URL')!;
+      const key = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+      fetch(`${url}/functions/v1/executar-fluxo`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          flowId: flow.id,
+          leadId,
+          conversationId,
+          conversationNumber,
+          companyId,
+          canal,
+          triggerType: matchedType,
+          triggerData: { message, nome_contato: contactName, channel: canal },
+        }),
+      }).catch((e) => console.error('❌ [IG-FLOW] erro ao invocar executar-fluxo:', e));
+
+      break;
+    }
+  } catch (e) {
+    console.error('❌ [IG-FLOW] erro:', e);
+  }
+}
+
 // Construir JSON estruturado para mídia Meta API
 function buildMetaMediaJson(mediaId: string, mimeType?: string, sha256?: string, fileName?: string, fileSize?: number) {
   return JSON.stringify({
