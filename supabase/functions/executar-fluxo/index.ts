@@ -671,7 +671,7 @@ async function sendChannelMessage(
         body: { numero, mensagem, tipo_mensagem: 'text', company_id: companyId },
       });
     }
-    await persistFlowMessage(supabase, numero, mensagem, companyId, leadId);
+    await persistFlowMessage(supabase, numero, mensagem, companyId, leadId, canal);
   } catch (e) {
     console.error(`❌ Erro ao enviar mensagem (canal=${canal}):`, e);
   }
