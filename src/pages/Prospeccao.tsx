@@ -15,6 +15,7 @@ import { ProspeccaoFormDialog } from "@/components/prospeccao/ProspeccaoFormDial
 import { FollowUpTable } from "@/components/prospeccao/FollowUpTable";
 import { FollowUpKPIs } from "@/components/prospeccao/FollowUpKPIs";
 import { FollowUpFormDialog } from "@/components/prospeccao/FollowUpFormDialog";
+import { EsteiraFollowUp } from "@/components/prospeccao/followup/EsteiraFollowUp";
 import { BenchmarkPanel } from "@/components/prospeccao/BenchmarkPanel";
 import { InteractionLogDialog } from "@/components/prospeccao/InteractionLogDialog";
 import { InteractionTimeline } from "@/components/prospeccao/InteractionTimeline";
