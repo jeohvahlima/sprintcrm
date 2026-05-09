@@ -16,7 +16,7 @@ serve(async (req) => {
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    const { flowId, leadId, conversationId, triggerType, triggerData, conversationNumber, companyId: inputCompanyId, currentNodeId, userResponse } = await req.json();
+    const { flowId, leadId, conversationId, triggerType, triggerData, conversationNumber, companyId: inputCompanyId, currentNodeId, userResponse, canal } = await req.json();
 
     console.log("🚀 Executando fluxo:", { flowId, leadId, conversationId, triggerType, currentNodeId });
 
