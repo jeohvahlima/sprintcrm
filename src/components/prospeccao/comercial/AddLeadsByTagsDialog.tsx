@@ -98,7 +98,7 @@ export function AddLeadsByTagsDialog({ open, onOpenChange, companyId, queueId, q
       while (true) {
         let q = supabase
           .from("leads")
-          .select("id, nome, telefone, tags")
+          .select("id, name, telefone, tags")
           .eq("company_id", companyId)
           .range(from, from + PAGE - 1);
         if (matchMode === "any") {
@@ -127,7 +127,7 @@ export function AddLeadsByTagsDialog({ open, onOpenChange, companyId, queueId, q
     if (!s) return leads;
     return leads.filter(
       (l) =>
-        (l.nome || "").toLowerCase().includes(s) ||
+        (l.name || "").toLowerCase().includes(s) ||
         (l.telefone || "").toLowerCase().includes(s)
     );
   }, [leads, search]);
@@ -275,7 +275,7 @@ export function AddLeadsByTagsDialog({ open, onOpenChange, companyId, queueId, q
                           onCheckedChange={() => !inQueue && toggleLead(l.id)}
                         />
                         <div className="flex-1 min-w-0">
-                          <p className="font-medium truncate">{l.nome || "Sem nome"}</p>
+                          <p className="font-medium truncate">{l.name || "Sem nome"}</p>
                           <p className="text-xs text-muted-foreground truncate">
                             {l.telefone || "Sem telefone"}
                             {l.tags && l.tags.length > 0 && (
