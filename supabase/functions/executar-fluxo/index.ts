@@ -608,18 +608,41 @@ async function persistFlowMessage(supabase: any, numero: string, mensagem: strin
   }
 }
 
-// ============= WHATSAPP HELPERS =============
+// ============= MESSAGING HELPERS =============
 
-async function sendWhatsAppMessage(supabase: any, numero: string, mensagem: string, companyId: string, leadId?: string) {
+async function sendChannelMessage(
+  supabase: any,
+  numero: string,
+  mensagem: string,
+  companyId: string,
+  leadId?: string,
+  canal: string = 'whatsapp',
+) {
   try {
-    await supabase.functions.invoke("enviar-whatsapp", {
-      body: { numero, mensagem, tipo_mensagem: "text", company_id: companyId },
-    });
-    // Persistir mensagem no CRM
+    if (canal === 'instagram' || canal === 'instagram_direct' || canal === 'instagram_comment') {
+      // Instagram só permite Direct (a janela de 24h aplicada pela Meta).
+      await supabase.functions.invoke('enviar-instagram', {
+        body: {
+          recipient_id: numero,
+          mensagem,
+          tipo_mensagem: 'text',
+          company_id: companyId,
+        },
+      });
+    } else {
+      await supabase.functions.invoke('enviar-whatsapp', {
+        body: { numero, mensagem, tipo_mensagem: 'text', company_id: companyId },
+      });
+    }
     await persistFlowMessage(supabase, numero, mensagem, companyId, leadId);
   } catch (e) {
-    console.error("❌ Erro ao enviar WhatsApp:", e);
+    console.error(`❌ Erro ao enviar mensagem (canal=${canal}):`, e);
   }
+}
+
+async function sendWhatsAppMessage(supabase: any, numero: string, mensagem: string, companyId: string, leadId?: string) {
+  // Compat: roteia pelo helper unificado usando WhatsApp como padrão.
+  return sendChannelMessage(supabase, numero, mensagem, companyId, leadId, 'whatsapp');
 }
 
 async function sendInteractiveButtons(supabase: any, numero: string, bodyText: string, buttons: any[], companyId: string, leadId?: string) {
