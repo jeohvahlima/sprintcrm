@@ -117,9 +117,47 @@ export function NodePropertiesPanel({ selectedNode, onUpdate }: NodePropertiesPa
                   <SelectItem value="tag_added">🏷️ Tag adicionada</SelectItem>
                   <SelectItem value="compromisso">📅 Compromisso criado</SelectItem>
                   <SelectItem value="palavra_chave">#️⃣ Palavra-chave recebida</SelectItem>
+                  <SelectItem value="comentario_instagram">📸 Comentário no Instagram</SelectItem>
+                  <SelectItem value="novo_seguidor_instagram">➕ Novo seguidor (interagiu)</SelectItem>
                 </SelectContent>
               </Select>
             </div>
+
+            {/* Canais onde o gatilho é válido */}
+            <div className="space-y-2">
+              <Label className="text-slate-300 text-xs font-medium">Canais</Label>
+              <div className="flex flex-wrap gap-2">
+                {[
+                  { id: 'whatsapp', label: '💬 WhatsApp' },
+                  { id: 'instagram_direct', label: '📸 Instagram Direct' },
+                  { id: 'instagram_comment', label: '💭 Comentário Instagram' },
+                ].map((c) => {
+                  const canais: string[] = selectedNode.data.canais || ['whatsapp'];
+                  const active = canais.includes(c.id);
+                  return (
+                    <button
+                      key={c.id}
+                      type="button"
+                      onClick={() => {
+                        const next = active
+                          ? canais.filter((x) => x !== c.id)
+                          : [...canais, c.id];
+                        updateNodeData('canais', next.length ? next : ['whatsapp']);
+                      }}
+                      className={`px-2 py-1 rounded text-xs border transition-colors ${
+                        active
+                          ? 'bg-emerald-600 border-emerald-500 text-white'
+                          : 'bg-slate-800 border-slate-700 text-slate-300'
+                      }`}
+                    >
+                      {c.label}
+                    </button>
+                  );
+                })}
+              </div>
+              <p className="text-xs text-slate-500">Selecione em quais canais este gatilho deve ser ativado.</p>
+            </div>
+
             <div className="space-y-2">
               <Label className="text-slate-300 text-xs font-medium">Título</Label>
               <Input
