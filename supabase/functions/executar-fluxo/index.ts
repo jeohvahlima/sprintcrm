@@ -588,18 +588,55 @@ async function executeRouteDepartment(node: any, context: any, supabase: any) {
 }
 
 // Persistir mensagem enviada pelo fluxo na tabela conversas (para aparecer no CRM)
-async function persistFlowMessage(supabase: any, numero: string, mensagem: string, companyId: string, leadId?: string) {
+async function persistFlowMessage(
+  supabase: any,
+  numero: string,
+  mensagem: string,
+  companyId: string,
+  leadId?: string,
+  canal: string = 'whatsapp',
+) {
   try {
-    const telefoneFormatado = numero.replace(/\D/g, '');
+    const isInstagram = canal === 'instagram' || canal === 'instagram_direct' || canal === 'instagram_comment';
+    // Para Instagram, mantemos o IGSID original (pode ter 15+ dígitos); para WhatsApp, normalizamos
+    const telefoneFormatado = isInstagram ? numero : numero.replace(/\D/g, '');
+
+    // Buscar nome do contato a partir do lead ou de mensagens anteriores
+    let nomeContato: string | null = null;
+    try {
+      if (leadId) {
+        const { data: lead } = await supabase
+          .from('leads')
+          .select('name')
+          .eq('id', leadId)
+          .maybeSingle();
+        nomeContato = lead?.name || null;
+      }
+      if (!nomeContato) {
+        const { data: prev } = await supabase
+          .from('conversas')
+          .select('nome_contato')
+          .eq('company_id', companyId)
+          .eq('telefone_formatado', telefoneFormatado)
+          .not('nome_contato', 'is', null)
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        nomeContato = prev?.nome_contato || null;
+      }
+    } catch {}
+
     await supabase.from("conversas").insert({
       numero: telefoneFormatado,
       telefone_formatado: telefoneFormatado,
       mensagem,
       fromme: true,
       status: 'Enviada',
-      origem: 'automacao',
+      origem: isInstagram ? 'Instagram' : 'automacao',
+      origem_api: isInstagram ? 'meta' : null,
       company_id: companyId,
       lead_id: leadId || null,
+      nome_contato: nomeContato,
       tipo_mensagem: 'texto',
       sent_by: 'bot',
     });
