@@ -1,49 +1,74 @@
-## Funil dedicado de Follow-up (etapas customizáveis)
 
-Cria um funil **separado e configurável** dentro da aba Follow-ups da Prospecção, ao lado da esteira de cadência atual. Cada empresa tem seu próprio funil com etapas que o usuário pode criar, renomear, reordenar e excluir — exatamente como um Kanban de vendas, mas dedicado a follow-up.
+## Diagnóstico atual da Ultra URA / Instagram
 
-### Estrutura
+Verifiquei o módulo de Automação (Fluxos) e a integração Meta/Instagram. Resumo honesto do que **já existe** e do que **ainda não existe**:
+
+### ✅ O que está funcionando
+- **Builder de fluxo** (`FluxoAutomacaoBuilder`, `NodesSidebar`, `NodePropertiesPanel`) com gatilhos: `nova_mensagem`, `novo_lead`, `palavra_chave`, `horario`, `tag_added`.
+- **Executor** (`executar-fluxo` edge function) que casa o `triggerType` com o nó inicial e roda o fluxo.
+- **Webhook Meta** (`webhook-meta`) recebe e salva:
+  - Direct messages do Instagram (texto, imagem, vídeo, áudio, story reply, story_mention, reações).
+  - **Comentários** do Instagram (`change.field === 'comments'`) — já chega e é salvo como mensagem com `source: 'instagram_comment'`.
+
+### ⚠️ O que está incompleto / não existe hoje
+1. **Nenhum disparo de fluxo a partir do webhook do Instagram.** O `webhook-meta` apenas grava a mensagem em `conversations`; **não chama `executar-fluxo`**. Logo, nem mesmo "nova mensagem do Direct" dispara URA hoje pelo IG (só pelo WhatsApp).
+2. **Comentário no feed/reels não dispara fluxo.** Já chega no webhook, mas só vira registro — não roda gatilho de palavra-chave.
+3. **Comentário em LIVE** — depende de assinar o campo `live_comments` na app Meta (hoje não temos esse subscribe; só `messages` e `comments`).
+4. **Novo seguidor** — **a Graph API do Instagram não emite webhook de "new follower"**. Limitação da própria Meta. Só dá pra simular via *polling* periódico do endpoint `/{ig-user-id}?fields=followers_count` + comparar com lista anterior, ou usar a aba "Activity" (não suportada via API oficial).
+5. Builder não tem opções específicas: `instagram_comment`, `instagram_live_comment`, `instagram_new_follower`.
+
+---
+
+## Plano sugerido (3 frentes)
+
+### 1. Disparar fluxos a partir do Instagram Direct e Comentários (viável agora)
+- Em `webhook-meta`, após salvar mensagem do IG, chamar `executar-fluxo` igual já é feito para WhatsApp:
+  - `triggerType = 'nova_mensagem'` para Direct.
+  - `triggerType = 'palavra_chave'` quando `source === 'instagram_comment'` e o texto contiver uma palavra-chave configurada.
+- Adicionar coluna `canais` (array: `whatsapp`, `instagram_direct`, `instagram_comment`) no fluxo, para o usuário escolher onde o fluxo roda.
+- No builder (`NodePropertiesPanel`), adicionar dropdown "Canal de origem" no gatilho.
+
+### 2. Comentários em LIVE
+- Atualizar configuração da App Meta para inscrever os campos `live_comments` (e `comments` se ainda não estiver).
+- Adicionar branch no `webhook-meta` para `change.field === 'live_comments'`, com mesmo tratamento de palavra-chave do item 1.
+- Documentação: requer permissão `instagram_manage_comments` + conta IG Business vinculada a página FB.
+
+### 3. Novo seguidor (workaround — não há webhook oficial)
+Opções, em ordem de preferência:
+- **A. Polling periódico (recomendado):** cron a cada 10–15 min lê `followers_count` e a lista mais recente via `/{ig-user-id}/business_discovery` ou Graph; compara com snapshot anterior salvo em uma nova tabela `instagram_followers_snapshot`. Para cada novo seguidor → dispara fluxo com `triggerType = 'novo_seguidor_instagram'`.
+  - Limitação: a Graph API **não retorna lista de seguidores** para conta IG Business; retorna só contagem. Logo o disparo seria "x novos seguidores hoje" sem `from`.
+  - Para enviar DM de saudação a um seguidor específico precisaríamos do username, que **não é exposto pela API**. Só funcionaria se o seguidor te mandar um direct primeiro (janela de 24h).
+- **B. Híbrido (realista):** quando alguém comenta/dá direct pela primeira vez, checar se ele te segue (via `is_follower` no payload do Messenger Platform — disponível em alguns eventos). Marcar como "novo seguidor que interagiu" e disparar fluxo de boas-vindas no Direct.
+- **C. Manual:** o usuário cola uma lista de @usuários e o sistema envia um Direct (sujeito à janela de 24h da Meta).
+
+Recomendo **B** + a saudação por palavra-chave do item 1, pois é o caminho que **realmente entrega mensagem ao seguidor** dentro das regras da Meta.
+
+---
+
+## Detalhes técnicos
 
 ```text
-┌─────────────┬─────────────┬─────────────┬─────────────┬─────────────┐
-│  A Iniciar  │ Tentando 1x │ Tentando 2x │  Negociando │  Fechado ✓  │
-│   (default) │             │             │             │  (terminal) │
-├─────────────┤             │             │             │             │
-│  [card]     │  [card]     │             │  [card]     │             │
-│  [card]     │             │             │             │             │
-└─────────────┴─────────────┴─────────────┴─────────────┴─────────────┘
-                  ← drag-and-drop entre colunas →
+Hoje:
+  Instagram → webhook-meta → conversations (fim)
+
+Proposto:
+  Instagram → webhook-meta → conversations
+                          ↓
+                    executar-fluxo (triggerType + canal + palavra-chave)
+                          ↓
+                    enviar-instagram (DM) / comentar
 ```
 
-- Cada empresa começa com um **funil default** + 5 etapas seed: `A Iniciar`, `Em contato`, `Negociando`, `Ganho`, `Perdido`. Tudo editável.
-- Usuário pode **adicionar, renomear, mudar cor, reordenar e excluir** etapas.
-- Cards arrastados entre colunas atualizam `stage_id`. Ao soltar em etapa terminal (`Ganho`/`Perdido`), o status do entry vira `completed`/`lost` automaticamente.
-- A **cadência (F1→F5)** continua rodando em paralelo: `next_due_at` ainda calcula vencimento e o badge "vencido" continua aparecendo no card. As duas dimensões coexistem: tempo (cadência) + qualidade (funil).
+Arquivos afetados:
+- `supabase/functions/webhook-meta/index.ts` — chamar `executar-fluxo` após persistir IG.
+- `supabase/functions/executar-fluxo/index.ts` — aceitar `canal` e novos `triggerType` (`comentario_instagram`, `live_comment_instagram`, `novo_seguidor_instagram`).
+- `src/components/fluxos/NodePropertiesPanel.tsx` + `NodesSidebar.tsx` — novos gatilhos e seletor de canal.
+- `src/components/fluxos/nodes/TriggerNode.tsx` — ícones para os novos triggers.
+- Nova migration: `flows.canais text[]`, tabela `instagram_followers_snapshot` (se polling).
+- Atualizar inscrição da App Meta para incluir `comments`, `live_comments`, `mentions`.
 
-### Mudanças técnicas
+---
 
-**Migration:**
-- `follow_up_funnels` — `company_id`, `name`, `is_default`
-- `follow_up_stages` — `funnel_id`, `name`, `color`, `order_index`, `is_terminal`, `terminal_status` (`completed`|`lost`|null)
-- `follow_up_entries`: adicionar `stage_id uuid` (nullable, FK)
-- Trigger `ensure_default_funnel()` cria funil + etapas seed na primeira inserção em `follow_up_entries` por empresa.
-- RLS por `company_id` via `user_company_ids_array()`.
+## Pergunta antes de executar
 
-**Frontend (novos arquivos):**
-- `src/hooks/useFollowUpFunnel.ts` — CRUD funil/etapas + mutation `moveEntryToStage`.
-- `src/components/prospeccao/followup/FunilFollowUp.tsx` — board Kanban com `@dnd-kit` (já no projeto), drag horizontal entre colunas.
-- `src/components/prospeccao/followup/StageManagerDialog.tsx` — gerenciar etapas (add/edit/cor/ordem/excluir).
-
-**Página `Prospeccao.tsx` — aba Follow-up:**
-```text
-[ Esteira de Cadência (atual, F1→F5 por tempo) ]
-[ Funil de Follow-up (novo, etapas customizáveis) ]   ← novo bloco
-[ Histórico/Relatório (atual) ]
-```
-
-Botão **"Gerenciar etapas"** no header do funil abre o dialog de configuração.
-
-### Fora do escopo desta entrega
-- Múltiplos funis por empresa (entrega só o default).
-- Automação de movimento por outcome (continua manual via drag).
-- Métricas de conversão por etapa (próxima rodada).
+Quer que eu implemente as **3 frentes** ou começo só pela **Frente 1** (Direct + comentário com palavra-chave), que é a que dá retorno imediato e respeita os limites da Meta? A "saudação automática a novo seguidor" tem limitação de plataforma — posso implementar a versão B (saudação ao primeiro contato do seguidor) que é o que de fato funciona.
