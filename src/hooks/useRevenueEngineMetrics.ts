@@ -51,7 +51,7 @@ export interface BottleneckRow {
   receita_potencial: number;
 }
 
-export function useRevenueEngine(companyId: string | null, days: number = 30) {
+export function useRevenueEngineMetrics(companyId: string | null, days: number = 30) {
   const [summary, setSummary] = useState<RevenueSummary | null>(null);
   const [campaigns, setCampaigns] = useState<CampaignMetric[]>([]);
   const [bottlenecks, setBottlenecks] = useState<BottleneckRow[]>([]);
