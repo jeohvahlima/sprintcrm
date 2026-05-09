@@ -21,6 +21,11 @@ const navigation = [{
   icon: LayoutDashboard,
   menuKey: "analytics"
 }, {
+  name: "Revenue Engine",
+  href: "/revenue-engine",
+  icon: Rocket,
+  menuKey: "analytics"
+}, {
   name: "Contatos",
   href: "/leads",
   icon: Users,
