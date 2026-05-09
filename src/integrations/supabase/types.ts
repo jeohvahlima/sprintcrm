@@ -9698,6 +9698,56 @@ export type Database = {
           role: Database["public"]["Enums"]["app_role"]
         }[]
       }
+      get_revenue_engine_bottlenecks: {
+        Args: {
+          p_company_id: string
+          p_end_date?: string
+          p_start_date?: string
+        }
+        Returns: {
+          dias_medio_parado: number
+          etapa_id: string
+          etapa_nome: string
+          leads_parados: number
+          receita_potencial: number
+          total_leads: number
+        }[]
+      }
+      get_revenue_engine_metrics: {
+        Args: {
+          p_company_id: string
+          p_end_date?: string
+          p_start_date?: string
+        }
+        Returns: {
+          ad_creative_name: string
+          ad_id: string
+          agendados: number
+          campaign_id: string
+          campaign_key: string
+          campaign_name: string
+          em_contato: number
+          ganhos: number
+          novos: number
+          perdidos: number
+          qualificados: number
+          receita_total: number
+          source_type: string
+          taxa_conversao: number
+          ticket_medio: number
+          total_leads: number
+          utm_medium: string
+          utm_source: string
+        }[]
+      }
+      get_revenue_engine_summary: {
+        Args: {
+          p_company_id: string
+          p_end_date?: string
+          p_start_date?: string
+        }
+        Returns: Json
+      }
       get_subconta_historical_cost: {
         Args: { p_company_id: string; p_master_company_id: string }
         Returns: Json
