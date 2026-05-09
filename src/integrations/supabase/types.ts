@@ -3253,6 +3253,148 @@ export type Database = {
         }
         Relationships: []
       }
+      follow_up_cadence: {
+        Row: {
+          company_id: string
+          created_at: string
+          days_offset: number
+          id: string
+          label: string
+          step_number: number
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          days_offset: number
+          id?: string
+          label: string
+          step_number: number
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          days_offset?: number
+          id?: string
+          label?: string
+          step_number?: number
+        }
+        Relationships: []
+      }
+      follow_up_entries: {
+        Row: {
+          assigned_to: string | null
+          company_id: string
+          contact_email: string | null
+          contact_name: string | null
+          contact_phone: string | null
+          created_at: string
+          current_step: number
+          id: string
+          last_executed_at: string | null
+          lead_id: string | null
+          next_due_at: string
+          notes: string | null
+          outcome: string | null
+          prospecting_contact_id: string | null
+          source: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          assigned_to?: string | null
+          company_id: string
+          contact_email?: string | null
+          contact_name?: string | null
+          contact_phone?: string | null
+          created_at?: string
+          current_step?: number
+          id?: string
+          last_executed_at?: string | null
+          lead_id?: string | null
+          next_due_at: string
+          notes?: string | null
+          outcome?: string | null
+          prospecting_contact_id?: string | null
+          source: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          assigned_to?: string | null
+          company_id?: string
+          contact_email?: string | null
+          contact_name?: string | null
+          contact_phone?: string | null
+          created_at?: string
+          current_step?: number
+          id?: string
+          last_executed_at?: string | null
+          lead_id?: string | null
+          next_due_at?: string
+          notes?: string | null
+          outcome?: string | null
+          prospecting_contact_id?: string | null
+          source?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "follow_up_entries_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      follow_up_executions: {
+        Row: {
+          channel: string
+          company_id: string
+          entry_id: string
+          executed_at: string
+          executed_by: string | null
+          id: string
+          notes: string | null
+          outcome: string
+          script_used: string | null
+          step_number: number
+        }
+        Insert: {
+          channel: string
+          company_id: string
+          entry_id: string
+          executed_at?: string
+          executed_by?: string | null
+          id?: string
+          notes?: string | null
+          outcome: string
+          script_used?: string | null
+          step_number: number
+        }
+        Update: {
+          channel?: string
+          company_id?: string
+          entry_id?: string
+          executed_at?: string
+          executed_by?: string | null
+          id?: string
+          notes?: string | null
+          outcome?: string
+          script_used?: string | null
+          step_number?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "follow_up_executions_entry_id_fkey"
+            columns: ["entry_id"]
+            isOneToOne: false
+            referencedRelation: "follow_up_entries"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       followup_daily_logs: {
         Row: {
           company_id: string
@@ -9568,6 +9710,40 @@ export type Database = {
         }
         Returns: undefined
       }
+      advance_follow_up_entry: {
+        Args: {
+          p_channel: string
+          p_entry_id: string
+          p_notes?: string
+          p_outcome: string
+          p_script?: string
+        }
+        Returns: {
+          assigned_to: string | null
+          company_id: string
+          contact_email: string | null
+          contact_name: string | null
+          contact_phone: string | null
+          created_at: string
+          current_step: number
+          id: string
+          last_executed_at: string | null
+          lead_id: string | null
+          next_due_at: string
+          notes: string | null
+          outcome: string | null
+          prospecting_contact_id: string | null
+          source: string
+          status: string
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "follow_up_entries"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       assert_user_can_access_funil: {
         Args: { p_funil_id: string }
         Returns: undefined
@@ -9860,6 +10036,7 @@ export type Database = {
         Args: { _company_id: string; _user_id: string }
         Returns: boolean
       }
+      user_company_ids_array: { Args: never; Returns: string[] }
       user_has_permission: {
         Args: { _permission_name: string; _user_id: string }
         Returns: boolean
