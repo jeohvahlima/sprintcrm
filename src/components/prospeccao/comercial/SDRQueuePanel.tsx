@@ -24,6 +24,7 @@ export function SDRQueuePanel() {
   const [currentLead, setCurrentLead] = useState<QueueLead | null>(null);
   const [notes, setNotes] = useState("");
   const [showCreate, setShowCreate] = useState(false);
+  const [showAddByTags, setShowAddByTags] = useState(false);
 
   const { data: stats } = useQueueStats(selectedQueueId || null, userId);
   const claimMutation = useClaimNextLead();
