@@ -5910,6 +5910,42 @@ export type Database = {
         }
         Relationships: []
       }
+      meeting_rhythm_templates: {
+        Row: {
+          created_at: string
+          duracao_min: number
+          id: string
+          label: string
+          ordem: number | null
+          participantes_sugeridos: string | null
+          pauta_md: string | null
+          periodicidade: string
+          tipo: string
+        }
+        Insert: {
+          created_at?: string
+          duracao_min?: number
+          id?: string
+          label: string
+          ordem?: number | null
+          participantes_sugeridos?: string | null
+          pauta_md?: string | null
+          periodicidade: string
+          tipo: string
+        }
+        Update: {
+          created_at?: string
+          duracao_min?: number
+          id?: string
+          label?: string
+          ordem?: number | null
+          participantes_sugeridos?: string | null
+          pauta_md?: string | null
+          periodicidade?: string
+          tipo?: string
+        }
+        Relationships: []
+      }
       meeting_signals: {
         Row: {
           created_at: string
@@ -6298,6 +6334,51 @@ export type Database = {
           id?: string
           module?: string
           name?: string
+        }
+        Relationships: []
+      }
+      phase_north_metrics: {
+        Row: {
+          ativo: boolean | null
+          created_at: string
+          descricao: string | null
+          fase: string
+          id: string
+          label: string
+          meta_ideal: number | null
+          meta_min: number | null
+          metrica_key: string
+          modulo_origem: string | null
+          ordem: number | null
+          unidade: string | null
+        }
+        Insert: {
+          ativo?: boolean | null
+          created_at?: string
+          descricao?: string | null
+          fase: string
+          id?: string
+          label: string
+          meta_ideal?: number | null
+          meta_min?: number | null
+          metrica_key: string
+          modulo_origem?: string | null
+          ordem?: number | null
+          unidade?: string | null
+        }
+        Update: {
+          ativo?: boolean | null
+          created_at?: string
+          descricao?: string | null
+          fase?: string
+          id?: string
+          label?: string
+          meta_ideal?: number | null
+          meta_min?: number | null
+          metrica_key?: string
+          modulo_origem?: string | null
+          ordem?: number | null
+          unidade?: string | null
         }
         Relationships: []
       }
@@ -8479,6 +8560,33 @@ export type Database = {
         }
         Relationships: []
       }
+      segment_benchmarks: {
+        Row: {
+          avg_score: number
+          id: string
+          sample_size: number
+          segmento: string
+          top10_score: number
+          updated_at: string
+        }
+        Insert: {
+          avg_score?: number
+          id?: string
+          sample_size?: number
+          segmento: string
+          top10_score?: number
+          updated_at?: string
+        }
+        Update: {
+          avg_score?: number
+          id?: string
+          sample_size?: number
+          segmento?: string
+          top10_score?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       social_selling_actions: {
         Row: {
           action_label: string
@@ -10289,6 +10397,10 @@ export type Database = {
         Args: { p_company_id?: string }
         Returns: Json
       }
+      get_grow_score_consolidated: {
+        Args: { p_company_id?: string }
+        Returns: Json
+      }
       get_monthly_cost_comparison: {
         Args: { p_master_company_id: string; p_months?: number }
         Returns: {
@@ -10461,6 +10573,7 @@ export type Database = {
         Returns: undefined
       }
       redeem_shop_reward: { Args: { p_reward_id: string }; Returns: Json }
+      refresh_segment_benchmarks: { Args: never; Returns: undefined }
       reorder_etapas: {
         Args: { p_funil_id: string; p_order: string[] }
         Returns: undefined

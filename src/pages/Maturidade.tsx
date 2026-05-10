@@ -9,16 +9,20 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { RadarPilares } from "@/components/wmi/RadarPilares";
 import { WMIAlertsPanel } from "@/components/wmi/WMIAlertsPanel";
 import { SegmentBenchmarkCard } from "@/components/wmi/SegmentBenchmarkCard";
+import { GrowSegmentBenchmarkCard } from "@/components/wmi/GrowSegmentBenchmarkCard";
 import { PillarEvolutionChart } from "@/components/wmi/PillarEvolutionChart";
 import { Diagnostico360 } from "@/components/wmi/Diagnostico360";
 import { GrowSalesIntelligence } from "@/components/wmi/GrowSalesIntelligence";
 import { CRMMaturityCheck } from "@/components/wmi/CRMMaturityCheck";
 import { CommercialHRPanel } from "@/components/wmi/CommercialHRPanel";
 import { BusinessPhaseCard } from "@/components/wmi/BusinessPhaseCard";
+import { GrowScoreHero } from "@/components/wmi/GrowScoreHero";
+import { NorthMetricsPanel } from "@/components/wmi/NorthMetricsPanel";
+import { RhythmTemplatesPanel } from "@/components/wmi/RhythmTemplatesPanel";
 import {
   Activity, Trophy, Sparkles, ArrowRight, GraduationCap, AlertTriangle,
   TrendingUp, Target, FileText, BarChart3, Bot, Users, ClipboardCheck, Calculator,
-  Database, Heart, Rocket,
+  Database, Heart, Rocket, Compass, Calendar as CalendarIcon,
 } from "lucide-react";
 import { LineChart, Line, ResponsiveContainer, XAxis, YAxis, Tooltip, CartesianGrid } from "recharts";
 import { format } from "date-fns";
@@ -78,6 +82,9 @@ export default function Maturidade() {
           Diagnóstico estratégico 360° + plano de ação executivo gerado pela IA com base nos 5 pilares do GROW OS.
         </p>
       </div>
+
+      {/* GROW SCORE CONSOLIDADO (selo da metodologia) */}
+      <GrowScoreHero />
 
       {/* SCORE PRINCIPAL + RADAR + GARGALOS */}
       <div className="grid lg:grid-cols-3 gap-6">
@@ -165,6 +172,12 @@ export default function Maturidade() {
           <TabsTrigger value="fase" className="gap-2">
             <Rocket className="h-4 w-4" /> Fase do Negócio
           </TabsTrigger>
+          <TabsTrigger value="norte" className="gap-2">
+            <Compass className="h-4 w-4" /> Métricas Norte
+          </TabsTrigger>
+          <TabsTrigger value="ritmos" className="gap-2">
+            <CalendarIcon className="h-4 w-4" /> Ritmos GROW
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="diagnostico">
@@ -185,6 +198,15 @@ export default function Maturidade() {
 
         <TabsContent value="fase">
           <BusinessPhaseCard />
+        </TabsContent>
+
+        <TabsContent value="norte" className="space-y-4">
+          <NorthMetricsPanel />
+          <GrowSegmentBenchmarkCard />
+        </TabsContent>
+
+        <TabsContent value="ritmos">
+          <RhythmTemplatesPanel />
         </TabsContent>
 
         {/* PILARES + EVOLUÇÃO */}

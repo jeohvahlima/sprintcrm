@@ -5,8 +5,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Users, Calculator, Save, GraduationCap, Heart } from "lucide-react";
+import { Users, Calculator, Save, GraduationCap, Heart, LineChart as LineChartIcon } from "lucide-react";
 import { useCommercialHR, useSaveCommercialHR, CommercialHRConfig } from "@/hooks/useEstruturacao";
+import { CompensationSimulator } from "@/components/wmi/CompensationSimulator";
 import { toast } from "sonner";
 
 export function CommercialHRPanel() {
@@ -47,6 +48,7 @@ export function CommercialHRPanel() {
           <TabsTrigger value="selecao" className="gap-2"><GraduationCap className="h-4 w-4" /> Funil de Seleção</TabsTrigger>
           <TabsTrigger value="rampup" className="gap-2">⚡ Ramp-up 30/60/90</TabsTrigger>
           <TabsTrigger value="remuneracao" className="gap-2"><Calculator className="h-4 w-4" /> Remuneração</TabsTrigger>
+          <TabsTrigger value="simulador" className="gap-2"><LineChartIcon className="h-4 w-4" /> Simulador</TabsTrigger>
           <TabsTrigger value="retencao" className="gap-2"><Heart className="h-4 w-4" /> Retenção</TabsTrigger>
         </TabsList>
 
@@ -121,6 +123,10 @@ export function CommercialHRPanel() {
               <strong>Total a 100% da meta:</strong> R$ {total100.toLocaleString("pt-BR")}
             </div>
           </CardContent></Card>
+        </TabsContent>
+
+        <TabsContent value="simulador" className="mt-4">
+          <CompensationSimulator fixo={Number(cfg.remuneracao?.fixo || 0)} variavelMeta={Number(cfg.remuneracao?.variavel_meta || 0)} />
         </TabsContent>
 
         <TabsContent value="retencao" className="mt-4">

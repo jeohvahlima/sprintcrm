@@ -1,116 +1,124 @@
-# Plano de Implementação — Estruturação Comercial 100% GROW
 
-Vamos fechar os 7 gaps identificados no playbook, distribuídos em 3 fases (F2, F3, F4). Tudo dentro dos 4 módulos de estruturação comercial existentes (Prospecção, Discador, Processos Comerciais, Maturidade) — sem criar módulos paralelos, mantendo a marca **Grow Sales Intelligence**.
+# F5 — Finalizar 100% da Metodologia GROW Sales Intelligence
 
----
-
-## FASE 2 — Esteira de Produtos + Funis de Marketing + ICP Estruturado
-**Onde:** módulo Prospecção (nova aba "Estratégia Comercial")
-**Impacto:** alto (cliente final vê valor imediato)
-
-### 2.1 Esteira de Produtos (Front / Back / High End)
-- Novo componente `ProductLadderBuilder.tsx` em `src/components/prospeccao/`
-- Tabela `product_ladder` (company_id, tier: front|back|high_end, nome, ticket, objetivo, ordem)
-- Visual em 3 colunas com matriz: ticket médio, ciclo de venda, canal de aquisição, função no funil
-- Sugestões IA por segmento (usa `useCompanySegmento`)
-
-### 2.2 Trilhas de Funis de Marketing
-- Componente `MarketingFunnelTracks.tsx` com 3 trilhas:
-  - **VSL/Diagnóstico** (orgânico)
-  - **Social Selling** (já parcial — consolidar com `SocialSellingPanel`)
-  - **Isca Paga** (anúncios)
-- Cada trilha = checklist de etapas do playbook + status (não iniciado / em construção / ativo)
-- Salvar em `marketing_funnel_progress`
-
-### 2.3 ICP Estruturado em 3 Etapas
-- Refatorar `ICPBuilder` para wizard de 3 passos: **Quem é** → **Dores** → **Gatilhos de compra**
-- Output: ficha ICP imprimível + injeção automática nos prompts da IA de prospecção
+Fechar os 6 gaps que restaram do diagnóstico anterior, priorizados por impacto. Tudo dentro dos 4 módulos existentes, sem criar rotas novas, mantendo o verde GROW (`142 71% 45%`).
 
 ---
 
-## FASE 3 — SDR1-4 + Playbook/CRM/IA Checklists
-**Onde:** módulo Discador + Processos Comerciais
-**Impacto:** médio-alto (organização operacional)
+## 5.1 — GROW Score Consolidado (PRIORIDADE 1)
+**Onde:** módulo Maturidade (topo) + card resumo no Dashboard
+**Por que:** hoje temos 4 scores soltos (Prospecção, Processos, Discador, Automação). Falta o número único que vira o "selo GROW".
 
-### 3.1 Estrutura SDR1 → SDR4
-- Estender tabela `user_roles_extended` (ou criar `sdr_specializations`): nivel: sdr1|sdr2|sdr3|sdr4
-  - SDR1: lista fria | SDR2: inbound | SDR3: outbound qualificado | SDR4: closer-assistant
-- `SDRDashboard.tsx`: filtro por nível + KPIs específicos por nível
-- Distribuição automática de leads conforme nível (regra no `useProspectingQueue`)
+- Estender RPC `get_commercial_maturity_score` para também consolidar:
+  - CRM Maturity (peso 15%)
+  - AI Maturity (peso 10%)
+  - Playbook Checklist (peso 15%)
+  - Fase do Negócio declarada (multiplicador de expectativa)
+- Novo componente `GrowScoreHero.tsx` (gauge 0-100 + classificação: Iniciante / Estruturado / Maduro / Referência)
+- Badge "Selo GROW Nível X" reutilizável em outros módulos
 
-### 3.2 Score de Maturidade do CRM
-- Adicionar sub-score em `GrowSalesIntelligence.tsx` (4ª aba "Maturidade do CRM")
-- Checklist auto-avaliativo: pipelines configurados, automações ativas, lead scoring, integrações, tagging
-- Resultado alimenta o pilar "automacao" do GMI
+## 5.2 — Métricas Norte por Fase do Negócio (PRIORIDADE 2)
+**Onde:** novo painel em Maturidade > aba "Métricas Norte"
+**Por que:** o playbook define KPIs diferentes para Validação / Tração / Escala — hoje mostramos métricas genéricas.
 
-### 3.3 Maturidade da IA Comercial
-- Componente `AIMaturityCheck.tsx` em Processos Comerciais
-- 3 níveis: Sugestivo / Automático / Desligado — por agente (atendimento, qualificação, follow-up)
-- Mapeia para configurações já existentes em `useAIAgents`
+- Tabela `phase_north_metrics` (seed com ~15 métricas do playbook):
+  - Validação: nº de entrevistas, % PMF, CAC payback
+  - Tração: leads/mês, taxa SQL, CAC/LTV, MRR growth
+  - Escala: NRR, GRR, sales velocity, ramp-up médio
+- Componente `NorthMetricsPanel.tsx` que lê a fase declarada em `business_context` e mostra só as métricas relevantes + meta sugerida + status (acima/dentro/abaixo)
+- Cada métrica linkada ao módulo onde se mede
 
-### 3.4 Playbooks Documentados (checklist)
-- Painel "Playbooks Comerciais" em Processos Comerciais
-- Checklist: script de abordagem, qualificação BANT/SPIN, objeções, fechamento, follow-up
-- Status por item + link para o documento (usa `useCommercialPlaybooks`)
+## 5.3 — Plano de Ação Auto-Gerado do Diagnóstico (PRIORIDADE 3)
+**Onde:** botão dentro de `PrescriptiveDiagnosis.tsx`
+**Por que:** hoje o diagnóstico mostra ações em texto. Precisa virar **tarefa real** no módulo Tarefas.
 
----
+- Botão "Gerar plano de ação" no resultado do diagnóstico
+- Cria N tarefas em `tarefas` (uma por ação prescrita) com:
+  - Título: ação prescrita
+  - Descrição: causa provável + módulo destino
+  - Prioridade espelhada da regra
+  - Tag automática: `grow-diagnostico`
+  - Vencimento: hoje + (10 - prioridade) dias
+- Toast com deep-link "Ver plano em Tarefas"
 
-## FASE 4 — RH Comercial + Fase do Negócio + Diagnóstico Prescritivo
-**Onde:** módulo Maturidade (3 novas abas) + Processos Comerciais
-**Impacto:** alto estratégico (fecha o capítulo 11 e 12 do playbook)
+## 5.4 — Templates de Reuniões de Ritmo D1/S1/M1/T1 (PRIORIDADE 4)
+**Onde:** Agenda (já existe) + nova aba "Ritmos GROW" na Maturidade
+**Por que:** Capítulo 10 do playbook prescreve ritmos diários/semanais/mensais/trimestrais — hoje sem templates.
 
-### 4.1 RH Comercial (Capítulo 11)
-- Nova aba na Maturidade: **"RH Comercial"**
-- 4 sub-seções:
-  - **Funil de Seleção** (etapas de recrutamento + taxas)
-  - **Ramp-up** (timeline 30/60/90 dias por cargo)
-  - **Calculadora de Remuneração** (fixo + variável + comissão escalonada por meta)
-  - **Painel de Retenção** (turnover, NPS interno, planos de carreira)
-- Tabela `commercial_hr_config` (company_id, secao, dados jsonb)
+- Tabela `meeting_rhythm_templates` (seed com 4 templates):
+  - **D1 Daily** (15min) — pipeline do dia, bloqueios, metas
+  - **S1 Semanal** (60min) — KPIs da semana, leads perdidos, próximas ações
+  - **M1 Mensal** (90min) — fechamento, forecast, pessoas
+  - **T1 Trimestral** (3h) — OKRs, fase do negócio, plano 90 dias
+- Componente `RhythmTemplatesPanel.tsx` com botão "Agendar recorrência" → cria evento recorrente em `agenda`
+- Cada template inclui pauta padrão (markdown) anexada ao evento
 
-### 4.2 Fase do Negócio
-- Pergunta no início do Diagnóstico 360°: **Validação / Tração / Escala**
-- Plano de ação IA passa a considerar a fase (prompts diferentes em `advisor-ai`)
-- Badge visível no header da Maturidade
+## 5.5 — Calculadora de Remuneração Interativa (PRIORIDADE 5)
+**Onde:** dentro de `CommercialHRPanel.tsx` (já existe a seção, faltam os charts)
+**Por que:** hoje só salva valores. Falta o **simulador** para o gestor brincar com cenários.
 
-### 4.3 Diagnóstico Prescritivo ("Consultor de Problemas")
-- Componente `PrescriptiveDiagnosis.tsx` em Processos Comerciais
-- Matriz "Se X então Y": usuário marca sintomas (ex: "leads não atendem", "fechamento baixo"), sistema retorna causas prováveis + ações prescritas + módulo do CRM responsável
-- Base de regras em tabela `prescriptive_rules` (sintoma, causa, acao, modulo_destino, prioridade) — seed inicial com ~40 regras do playbook
+- Adicionar tab "Simulador" dentro do painel RH
+- Inputs: fixo, % comissão, meta, acelerador (>100%), super-acelerador (>120%)
+- Output: gráfico de linha (Recharts) mostrando remuneração total em 5 cenários de atingimento (60%, 80%, 100%, 120%, 150%)
+- Comparativo com benchmark de mercado por cargo (SDR1 / SDR2 / Closer / Gerente)
+
+## 5.6 — Benchmark Anônimo por Segmento (PRIORIDADE 6)
+**Onde:** card discreto no Dashboard de Maturidade
+**Por que:** valor altíssimo de retenção, mas precisa massa crítica. Implementar a base agora.
+
+- View materializada `segment_benchmarks` (agregada, sem PII): média de GROW Score por segmento (advocacia, médico, financeiro, etc.) com `count >= 5` para anonimizar
+- Componente `SegmentBenchmarkCard.tsx`: "Seu score: 72 | Média do seu segmento (advocacia): 64 | Top 10%: 89"
+- Refresh diário via cron edge function
 
 ---
 
 ## Detalhes Técnicos
 
-**Banco (migrations):**
-- `product_ladder`, `marketing_funnel_progress`, `sdr_specializations`, `commercial_hr_config`, `prescriptive_rules`
-- Todas com RLS por `company_id` usando `get_user_company_ids()` (padrão do projeto)
-- Seed de `prescriptive_rules` com regras do playbook
+**Migrations:**
+- `phase_north_metrics` (id, fase, metrica_key, label, formula, meta_min, meta_ideal, modulo_origem)
+- `meeting_rhythm_templates` (id, tipo D1/S1/M1/T1, duracao_min, pauta_md, periodicidade)
+- View materializada `segment_benchmarks`
+- Extensão da RPC `get_commercial_maturity_score` para incluir CRM/AI/Playbook
+- Seed: ~15 métricas norte + 4 templates de ritmo + ~10 benchmarks de remuneração de mercado
 
 **Edge functions:**
-- Estender `advisor-ai` para aceitar `business_phase` e gerar prompts contextualizados
-- Nova função `prescriptive-diagnosis` (recebe sintomas, retorna ações)
+- `refresh-segment-benchmarks` (cron diário)
+- Extensão de `advisor-ai` para usar GROW Score consolidado no contexto
 
-**Frontend:**
-- Componentes em `src/components/wmi/`, `src/components/prospeccao/`, `src/components/processos/`
-- Reuso total dos design tokens (verde `142 71% 45%`)
-- Sem rota nova — tudo via abas dentro dos módulos existentes
+**Frontend (componentes novos):**
+- `src/components/wmi/GrowScoreHero.tsx`
+- `src/components/wmi/NorthMetricsPanel.tsx`
+- `src/components/wmi/RhythmTemplatesPanel.tsx`
+- `src/components/wmi/SegmentBenchmarkCard.tsx`
+- `src/components/wmi/CompensationSimulator.tsx` (sub-componente do CommercialHRPanel)
+- Botão `GenerateActionPlanButton.tsx` em PrescriptiveDiagnosis
 
-**Ordem de execução proposta:**
-1. F2.1 (Esteira) → F2.3 (ICP) → F2.2 (Funis)
-2. F3.2 (CRM Maturity) → F3.3 (IA) → F3.4 (Playbooks) → F3.1 (SDR1-4)
-3. F4.2 (Fase) → F4.3 (Prescritivo) → F4.1 (RH Comercial — maior)
+**Reutilização total:**
+- Design tokens existentes (verde GROW, sem cores hardcoded)
+- Hook `useEstruturacao.ts` estendido (não criar hook novo)
+- Recharts já está no projeto
+- Tarefas já tem hook próprio
+
+**Ordem de execução (1 sessão por bloco):**
+1. F5.1 (GROW Score Hero) — fechamento visual da metodologia
+2. F5.2 (Métricas Norte) — valor imediato por fase
+3. F5.3 (Plano de Ação) — diagnóstico vira ação
+4. F5.4 (Ritmos D1/S1/M1/T1)
+5. F5.5 (Simulador de Remuneração)
+6. F5.6 (Benchmark por Segmento)
 
 ---
 
-## Entregáveis por fase
+## Resultado final
 
-| Fase | Componentes novos | Tabelas | Edge functions | Tempo estimado |
-|------|------------------|---------|----------------|----------------|
-| F2   | 3                | 2       | 0              | ~3 sessões     |
-| F3   | 4                | 1       | 0              | ~3 sessões     |
-| F4   | 3                | 2       | 1 nova + 1 ext | ~4 sessões     |
+Ao fim da F5: **100% da metodologia GROW Sales Intelligence implementada**, com:
+- 1 número único (GROW Score) que resume a maturidade comercial
+- Métricas ajustadas à fase do negócio
+- Diagnóstico que vira plano de ação executável
+- Ritmos de gestão padronizados
+- Simulador de remuneração com benchmark
+- Comparativo anônimo entre clientes do mesmo segmento
 
-Ao fim das 3 fases: **100% da metodologia GROW Sales Intelligence coberta no SaaS**, posicionando o produto como único CRM brasileiro com playbook nativo de estruturação comercial.
+**Posicionamento:** único CRM brasileiro com playbook nativo completo de estruturação comercial.
 
-**Recomendação:** começar por **F2.1 (Esteira de Produtos)** — é o gap mais visível e o que mais diferencia visualmente o produto.
+Quer que eu execute as **6 fases em sequência** ou prefere começar só pelos **3 primeiros** (Score + Métricas Norte + Plano de Ação) que entregam ~80% do impacto?
