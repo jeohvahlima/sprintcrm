@@ -146,6 +146,9 @@ export default function Maturidade() {
           <TabsTrigger value="diagnostico" className="gap-2">
             <Sparkles className="h-4 w-4" /> Diagnóstico 360° + Plano de Ação IA
           </TabsTrigger>
+          <TabsTrigger value="intelligence" className="gap-2">
+            <Calculator className="h-4 w-4" /> Grow Sales Intelligence
+          </TabsTrigger>
           <TabsTrigger value="pilares" className="gap-2">
             <TrendingUp className="h-4 w-4" /> Pilares & Evolução
           </TabsTrigger>
@@ -154,6 +157,11 @@ export default function Maturidade() {
         {/* DIAGNÓSTICO 360 ESTRATÉGICO — fluxo único: SWOT + Plano IA estruturado + Roadmap + acompanhamento */}
         <TabsContent value="diagnostico">
           <Diagnostico360 />
+        </TabsContent>
+
+        {/* GROW SALES INTELLIGENCE — Calculadora de cenários + KPIs ideais + Dimensionamento */}
+        <TabsContent value="intelligence">
+          <GrowSalesIntelligence />
         </TabsContent>
 
         {/* PILARES + EVOLUÇÃO */}
