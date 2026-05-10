@@ -2136,7 +2136,7 @@ serve(async (req) => {
           const supabaseUrlEnv = Deno.env.get('SUPABASE_URL')!;
           const supabaseKeyEnv = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
           
-          fetch(`${supabaseUrlEnv}/functions/v1/executar-fluxo`, {
+          const fluxoResponse = await fetch(`${supabaseUrlEnv}/functions/v1/executar-fluxo`, {
             method: 'POST',
             headers: {
               'Authorization': `Bearer ${supabaseKeyEnv}`,
@@ -2156,12 +2156,13 @@ serve(async (req) => {
                 midia_url: validatedData.midia_url,
               }
             })
-          }).then(async (r) => {
-            const result = await r.json();
-            console.log('✅ [WEBHOOK-FLOW] Fluxo continuado:', result);
-          }).catch((e) => {
-            console.error('❌ [WEBHOOK-FLOW] Erro ao continuar fluxo:', e);
           });
+          const fluxoResult = await fluxoResponse.json().catch(() => null);
+          if (!fluxoResponse.ok) {
+            console.error('❌ [WEBHOOK-FLOW] Erro ao continuar fluxo:', fluxoResponse.status, fluxoResult);
+          } else {
+            console.log('✅ [WEBHOOK-FLOW] Fluxo continuado:', fluxoResult);
+          }
           
           // Não chamar IA - o fluxo já está tratando
         } else {
@@ -2339,7 +2340,7 @@ serve(async (req) => {
               const supabaseUrlEnv = Deno.env.get('SUPABASE_URL')!;
               const supabaseKeyEnv = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
               
-              fetch(`${supabaseUrlEnv}/functions/v1/executar-fluxo`, {
+              const fluxoResponse = await fetch(`${supabaseUrlEnv}/functions/v1/executar-fluxo`, {
                 method: 'POST',
                 headers: {
                   'Authorization': `Bearer ${supabaseKeyEnv}`,
@@ -2359,12 +2360,13 @@ serve(async (req) => {
                     nome_contato: nomeContatoFinal,
                   }
                 })
-              }).then(async (r) => {
-                const result = await r.json();
-                console.log('✅ [WEBHOOK-FLOW] Fluxo iniciado:', result);
-              }).catch((e) => {
-                console.error('❌ [WEBHOOK-FLOW] Erro ao iniciar fluxo:', e);
               });
+              const fluxoResult = await fluxoResponse.json().catch(() => null);
+              if (!fluxoResponse.ok) {
+                console.error('❌ [WEBHOOK-FLOW] Erro ao iniciar fluxo:', fluxoResponse.status, fluxoResult);
+              } else {
+                console.log('✅ [WEBHOOK-FLOW] Fluxo iniciado:', fluxoResult);
+              }
                 
               flowStarted = true;
               break; // Usar apenas o primeiro fluxo com gatilho correspondente
