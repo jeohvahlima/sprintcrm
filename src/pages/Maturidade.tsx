@@ -83,6 +83,9 @@ export default function Maturidade() {
         </p>
       </div>
 
+      {/* GROW SCORE CONSOLIDADO (selo da metodologia) */}
+      <GrowScoreHero />
+
       {/* SCORE PRINCIPAL + RADAR + GARGALOS */}
       <div className="grid lg:grid-cols-3 gap-6">
         <Card className="overflow-hidden border-2 lg:col-span-2">
