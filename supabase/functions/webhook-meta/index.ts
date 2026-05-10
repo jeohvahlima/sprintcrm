@@ -297,6 +297,16 @@ async function triggerWhatsAppFlow(opts: {
         continue;
       }
 
+      // ===== CHECK: Schedule (horário de funcionamento) =====
+      const sched = isOutOfSchedule((flow as any).settings);
+      if (sched.out) {
+        console.log(`🕐 [META-WA-FLOW] Fora do horário do fluxo ${flow.id}`, sched);
+        if (sched.outOfHoursMessage) {
+          await sendOutOfHoursMessage(sched.outOfHoursMessage);
+        }
+        return;
+      }
+
       console.log(`🚀 [META-WA-FLOW] Iniciando URA ${flow.id} por ${matchedTriggerType}`);
       const response = await fetch(`${url}/functions/v1/executar-fluxo`, {
         method: 'POST',
