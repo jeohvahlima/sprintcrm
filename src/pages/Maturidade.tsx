@@ -12,7 +12,7 @@ import { SegmentBenchmarkCard } from "@/components/wmi/SegmentBenchmarkCard";
 import { GrowSegmentBenchmarkCard } from "@/components/wmi/GrowSegmentBenchmarkCard";
 import { PillarEvolutionChart } from "@/components/wmi/PillarEvolutionChart";
 import { Diagnostico360 } from "@/components/wmi/Diagnostico360";
-import { GrowSalesIntelligence } from "@/components/wmi/GrowSalesIntelligence";
+
 import { CRMMaturityCheck } from "@/components/wmi/CRMMaturityCheck";
 import { CommercialHRPanel } from "@/components/wmi/CommercialHRPanel";
 import { BusinessPhaseCard } from "@/components/wmi/BusinessPhaseCard";
@@ -22,7 +22,7 @@ import { RhythmTemplatesPanel } from "@/components/wmi/RhythmTemplatesPanel";
 import { Onboarding7Days } from "@/components/wmi/Onboarding7Days";
 import {
   Activity, Trophy, Sparkles, ArrowRight, GraduationCap, AlertTriangle,
-  TrendingUp, Target, FileText, BarChart3, Bot, Users, ClipboardCheck, Calculator,
+  TrendingUp, Target, FileText, BarChart3, Bot, Users, ClipboardCheck,
   Database, Heart, Rocket, Compass, Calendar as CalendarIcon, Zap,
 } from "lucide-react";
 import { LineChart, Line, ResponsiveContainer, XAxis, YAxis, Tooltip, CartesianGrid } from "recharts";
@@ -159,7 +159,7 @@ export default function Maturidade() {
             <Zap className="h-4 w-4" /> Onboarding 7 Dias
           </TabsTrigger>
           <TabsTrigger value="diagnostico" className="gap-2">
-            <Sparkles className="h-4 w-4" /> Diagnóstico 360° + Grow Sales Intelligence
+            <Sparkles className="h-4 w-4" /> Diagnóstico 360°
           </TabsTrigger>
           <TabsTrigger value="pilares" className="gap-2">
             <TrendingUp className="h-4 w-4" /> Pilares & Evolução
@@ -185,16 +185,8 @@ export default function Maturidade() {
           <Onboarding7Days />
         </TabsContent>
 
-        <TabsContent value="diagnostico" className="space-y-6">
+        <TabsContent value="diagnostico">
           <Diagnostico360 />
-          <div className="pt-2">
-            <div className="flex items-center gap-2 mb-3">
-              <Calculator className="h-5 w-5 text-primary" />
-              <h3 className="text-lg font-semibold">Grow Sales Intelligence</h3>
-              <Badge variant="secondary" className="text-[10px]">Use durante o diagnóstico</Badge>
-            </div>
-            <GrowSalesIntelligence />
-          </div>
         </TabsContent>
 
         <TabsContent value="crm-maturity">

@@ -27,6 +27,7 @@ import { ImpactoFinanceiroExpandido } from "./ImpactoFinanceiroExpandido";
 import { TimeComercialInputs, TimeComercialResultCard } from "./TimeComercialAnalysis";
 import { CurvaABCEditor } from "./CurvaABCEditor";
 import { ResumoExecutivoConsultivo } from "./ResumoExecutivoConsultivo";
+import { GrowSalesIntelligence } from "./GrowSalesIntelligence";
 import { useNavigate } from "react-router-dom";
 import { useCompanySegmento } from "@/hooks/useCompanySegmento";
 import { SEGMENTOS_EMPRESA } from "@/lib/segmentos";
@@ -38,7 +39,7 @@ import { cn } from "@/lib/utils";
 
 const ICON_MAP: Record<string, any> = { Target, TrendingUp, Heart, Users, BarChart3 };
 
-type Step = "intro" | "dores" | "swot" | "alavancas" | "result";
+type Step = "intro" | "dores" | "swot" | "intel" | "alavancas" | "result";
 
 const EMPTY_DORES: DoresDesejos = {
   principal_dor: "",
@@ -426,6 +427,41 @@ export function Diagnostico360() {
             <Button variant="outline" onClick={() => setStep("dores")} className="gap-2">
               <ChevronLeft className="h-4 w-4" /> Voltar
             </Button>
+            <Button onClick={() => setStep("intel")} className="gap-2">
+              Próxima: Grow Sales Intelligence <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // ============ STEP: GROW SALES INTELLIGENCE (Calculadora) ============
+  if (step === "intel") {
+    return (
+      <Card className="border-2 animate-fade-in">
+        <div className="h-2 bg-gradient-to-r from-primary to-primary/60" />
+        <CardHeader className="pb-3">
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 rounded-lg bg-gradient-to-br from-primary/30 to-primary/10">
+              <Sparkles className="h-5 w-5 text-primary" />
+            </div>
+            <div>
+              <Badge variant="outline" className="mb-1 text-xs">Etapa 2.5 · Calculadora Comercial</Badge>
+              <CardTitle className="text-lg">Grow Sales Intelligence</CardTitle>
+              <CardDescription className="text-xs">
+                Simule cenários, compare KPIs e dimensione o time antes de avaliar as alavancas.
+              </CardDescription>
+            </div>
+          </div>
+          <Progress value={50} className="h-1.5 mt-3" />
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <GrowSalesIntelligence />
+          <div className="flex justify-between pt-2 gap-2">
+            <Button variant="outline" onClick={() => setStep("swot")} className="gap-2">
+              <ChevronLeft className="h-4 w-4" /> Voltar
+            </Button>
             <Button onClick={() => { setCurrentAlavanca(0); setStep("alavancas"); }} className="gap-2">
               Próxima: Alavancas <ChevronRight className="h-4 w-4" />
             </Button>
@@ -522,7 +558,7 @@ export function Diagnostico360() {
 
           <div className="flex justify-between pt-4 gap-2">
             <Button variant="outline" onClick={() => {
-              if (currentAlavanca === 0) setStep("swot");
+              if (currentAlavanca === 0) setStep("intel");
               else setCurrentAlavanca((i) => i - 1);
             }} className="gap-2">
               <ChevronLeft className="h-4 w-4" /> Voltar
