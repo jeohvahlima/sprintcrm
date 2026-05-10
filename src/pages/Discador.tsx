@@ -180,6 +180,10 @@ const Discador = () => {
           <TabsContent value="painel-sdr">
             <SDRDashboard getMetrics={getSDRMetrics} />
           </TabsContent>
+
+          <TabsContent value="especializacao">
+            <SDRSpecializationPanel />
+          </TabsContent>
         </Tabs>
       </div>
 
