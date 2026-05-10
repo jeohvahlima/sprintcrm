@@ -161,23 +161,8 @@ export default function Maturidade() {
           <TabsTrigger value="diagnostico" className="gap-2">
             <Sparkles className="h-4 w-4" /> Diagnóstico 360°
           </TabsTrigger>
-          <TabsTrigger value="pilares" className="gap-2">
-            <TrendingUp className="h-4 w-4" /> Pilares & Evolução
-          </TabsTrigger>
-          <TabsTrigger value="crm-maturity" className="gap-2">
-            <Database className="h-4 w-4" /> Maturidade CRM
-          </TabsTrigger>
-          <TabsTrigger value="rh" className="gap-2">
-            <Heart className="h-4 w-4" /> RH Comercial
-          </TabsTrigger>
-          <TabsTrigger value="fase" className="gap-2">
-            <Rocket className="h-4 w-4" /> Fase do Negócio
-          </TabsTrigger>
-          <TabsTrigger value="norte" className="gap-2">
-            <Compass className="h-4 w-4" /> Métricas Norte
-          </TabsTrigger>
-          <TabsTrigger value="ritmos" className="gap-2">
-            <CalendarIcon className="h-4 w-4" /> Ritmos GROW
+          <TabsTrigger value="evolucao" className="gap-2">
+            <TrendingUp className="h-4 w-4" /> Maturidade & Evolução
           </TabsTrigger>
         </TabsList>
 
@@ -189,101 +174,133 @@ export default function Maturidade() {
           <Diagnostico360 />
         </TabsContent>
 
-        <TabsContent value="crm-maturity">
-          <CRMMaturityCheck />
-        </TabsContent>
-
-        <TabsContent value="rh">
-          <CommercialHRPanel />
-        </TabsContent>
-
-        <TabsContent value="fase">
-          <BusinessPhaseCard />
-        </TabsContent>
-
-        <TabsContent value="norte" className="space-y-4">
-          <NorthMetricsPanel />
-          <GrowSegmentBenchmarkCard />
-        </TabsContent>
-
-        <TabsContent value="ritmos">
-          <RhythmTemplatesPanel />
-        </TabsContent>
-
-        {/* PILARES + EVOLUÇÃO */}
-        <TabsContent value="pilares" className="space-y-4">
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {Object.entries(score.pillars).map(([key, p]) => {
-              const meta = PILLAR_META[key];
-              const Icon = meta.icon;
-              const pct = Math.round((p.score / p.max) * 100);
-              return (
-                <Card key={key} className="overflow-hidden hover:border-primary/40 transition">
-                  <div className={`h-1.5 bg-gradient-to-r ${meta.color}`} />
-                  <CardHeader className="pb-3">
-                    <div className="flex items-center gap-2">
-                      <div className={`p-2 rounded-lg bg-gradient-to-br ${meta.color} text-white`}>
-                        <Icon className="h-5 w-5" />
-                      </div>
-                      <CardTitle className="text-base flex-1">{meta.label}</CardTitle>
-                      <Badge variant="secondary" className="font-mono">{p.score}/{p.max}</Badge>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="space-y-3">
-                    <Progress value={pct} className="h-2" />
-                    <div className="space-y-1.5 pt-1">
-                      {Object.entries(p.metrics).map(([k, v]) => (
-                        <div key={k} className="flex justify-between text-xs">
-                          <span className="text-muted-foreground capitalize">{k.replace(/_/g, " ")}</span>
-                          <span className="font-medium">{typeof v === "number" ? v.toLocaleString("pt-BR") : v}</span>
+        {/* MATURIDADE & EVOLUÇÃO — agrupa Pilares, CRM, RH, Fase, Métricas Norte e Ritmos */}
+        <TabsContent value="evolucao" className="space-y-10">
+          {/* Pilares & Evolução do GMI Score */}
+          <section className="space-y-4">
+            <div className="flex items-center gap-2">
+              <TrendingUp className="h-5 w-5 text-primary" />
+              <h2 className="text-lg font-semibold">Pilares & Evolução</h2>
+            </div>
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {Object.entries(score.pillars).map(([key, p]) => {
+                const meta = PILLAR_META[key];
+                const Icon = meta.icon;
+                const pct = Math.round((p.score / p.max) * 100);
+                return (
+                  <Card key={key} className="overflow-hidden hover:border-primary/40 transition">
+                    <div className={`h-1.5 bg-gradient-to-r ${meta.color}`} />
+                    <CardHeader className="pb-3">
+                      <div className="flex items-center gap-2">
+                        <div className={`p-2 rounded-lg bg-gradient-to-br ${meta.color} text-white`}>
+                          <Icon className="h-5 w-5" />
                         </div>
-                      ))}
-                    </div>
-                    <Button variant="ghost" size="sm" className="w-full justify-between" onClick={() => navigate(meta.route)}>
-                      Ir para o módulo <ArrowRight className="h-3 w-3" />
-                    </Button>
-                  </CardContent>
-                </Card>
-              );
-            })}
-          </div>
+                        <CardTitle className="text-base flex-1">{meta.label}</CardTitle>
+                        <Badge variant="secondary" className="font-mono">{p.score}/{p.max}</Badge>
+                      </div>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      <Progress value={pct} className="h-2" />
+                      <div className="space-y-1.5 pt-1">
+                        {Object.entries(p.metrics).map(([k, v]) => (
+                          <div key={k} className="flex justify-between text-xs">
+                            <span className="text-muted-foreground capitalize">{k.replace(/_/g, " ")}</span>
+                            <span className="font-medium">{typeof v === "number" ? v.toLocaleString("pt-BR") : v}</span>
+                          </div>
+                        ))}
+                      </div>
+                      <Button variant="ghost" size="sm" className="w-full justify-between" onClick={() => navigate(meta.route)}>
+                        Ir para o módulo <ArrowRight className="h-3 w-3" />
+                      </Button>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
 
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">Evolução do GMI Score</CardTitle>
-              <CardDescription>Histórico de avaliações geradas.</CardDescription>
-            </CardHeader>
-            <CardContent>
-              {!history?.length ? (
-                <p className="text-sm text-muted-foreground text-center py-10">
-                  Gere seu primeiro plano para registrar o histórico.
-                </p>
-              ) : (
-                <ResponsiveContainer width="100%" height={280}>
-                  <LineChart data={history.map((h: any) => ({
-                    date: format(new Date(h.created_at), "dd/MM"),
-                    score: h.total_score,
-                  }))}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                    <XAxis dataKey="date" tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }} />
-                    <YAxis domain={[0, 100]} tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }} />
-                    <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 8 }} />
-                    <Line type="monotone" dataKey="score" stroke="hsl(var(--primary))" strokeWidth={2.5} dot={{ r: 4 }} />
-                  </LineChart>
-                </ResponsiveContainer>
-              )}
-            </CardContent>
-          </Card>
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">Evolução do GMI Score</CardTitle>
+                <CardDescription>Histórico de avaliações geradas.</CardDescription>
+              </CardHeader>
+              <CardContent>
+                {!history?.length ? (
+                  <p className="text-sm text-muted-foreground text-center py-10">
+                    Gere seu primeiro plano para registrar o histórico.
+                  </p>
+                ) : (
+                  <ResponsiveContainer width="100%" height={280}>
+                    <LineChart data={history.map((h: any) => ({
+                      date: format(new Date(h.created_at), "dd/MM"),
+                      score: h.total_score,
+                    }))}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                      <XAxis dataKey="date" tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }} />
+                      <YAxis domain={[0, 100]} tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }} />
+                      <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 8 }} />
+                      <Line type="monotone" dataKey="score" stroke="hsl(var(--primary))" strokeWidth={2.5} dot={{ r: 4 }} />
+                    </LineChart>
+                  </ResponsiveContainer>
+                )}
+              </CardContent>
+            </Card>
 
-          <div className="grid lg:grid-cols-2 gap-4">
-            <PillarEvolutionChart />
-            <SegmentBenchmarkCard
-              currentMetrics={{
-                win_rate: (score.pillars.gestao?.metrics as any)?.win_rate,
-                cycle_days: (score.pillars.gestao?.metrics as any)?.cycle_days,
-              }}
-            />
-          </div>
+            <div className="grid lg:grid-cols-2 gap-4">
+              <PillarEvolutionChart />
+              <SegmentBenchmarkCard
+                currentMetrics={{
+                  win_rate: (score.pillars.gestao?.metrics as any)?.win_rate,
+                  cycle_days: (score.pillars.gestao?.metrics as any)?.cycle_days,
+                }}
+              />
+            </div>
+          </section>
+
+          {/* Fase do Negócio */}
+          <section className="space-y-3">
+            <div className="flex items-center gap-2">
+              <Rocket className="h-5 w-5 text-primary" />
+              <h2 className="text-lg font-semibold">Fase do Negócio</h2>
+            </div>
+            <BusinessPhaseCard />
+          </section>
+
+          {/* Métricas Norte */}
+          <section className="space-y-3">
+            <div className="flex items-center gap-2">
+              <Compass className="h-5 w-5 text-primary" />
+              <h2 className="text-lg font-semibold">Métricas Norte</h2>
+            </div>
+            <NorthMetricsPanel />
+            <GrowSegmentBenchmarkCard />
+          </section>
+
+          {/* Maturidade CRM */}
+          <section className="space-y-3">
+            <div className="flex items-center gap-2">
+              <Database className="h-5 w-5 text-primary" />
+              <h2 className="text-lg font-semibold">Maturidade CRM</h2>
+            </div>
+            <CRMMaturityCheck />
+          </section>
+
+          {/* RH Comercial */}
+          <section className="space-y-3">
+            <div className="flex items-center gap-2">
+              <Heart className="h-5 w-5 text-primary" />
+              <h2 className="text-lg font-semibold">RH Comercial</h2>
+            </div>
+            <CommercialHRPanel />
+          </section>
+
+          {/* Ritmos GROW */}
+          <section className="space-y-3">
+            <div className="flex items-center gap-2">
+              <CalendarIcon className="h-5 w-5 text-primary" />
+              <h2 className="text-lg font-semibold">Ritmos GROW</h2>
+            </div>
+            <RhythmTemplatesPanel />
+          </section>
         </TabsContent>
       </Tabs>
 
