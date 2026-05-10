@@ -2081,8 +2081,10 @@ serve(async (req) => {
         // NÃO herdar fluxos da empresa mãe - cada conta deve criar seus próprios fluxos
         const companyIdsToSearch = [companyId];
 
+        // 🔑 Palavra-chave SEMPRE deve resetar a conversa, mesmo sem flow_state ativo
+        // (caso comum: conversa transferida com assignment ativo, contato manda palavra-chave para reiniciar URA)
         let keywordOverride = false;
-        if (flowState) {
+        {
           const { data: allActiveFlows } = await supabase
             .from('automation_flows')
             .select('id, nodes, company_id')
@@ -2098,13 +2100,23 @@ serve(async (req) => {
               if (kwTrigger) {
                 const kw = kwTrigger.data.keyword.toLowerCase().trim();
                 const msg = (validatedData.mensagem || '').toLowerCase().trim();
-                if (msg.includes(kw)) {
-                  console.log(`🔑 [WEBHOOK-FLOW] Palavra-chave "${kw}" detectada! Resetando estado anterior e iniciando novo fluxo. (flow company: ${flow.company_id})`);
-                  // Limpar estado antigo
-                  await supabase.from('conversation_flow_state')
-                    .delete()
-                    .eq('conversation_number', numeroLimpo)
-                    .eq('company_id', companyId);
+                if (msg && kw && msg.includes(kw)) {
+                  console.log(`🔑 [WEBHOOK-FLOW] Palavra-chave "${kw}" detectada! Resetando flow_state, assignment e atendimento ativo para reiniciar URA. (flow company: ${flow.company_id})`);
+                  // Limpar TODOS os estados que poderiam bloquear o reinício do fluxo
+                  await Promise.all([
+                    supabase.from('conversation_flow_state')
+                      .delete()
+                      .eq('conversation_number', numeroLimpo)
+                      .eq('company_id', companyId),
+                    supabase.from('conversation_assignments')
+                      .delete()
+                      .eq('telefone_formatado', numeroLimpo)
+                      .eq('company_id', companyId),
+                    supabase.from('active_attendances')
+                      .delete()
+                      .eq('telefone_formatado', numeroLimpo)
+                      .eq('company_id', companyId),
+                  ]);
                   keywordOverride = true;
                   break;
                 }
