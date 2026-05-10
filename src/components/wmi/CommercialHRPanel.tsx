@@ -125,6 +125,10 @@ export function CommercialHRPanel() {
           </CardContent></Card>
         </TabsContent>
 
+        <TabsContent value="simulador" className="mt-4">
+          <CompensationSimulator fixo={Number(cfg.remuneracao?.fixo || 0)} variavelMeta={Number(cfg.remuneracao?.variavel_meta || 0)} />
+        </TabsContent>
+
         <TabsContent value="retencao" className="mt-4">
           <Card><CardContent className="p-5 space-y-3">
             <div className="grid md:grid-cols-2 gap-3">
