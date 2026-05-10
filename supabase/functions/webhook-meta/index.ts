@@ -124,6 +124,152 @@ async function triggerInstagramFlow(opts: {
   }
 }
 
+// Dispara a URA também para mensagens recebidas pelo WhatsApp Meta oficial.
+async function triggerWhatsAppFlow(opts: {
+  supabase: any;
+  companyId: string;
+  conversationNumber: string;
+  conversationId?: string | null;
+  leadId?: string | null;
+  message: string;
+  contactName?: string | null;
+  messageType?: string | null;
+  mediaUrl?: string | null;
+}) {
+  const { supabase, companyId, conversationNumber, conversationId, leadId, message, contactName, messageType, mediaUrl } = opts;
+  try {
+    const { data: flowState } = await supabase
+      .from('conversation_flow_state')
+      .select('*')
+      .eq('conversation_number', conversationNumber)
+      .eq('company_id', companyId)
+      .gt('expires_at', new Date().toISOString())
+      .maybeSingle();
+
+    const { data: activeFlows } = await supabase
+      .from('automation_flows')
+      .select('id, name, nodes, active')
+      .eq('company_id', companyId)
+      .eq('active', true);
+
+    const msgLower = String(message || '').toLowerCase().trim();
+    let keywordOverride = false;
+
+    for (const flow of activeFlows || []) {
+      const nodes: any[] = (flow as any).nodes || [];
+      const keywordTrigger = nodes.find((n: any) => {
+        const canais: string[] = n.data?.canais || ['whatsapp'];
+        return n.type === 'trigger'
+          && n.data?.triggerType === 'palavra_chave'
+          && n.data?.keyword
+          && canais.includes('whatsapp');
+      });
+
+      const keyword = String(keywordTrigger?.data?.keyword || '').toLowerCase().trim();
+      if (keyword && msgLower.includes(keyword)) {
+        console.log(`🔑 [META-WA-FLOW] Palavra-chave "${keyword}" detectada. Limpando bloqueios antes de reiniciar URA.`);
+        await Promise.all([
+          supabase.from('conversation_flow_state')
+            .delete()
+            .eq('conversation_number', conversationNumber)
+            .eq('company_id', companyId),
+          supabase.from('conversation_assignments')
+            .delete()
+            .eq('telefone_formatado', conversationNumber)
+            .eq('company_id', companyId),
+          supabase.from('active_attendances')
+            .delete()
+            .eq('telefone_formatado', conversationNumber)
+            .eq('company_id', companyId),
+        ]);
+        keywordOverride = true;
+        break;
+      }
+    }
+
+    const url = Deno.env.get('SUPABASE_URL')!;
+    const key = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const triggerData = { message, tipo_mensagem: messageType || 'text', midia_url: mediaUrl || null, nome_contato: contactName };
+
+    if (flowState && !keywordOverride) {
+      console.log('✅ [META-WA-FLOW] Continuando URA em andamento:', flowState.flow_id);
+      const response = await fetch(`${url}/functions/v1/executar-fluxo`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          flowId: flowState.flow_id,
+          leadId: flowState.context_data?.leadId || leadId,
+          conversationId,
+          conversationNumber,
+          companyId,
+          canal: 'whatsapp',
+          currentNodeId: flowState.current_node_id,
+          userResponse: message,
+          triggerData,
+        }),
+      });
+      const result = await response.json().catch(() => null);
+      if (!response.ok) console.error('❌ [META-WA-FLOW] Erro ao continuar URA:', response.status, result);
+      else console.log('✅ [META-WA-FLOW] URA continuada:', result);
+      return;
+    }
+
+    const { data: assignment } = await supabase
+      .from('conversation_assignments')
+      .select('id')
+      .eq('telefone_formatado', conversationNumber)
+      .eq('company_id', companyId)
+      .not('assigned_user_id', 'is', null)
+      .maybeSingle();
+
+    if (assignment) {
+      console.log('🚫 [META-WA-FLOW] URA bloqueada por atendimento humano ativo:', assignment.id);
+      return;
+    }
+
+    for (const flow of activeFlows || []) {
+      const nodes: any[] = (flow as any).nodes || [];
+      const whatsappTriggers = nodes.filter((n: any) => {
+        const canais: string[] = n.data?.canais || ['whatsapp'];
+        return n.type === 'trigger' && canais.includes('whatsapp');
+      });
+
+      const keywordTrigger = whatsappTriggers.find((n: any) => n.data?.triggerType === 'palavra_chave' && n.data?.keyword);
+      let matchedTriggerType = 'nova_mensagem';
+
+      if (keywordTrigger) {
+        const keyword = String(keywordTrigger.data.keyword || '').toLowerCase().trim();
+        if (!keyword || !msgLower.includes(keyword)) continue;
+        matchedTriggerType = 'palavra_chave';
+      } else if (!whatsappTriggers.some((n: any) => n.data?.triggerType === 'nova_mensagem')) {
+        continue;
+      }
+
+      console.log(`🚀 [META-WA-FLOW] Iniciando URA ${flow.id} por ${matchedTriggerType}`);
+      const response = await fetch(`${url}/functions/v1/executar-fluxo`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          flowId: flow.id,
+          leadId,
+          conversationId,
+          conversationNumber,
+          companyId,
+          canal: 'whatsapp',
+          triggerType: matchedTriggerType,
+          triggerData,
+        }),
+      });
+      const result = await response.json().catch(() => null);
+      if (!response.ok) console.error('❌ [META-WA-FLOW] Erro ao iniciar URA:', response.status, result);
+      else console.log('✅ [META-WA-FLOW] URA iniciada:', result);
+      break;
+    }
+  } catch (e) {
+    console.error('❌ [META-WA-FLOW] erro:', e);
+  }
+}
+
 // Construir JSON estruturado para mídia Meta API
 function buildMetaMediaJson(mediaId: string, mimeType?: string, sha256?: string, fileName?: string, fileSize?: number) {
   return JSON.stringify({
