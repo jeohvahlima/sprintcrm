@@ -1,6 +1,125 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
+/* ============ F5: GROW Score Consolidado ============ */
+export type GrowSelo = "iniciante" | "estruturado" | "maduro" | "referencia";
+export interface GrowScoreData {
+  grow_score: number;
+  selo: GrowSelo;
+  fase: string | null;
+  pillars: {
+    prospeccao: number; processos: number; discador: number; automacao: number;
+    crm: number; ia: number; playbook: number;
+  };
+  calculated_at: string;
+}
+export const GROW_SELO_META: Record<GrowSelo, { label: string; emoji: string; color: string; desc: string }> = {
+  iniciante:    { label: "Iniciante",   emoji: "🌱", color: "from-rose-500 to-orange-400",   desc: "Base sendo construída. Foque nos fundamentos." },
+  estruturado:  { label: "Estruturado", emoji: "🏗️", color: "from-blue-500 to-cyan-400",     desc: "Pilares básicos no lugar. Refine processos." },
+  maduro:       { label: "Maduro",      emoji: "📈", color: "from-emerald-500 to-green-400", desc: "Operação previsível. Próximo nível: otimizar." },
+  referencia:   { label: "Referência",  emoji: "🚀", color: "from-amber-500 to-yellow-400",  desc: "Top do mercado. Hora de escalar com confiança." },
+};
+
+export function useGrowScore() {
+  return useQuery({
+    queryKey: ["grow_score_consolidated"],
+    queryFn: async (): Promise<GrowScoreData> => {
+      const { data, error } = await supabase.rpc("get_grow_score_consolidated" as any);
+      if (error) throw error;
+      return data as unknown as GrowScoreData;
+    },
+    staleTime: 60_000,
+  });
+}
+
+/* ============ F5: Métricas Norte por Fase ============ */
+export interface NorthMetric {
+  id: string; fase: string; metrica_key: string; label: string; descricao: string;
+  unidade: string; meta_min: number; meta_ideal: number; modulo_origem: string; ordem: number;
+}
+export function useNorthMetrics(fase: string | null | undefined) {
+  return useQuery({
+    queryKey: ["phase_north_metrics", fase],
+    enabled: !!fase,
+    queryFn: async () => {
+      const { data, error } = await supabase.from("phase_north_metrics" as any)
+        .select("*").eq("fase", fase).eq("ativo", true).order("ordem");
+      if (error) throw error;
+      return (data as any[]) as NorthMetric[];
+    },
+  });
+}
+
+/* ============ F5: Templates de Ritmo D1/S1/M1/T1 ============ */
+export interface RhythmTemplate {
+  id: string; tipo: "D1"|"S1"|"M1"|"T1"; label: string; duracao_min: number;
+  periodicidade: string; pauta_md: string; participantes_sugeridos: string; ordem: number;
+}
+export function useRhythmTemplates() {
+  return useQuery({
+    queryKey: ["meeting_rhythm_templates"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("meeting_rhythm_templates" as any)
+        .select("*").order("ordem");
+      if (error) throw error;
+      return (data as any[]) as RhythmTemplate[];
+    },
+    staleTime: 5 * 60_000,
+  });
+}
+
+/* ============ F5: Benchmark por Segmento ============ */
+export interface SegmentBenchmark {
+  segmento: string; avg_score: number; top10_score: number; sample_size: number;
+}
+export function useGrowSegmentBenchmark(segmento: string | null | undefined) {
+  return useQuery({
+    queryKey: ["segment_benchmark", segmento],
+    enabled: !!segmento,
+    queryFn: async () => {
+      const { data, error } = await supabase.from("segment_benchmarks" as any)
+        .select("*").eq("segmento", segmento).maybeSingle();
+      if (error) throw error;
+      return data as unknown as SegmentBenchmark | null;
+    },
+  });
+}
+
+/* ============ F5: Plano de Ação a partir do Diagnóstico ============ */
+export interface ActionItem {
+  sintoma_label: string; causa_provavel: string; acao_prescrita: string;
+  modulo_destino: string | null; prioridade: number;
+}
+export function useGenerateActionPlan() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (actions: ActionItem[]) => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Não autenticado");
+      const company_id = await getCompanyId();
+      const rows = actions.map((a) => {
+        const dueDays = Math.max(1, 11 - a.prioridade);
+        const due = new Date();
+        due.setDate(due.getDate() + dueDays);
+        return {
+          title: `[GROW] ${a.acao_prescrita}`,
+          description: `**Sintoma:** ${a.sintoma_label}\n\n**Causa provável:** ${a.causa_provavel}\n\n**Módulo responsável:** ${a.modulo_destino || "—"}\n\n_Plano gerado pelo Diagnóstico Prescritivo GROW._`,
+          status: "pendente",
+          priority: a.prioridade >= 8 ? "alta" : a.prioridade >= 5 ? "media" : "baixa",
+          owner_id: user.id,
+          company_id,
+          tags: ["grow-diagnostico", `modulo:${a.modulo_destino || "geral"}`],
+          due_date: due.toISOString(),
+        };
+      });
+      const { error, data } = await supabase.from("tasks").insert(rows as any).select("id");
+      if (error) throw error;
+      return data?.length || 0;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["tasks"] }),
+  });
+}
+
 async function getCompanyId(): Promise<string> {
   const { data, error } = await supabase.rpc("get_my_company_id");
   if (error) throw error;
