@@ -3745,6 +3745,42 @@ export type Database = {
         }
         Relationships: []
       }
+      grow_onboarding_progress: {
+        Row: {
+          company_id: string
+          completed_at: string | null
+          completed_tasks: Json
+          created_at: string
+          current_day: number
+          id: string
+          started_at: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          company_id: string
+          completed_at?: string | null
+          completed_tasks?: Json
+          created_at?: string
+          current_day?: number
+          id?: string
+          started_at?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          company_id?: string
+          completed_at?: string | null
+          completed_tasks?: Json
+          created_at?: string
+          current_day?: number
+          id?: string
+          started_at?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       ia_cadence_rules: {
         Row: {
           avoid_hours: Json | null

@@ -19,10 +19,11 @@ import { BusinessPhaseCard } from "@/components/wmi/BusinessPhaseCard";
 import { GrowScoreHero } from "@/components/wmi/GrowScoreHero";
 import { NorthMetricsPanel } from "@/components/wmi/NorthMetricsPanel";
 import { RhythmTemplatesPanel } from "@/components/wmi/RhythmTemplatesPanel";
+import { Onboarding7Days } from "@/components/wmi/Onboarding7Days";
 import {
   Activity, Trophy, Sparkles, ArrowRight, GraduationCap, AlertTriangle,
   TrendingUp, Target, FileText, BarChart3, Bot, Users, ClipboardCheck, Calculator,
-  Database, Heart, Rocket, Compass, Calendar as CalendarIcon,
+  Database, Heart, Rocket, Compass, Calendar as CalendarIcon, Zap,
 } from "lucide-react";
 import { LineChart, Line, ResponsiveContainer, XAxis, YAxis, Tooltip, CartesianGrid } from "recharts";
 import { format } from "date-fns";
@@ -152,10 +153,16 @@ export default function Maturidade() {
       <WMIAlertsPanel />
 
       {/* TABS UNIFICADAS */}
-      <Tabs defaultValue="diagnostico" className="space-y-4">
+      <Tabs defaultValue="onboarding" className="space-y-4">
         <TabsList className="flex-wrap h-auto">
+          <TabsTrigger value="onboarding" className="gap-2">
+            <Zap className="h-4 w-4" /> Onboarding 7 Dias
+          </TabsTrigger>
           <TabsTrigger value="diagnostico" className="gap-2">
             <Sparkles className="h-4 w-4" /> Diagnóstico 360° + Plano de Ação IA
+          </TabsTrigger>
+          <TabsTrigger value="intelligence" className="gap-2">
+            <Calculator className="h-4 w-4" /> Grow Sales Intelligence
           </TabsTrigger>
           <TabsTrigger value="intelligence" className="gap-2">
             <Calculator className="h-4 w-4" /> Grow Sales Intelligence
@@ -179,6 +186,10 @@ export default function Maturidade() {
             <CalendarIcon className="h-4 w-4" /> Ritmos GROW
           </TabsTrigger>
         </TabsList>
+
+        <TabsContent value="onboarding">
+          <Onboarding7Days />
+        </TabsContent>
 
         <TabsContent value="diagnostico">
           <Diagnostico360 />
