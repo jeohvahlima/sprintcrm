@@ -19,10 +19,11 @@ import { BusinessPhaseCard } from "@/components/wmi/BusinessPhaseCard";
 import { GrowScoreHero } from "@/components/wmi/GrowScoreHero";
 import { NorthMetricsPanel } from "@/components/wmi/NorthMetricsPanel";
 import { RhythmTemplatesPanel } from "@/components/wmi/RhythmTemplatesPanel";
+import { Onboarding7Days } from "@/components/wmi/Onboarding7Days";
 import {
   Activity, Trophy, Sparkles, ArrowRight, GraduationCap, AlertTriangle,
   TrendingUp, Target, FileText, BarChart3, Bot, Users, ClipboardCheck, Calculator,
-  Database, Heart, Rocket, Compass, Calendar as CalendarIcon,
+  Database, Heart, Rocket, Compass, Calendar as CalendarIcon, Zap,
 } from "lucide-react";
 import { LineChart, Line, ResponsiveContainer, XAxis, YAxis, Tooltip, CartesianGrid } from "recharts";
 import { format } from "date-fns";
