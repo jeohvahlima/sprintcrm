@@ -1,74 +1,116 @@
+# Plano de Implementação — Estruturação Comercial 100% GROW
 
-## Diagnóstico atual da Ultra URA / Instagram
-
-Verifiquei o módulo de Automação (Fluxos) e a integração Meta/Instagram. Resumo honesto do que **já existe** e do que **ainda não existe**:
-
-### ✅ O que está funcionando
-- **Builder de fluxo** (`FluxoAutomacaoBuilder`, `NodesSidebar`, `NodePropertiesPanel`) com gatilhos: `nova_mensagem`, `novo_lead`, `palavra_chave`, `horario`, `tag_added`.
-- **Executor** (`executar-fluxo` edge function) que casa o `triggerType` com o nó inicial e roda o fluxo.
-- **Webhook Meta** (`webhook-meta`) recebe e salva:
-  - Direct messages do Instagram (texto, imagem, vídeo, áudio, story reply, story_mention, reações).
-  - **Comentários** do Instagram (`change.field === 'comments'`) — já chega e é salvo como mensagem com `source: 'instagram_comment'`.
-
-### ⚠️ O que está incompleto / não existe hoje
-1. **Nenhum disparo de fluxo a partir do webhook do Instagram.** O `webhook-meta` apenas grava a mensagem em `conversations`; **não chama `executar-fluxo`**. Logo, nem mesmo "nova mensagem do Direct" dispara URA hoje pelo IG (só pelo WhatsApp).
-2. **Comentário no feed/reels não dispara fluxo.** Já chega no webhook, mas só vira registro — não roda gatilho de palavra-chave.
-3. **Comentário em LIVE** — depende de assinar o campo `live_comments` na app Meta (hoje não temos esse subscribe; só `messages` e `comments`).
-4. **Novo seguidor** — **a Graph API do Instagram não emite webhook de "new follower"**. Limitação da própria Meta. Só dá pra simular via *polling* periódico do endpoint `/{ig-user-id}?fields=followers_count` + comparar com lista anterior, ou usar a aba "Activity" (não suportada via API oficial).
-5. Builder não tem opções específicas: `instagram_comment`, `instagram_live_comment`, `instagram_new_follower`.
+Vamos fechar os 7 gaps identificados no playbook, distribuídos em 3 fases (F2, F3, F4). Tudo dentro dos 4 módulos de estruturação comercial existentes (Prospecção, Discador, Processos Comerciais, Maturidade) — sem criar módulos paralelos, mantendo a marca **Grow Sales Intelligence**.
 
 ---
 
-## Plano sugerido (3 frentes)
+## FASE 2 — Esteira de Produtos + Funis de Marketing + ICP Estruturado
+**Onde:** módulo Prospecção (nova aba "Estratégia Comercial")
+**Impacto:** alto (cliente final vê valor imediato)
 
-### 1. Disparar fluxos a partir do Instagram Direct e Comentários (viável agora)
-- Em `webhook-meta`, após salvar mensagem do IG, chamar `executar-fluxo` igual já é feito para WhatsApp:
-  - `triggerType = 'nova_mensagem'` para Direct.
-  - `triggerType = 'palavra_chave'` quando `source === 'instagram_comment'` e o texto contiver uma palavra-chave configurada.
-- Adicionar coluna `canais` (array: `whatsapp`, `instagram_direct`, `instagram_comment`) no fluxo, para o usuário escolher onde o fluxo roda.
-- No builder (`NodePropertiesPanel`), adicionar dropdown "Canal de origem" no gatilho.
+### 2.1 Esteira de Produtos (Front / Back / High End)
+- Novo componente `ProductLadderBuilder.tsx` em `src/components/prospeccao/`
+- Tabela `product_ladder` (company_id, tier: front|back|high_end, nome, ticket, objetivo, ordem)
+- Visual em 3 colunas com matriz: ticket médio, ciclo de venda, canal de aquisição, função no funil
+- Sugestões IA por segmento (usa `useCompanySegmento`)
 
-### 2. Comentários em LIVE
-- Atualizar configuração da App Meta para inscrever os campos `live_comments` (e `comments` se ainda não estiver).
-- Adicionar branch no `webhook-meta` para `change.field === 'live_comments'`, com mesmo tratamento de palavra-chave do item 1.
-- Documentação: requer permissão `instagram_manage_comments` + conta IG Business vinculada a página FB.
+### 2.2 Trilhas de Funis de Marketing
+- Componente `MarketingFunnelTracks.tsx` com 3 trilhas:
+  - **VSL/Diagnóstico** (orgânico)
+  - **Social Selling** (já parcial — consolidar com `SocialSellingPanel`)
+  - **Isca Paga** (anúncios)
+- Cada trilha = checklist de etapas do playbook + status (não iniciado / em construção / ativo)
+- Salvar em `marketing_funnel_progress`
 
-### 3. Novo seguidor (workaround — não há webhook oficial)
-Opções, em ordem de preferência:
-- **A. Polling periódico (recomendado):** cron a cada 10–15 min lê `followers_count` e a lista mais recente via `/{ig-user-id}/business_discovery` ou Graph; compara com snapshot anterior salvo em uma nova tabela `instagram_followers_snapshot`. Para cada novo seguidor → dispara fluxo com `triggerType = 'novo_seguidor_instagram'`.
-  - Limitação: a Graph API **não retorna lista de seguidores** para conta IG Business; retorna só contagem. Logo o disparo seria "x novos seguidores hoje" sem `from`.
-  - Para enviar DM de saudação a um seguidor específico precisaríamos do username, que **não é exposto pela API**. Só funcionaria se o seguidor te mandar um direct primeiro (janela de 24h).
-- **B. Híbrido (realista):** quando alguém comenta/dá direct pela primeira vez, checar se ele te segue (via `is_follower` no payload do Messenger Platform — disponível em alguns eventos). Marcar como "novo seguidor que interagiu" e disparar fluxo de boas-vindas no Direct.
-- **C. Manual:** o usuário cola uma lista de @usuários e o sistema envia um Direct (sujeito à janela de 24h da Meta).
-
-Recomendo **B** + a saudação por palavra-chave do item 1, pois é o caminho que **realmente entrega mensagem ao seguidor** dentro das regras da Meta.
+### 2.3 ICP Estruturado em 3 Etapas
+- Refatorar `ICPBuilder` para wizard de 3 passos: **Quem é** → **Dores** → **Gatilhos de compra**
+- Output: ficha ICP imprimível + injeção automática nos prompts da IA de prospecção
 
 ---
 
-## Detalhes técnicos
+## FASE 3 — SDR1-4 + Playbook/CRM/IA Checklists
+**Onde:** módulo Discador + Processos Comerciais
+**Impacto:** médio-alto (organização operacional)
 
-```text
-Hoje:
-  Instagram → webhook-meta → conversations (fim)
+### 3.1 Estrutura SDR1 → SDR4
+- Estender tabela `user_roles_extended` (ou criar `sdr_specializations`): nivel: sdr1|sdr2|sdr3|sdr4
+  - SDR1: lista fria | SDR2: inbound | SDR3: outbound qualificado | SDR4: closer-assistant
+- `SDRDashboard.tsx`: filtro por nível + KPIs específicos por nível
+- Distribuição automática de leads conforme nível (regra no `useProspectingQueue`)
 
-Proposto:
-  Instagram → webhook-meta → conversations
-                          ↓
-                    executar-fluxo (triggerType + canal + palavra-chave)
-                          ↓
-                    enviar-instagram (DM) / comentar
-```
+### 3.2 Score de Maturidade do CRM
+- Adicionar sub-score em `GrowSalesIntelligence.tsx` (4ª aba "Maturidade do CRM")
+- Checklist auto-avaliativo: pipelines configurados, automações ativas, lead scoring, integrações, tagging
+- Resultado alimenta o pilar "automacao" do GMI
 
-Arquivos afetados:
-- `supabase/functions/webhook-meta/index.ts` — chamar `executar-fluxo` após persistir IG.
-- `supabase/functions/executar-fluxo/index.ts` — aceitar `canal` e novos `triggerType` (`comentario_instagram`, `live_comment_instagram`, `novo_seguidor_instagram`).
-- `src/components/fluxos/NodePropertiesPanel.tsx` + `NodesSidebar.tsx` — novos gatilhos e seletor de canal.
-- `src/components/fluxos/nodes/TriggerNode.tsx` — ícones para os novos triggers.
-- Nova migration: `flows.canais text[]`, tabela `instagram_followers_snapshot` (se polling).
-- Atualizar inscrição da App Meta para incluir `comments`, `live_comments`, `mentions`.
+### 3.3 Maturidade da IA Comercial
+- Componente `AIMaturityCheck.tsx` em Processos Comerciais
+- 3 níveis: Sugestivo / Automático / Desligado — por agente (atendimento, qualificação, follow-up)
+- Mapeia para configurações já existentes em `useAIAgents`
+
+### 3.4 Playbooks Documentados (checklist)
+- Painel "Playbooks Comerciais" em Processos Comerciais
+- Checklist: script de abordagem, qualificação BANT/SPIN, objeções, fechamento, follow-up
+- Status por item + link para o documento (usa `useCommercialPlaybooks`)
 
 ---
 
-## Pergunta antes de executar
+## FASE 4 — RH Comercial + Fase do Negócio + Diagnóstico Prescritivo
+**Onde:** módulo Maturidade (3 novas abas) + Processos Comerciais
+**Impacto:** alto estratégico (fecha o capítulo 11 e 12 do playbook)
 
-Quer que eu implemente as **3 frentes** ou começo só pela **Frente 1** (Direct + comentário com palavra-chave), que é a que dá retorno imediato e respeita os limites da Meta? A "saudação automática a novo seguidor" tem limitação de plataforma — posso implementar a versão B (saudação ao primeiro contato do seguidor) que é o que de fato funciona.
+### 4.1 RH Comercial (Capítulo 11)
+- Nova aba na Maturidade: **"RH Comercial"**
+- 4 sub-seções:
+  - **Funil de Seleção** (etapas de recrutamento + taxas)
+  - **Ramp-up** (timeline 30/60/90 dias por cargo)
+  - **Calculadora de Remuneração** (fixo + variável + comissão escalonada por meta)
+  - **Painel de Retenção** (turnover, NPS interno, planos de carreira)
+- Tabela `commercial_hr_config` (company_id, secao, dados jsonb)
+
+### 4.2 Fase do Negócio
+- Pergunta no início do Diagnóstico 360°: **Validação / Tração / Escala**
+- Plano de ação IA passa a considerar a fase (prompts diferentes em `advisor-ai`)
+- Badge visível no header da Maturidade
+
+### 4.3 Diagnóstico Prescritivo ("Consultor de Problemas")
+- Componente `PrescriptiveDiagnosis.tsx` em Processos Comerciais
+- Matriz "Se X então Y": usuário marca sintomas (ex: "leads não atendem", "fechamento baixo"), sistema retorna causas prováveis + ações prescritas + módulo do CRM responsável
+- Base de regras em tabela `prescriptive_rules` (sintoma, causa, acao, modulo_destino, prioridade) — seed inicial com ~40 regras do playbook
+
+---
+
+## Detalhes Técnicos
+
+**Banco (migrations):**
+- `product_ladder`, `marketing_funnel_progress`, `sdr_specializations`, `commercial_hr_config`, `prescriptive_rules`
+- Todas com RLS por `company_id` usando `get_user_company_ids()` (padrão do projeto)
+- Seed de `prescriptive_rules` com regras do playbook
+
+**Edge functions:**
+- Estender `advisor-ai` para aceitar `business_phase` e gerar prompts contextualizados
+- Nova função `prescriptive-diagnosis` (recebe sintomas, retorna ações)
+
+**Frontend:**
+- Componentes em `src/components/wmi/`, `src/components/prospeccao/`, `src/components/processos/`
+- Reuso total dos design tokens (verde `142 71% 45%`)
+- Sem rota nova — tudo via abas dentro dos módulos existentes
+
+**Ordem de execução proposta:**
+1. F2.1 (Esteira) → F2.3 (ICP) → F2.2 (Funis)
+2. F3.2 (CRM Maturity) → F3.3 (IA) → F3.4 (Playbooks) → F3.1 (SDR1-4)
+3. F4.2 (Fase) → F4.3 (Prescritivo) → F4.1 (RH Comercial — maior)
+
+---
+
+## Entregáveis por fase
+
+| Fase | Componentes novos | Tabelas | Edge functions | Tempo estimado |
+|------|------------------|---------|----------------|----------------|
+| F2   | 3                | 2       | 0              | ~3 sessões     |
+| F3   | 4                | 1       | 0              | ~3 sessões     |
+| F4   | 3                | 2       | 1 nova + 1 ext | ~4 sessões     |
+
+Ao fim das 3 fases: **100% da metodologia GROW Sales Intelligence coberta no SaaS**, posicionando o produto como único CRM brasileiro com playbook nativo de estruturação comercial.
+
+**Recomendação:** começar por **F2.1 (Esteira de Produtos)** — é o gap mais visível e o que mais diferencia visualmente o produto.

@@ -4414,6 +4414,36 @@ export type Database = {
         }
         Relationships: []
       }
+      icp_structured: {
+        Row: {
+          company_id: string
+          created_at: string
+          dores: Json
+          gatilhos: Json
+          id: string
+          quem_e: Json
+          updated_at: string
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          dores?: Json
+          gatilhos?: Json
+          id?: string
+          quem_e?: Json
+          updated_at?: string
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          dores?: Json
+          gatilhos?: Json
+          id?: string
+          quem_e?: Json
+          updated_at?: string
+        }
+        Relationships: []
+      }
       internal_conversation_participants: {
         Row: {
           conversation_id: string
@@ -5697,6 +5727,45 @@ export type Database = {
           },
         ]
       }
+      marketing_funnel_progress: {
+        Row: {
+          company_id: string
+          created_at: string
+          etapa_key: string
+          etapa_label: string
+          id: string
+          observacoes: string | null
+          ordem: number
+          status: string
+          trilha: string
+          updated_at: string
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          etapa_key: string
+          etapa_label: string
+          id?: string
+          observacoes?: string | null
+          ordem?: number
+          status?: string
+          trilha: string
+          updated_at?: string
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          etapa_key?: string
+          etapa_label?: string
+          id?: string
+          observacoes?: string | null
+          ordem?: number
+          status?: string
+          trilha?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       meeting_chat_messages: {
         Row: {
           created_at: string
@@ -6682,6 +6751,57 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      product_ladder: {
+        Row: {
+          ativo: boolean
+          canal_aquisicao: string | null
+          ciclo_dias: number | null
+          company_id: string
+          created_at: string
+          descricao: string | null
+          funcao_funil: string | null
+          id: string
+          nome: string
+          objetivo: string | null
+          ordem: number
+          ticket: number
+          tier: string
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean
+          canal_aquisicao?: string | null
+          ciclo_dias?: number | null
+          company_id: string
+          created_at?: string
+          descricao?: string | null
+          funcao_funil?: string | null
+          id?: string
+          nome: string
+          objetivo?: string | null
+          ordem?: number
+          ticket?: number
+          tier: string
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean
+          canal_aquisicao?: string | null
+          ciclo_dias?: number | null
+          company_id?: string
+          created_at?: string
+          descricao?: string | null
+          funcao_funil?: string | null
+          id?: string
+          nome?: string
+          objetivo?: string | null
+          ordem?: number
+          ticket?: number
+          tier?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       produtos_servicos: {
         Row: {
