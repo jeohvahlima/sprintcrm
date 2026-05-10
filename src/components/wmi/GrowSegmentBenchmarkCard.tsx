@@ -6,8 +6,7 @@ import { useCompanySegmento } from "@/hooks/useCompanySegmento";
 import { useGrowScore, useGrowSegmentBenchmark } from "@/hooks/useEstruturacao";
 
 export function GrowSegmentBenchmarkCard() {
-  const { data: seg } = useCompanySegmento();
-  const segmento = (seg as any)?.segmento || (seg as any)?.codigo || (typeof seg === "string" ? seg : null);
+  const { segmento } = useCompanySegmento();
   const { data: bench, isLoading } = useGrowSegmentBenchmark(segmento);
   const { data: grow } = useGrowScore();
 
