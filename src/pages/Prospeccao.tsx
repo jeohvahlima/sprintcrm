@@ -44,6 +44,7 @@ import { CloserInbox } from "@/components/prospeccao/comercial/CloserInbox";
 import { ManagerCommandCenter } from "@/components/prospeccao/comercial/ManagerCommandCenter";
 import { SDRQueuePanel } from "@/components/prospeccao/comercial/SDRQueuePanel";
 import { SocialSellingPanel } from "@/components/prospeccao/SocialSellingPanel";
+import { EstrategiaComercialPanel } from "@/components/prospeccao/comercial/EstrategiaComercialPanel";
 import { RotinaInteligente } from "@/components/prospeccao/RotinaInteligente";
 import { PerformanceHubPanel } from "@/components/prospeccao/PerformanceHubPanel";
 import { TopoFoco } from "@/components/prospeccao/foco/TopoFoco";
