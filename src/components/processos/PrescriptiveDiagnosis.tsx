@@ -26,6 +26,7 @@ export function PrescriptiveDiagnosis() {
   const navigate = useNavigate();
   const { data: rules = [], isLoading } = usePrescriptiveRules();
   const logDx = useLogDiagnosis();
+  const generatePlan = useGenerateActionPlan();
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [showResult, setShowResult] = useState(false);
 
