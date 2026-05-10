@@ -1212,14 +1212,29 @@ serve(async (req) => {
 
             console.log('💾 Inserindo conversa WhatsApp Meta:', JSON.stringify(conversaData, null, 2));
 
-            const { error: insertError } = await supabase
+            const { data: insertedRow, error: insertError } = await supabase
               .from('conversas')
-              .insert(conversaData);
+              .insert(conversaData)
+              .select('id')
+              .maybeSingle();
 
             if (insertError) {
               console.error('❌ Erro ao inserir conversa WhatsApp:', insertError);
             } else {
               console.log('✅ Conversa WhatsApp inserida com sucesso');
+              if (!msg.is_from_me) {
+                await triggerWhatsAppFlow({
+                  supabase,
+                  companyId: company_id,
+                  conversationNumber: formattedNumber,
+                  conversationId: insertedRow?.id || null,
+                  leadId: leadId || null,
+                  message: msg.content || '',
+                  contactName: conversaData.nome_contato,
+                  messageType: msg.type,
+                  mediaUrl: msg.media_url || null,
+                });
+              }
             }
           }
         }
