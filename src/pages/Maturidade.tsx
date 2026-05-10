@@ -12,9 +12,13 @@ import { SegmentBenchmarkCard } from "@/components/wmi/SegmentBenchmarkCard";
 import { PillarEvolutionChart } from "@/components/wmi/PillarEvolutionChart";
 import { Diagnostico360 } from "@/components/wmi/Diagnostico360";
 import { GrowSalesIntelligence } from "@/components/wmi/GrowSalesIntelligence";
+import { CRMMaturityCheck } from "@/components/wmi/CRMMaturityCheck";
+import { CommercialHRPanel } from "@/components/wmi/CommercialHRPanel";
+import { BusinessPhaseCard } from "@/components/wmi/BusinessPhaseCard";
 import {
   Activity, Trophy, Sparkles, ArrowRight, GraduationCap, AlertTriangle,
   TrendingUp, Target, FileText, BarChart3, Bot, Users, ClipboardCheck, Calculator,
+  Database, Heart, Rocket,
 } from "lucide-react";
 import { LineChart, Line, ResponsiveContainer, XAxis, YAxis, Tooltip, CartesianGrid } from "recharts";
 import { format } from "date-fns";
@@ -152,16 +156,35 @@ export default function Maturidade() {
           <TabsTrigger value="pilares" className="gap-2">
             <TrendingUp className="h-4 w-4" /> Pilares & Evolução
           </TabsTrigger>
+          <TabsTrigger value="crm-maturity" className="gap-2">
+            <Database className="h-4 w-4" /> Maturidade CRM
+          </TabsTrigger>
+          <TabsTrigger value="rh" className="gap-2">
+            <Heart className="h-4 w-4" /> RH Comercial
+          </TabsTrigger>
+          <TabsTrigger value="fase" className="gap-2">
+            <Rocket className="h-4 w-4" /> Fase do Negócio
+          </TabsTrigger>
         </TabsList>
 
-        {/* DIAGNÓSTICO 360 ESTRATÉGICO — fluxo único: SWOT + Plano IA estruturado + Roadmap + acompanhamento */}
         <TabsContent value="diagnostico">
           <Diagnostico360 />
         </TabsContent>
 
-        {/* GROW SALES INTELLIGENCE — Calculadora de cenários + KPIs ideais + Dimensionamento */}
         <TabsContent value="intelligence">
           <GrowSalesIntelligence />
+        </TabsContent>
+
+        <TabsContent value="crm-maturity">
+          <CRMMaturityCheck />
+        </TabsContent>
+
+        <TabsContent value="rh">
+          <CommercialHRPanel />
+        </TabsContent>
+
+        <TabsContent value="fase">
+          <BusinessPhaseCard />
         </TabsContent>
 
         {/* PILARES + EVOLUÇÃO */}
