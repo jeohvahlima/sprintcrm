@@ -9,16 +9,20 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { RadarPilares } from "@/components/wmi/RadarPilares";
 import { WMIAlertsPanel } from "@/components/wmi/WMIAlertsPanel";
 import { SegmentBenchmarkCard } from "@/components/wmi/SegmentBenchmarkCard";
+import { GrowSegmentBenchmarkCard } from "@/components/wmi/GrowSegmentBenchmarkCard";
 import { PillarEvolutionChart } from "@/components/wmi/PillarEvolutionChart";
 import { Diagnostico360 } from "@/components/wmi/Diagnostico360";
 import { GrowSalesIntelligence } from "@/components/wmi/GrowSalesIntelligence";
 import { CRMMaturityCheck } from "@/components/wmi/CRMMaturityCheck";
 import { CommercialHRPanel } from "@/components/wmi/CommercialHRPanel";
 import { BusinessPhaseCard } from "@/components/wmi/BusinessPhaseCard";
+import { GrowScoreHero } from "@/components/wmi/GrowScoreHero";
+import { NorthMetricsPanel } from "@/components/wmi/NorthMetricsPanel";
+import { RhythmTemplatesPanel } from "@/components/wmi/RhythmTemplatesPanel";
 import {
   Activity, Trophy, Sparkles, ArrowRight, GraduationCap, AlertTriangle,
   TrendingUp, Target, FileText, BarChart3, Bot, Users, ClipboardCheck, Calculator,
-  Database, Heart, Rocket,
+  Database, Heart, Rocket, Compass, Calendar as CalendarIcon,
 } from "lucide-react";
 import { LineChart, Line, ResponsiveContainer, XAxis, YAxis, Tooltip, CartesianGrid } from "recharts";
 import { format } from "date-fns";
