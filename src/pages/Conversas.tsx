@@ -8674,6 +8674,32 @@ function Conversas() {
       });
     }
   };
+  const reativarUraAtendimento = async (telefoneFormatado: string, companyId?: string | null, conversationId?: string) => {
+    if (!telefoneFormatado || !companyId) {
+      throw new Error('Telefone ou empresa não encontrados para reativar a URA');
+    }
+
+    const { data, error } = await supabase.functions.invoke('resetar-fluxo-conversa', {
+      body: {
+        telefone: telefoneFormatado,
+        companyId,
+        actions: ['flow_state', 'assignment', 'attendance', 'ai_mode'],
+      },
+    });
+
+    if (error || data?.error) {
+      throw new Error(error?.message || data?.error || 'Erro ao reativar URA');
+    }
+
+    setAiMode(prev => ({
+      ...prev,
+      [telefoneFormatado]: 'fluxo',
+      ...(conversationId ? { [conversationId]: 'fluxo' } : {}),
+    }));
+
+    return data;
+  };
+
   const finalizarAtendimento = async (mensagem: string) => {
     if (!selectedConv) return;
     try {
@@ -8730,26 +8756,18 @@ function Conversas() {
         status: 'Resolvida'
       }).eq('telefone_formatado', telefoneFormatado).eq('company_id', userRole?.company_id).neq('status', 'Resolvida'); // Só atualizar as que ainda não estão resolvidas
 
-      // Limpar conversation_assignments, fluxo e atendimento ativo para que a URA reative no próximo contato
-      await Promise.all([
-        supabase.from('conversation_assignments').delete()
-          .eq('telefone_formatado', telefoneFormatado)
-          .eq('company_id', userRole?.company_id),
-        supabase.from('conversation_flow_state').delete()
-          .eq('conversation_number', telefoneFormatado)
-          .eq('company_id', userRole?.company_id),
-        supabase.from('active_attendances').delete()
-          .eq('telefone_formatado', telefoneFormatado)
-          .eq('company_id', userRole?.company_id),
-      ]);
+      // Limpar bloqueios e religar Fluxo/URA para que a próxima mensagem seja novo atendimento
+      await reativarUraAtendimento(telefoneFormatado, userRole?.company_id, selectedConv.id);
 
-      console.log('✅ Conversa finalizada — assignment, flow_state e active_attendance limpos (URA reativa)');
+      console.log('✅ Conversa finalizada — bloqueios limpos e Fluxo/URA reativado');
 
       // Atualizar estados localmente
       const updatedConv: Conversation = {
         ...selectedConv,
         status: 'resolved',
-        lastMessage: mensagem
+        lastMessage: mensagem,
+        responsavel: undefined,
+        assignedUser: undefined,
       };
       const updatedList = conversations.map(c => c.id === selectedConv.id ? updatedConv : c);
       saveConversations(updatedList);
@@ -8784,25 +8802,17 @@ function Conversas() {
         .eq('company_id', userRole?.company_id)
         .neq('status', 'Resolvida');
 
-      // Limpar conversation_assignments, fluxo e atendimento ativo para que a URA reative no próximo contato
-      await Promise.all([
-        supabase.from('conversation_assignments').delete()
-          .eq('telefone_formatado', telefoneFormatado)
-          .eq('company_id', userRole?.company_id),
-        supabase.from('conversation_flow_state').delete()
-          .eq('conversation_number', telefoneFormatado)
-          .eq('company_id', userRole?.company_id),
-        supabase.from('active_attendances').delete()
-          .eq('telefone_formatado', telefoneFormatado)
-          .eq('company_id', userRole?.company_id),
-      ]);
+      // Limpar bloqueios e religar Fluxo/URA para que a próxima mensagem seja novo atendimento
+      await reativarUraAtendimento(telefoneFormatado, userRole?.company_id, selectedConv.id);
 
-      console.log('✅ Conversa finalizada (silent) — assignment, flow_state e active_attendance limpos');
+      console.log('✅ Conversa finalizada (silent) — bloqueios limpos e Fluxo/URA reativado');
 
       // Atualizar estados localmente
       const updatedConv: Conversation = {
         ...selectedConv,
         status: 'resolved',
+        responsavel: undefined,
+        assignedUser: undefined,
       };
       const updatedList = conversations.map(c => c.id === selectedConv.id ? updatedConv : c);
       saveConversations(updatedList);
@@ -9321,7 +9331,7 @@ function Conversas() {
         {selectedConv ? <>
             {/* Header - FIXO NO TOPO */}
             <div className="flex-shrink-0 bg-background border-b z-10">
-              <ConversationHeader contactName={selectedConv.contactName} channel={selectedConv.channel} avatarUrl={selectedConv.avatarUrl} produto={selectedConv.produto} valor={selectedConv.valor || (leadVinculado?.value && leadVinculado.value > 0 ? `R$ ${Number(leadVinculado.value).toLocaleString('pt-BR')}` : undefined)} responsavel={selectedConv.responsavel || leadExtraInfo.responsavelNome} tags={selectedConv.tags || leadVinculado?.tags} funnelStage={selectedConv.funnelStage || (leadExtraInfo.etapaNome ? (leadExtraInfo.funilNome ? `${leadExtraInfo.funilNome} → ${leadExtraInfo.etapaNome}` : leadExtraInfo.etapaNome) : undefined)} showInfoPanel={showInfoPanel} onToggleInfoPanel={() => setShowInfoPanel(!showInfoPanel)} syncStatus={syncStatus} leadVinculado={leadVinculado} mostrarBotaoCriarLead={mostrarBotaoCriarLead} onCriarLead={criarLeadManualmente} onFinalizeAtendimento={finalizarAtendimento} onFinalizeAtendimentoSilent={finalizarAtendimentoSilent} onTransferAtendimento={() => setTransferDialogOpen(true)} onChangeAIMode={(mode) => setConversationAIMode(selectedConv.id, mode)} currentAIMode={(aiMode[selectedConv.id] as any) || 'off'} onlineStatus={onlineStatus[selectedConv.id] || 'unknown'} isContactInactive={isContactInactive} onRestoreConversation={handleRestoreConversation} restoringConversation={restoringConversation} restoreProgress={restoreProgress} showBackButton={isMobile} onBack={() => setSelectedConv(null)} protocolNumber={activeProtocol?.protocol_number} protocolStatus={activeProtocol?.status} contactPhone={(selectedConv.phoneNumber || selectedConv.id).replace(/[^0-9]/g, '')} companyId={userCompanyId} />
+              <ConversationHeader contactName={selectedConv.contactName} channel={selectedConv.channel} avatarUrl={selectedConv.avatarUrl} produto={selectedConv.produto} valor={selectedConv.valor || (leadVinculado?.value && leadVinculado.value > 0 ? `R$ ${Number(leadVinculado.value).toLocaleString('pt-BR')}` : undefined)} responsavel={selectedConv.responsavel || leadExtraInfo.responsavelNome} tags={selectedConv.tags || leadVinculado?.tags} funnelStage={selectedConv.funnelStage || (leadExtraInfo.etapaNome ? (leadExtraInfo.funilNome ? `${leadExtraInfo.funilNome} → ${leadExtraInfo.etapaNome}` : leadExtraInfo.etapaNome) : undefined)} showInfoPanel={showInfoPanel} onToggleInfoPanel={() => setShowInfoPanel(!showInfoPanel)} syncStatus={syncStatus} leadVinculado={leadVinculado} mostrarBotaoCriarLead={mostrarBotaoCriarLead} onCriarLead={criarLeadManualmente} onFinalizeAtendimento={finalizarAtendimento} onFinalizeAtendimentoSilent={finalizarAtendimentoSilent} onTransferAtendimento={() => setTransferDialogOpen(true)} onChangeAIMode={(mode) => setConversationAIMode(selectedConv.id, mode)} currentAIMode={(aiMode[selectedConv.id] || aiMode[(selectedConv.phoneNumber || selectedConv.id).replace(/[^0-9]/g, '')] || 'off') as any} onlineStatus={onlineStatus[selectedConv.id] || 'unknown'} isContactInactive={isContactInactive} onRestoreConversation={handleRestoreConversation} restoringConversation={restoringConversation} restoreProgress={restoreProgress} showBackButton={isMobile} onBack={() => setSelectedConv(null)} protocolNumber={activeProtocol?.protocol_number} protocolStatus={activeProtocol?.status} contactPhone={(selectedConv.phoneNumber || selectedConv.id).replace(/[^0-9]/g, '')} companyId={userCompanyId} />
             </div>
             
             {/* Dialog de Transferir Atendimento */}

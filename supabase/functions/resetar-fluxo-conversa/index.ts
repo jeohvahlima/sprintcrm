@@ -1,5 +1,6 @@
 // Reseta o estado de URA/atendimento de uma conversa específica.
 // Pode limpar: conversation_flow_state, conversation_assignments, active_attendances
+// e reativar o modo Fluxo/URA em conversation_ai_settings.
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
@@ -89,6 +90,21 @@ serve(async (req) => {
         .eq('telefone_formatado', telefone)
         .eq('company_id', companyId);
       result.attendances_deleted = count || 0;
+    }
+
+    if (actions.includes('ai_mode')) {
+      const { error: aiModeError } = await supabase
+        .from('conversation_ai_settings')
+        .upsert({
+          conversation_id: telefone,
+          company_id: companyId,
+          ai_mode: 'fluxo',
+          activated_by: user.id,
+          updated_at: new Date().toISOString(),
+        }, { onConflict: 'conversation_id,company_id' });
+
+      if (aiModeError) throw aiModeError;
+      result.ai_mode_reactivated = 1;
     }
 
     return new Response(JSON.stringify({ success: true, ...result }), {
