@@ -8784,14 +8784,20 @@ function Conversas() {
         .eq('company_id', userRole?.company_id)
         .neq('status', 'Resolvida');
 
-      // Limpar conversation_assignments para desbloquear fluxo futuro
-      await supabase
-        .from('conversation_assignments')
-        .delete()
-        .eq('telefone_formatado', telefoneFormatado)
-        .eq('company_id', userRole?.company_id);
+      // Limpar conversation_assignments, fluxo e atendimento ativo para que a URA reative no próximo contato
+      await Promise.all([
+        supabase.from('conversation_assignments').delete()
+          .eq('telefone_formatado', telefoneFormatado)
+          .eq('company_id', userRole?.company_id),
+        supabase.from('conversation_flow_state').delete()
+          .eq('conversation_number', telefoneFormatado)
+          .eq('company_id', userRole?.company_id),
+        supabase.from('active_attendances').delete()
+          .eq('telefone_formatado', telefoneFormatado)
+          .eq('company_id', userRole?.company_id),
+      ]);
 
-      console.log('✅ Conversa marcada como resolvida e assignment removido (sem mensagem)');
+      console.log('✅ Conversa finalizada (silent) — assignment, flow_state e active_attendance limpos');
 
       // Atualizar estados localmente
       const updatedConv: Conversation = {
