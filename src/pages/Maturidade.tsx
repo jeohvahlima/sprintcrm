@@ -172,6 +172,12 @@ export default function Maturidade() {
           <TabsTrigger value="fase" className="gap-2">
             <Rocket className="h-4 w-4" /> Fase do Negócio
           </TabsTrigger>
+          <TabsTrigger value="norte" className="gap-2">
+            <Compass className="h-4 w-4" /> Métricas Norte
+          </TabsTrigger>
+          <TabsTrigger value="ritmos" className="gap-2">
+            <CalendarIcon className="h-4 w-4" /> Ritmos GROW
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="diagnostico">
