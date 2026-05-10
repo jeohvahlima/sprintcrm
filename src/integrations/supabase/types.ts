@@ -428,6 +428,30 @@ export type Database = {
           },
         ]
       }
+      ai_maturity: {
+        Row: {
+          agentes: Json
+          company_id: string
+          created_at: string
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          agentes?: Json
+          company_id: string
+          created_at?: string
+          id?: string
+          updated_at?: string
+        }
+        Update: {
+          agentes?: Json
+          company_id?: string
+          created_at?: string
+          id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       ai_process_suggestions: {
         Row: {
           approved: boolean | null
@@ -1143,6 +1167,36 @@ export type Database = {
         }
         Relationships: []
       }
+      business_context: {
+        Row: {
+          company_id: string
+          created_at: string
+          fase: string | null
+          id: string
+          modelo_negocio: string | null
+          notas: string | null
+          updated_at: string
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          fase?: string | null
+          id?: string
+          modelo_negocio?: string | null
+          notas?: string | null
+          updated_at?: string
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          fase?: string | null
+          id?: string
+          modelo_negocio?: string | null
+          notas?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       call_history: {
         Row: {
           call_end: string | null
@@ -1297,6 +1351,39 @@ export type Database = {
           team_id?: string | null
           updated_at?: string | null
           user_id?: string | null
+        }
+        Relationships: []
+      }
+      commercial_hr_config: {
+        Row: {
+          company_id: string
+          created_at: string
+          funil_selecao: Json
+          id: string
+          rampup: Json
+          remuneracao: Json
+          retencao: Json
+          updated_at: string
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          funil_selecao?: Json
+          id?: string
+          rampup?: Json
+          remuneracao?: Json
+          retencao?: Json
+          updated_at?: string
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          funil_selecao?: Json
+          id?: string
+          rampup?: Json
+          remuneracao?: Json
+          retencao?: Json
+          updated_at?: string
         }
         Relationships: []
       }
@@ -2614,6 +2701,33 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      crm_maturity: {
+        Row: {
+          company_id: string
+          created_at: string
+          criterios: Json
+          id: string
+          score: number
+          updated_at: string
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          criterios?: Json
+          id?: string
+          score?: number
+          updated_at?: string
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          criterios?: Json
+          id?: string
+          score?: number
+          updated_at?: string
+        }
+        Relationships: []
       }
       customer_ltv_cache: {
         Row: {
@@ -6298,6 +6412,111 @@ export type Database = {
         }
         Relationships: []
       }
+      playbook_checklist: {
+        Row: {
+          company_id: string
+          created_at: string
+          id: string
+          item_key: string
+          item_label: string
+          link_documento: string | null
+          observacoes: string | null
+          ordem: number
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          id?: string
+          item_key: string
+          item_label: string
+          link_documento?: string | null
+          observacoes?: string | null
+          ordem?: number
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          id?: string
+          item_key?: string
+          item_label?: string
+          link_documento?: string | null
+          observacoes?: string | null
+          ordem?: number
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      prescriptive_diagnosis_log: {
+        Row: {
+          acoes: Json
+          company_id: string
+          created_at: string
+          id: string
+          sintomas_keys: string[]
+          user_id: string | null
+        }
+        Insert: {
+          acoes?: Json
+          company_id: string
+          created_at?: string
+          id?: string
+          sintomas_keys?: string[]
+          user_id?: string | null
+        }
+        Update: {
+          acoes?: Json
+          company_id?: string
+          created_at?: string
+          id?: string
+          sintomas_keys?: string[]
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      prescriptive_rules: {
+        Row: {
+          acao_prescrita: string
+          ativo: boolean
+          causa_provavel: string
+          created_at: string
+          id: string
+          modulo_destino: string | null
+          pilar: string | null
+          prioridade: number
+          sintoma_key: string
+          sintoma_label: string
+        }
+        Insert: {
+          acao_prescrita: string
+          ativo?: boolean
+          causa_provavel: string
+          created_at?: string
+          id?: string
+          modulo_destino?: string | null
+          pilar?: string | null
+          prioridade?: number
+          sintoma_key: string
+          sintoma_label: string
+        }
+        Update: {
+          acao_prescrita?: string
+          ativo?: boolean
+          causa_provavel?: string
+          created_at?: string
+          id?: string
+          modulo_destino?: string | null
+          pilar?: string | null
+          prioridade?: number
+          sintoma_key?: string
+          sintoma_label?: string
+        }
+        Relationships: []
+      }
       process_blocks: {
         Row: {
           block_type: string
@@ -8227,6 +8446,36 @@ export type Database = {
           sdr_notes?: string | null
           status?: string
           updated_at?: string | null
+        }
+        Relationships: []
+      }
+      sdr_specializations: {
+        Row: {
+          company_id: string
+          created_at: string
+          id: string
+          nivel: string
+          observacoes: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          id?: string
+          nivel: string
+          observacoes?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          id?: string
+          nivel?: string
+          observacoes?: string | null
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }
