@@ -148,9 +148,61 @@ async function triggerWhatsAppFlow(opts: {
 
     const { data: activeFlows } = await supabase
       .from('automation_flows')
-      .select('id, name, nodes, active')
+      .select('id, name, nodes, active, settings')
       .eq('company_id', companyId)
       .eq('active', true);
+
+    // Helper: schedule check (Brasília time)
+    const isOutOfSchedule = (settings: any) => {
+      const schedule = settings?.schedule;
+      if (!schedule?.enabled) return { out: false } as const;
+      const now = new Date();
+      const brasiliaOffset = -3 * 60;
+      const utcMs = now.getTime() + (now.getTimezoneOffset() * 60000);
+      const brasiliaDate = new Date(utcMs + (brasiliaOffset * 60000));
+      const dayMap: Record<number, string> = {
+        0: 'sunday', 1: 'monday', 2: 'tuesday', 3: 'wednesday',
+        4: 'thursday', 5: 'friday', 6: 'saturday'
+      };
+      const currentDay = dayMap[brasiliaDate.getDay()];
+      const currentTime = `${String(brasiliaDate.getHours()).padStart(2,'0')}:${String(brasiliaDate.getMinutes()).padStart(2,'0')}`;
+      const allowedDays: string[] = schedule.days || [];
+      const startTime: string = schedule.startTime || '09:00';
+      const endTime: string = schedule.endTime || '18:00';
+      const isAllowedDay = allowedDays.length === 0 || allowedDays.includes(currentDay);
+      const isWithinTime = currentTime >= startTime && currentTime <= endTime;
+      const out = !isAllowedDay || !isWithinTime;
+      return { out, currentDay, currentTime, allowedDays, startTime, endTime, outOfHoursMessage: schedule.outOfHoursMessage } as const;
+    };
+
+    const sendOutOfHoursMessage = async (msg: string) => {
+      if (!msg || !conversationNumber) return;
+      try {
+        const supabaseUrlEnv = Deno.env.get('SUPABASE_URL')!;
+        const supabaseKeyEnv = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+        await fetch(`${supabaseUrlEnv}/functions/v1/enviar-whatsapp`, {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${supabaseKeyEnv}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ numero: conversationNumber, mensagem: msg, companyId })
+        });
+        const telefoneFormatado = conversationNumber.replace(/\D/g, '');
+        await supabase.from('conversas').insert({
+          numero: telefoneFormatado,
+          mensagem: msg,
+          fromme: true,
+          origem: 'automacao',
+          status: 'sent',
+          company_id: companyId,
+          lead_id: leadId || null,
+          nome_contato: contactName || null,
+          telefone_formatado: telefoneFormatado,
+          sent_by: 'bot',
+          tipo_mensagem: 'text'
+        });
+      } catch (e) {
+        console.error('❌ [META-WA-FLOW] Erro ao enviar msg fora de horário:', e);
+      }
+    };
 
     const msgLower = String(message || '').toLowerCase().trim();
     let keywordOverride = false;
@@ -243,6 +295,16 @@ async function triggerWhatsAppFlow(opts: {
         matchedTriggerType = 'palavra_chave';
       } else if (!whatsappTriggers.some((n: any) => n.data?.triggerType === 'nova_mensagem')) {
         continue;
+      }
+
+      // ===== CHECK: Schedule (horário de funcionamento) =====
+      const sched = isOutOfSchedule((flow as any).settings);
+      if (sched.out) {
+        console.log(`🕐 [META-WA-FLOW] Fora do horário do fluxo ${flow.id}`, sched);
+        if (sched.outOfHoursMessage) {
+          await sendOutOfHoursMessage(sched.outOfHoursMessage);
+        }
+        return;
       }
 
       console.log(`🚀 [META-WA-FLOW] Iniciando URA ${flow.id} por ${matchedTriggerType}`);
