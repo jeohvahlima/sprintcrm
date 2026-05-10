@@ -200,6 +200,15 @@ export default function Maturidade() {
           <BusinessPhaseCard />
         </TabsContent>
 
+        <TabsContent value="norte" className="space-y-4">
+          <NorthMetricsPanel />
+          <GrowSegmentBenchmarkCard />
+        </TabsContent>
+
+        <TabsContent value="ritmos">
+          <RhythmTemplatesPanel />
+        </TabsContent>
+
         {/* PILARES + EVOLUÇÃO */}
         <TabsContent value="pilares" className="space-y-4">
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
