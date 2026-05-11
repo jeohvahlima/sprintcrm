@@ -16,6 +16,8 @@ import {
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { usePlayerProfile } from "@/hooks/usePlayerProfile";
+import { usePermissions } from "@/hooks/usePermissions";
+import { Users, Sparkles } from "lucide-react";
 
 type Role = "sdr" | "closer";
 type Channel = "whatsapp" | "ligacao" | "instagram" | "email" | "linkedin";
