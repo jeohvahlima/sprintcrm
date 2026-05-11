@@ -7339,7 +7339,9 @@ export type Database = {
           config: Json
           created_at: string
           id: string
+          is_template: boolean
           sdr_blocks: Json
+          template_role: string | null
           updated_at: string
           user_id: string
         }
@@ -7349,7 +7351,9 @@ export type Database = {
           config?: Json
           created_at?: string
           id?: string
+          is_template?: boolean
           sdr_blocks?: Json
+          template_role?: string | null
           updated_at?: string
           user_id: string
         }
@@ -7359,7 +7363,9 @@ export type Database = {
           config?: Json
           created_at?: string
           id?: string
+          is_template?: boolean
           sdr_blocks?: Json
+          template_role?: string | null
           updated_at?: string
           user_id?: string
         }

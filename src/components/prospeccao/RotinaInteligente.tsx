@@ -16,6 +16,8 @@ import {
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { usePlayerProfile } from "@/hooks/usePlayerProfile";
+import { usePermissions } from "@/hooks/usePermissions";
+import { Users, Sparkles } from "lucide-react";
 
 type Role = "sdr" | "closer";
 type Channel = "whatsapp" | "ligacao" | "instagram" | "email" | "linkedin";
@@ -122,6 +124,7 @@ function diffMin(start: string, end: string): number {
 
 export function RotinaInteligente() {
   const { companyId, userId } = usePlayerProfile();
+  const { isAdmin } = usePermissions();
   const [config, setConfig] = useState<Config>(() => {
     try { const s = localStorage.getItem(STORAGE_KEY); return s ? { ...DEFAULT_CONFIG, ...JSON.parse(s) } : DEFAULT_CONFIG; }
     catch { return DEFAULT_CONFIG; }
@@ -131,8 +134,9 @@ export function RotinaInteligente() {
   const [closerBlocks, setCloserBlocks] = useState<RoutineBlock[]>([]);
   const [recordId, setRecordId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [usedTemplate, setUsedTemplate] = useState<{ sdr: boolean; closer: boolean }>({ sdr: false, closer: false });
 
-  // Carregar do Supabase (com fallback p/ localStorage)
+  // Carregar do Supabase (rotina pessoal → fallback: template da empresa por papel)
   useEffect(() => {
     let cancelled = false;
     (async () => {
@@ -147,24 +151,65 @@ export function RotinaInteligente() {
       } catch {}
 
       if (!companyId || !userId) { setLoading(false); return; }
-      const { data, error } = await supabase
+
+      // 1) rotina pessoal
+      const { data: personal } = await supabase
         .from("prospeccao_smart_routines")
         .select("id, config, sdr_blocks, closer_blocks")
         .eq("company_id", companyId)
         .eq("user_id", userId)
+        .eq("is_template", false)
         .maybeSingle();
+
       if (cancelled) return;
-      if (!error && data) {
-        setRecordId(data.id);
-        if (data.config && Object.keys(data.config as any).length) {
-          setConfig({ ...DEFAULT_CONFIG, ...(data.config as any) });
+
+      let hasPersonalSdr = false;
+      let hasPersonalCloser = false;
+
+      if (personal) {
+        setRecordId(personal.id);
+        if (personal.config && Object.keys(personal.config as any).length) {
+          setConfig({ ...DEFAULT_CONFIG, ...(personal.config as any) });
         }
-        if (Array.isArray(data.sdr_blocks)) setSdrBlocks(data.sdr_blocks as any);
-        if (Array.isArray(data.closer_blocks)) setCloserBlocks(data.closer_blocks as any);
-      } else if (!error && !data) {
-        // novo usuário: resetar estado para padrão para não herdar de outro
+        if (Array.isArray(personal.sdr_blocks) && (personal.sdr_blocks as any[]).length) {
+          setSdrBlocks(personal.sdr_blocks as any);
+          hasPersonalSdr = true;
+        }
+        if (Array.isArray(personal.closer_blocks) && (personal.closer_blocks as any[]).length) {
+          setCloserBlocks(personal.closer_blocks as any);
+          hasPersonalCloser = true;
+        }
+      } else {
         setRecordId(null);
       }
+
+      // 2) fallback: templates da empresa por papel
+      if (!hasPersonalSdr || !hasPersonalCloser) {
+        const { data: tpls } = await supabase
+          .from("prospeccao_smart_routines")
+          .select("template_role, sdr_blocks, closer_blocks, config")
+          .eq("company_id", companyId)
+          .eq("is_template", true);
+
+        if (cancelled) return;
+        if (tpls && tpls.length) {
+          const sdrTpl = tpls.find((t: any) => t.template_role === "sdr");
+          const closerTpl = tpls.find((t: any) => t.template_role === "closer");
+          if (!hasPersonalSdr && sdrTpl && Array.isArray(sdrTpl.sdr_blocks) && (sdrTpl.sdr_blocks as any[]).length) {
+            setSdrBlocks(sdrTpl.sdr_blocks as any);
+            setUsedTemplate((u) => ({ ...u, sdr: true }));
+          }
+          if (!hasPersonalCloser && closerTpl && Array.isArray(closerTpl.closer_blocks) && (closerTpl.closer_blocks as any[]).length) {
+            setCloserBlocks(closerTpl.closer_blocks as any);
+            setUsedTemplate((u) => ({ ...u, closer: true }));
+          }
+          // Se ainda não tem config pessoal, herda do template SDR (mais completo)
+          if (!personal && sdrTpl?.config && Object.keys(sdrTpl.config as any).length) {
+            setConfig({ ...DEFAULT_CONFIG, ...(sdrTpl.config as any) });
+          }
+        }
+      }
+
       setLoading(false);
     })();
     return () => { cancelled = true; };
@@ -345,7 +390,54 @@ export function RotinaInteligente() {
       return;
     }
     if (data?.id) setRecordId(data.id);
-    toast.success("Configuração e rotinas salvas.");
+    setUsedTemplate({ sdr: false, closer: false });
+    toast.success("Configuração e rotinas salvas (pessoal).");
+  };
+
+  const handleSaveAsTemplate = async (role: Role) => {
+    if (!isAdmin) {
+      toast.error("Apenas administradores podem definir a rotina padrão da equipe.");
+      return;
+    }
+    if (!companyId || !userId) {
+      toast.error("Empresa não identificada.");
+      return;
+    }
+    const blocksToSave = role === "sdr" ? sdrBlocks : closerBlocks;
+    if (!blocksToSave.length) {
+      toast.error("Gere ou adicione blocos antes de salvar o template.");
+      return;
+    }
+
+    // upsert manual: busca existente do template, depois insere/atualiza
+    const { data: existing } = await supabase
+      .from("prospeccao_smart_routines")
+      .select("id")
+      .eq("company_id", companyId)
+      .eq("is_template", true)
+      .eq("template_role", role)
+      .maybeSingle();
+
+    const payload: any = {
+      company_id: companyId,
+      user_id: userId,
+      is_template: true,
+      template_role: role,
+      config: config as any,
+      sdr_blocks: role === "sdr" ? (sdrBlocks as any) : ([] as any),
+      closer_blocks: role === "closer" ? (closerBlocks as any) : ([] as any),
+    };
+
+    const { error } = existing
+      ? await supabase.from("prospeccao_smart_routines").update(payload).eq("id", existing.id)
+      : await supabase.from("prospeccao_smart_routines").insert(payload);
+
+    if (error) {
+      console.error("[RotinaInteligente] template save error", error);
+      toast.error("Erro ao salvar template: " + error.message);
+      return;
+    }
+    toast.success(`Template ${role === "sdr" ? "do SDR" : "do Closer"} salvo para toda a equipe.`);
   };
 
   const updateBlock = (role: Role, id: string, patch: Partial<RoutineBlock>) => {
@@ -459,6 +551,19 @@ export function RotinaInteligente() {
           )}
         </CardContent>
       </Card>
+
+      {/* Aviso de escopo / fonte da rotina */}
+      {(usedTemplate.sdr || usedTemplate.closer) && (
+        <div className="rounded-lg border border-blue-500/30 bg-blue-500/10 px-3 py-2 text-xs text-foreground flex items-center gap-2">
+          <Users className="h-4 w-4 text-blue-500" />
+          <span>
+            Você está vendo a <b>rotina padrão da equipe</b>
+            {usedTemplate.sdr && usedTemplate.closer ? " (SDR e Closer)"
+              : usedTemplate.sdr ? " (SDR)" : " (Closer)"}.
+            Edite e clique em <b>Salvar configuração</b> para criar a sua versão pessoal.
+          </span>
+        </div>
+      )}
 
       {/* TABS SDR / CLOSER */}
       <Tabs value={activeRole} onValueChange={(v) => setActiveRole(v as Role)}>
@@ -591,14 +696,38 @@ export function RotinaInteligente() {
       </Tabs>
 
       {/* AÇÕES GLOBAIS */}
-      <div className="flex justify-end gap-2 sticky bottom-2">
+      <div className="flex justify-end gap-2 sticky bottom-2 flex-wrap">
         <Button variant="outline" onClick={() => { setConfig(DEFAULT_CONFIG); toast.info("Padrões restaurados."); }}>
           <RefreshCw className="h-4 w-4 mr-1" /> Restaurar padrões
         </Button>
+        {isAdmin && (
+          <>
+            <Button
+              variant="secondary"
+              onClick={() => handleSaveAsTemplate("sdr")}
+              title="Define a rotina padrão dos SDRs da empresa"
+            >
+              <Sparkles className="h-4 w-4 mr-1" /> Salvar como padrão SDR (equipe)
+            </Button>
+            <Button
+              variant="secondary"
+              onClick={() => handleSaveAsTemplate("closer")}
+              title="Define a rotina padrão dos Closers da empresa"
+            >
+              <Sparkles className="h-4 w-4 mr-1" /> Salvar como padrão Closer (equipe)
+            </Button>
+          </>
+        )}
         <Button onClick={handleSave}>
-          <Save className="h-4 w-4 mr-1" /> Salvar configuração
+          <Save className="h-4 w-4 mr-1" /> Salvar minha rotina
         </Button>
       </div>
+
+      {isAdmin && (
+        <p className="text-[11px] text-muted-foreground -mt-3 text-right">
+          Como admin, você pode salvar a rotina atual como <b>padrão da equipe</b> por papel (SDR/Closer). Cada usuário ainda pode personalizar a sua.
+        </p>
+      )}
 
       {/* FILOSOFIA */}
       <Card className="bg-gradient-to-br from-emerald-500/5 to-transparent border-l-4 border-l-emerald-500">
