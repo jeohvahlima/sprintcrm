@@ -135,8 +135,32 @@ export function ICPIntelligenceBuilder({ onApplied }: Props) {
             />
             <Button onClick={handleGenerate} disabled={generate.isPending} className="gap-1">
               {generate.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Wand2 className="h-4 w-4" />}
-              Gerar ICP Inteligente
+              {data ? "Regerar ICP" : "Gerar ICP Inteligente"}
             </Button>
+            {data && (
+              <Button
+                type="button"
+                variant="outline"
+                onClick={async () => {
+                  if (!confirm("Limpar o ICP atual e definir um novo manualmente?")) return;
+                  try {
+                    if (companyId) {
+                      await supabase
+                        .from("icp_profiles" as any)
+                        .delete()
+                        .eq("company_id", companyId)
+                        .eq("source", "ai");
+                    }
+                  } catch (e) { console.error(e); }
+                  setData(null);
+                  setNiche("");
+                  toast.success("ICP limpo. Defina o novo nicho e gere novamente.");
+                }}
+                className="gap-1"
+              >
+                <XCircle className="h-4 w-4" /> Limpar
+              </Button>
+            )}
           </div>
           <div className="flex flex-wrap gap-1.5">
             <span className="text-[11px] text-muted-foreground">Sugestões:</span>
