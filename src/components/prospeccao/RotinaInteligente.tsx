@@ -14,6 +14,8 @@ import {
   Sun, CloudSun, Sunset, Moon, Zap, BookOpen, Calendar
 } from "lucide-react";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+import { usePlayerProfile } from "@/hooks/usePlayerProfile";
 
 type Role = "sdr" | "closer";
 type Channel = "whatsapp" | "ligacao" | "instagram" | "email" | "linkedin";
@@ -119,6 +121,7 @@ function diffMin(start: string, end: string): number {
 }
 
 export function RotinaInteligente() {
+  const { companyId } = usePlayerProfile();
   const [config, setConfig] = useState<Config>(() => {
     try { const s = localStorage.getItem(STORAGE_KEY); return s ? { ...DEFAULT_CONFIG, ...JSON.parse(s) } : DEFAULT_CONFIG; }
     catch { return DEFAULT_CONFIG; }
@@ -126,18 +129,42 @@ export function RotinaInteligente() {
   const [activeRole, setActiveRole] = useState<Role>("sdr");
   const [sdrBlocks, setSdrBlocks] = useState<RoutineBlock[]>([]);
   const [closerBlocks, setCloserBlocks] = useState<RoutineBlock[]>([]);
+  const [recordId, setRecordId] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  // Carregar blocos salvos
+  // Carregar do Supabase (com fallback p/ localStorage)
   useEffect(() => {
-    try {
-      const s = localStorage.getItem(ROUTINE_KEY);
-      if (s) {
-        const parsed = JSON.parse(s);
-        setSdrBlocks(parsed.sdr || []);
-        setCloserBlocks(parsed.closer || []);
+    let cancelled = false;
+    (async () => {
+      // Fallback local imediato
+      try {
+        const s = localStorage.getItem(ROUTINE_KEY);
+        if (s) {
+          const parsed = JSON.parse(s);
+          setSdrBlocks(parsed.sdr || []);
+          setCloserBlocks(parsed.closer || []);
+        }
+      } catch {}
+
+      if (!companyId) { setLoading(false); return; }
+      const { data, error } = await supabase
+        .from("prospeccao_smart_routines")
+        .select("id, config, sdr_blocks, closer_blocks")
+        .eq("company_id", companyId)
+        .maybeSingle();
+      if (cancelled) return;
+      if (!error && data) {
+        setRecordId(data.id);
+        if (data.config && Object.keys(data.config as any).length) {
+          setConfig({ ...DEFAULT_CONFIG, ...(data.config as any) });
+        }
+        if (Array.isArray(data.sdr_blocks)) setSdrBlocks(data.sdr_blocks as any);
+        if (Array.isArray(data.closer_blocks)) setCloserBlocks(data.closer_blocks as any);
       }
-    } catch {}
-  }, []);
+      setLoading(false);
+    })();
+    return () => { cancelled = true; };
+  }, [companyId]);
 
   const update = (k: keyof Config, v: any) => setConfig((c) => ({ ...c, [k]: v }));
 
@@ -284,9 +311,35 @@ export function RotinaInteligente() {
     toast.success(`Rotina ${role === "sdr" ? "do SDR" : "do Closer"} gerada com base na sua meta.`);
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
+    // Cache local imediato
     localStorage.setItem(STORAGE_KEY, JSON.stringify(config));
     localStorage.setItem(ROUTINE_KEY, JSON.stringify({ sdr: sdrBlocks, closer: closerBlocks }));
+
+    if (!companyId) {
+      toast.error("Empresa não identificada. Faça login novamente.");
+      return;
+    }
+
+    const payload = {
+      company_id: companyId,
+      config: config as any,
+      sdr_blocks: sdrBlocks as any,
+      closer_blocks: closerBlocks as any,
+    };
+
+    const { data, error } = await supabase
+      .from("prospeccao_smart_routines")
+      .upsert(payload, { onConflict: "company_id" })
+      .select("id")
+      .single();
+
+    if (error) {
+      console.error("[RotinaInteligente] save error", error);
+      toast.error("Erro ao salvar rotina: " + error.message);
+      return;
+    }
+    if (data?.id) setRecordId(data.id);
     toast.success("Configuração e rotinas salvas.");
   };
 

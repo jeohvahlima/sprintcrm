@@ -7332,6 +7332,39 @@ export type Database = {
           },
         ]
       }
+      prospeccao_smart_routines: {
+        Row: {
+          closer_blocks: Json
+          company_id: string
+          config: Json
+          created_at: string
+          id: string
+          sdr_blocks: Json
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          closer_blocks?: Json
+          company_id: string
+          config?: Json
+          created_at?: string
+          id?: string
+          sdr_blocks?: Json
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          closer_blocks?: Json
+          company_id?: string
+          config?: Json
+          created_at?: string
+          id?: string
+          sdr_blocks?: Json
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       prospecting_achievements: {
         Row: {
           achievement_code: string
