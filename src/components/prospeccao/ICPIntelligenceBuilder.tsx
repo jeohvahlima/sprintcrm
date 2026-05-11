@@ -36,6 +36,27 @@ export function ICPIntelligenceBuilder({ onApplied }: Props) {
     })();
   }, [companyId]);
 
+  // Carrega ICP IA salvo (último gerado) para não perder ao atualizar página
+  useEffect(() => {
+    if (!companyId) return;
+    (async () => {
+      const { data: rows } = await supabase
+        .from("icp_profiles" as any)
+        .select("niche, intelligence, source, is_default, generated_at, created_at")
+        .eq("company_id", companyId)
+        .eq("source", "ai")
+        .order("is_default", { ascending: false })
+        .order("generated_at", { ascending: false, nullsFirst: false })
+        .order("created_at", { ascending: false })
+        .limit(1);
+      const row = (rows as any[])?.[0];
+      if (row?.intelligence && row?.niche) {
+        setData({ niche: row.niche, intelligence: row.intelligence });
+        setNiche(row.niche);
+      }
+    })();
+  }, [companyId]);
+
   const handleGenerate = async () => {
     if (!niche.trim()) { toast.error("Informe um nicho/segmento"); return; }
     try {
