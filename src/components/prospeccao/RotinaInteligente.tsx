@@ -311,9 +311,35 @@ export function RotinaInteligente() {
     toast.success(`Rotina ${role === "sdr" ? "do SDR" : "do Closer"} gerada com base na sua meta.`);
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
+    // Cache local imediato
     localStorage.setItem(STORAGE_KEY, JSON.stringify(config));
     localStorage.setItem(ROUTINE_KEY, JSON.stringify({ sdr: sdrBlocks, closer: closerBlocks }));
+
+    if (!companyId) {
+      toast.error("Empresa não identificada. Faça login novamente.");
+      return;
+    }
+
+    const payload = {
+      company_id: companyId,
+      config: config as any,
+      sdr_blocks: sdrBlocks as any,
+      closer_blocks: closerBlocks as any,
+    };
+
+    const { data, error } = await supabase
+      .from("prospeccao_smart_routines")
+      .upsert(payload, { onConflict: "company_id" })
+      .select("id")
+      .single();
+
+    if (error) {
+      console.error("[RotinaInteligente] save error", error);
+      toast.error("Erro ao salvar rotina: " + error.message);
+      return;
+    }
+    if (data?.id) setRecordId(data.id);
     toast.success("Configuração e rotinas salvas.");
   };
 
