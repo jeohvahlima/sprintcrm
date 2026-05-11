@@ -121,7 +121,7 @@ function diffMin(start: string, end: string): number {
 }
 
 export function RotinaInteligente() {
-  const { companyId } = usePlayerProfile();
+  const { companyId, userId } = usePlayerProfile();
   const [config, setConfig] = useState<Config>(() => {
     try { const s = localStorage.getItem(STORAGE_KEY); return s ? { ...DEFAULT_CONFIG, ...JSON.parse(s) } : DEFAULT_CONFIG; }
     catch { return DEFAULT_CONFIG; }
@@ -146,11 +146,12 @@ export function RotinaInteligente() {
         }
       } catch {}
 
-      if (!companyId) { setLoading(false); return; }
+      if (!companyId || !userId) { setLoading(false); return; }
       const { data, error } = await supabase
         .from("prospeccao_smart_routines")
         .select("id, config, sdr_blocks, closer_blocks")
         .eq("company_id", companyId)
+        .eq("user_id", userId)
         .maybeSingle();
       if (cancelled) return;
       if (!error && data) {
@@ -160,11 +161,14 @@ export function RotinaInteligente() {
         }
         if (Array.isArray(data.sdr_blocks)) setSdrBlocks(data.sdr_blocks as any);
         if (Array.isArray(data.closer_blocks)) setCloserBlocks(data.closer_blocks as any);
+      } else if (!error && !data) {
+        // novo usuário: resetar estado para padrão para não herdar de outro
+        setRecordId(null);
       }
       setLoading(false);
     })();
     return () => { cancelled = true; };
-  }, [companyId]);
+  }, [companyId, userId]);
 
   const update = (k: keyof Config, v: any) => setConfig((c) => ({ ...c, [k]: v }));
 
@@ -316,13 +320,14 @@ export function RotinaInteligente() {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(config));
     localStorage.setItem(ROUTINE_KEY, JSON.stringify({ sdr: sdrBlocks, closer: closerBlocks }));
 
-    if (!companyId) {
-      toast.error("Empresa não identificada. Faça login novamente.");
+    if (!companyId || !userId) {
+      toast.error("Usuário/empresa não identificados. Faça login novamente.");
       return;
     }
 
     const payload = {
       company_id: companyId,
+      user_id: userId,
       config: config as any,
       sdr_blocks: sdrBlocks as any,
       closer_blocks: closerBlocks as any,
@@ -330,7 +335,7 @@ export function RotinaInteligente() {
 
     const { data, error } = await supabase
       .from("prospeccao_smart_routines")
-      .upsert(payload, { onConflict: "company_id" })
+      .upsert(payload, { onConflict: "company_id,user_id" })
       .select("id")
       .single();
 

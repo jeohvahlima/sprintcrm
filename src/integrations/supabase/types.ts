@@ -7341,7 +7341,7 @@ export type Database = {
           id: string
           sdr_blocks: Json
           updated_at: string
-          user_id: string | null
+          user_id: string
         }
         Insert: {
           closer_blocks?: Json
@@ -7351,7 +7351,7 @@ export type Database = {
           id?: string
           sdr_blocks?: Json
           updated_at?: string
-          user_id?: string | null
+          user_id: string
         }
         Update: {
           closer_blocks?: Json
@@ -7361,7 +7361,7 @@ export type Database = {
           id?: string
           sdr_blocks?: Json
           updated_at?: string
-          user_id?: string | null
+          user_id?: string
         }
         Relationships: []
       }
