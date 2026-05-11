@@ -38,8 +38,19 @@ export function EstrategiaComercialPanel() {
         <TabsContent value="esteira" className="mt-4">
           <ProductLadderBuilder />
         </TabsContent>
-        <TabsContent value="icp" className="mt-4">
-          <ICPWizard />
+        <TabsContent value="icp" className="mt-4 space-y-4">
+          <Tabs defaultValue="manual-text">
+            <TabsList>
+              <TabsTrigger value="manual-text" className="gap-1"><FileText className="h-3.5 w-3.5" /> Manual ICP (texto)</TabsTrigger>
+              <TabsTrigger value="wizard" className="gap-1"><Target className="h-3.5 w-3.5" /> Wizard 3 etapas</TabsTrigger>
+            </TabsList>
+            <TabsContent value="manual-text" className="mt-4">
+              <ICPManualText />
+            </TabsContent>
+            <TabsContent value="wizard" className="mt-4">
+              <ICPWizard />
+            </TabsContent>
+          </Tabs>
         </TabsContent>
         <TabsContent value="trilhas" className="mt-4">
           <MarketingFunnelTracks />
