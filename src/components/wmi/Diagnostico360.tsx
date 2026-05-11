@@ -12,8 +12,9 @@ import {
   ClipboardCheck, ChevronLeft, ChevronRight, Sparkles, Loader2, Trophy,
   AlertTriangle, RotateCcw, Target, TrendingUp, Heart, Users, BarChart3,
   Flame, Lightbulb, ShieldCheck, ShieldAlert, CheckCircle2, Circle, Clock,
-  Zap, DollarSign, Calendar, Map, Settings,
+  Zap, DollarSign, Calendar, Map, Settings, Download,
 } from "lucide-react";
+import jsPDF from "jspdf";
 import {
   useAlavancas, usePerguntas, usePerguntasSegmento, useUltimoDiagnostico,
   useSalvarDiagnostico, useGargalos, useUpdateGargaloStatus, useGerarRoadmapDiagnostico,
