@@ -3,11 +3,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { Phone, Upload, Loader2, Sparkles, FileSpreadsheet, Download, Trash2, Brain, ChevronDown, ChevronRight } from "lucide-react";
+import { Phone, Upload, Loader2, Sparkles, FileSpreadsheet, Download, Trash2, Brain, ChevronDown, ChevronRight, PhoneCall, Check, CalendarClock, Flame, X, Trophy, Filter } from "lucide-react";
 import { toast } from "sonner";
 import * as XLSX from "xlsx";
 import { supabase } from "@/integrations/supabase/client";
 import { useCompanySegmento } from "@/hooks/useCompanySegmento";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+
+type Outcome = "pendente" | "prospectado" | "sem_resposta" | "oportunidade" | "agendamento" | "follow_up" | "ganho" | "descartado";
 
 type Row = Record<string, any> & {
   __id: string;
@@ -17,6 +20,9 @@ type Row = Record<string, any> & {
   __brief?: any;
   __error?: string;
   __open?: boolean;
+  __outcome?: Outcome;
+  __leadId?: string | null;
+  __importedAt?: string | null;
 };
 
 type SavedAnalysis = {
@@ -26,7 +32,22 @@ type SavedAnalysis = {
   brief: any;
   status: "pending" | "running" | "done" | "error";
   error_message: string | null;
+  outcome?: string | null;
+  lead_id?: string | null;
+  imported_to_coldcall_at?: string | null;
 };
+
+const OUTCOME_META: Record<Outcome, { label: string; className: string; icon?: any }> = {
+  pendente: { label: "Pendente", className: "text-muted-foreground" },
+  prospectado: { label: "Prospectado (OK)", className: "text-emerald-600", icon: Check },
+  sem_resposta: { label: "Sem resposta", className: "text-slate-500", icon: X },
+  oportunidade: { label: "Oportunidade", className: "text-amber-600", icon: Flame },
+  agendamento: { label: "Agendamento", className: "text-purple-600", icon: CalendarClock },
+  follow_up: { label: "Follow-up", className: "text-cyan-600", icon: PhoneCall },
+  ganho: { label: "Ganho", className: "text-emerald-700", icon: Trophy },
+  descartado: { label: "Descartado", className: "text-rose-600", icon: X },
+};
+const OUTCOME_ORDER: Outcome[] = ["pendente", "prospectado", "sem_resposta", "oportunidade", "agendamento", "follow_up", "ganho", "descartado"];
 
 const COL_MAP: Record<string, string[]> = {
   razao: ["razao", "razão", "razao social", "razão social", "razaosocial"],
@@ -73,6 +94,9 @@ function toRowFromSaved(item: SavedAnalysis): Row {
     __status: item.status === "pending" || item.status === "running" ? "idle" : item.status,
     __brief: item.brief || undefined,
     __error: item.error_message || undefined,
+    __outcome: (item.outcome as Outcome) || "pendente",
+    __leadId: item.lead_id || null,
+    __importedAt: item.imported_to_coldcall_at || null,
   };
 }
 
@@ -110,6 +134,8 @@ export function PreSDRListAnalyzer() {
   const { segmento, companyId } = useCompanySegmento();
   const fileRef = useRef<HTMLInputElement>(null);
   const cancelRef = useRef(false);
+  const [outcomeFilter, setOutcomeFilter] = useState<"all" | Outcome>("all");
+  const [importingId, setImportingId] = useState<string | null>(null);
 
   // carrega ICP IA salvo + produtos
   useEffect(() => {
@@ -138,7 +164,7 @@ export function PreSDRListAnalyzer() {
       const all: SavedAnalysis[] = [];
       for (let from = 0; ; from += 1000) {
         const { data, error } = await supabase.from("pre_sdr_analyses" as any)
-          .select("id,row_key,raw_row,brief,status,error_message")
+          .select("id,row_key,raw_row,brief,status,error_message,outcome,lead_id,imported_to_coldcall_at")
           .eq("company_id", companyId)
           .order("updated_at", { ascending: false })
           .range(from, from + 999);
@@ -308,9 +334,87 @@ export function PreSDRListAnalyzer() {
     setRows((prev) => prev.map((r) => (r.__id === id ? { ...r, __open: !r.__open } : r)));
   }
 
+  async function setOutcome(row: Row, outcome: Outcome) {
+    if (!companyId) return;
+    const key = row.__rowKey || rowKey(row);
+    setRows((prev) => prev.map((r) => (r.__id === row.__id ? { ...r, __outcome: outcome } : r)));
+    const { error } = await supabase
+      .from("pre_sdr_analyses" as any)
+      .update({ outcome, outcome_at: new Date().toISOString() } as any)
+      .eq("company_id", companyId)
+      .eq("row_key", key);
+    if (error) toast.error("Não foi possível salvar o status", { description: error.message });
+  }
+
+  async function importToColdCall(row: Row) {
+    if (!companyId) return;
+    const phone = String(row.telefone || "").replace(/\D/g, "");
+    if (!phone) return toast.error("Linha sem telefone — não dá para importar para Cold Call.");
+    if (row.__leadId) return toast.info("Esta empresa já foi importada.");
+    setImportingId(row.__id);
+    try {
+      const name = String(row.fantasia || row.razao || "Empresa sem nome").trim();
+      const company = String(row.razao || row.fantasia || "").trim();
+      const briefNote = row.__brief
+        ? `Decisor provável: ${row.__brief.decisor_provavel || "—"}\nGancho: ${row.__brief.gancho_abertura || "—"}\nOferta sugerida: ${row.__brief.oferta_recomendada || "—"}\nFit: ${row.__brief.fit_score ?? "—"}`
+        : null;
+      const { data: lead, error } = await supabase
+        .from("leads")
+        .insert({
+          company_id: companyId,
+          name,
+          phone,
+          telefone: phone,
+          email: row.email || null,
+          company: company || null,
+          source: "pre_sdr",
+          notes: briefNote,
+          to_prospect: true,
+          prospecting_priority: row.__brief?.fit_score ?? 1,
+          stage: "prospeccao",
+          status: "novo",
+        } as any)
+        .select("id")
+        .single();
+      if (error) throw error;
+      const key = row.__rowKey || rowKey(row);
+      const importedAt = new Date().toISOString();
+      await supabase
+        .from("pre_sdr_analyses" as any)
+        .update({ lead_id: lead!.id, imported_to_coldcall_at: importedAt } as any)
+        .eq("company_id", companyId)
+        .eq("row_key", key);
+      setRows((prev) => prev.map((r) => (r.__id === row.__id ? { ...r, __leadId: lead!.id, __importedAt: importedAt } : r)));
+      toast.success("Importado para Cold Call", { description: `${name} já está disponível na fila.` });
+    } catch (e: any) {
+      toast.error("Falha ao importar", { description: e?.message });
+    } finally {
+      setImportingId(null);
+    }
+  }
+
+  async function importSelectedToColdCall() {
+    const candidates = visibleRows.filter((r) => !r.__leadId && (r.telefone || "").toString().replace(/\D/g, ""));
+    if (!candidates.length) return toast.info("Nada para importar (filtre uma lista com telefone).");
+    let ok = 0;
+    for (const r of candidates) {
+      // sequencial para não estourar rate limit
+      // eslint-disable-next-line no-await-in-loop
+      await importToColdCall(r);
+      ok++;
+    }
+    toast.success(`${ok} contato(s) enviados para Cold Call.`);
+  }
+
   const total = rows.length;
   const enriched = rows.filter((r) => r.__brief).length;
   const errors = rows.filter((r) => r.__status === "error").length;
+  const outcomeCounts = OUTCOME_ORDER.reduce<Record<string, number>>((acc, o) => {
+    acc[o] = rows.filter((r) => (r.__outcome || "pendente") === o).length;
+    return acc;
+  }, {});
+  const visibleRows = outcomeFilter === "all" ? rows : rows.filter((r) => (r.__outcome || "pendente") === outcomeFilter);
+  const importedCount = rows.filter((r) => r.__leadId).length;
 
   return (
     <Card className="border-primary/30 bg-gradient-to-br from-primary/5 via-transparent to-transparent">
@@ -364,12 +468,44 @@ export function PreSDRListAnalyzer() {
                   <Download className="h-4 w-4" /> Exportar CSV
                 </Button>
               )}
+              <Button size="sm" variant="outline" onClick={importSelectedToColdCall} className="gap-1 border-emerald-300 text-emerald-700 hover:bg-emerald-50">
+                <PhoneCall className="h-4 w-4" /> Enviar visíveis para Cold Call
+              </Button>
+              {importedCount > 0 && (
+                <Badge variant="outline" className="text-emerald-700 border-emerald-300">{importedCount} no Cold Call</Badge>
+              )}
               <Button size="sm" variant="ghost" onClick={() => setRows([])} className="gap-1">
                 <Trash2 className="h-4 w-4" /> Limpar
               </Button>
             </>
           )}
         </div>
+
+        {total > 0 && (
+          <div className="flex flex-wrap items-center gap-1.5 text-[11px]">
+            <span className="text-muted-foreground flex items-center gap-1"><Filter className="h-3 w-3" /> Filtrar:</span>
+            <button
+              onClick={() => setOutcomeFilter("all")}
+              className={`px-2 py-0.5 rounded-full border ${outcomeFilter === "all" ? "bg-primary text-primary-foreground border-primary" : "border-border hover:bg-muted"}`}
+            >
+              Todos ({total})
+            </button>
+            {OUTCOME_ORDER.map((o) => {
+              const meta = OUTCOME_META[o];
+              const count = outcomeCounts[o] || 0;
+              if (count === 0 && o !== "pendente") return null;
+              return (
+                <button
+                  key={o}
+                  onClick={() => setOutcomeFilter(o)}
+                  className={`px-2 py-0.5 rounded-full border ${outcomeFilter === o ? "bg-primary text-primary-foreground border-primary" : `border-border hover:bg-muted ${meta.className}`}`}
+                >
+                  {meta.label} ({count})
+                </button>
+              );
+            })}
+          </div>
+        )}
 
         {running && (
           <div className="space-y-1">
@@ -397,22 +533,26 @@ export function PreSDRListAnalyzer() {
                     <th className="px-2 py-1.5">Telefone</th>
                     <th className="px-2 py-1.5">Decisor (IA)</th>
                     <th className="px-2 py-1.5">Fit</th>
-                    <th className="px-2 py-1.5">Status</th>
+                    <th className="px-2 py-1.5">IA</th>
+                    <th className="px-2 py-1.5">Resultado da prospecção</th>
+                    <th className="px-2 py-1.5">Ações</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {rows.map((r) => {
+                  {visibleRows.map((r) => {
                     const b = r.__brief;
                     const fit = b?.fit_score;
                     const fitColor =
                       fit == null ? "" : fit >= 75 ? "text-emerald-600" : fit >= 50 ? "text-amber-600" : "text-rose-600";
+                    const outcome = (r.__outcome || "pendente") as Outcome;
+                    const oMeta = OUTCOME_META[outcome];
                     return (
                       <Fragment key={r.__id}>
-                        <tr className="border-t hover:bg-muted/40 cursor-pointer" onClick={() => b && toggleOpen(r.__id)}>
-                          <td className="px-2 py-1.5">
+                        <tr className="border-t hover:bg-muted/40">
+                          <td className="px-2 py-1.5 cursor-pointer" onClick={() => b && toggleOpen(r.__id)}>
                             {b ? (r.__open ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />) : null}
                           </td>
-                          <td className="px-2 py-1.5">
+                          <td className="px-2 py-1.5 cursor-pointer" onClick={() => b && toggleOpen(r.__id)}>
                             <div className="font-medium">{r.fantasia || r.razao || "—"}</div>
                             {r.razao && r.fantasia && <div className="text-[10px] text-muted-foreground">{r.razao}</div>}
                           </td>
@@ -427,10 +567,56 @@ export function PreSDRListAnalyzer() {
                             {r.__status === "error" && <Badge variant="outline" className="text-rose-600" title={r.__error}>erro</Badge>}
                             {r.__status === "idle" && <span className="text-muted-foreground">—</span>}
                           </td>
+                          <td className="px-2 py-1.5">
+                            <Select value={outcome} onValueChange={(v) => setOutcome(r, v as Outcome)}>
+                              <SelectTrigger className={`h-7 w-[170px] text-xs ${oMeta.className}`}>
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {OUTCOME_ORDER.map((o) => (
+                                  <SelectItem key={o} value={o} className={OUTCOME_META[o].className}>
+                                    {OUTCOME_META[o].label}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </td>
+                          <td className="px-2 py-1.5">
+                            <div className="flex items-center gap-1">
+                              {outcome !== "prospectado" && (
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  className="h-7 px-2 text-emerald-600 hover:bg-emerald-50"
+                                  onClick={() => setOutcome(r, "prospectado")}
+                                  title="Marcar como prospectado"
+                                >
+                                  <Check className="h-3.5 w-3.5" /> OK
+                                </Button>
+                              )}
+                              {r.__leadId ? (
+                                <Badge variant="outline" className="text-emerald-700 border-emerald-300 gap-1">
+                                  <PhoneCall className="h-3 w-3" /> Cold Call
+                                </Badge>
+                              ) : (
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  className="h-7 px-2"
+                                  disabled={importingId === r.__id || !r.telefone}
+                                  onClick={() => importToColdCall(r)}
+                                  title={r.telefone ? "Importar para a aba Cold Call" : "Sem telefone"}
+                                >
+                                  {importingId === r.__id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <PhoneCall className="h-3.5 w-3.5" />}
+                                  <span className="ml-1">Cold Call</span>
+                                </Button>
+                              )}
+                            </div>
+                          </td>
                         </tr>
                         {r.__open && b && (
                           <tr className="bg-muted/20 border-t">
-                            <td colSpan={6} className="px-3 py-3 space-y-2">
+                            <td colSpan={8} className="px-3 py-3 space-y-2">
                               <div className="grid md:grid-cols-2 gap-3">
                                 <Field k="Resumo da empresa" v={b.empresa_resumo} />
                                 <Field k="Site" v={b.site_resumo} />

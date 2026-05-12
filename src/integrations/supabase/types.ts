@@ -6578,6 +6578,11 @@ export type Database = {
           empresa_nome: string | null
           error_message: string | null
           id: string
+          imported_to_coldcall_at: string | null
+          lead_id: string | null
+          outcome: string | null
+          outcome_at: string | null
+          outcome_notes: string | null
           raw_row: Json
           row_key: string
           site: string | null
@@ -6595,6 +6600,11 @@ export type Database = {
           empresa_nome?: string | null
           error_message?: string | null
           id?: string
+          imported_to_coldcall_at?: string | null
+          lead_id?: string | null
+          outcome?: string | null
+          outcome_at?: string | null
+          outcome_notes?: string | null
           raw_row?: Json
           row_key: string
           site?: string | null
@@ -6612,6 +6622,11 @@ export type Database = {
           empresa_nome?: string | null
           error_message?: string | null
           id?: string
+          imported_to_coldcall_at?: string | null
+          lead_id?: string | null
+          outcome?: string | null
+          outcome_at?: string | null
+          outcome_notes?: string | null
           raw_row?: Json
           row_key?: string
           site?: string | null
@@ -6620,7 +6635,15 @@ export type Database = {
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "pre_sdr_analyses_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       prescriptive_diagnosis_log: {
         Row: {
