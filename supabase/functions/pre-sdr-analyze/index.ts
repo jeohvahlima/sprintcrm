@@ -1,5 +1,5 @@
 // Pre-SDR: enriquece um contato (empresa) para prospecção cold call.
-// Usa Lovable AI Gateway (gemini-2.5-flash) com tool calling estruturado e busca na web (google_search_retrieval) quando disponível.
+// Usa Lovable AI com tool calling estruturado e fallback local para não perder contatos em lote.
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -58,20 +58,63 @@ function fmtPhone(v: any): string {
   return s;
 }
 
+function firstDecisionMaker(value: any): string {
+  const text = String(value || "").trim();
+  if (!text) return "a confirmar";
+  return text.split(/[,;|\n•]+/).map((p) => p.trim()).filter(Boolean)[0] || "a confirmar";
+}
+
+function fallbackBrief(empresa: any, produtos: any[] | undefined, motivo: string) {
+  const nome = empresa.fantasia || empresa.razao || "empresa";
+  const decisor = firstDecisionMaker(empresa.socios);
+  const hasSite = Boolean(empresa.site);
+  const hasSocios = decisor !== "a confirmar";
+  const hasPhone = Boolean(empresa.telefone);
+  const fit_score = Math.min(82, 42 + (hasSite ? 12 : 0) + (hasSocios ? 16 : 0) + (hasPhone ? 10 : 0) + (empresa.email ? 6 : 0));
+  const oferta = Array.isArray(produtos) && produtos.length
+    ? `Iniciar pela oferta ${produtos[0]?.nome || produtos[0]?.name || "principal"}, validando aderência na ligação.`
+    : "Diagnóstico de estruturação comercial e implantação do sistema, validando maturidade e volume de prospecção.";
+  return {
+    empresa_resumo: `${nome} deve ser tratado como prospect B2B; confirme segmento, porte e momento comercial na abertura.`,
+    site_resumo: hasSite ? `Site informado: ${empresa.site}. Confirmar posicionamento e serviços antes da abordagem.` : "Site não informado; confirmar presença digital e canais de aquisição na ligação.",
+    porte_estimado: "a confirmar",
+    decisor_provavel: decisor,
+    cargo_decisor: hasSocios ? "sócio / diretor provável" : "a confirmar",
+    outros_decisores: [],
+    gatekeeper_esperado: "recepção, atendimento ou administrativo",
+    melhor_horario_ligar: "09h às 11h ou 14h às 17h",
+    gancho_abertura: `Olá, falo com ${decisor}? Vi a ${nome} e queria entender rapidamente como vocês estruturam hoje a captação e atendimento comercial de novos clientes.`,
+    perguntas_qualificacao: [
+      "Hoje vocês têm alguém dedicado à prospecção ou o atendimento fica com o time comercial/administrativo?",
+      "Quais canais geram mais oportunidades: indicação, tráfego, WhatsApp, ligação ou redes sociais?",
+      "Existe algum processo ou sistema para acompanhar contatos, retornos e propostas?",
+      "Qual seria o principal gargalo comercial hoje: gerar leads, atender rápido, acompanhar propostas ou fechar?",
+    ],
+    dores_provaveis: ["perda de oportunidades por falta de follow-up", "baixa previsibilidade comercial", "atendimento descentralizado em telefone/WhatsApp"],
+    objecoes_provaveis: ["já temos indicações suficientes", "não é prioridade agora", "já usamos planilha ou sistema simples"],
+    oferta_recomendada: oferta,
+    fit_score,
+    prioridade: fit_score >= 70 ? "alta" : fit_score >= 55 ? "média" : "baixa",
+    risco_descarte: hasPhone ? [] : ["telefone não informado na lista"],
+    observacoes: `Gerado com fallback seguro porque a IA não retornou resposta completa (${motivo}). Não inventar dados; validar decisor e contexto na primeira ligação.`,
+  };
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
   try {
-    const apiKey = Deno.env.get("LOVABLE_API_KEY");
-    if (!apiKey) {
-      return new Response(JSON.stringify({ error: "LOVABLE_API_KEY ausente" }), {
-        status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
     const body = await req.json().catch(() => ({}));
     const { empresa, icp, segmento_vendedor, produtos } = body || {};
     if (!empresa || typeof empresa !== "object") {
       return new Response(JSON.stringify({ error: "empresa obrigatória" }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const apiKey = Deno.env.get("LOVABLE_API_KEY");
+    if (!apiKey) {
+      return new Response(JSON.stringify({ brief: fallbackBrief(empresa, produtos, "LOVABLE_API_KEY ausente"), fallback: true }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
@@ -109,7 +152,8 @@ Deno.serve(async (req) => {
         method: "POST",
         headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
         body: JSON.stringify({
-          model: "google/gemini-2.5-flash",
+          model: "google/gemini-3-flash-preview",
+          temperature: 0.2,
           messages: [
             { role: "system", content: SYSTEM },
             { role: "user", content: ctx.join("\n") },
@@ -122,8 +166,8 @@ Deno.serve(async (req) => {
       lastErrText = await resp.text().catch(() => "");
       // 402 = sem créditos; não adianta tentar de novo
       if (resp.status === 402) {
-        return new Response(JSON.stringify({ error: "Sem créditos no Lovable AI. Adicione créditos em Settings → Workspace → Usage." }), {
-          status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        return new Response(JSON.stringify({ brief: fallbackBrief(empresa, produtos, "sem créditos no Lovable AI"), fallback: true, warning: "Sem créditos no Lovable AI; gerado briefing básico para não perder o contato." }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
       // 429 ou 5xx → espera e tenta de novo
@@ -140,25 +184,24 @@ Deno.serve(async (req) => {
     }
 
     if (!resp || !resp.ok) {
-      const status = resp?.status === 429 ? 429 : 500;
-      return new Response(JSON.stringify({ error: `AI Gateway ${resp?.status ?? "?"} após ${maxAttempts} tentativas: ${lastErrText.slice(0, 200)}` }), {
-        status, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      return new Response(JSON.stringify({ brief: fallbackBrief(empresa, produtos, `AI Gateway ${resp?.status ?? "?"}`), fallback: true, warning: `IA instável após ${maxAttempts} tentativas; gerado briefing básico.` }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
     const data = await resp.json();
     const call = data.choices?.[0]?.message?.tool_calls?.[0];
     if (!call) {
-      return new Response(JSON.stringify({ error: "Sem tool_call na resposta" }), {
-        status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      return new Response(JSON.stringify({ brief: fallbackBrief(empresa, produtos, "resposta sem estrutura"), fallback: true }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
     let brief: any;
     try {
       brief = JSON.parse(call.function.arguments);
     } catch (e) {
-      return new Response(JSON.stringify({ error: "Resposta da IA inválida (JSON malformado)" }), {
-        status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      return new Response(JSON.stringify({ brief: fallbackBrief(empresa, produtos, "JSON malformado"), fallback: true }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
     return new Response(JSON.stringify({ brief }), {

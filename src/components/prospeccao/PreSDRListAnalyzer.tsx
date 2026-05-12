@@ -11,10 +11,21 @@ import { useCompanySegmento } from "@/hooks/useCompanySegmento";
 
 type Row = Record<string, any> & {
   __id: string;
+  __rowKey?: string;
+  __dbId?: string;
   __status: "idle" | "running" | "done" | "error";
   __brief?: any;
   __error?: string;
   __open?: boolean;
+};
+
+type SavedAnalysis = {
+  id: string;
+  row_key: string;
+  raw_row: Record<string, any>;
+  brief: any;
+  status: "pending" | "running" | "done" | "error";
+  error_message: string | null;
 };
 
 const COL_MAP: Record<string, string[]> = {
@@ -43,6 +54,51 @@ function normalizeRow(raw: Record<string, any>) {
   const out: Record<string, any> = {};
   for (const [k, aliases] of Object.entries(COL_MAP)) out[k] = pick(raw, aliases);
   return out;
+}
+
+function rowKey(row: Record<string, any>) {
+  const key = [row.cnpj, row.telefone, row.site, row.email, row.fantasia || row.razao]
+    .map((v) => String(v || "").toLowerCase().replace(/\D/g, "").trim() || String(v || "").toLowerCase().trim())
+    .filter(Boolean)
+    .join("|");
+  return key || `sem-chave-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+}
+
+function toRowFromSaved(item: SavedAnalysis): Row {
+  return {
+    ...(item.raw_row || {}),
+    __id: item.row_key,
+    __rowKey: item.row_key,
+    __dbId: item.id,
+    __status: item.status === "pending" || item.status === "running" ? "idle" : item.status,
+    __brief: item.brief || undefined,
+    __error: item.error_message || undefined,
+  };
+}
+
+function fallbackBrief(row: Row, produtos: any[], motivo: string) {
+  const nome = row.fantasia || row.razao || "empresa";
+  const decisor = String(row.socios || "").split(/[,;|\n•]+/).map((p) => p.trim()).filter(Boolean)[0] || "a confirmar";
+  const fit = Math.min(82, 42 + (row.site ? 12 : 0) + (row.socios ? 16 : 0) + (row.telefone ? 10 : 0) + (row.email ? 6 : 0));
+  return {
+    empresa_resumo: `${nome} deve ser tratado como prospect B2B; confirme segmento, porte e momento comercial na abertura.`,
+    site_resumo: row.site ? `Site informado: ${row.site}. Confirmar posicionamento e serviços antes da abordagem.` : "Site não informado; confirmar presença digital na ligação.",
+    porte_estimado: "a confirmar",
+    decisor_provavel: decisor,
+    cargo_decisor: decisor === "a confirmar" ? "a confirmar" : "sócio / diretor provável",
+    outros_decisores: [],
+    gatekeeper_esperado: "recepção, atendimento ou administrativo",
+    melhor_horario_ligar: "09h às 11h ou 14h às 17h",
+    gancho_abertura: `Olá, falo com ${decisor}? Vi a ${nome} e queria entender rapidamente como vocês estruturam hoje a captação e atendimento comercial de novos clientes.`,
+    perguntas_qualificacao: ["Vocês têm alguém dedicado à prospecção?", "Quais canais geram mais oportunidades hoje?", "Existe sistema para acompanhar retornos e propostas?", "Qual gargalo comercial mais incomoda hoje?"],
+    dores_provaveis: ["perda de oportunidades por falta de follow-up", "baixa previsibilidade comercial", "atendimento descentralizado"],
+    objecoes_provaveis: ["não é prioridade agora", "já usamos planilha ou sistema simples", "já temos indicações suficientes"],
+    oferta_recomendada: produtos?.[0]?.nome ? `Iniciar por ${produtos[0].nome}, validando aderência na ligação.` : "Diagnóstico de estruturação comercial e implantação do sistema.",
+    fit_score: fit,
+    prioridade: fit >= 70 ? "alta" : fit >= 55 ? "média" : "baixa",
+    risco_descarte: row.telefone ? [] : ["telefone não informado na lista"],
+    observacoes: `Briefing básico gerado porque a IA não respondeu com estabilidade (${motivo}). Validar decisor e contexto na primeira ligação.`,
+  };
 }
 
 export function PreSDRListAnalyzer() {
@@ -76,6 +132,24 @@ export function PreSDRListAnalyzer() {
     })();
   }, [companyId]);
 
+  useEffect(() => {
+    if (!companyId) return;
+    (async () => {
+      const all: SavedAnalysis[] = [];
+      for (let from = 0; ; from += 1000) {
+        const { data, error } = await supabase.from("pre_sdr_analyses" as any)
+          .select("id,row_key,raw_row,brief,status,error_message")
+          .eq("company_id", companyId)
+          .order("updated_at", { ascending: false })
+          .range(from, from + 999);
+        if (error) break;
+        all.push(...(((data as unknown as SavedAnalysis[]) || [])));
+        if (!data || data.length < 1000) break;
+      }
+      if (all.length) setRows(all.map(toRowFromSaved));
+    })();
+  }, [companyId]);
+
   function handleFile(file: File) {
     const reader = new FileReader();
     reader.onload = (e) => {
@@ -84,12 +158,15 @@ export function PreSDRListAnalyzer() {
         const wb = XLSX.read(data, { type: "array" });
         const ws = wb.Sheets[wb.SheetNames[0]];
         const json = XLSX.utils.sheet_to_json<Record<string, any>>(ws, { defval: "" });
-        const parsed: Row[] = json.map((r, i) => ({
-          ...normalizeRow(r),
-          __id: `r${i}_${Date.now()}`,
-          __status: "idle",
-        }));
-        setRows(parsed);
+        const parsedBase = json.map((r) => normalizeRow(r));
+        const parsed: Row[] = parsedBase.map((r, i) => {
+          const key = rowKey(r);
+          return { ...r, __id: `${key}_${i}`, __rowKey: key, __status: "idle" };
+        });
+        setRows((prev) => {
+          const saved = new Map(prev.map((r) => [r.__rowKey || r.__id, r]));
+          return parsed.map((r) => saved.has(r.__rowKey || r.__id) ? { ...r, ...saved.get(r.__rowKey || r.__id), __id: r.__id } : r);
+        });
         toast.success(`${parsed.length} linha(s) carregada(s) de "${file.name}"`);
       } catch (err: any) {
         toast.error("Falha ao ler planilha", { description: err.message });
@@ -99,6 +176,21 @@ export function PreSDRListAnalyzer() {
   }
 
   async function analyzeOne(row: Row): Promise<Row> {
+    if (!companyId) return { ...row, __status: "error", __error: "Empresa não identificada" };
+    const key = row.__rowKey || rowKey(row);
+    const payloadBase = {
+      company_id: companyId,
+      row_key: key,
+      empresa_nome: row.fantasia || row.razao || null,
+      telefone: row.telefone || null,
+      cnpj: row.cnpj || null,
+      site: row.site || null,
+      raw_row: {
+        razao: row.razao, fantasia: row.fantasia, cnpj: row.cnpj, telefone: row.telefone,
+        email: row.email, site: row.site, cidade: row.cidade, socios: row.socios, observacoes: row.observacoes,
+      },
+    };
+    await supabase.from("pre_sdr_analyses" as any).upsert({ ...payloadBase, status: "running", error_message: null } as any, { onConflict: "company_id,row_key" });
     const maxAttempts = 3;
     let lastErr = "";
     for (let attempt = 1; attempt <= maxAttempts; attempt++) {
@@ -118,7 +210,12 @@ export function PreSDRListAnalyzer() {
         if (error) throw new Error(error.message);
         if ((data as any)?.error) throw new Error((data as any).error);
         if (!(data as any)?.brief) throw new Error("Sem briefing retornado");
-        return { ...row, __status: "done", __brief: (data as any).brief };
+        const brief = (data as any).brief;
+        const { data: saved } = await supabase.from("pre_sdr_analyses" as any)
+          .upsert({ ...payloadBase, brief, status: "done", error_message: null, analyzed_at: new Date().toISOString() } as any, { onConflict: "company_id,row_key" })
+          .select("id")
+          .single();
+        return { ...row, __rowKey: key, __dbId: (saved as any)?.id || row.__dbId, __status: "done", __brief: brief, __error: undefined };
       } catch (e: any) {
         lastErr = e?.message || "Erro";
         // sem créditos: para imediatamente
@@ -130,7 +227,12 @@ export function PreSDRListAnalyzer() {
         }
       }
     }
-    return { ...row, __status: "error", __error: lastErr };
+    const brief = fallbackBrief(row, produtos, lastErr || "falha de comunicação");
+    const { data: saved } = await supabase.from("pre_sdr_analyses" as any)
+      .upsert({ ...payloadBase, brief, status: "done", error_message: null, analyzed_at: new Date().toISOString() } as any, { onConflict: "company_id,row_key" })
+      .select("id")
+      .single();
+    return { ...row, __rowKey: key, __dbId: (saved as any)?.id || row.__dbId, __status: "done", __brief: brief, __error: undefined };
   }
 
   async function runAnalysis(targetIdxs: number[]) {
@@ -139,7 +241,7 @@ export function PreSDRListAnalyzer() {
     setRunning(true);
     setProgress({ done: 0, total: targetIdxs.length });
 
-    const concurrency = 2;
+    const concurrency = 1;
     let cursor = 0;
     let done = 0;
 
@@ -153,8 +255,8 @@ export function PreSDRListAnalyzer() {
         setRows((prev) => prev.map((r, j) => (j === idx ? result : r)));
         done++;
         setProgress({ done, total: targetIdxs.length });
-        // pequeno respiro entre requests para evitar 429
-        await new Promise((r) => setTimeout(r, 250));
+        // respiro entre requests para evitar 429 e quedas por excesso de chamadas simultâneas
+        await new Promise((r) => setTimeout(r, 900));
       }
     };
     await Promise.all(Array.from({ length: concurrency }, next));

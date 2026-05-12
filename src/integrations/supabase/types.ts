@@ -6568,6 +6568,60 @@ export type Database = {
         }
         Relationships: []
       }
+      pre_sdr_analyses: {
+        Row: {
+          analyzed_at: string | null
+          brief: Json | null
+          cnpj: string | null
+          company_id: string
+          created_at: string
+          empresa_nome: string | null
+          error_message: string | null
+          id: string
+          raw_row: Json
+          row_key: string
+          site: string | null
+          status: string
+          telefone: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          analyzed_at?: string | null
+          brief?: Json | null
+          cnpj?: string | null
+          company_id: string
+          created_at?: string
+          empresa_nome?: string | null
+          error_message?: string | null
+          id?: string
+          raw_row?: Json
+          row_key: string
+          site?: string | null
+          status?: string
+          telefone?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Update: {
+          analyzed_at?: string | null
+          brief?: Json | null
+          cnpj?: string | null
+          company_id?: string
+          created_at?: string
+          empresa_nome?: string | null
+          error_message?: string | null
+          id?: string
+          raw_row?: Json
+          row_key?: string
+          site?: string | null
+          status?: string
+          telefone?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       prescriptive_diagnosis_log: {
         Row: {
           acoes: Json
