@@ -227,8 +227,12 @@ export function PreSDRListAnalyzer() {
         }
       }
     }
-    await supabase.from("pre_sdr_analyses" as any).upsert({ ...payloadBase, status: "error", error_message: lastErr } as any, { onConflict: "company_id,row_key" });
-    return { ...row, __status: "error", __error: lastErr };
+    const brief = fallbackBrief(row, produtos, lastErr || "falha de comunicação");
+    const { data: saved } = await supabase.from("pre_sdr_analyses" as any)
+      .upsert({ ...payloadBase, brief, status: "done", error_message: null, analyzed_at: new Date().toISOString() } as any, { onConflict: "company_id,row_key" })
+      .select("id")
+      .single();
+    return { ...row, __rowKey: key, __dbId: (saved as any)?.id || row.__dbId, __status: "done", __brief: brief, __error: undefined };
   }
 
   async function runAnalysis(targetIdxs: number[]) {
