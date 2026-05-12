@@ -11,6 +11,7 @@ import { useCompanySegmento } from "@/hooks/useCompanySegmento";
 
 type Row = Record<string, any> & {
   __id: string;
+  __rowKey?: string;
   __dbId?: string;
   __status: "idle" | "running" | "done" | "error";
   __brief?: any;
@@ -67,6 +68,7 @@ function toRowFromSaved(item: SavedAnalysis): Row {
   return {
     ...(item.raw_row || {}),
     __id: item.row_key,
+    __rowKey: item.row_key,
     __dbId: item.id,
     __status: item.status === "pending" || item.status === "running" ? "idle" : item.status,
     __brief: item.brief || undefined,
@@ -132,10 +134,13 @@ export function PreSDRListAnalyzer() {
         const ws = wb.Sheets[wb.SheetNames[0]];
         const json = XLSX.utils.sheet_to_json<Record<string, any>>(ws, { defval: "" });
         const parsedBase = json.map((r) => normalizeRow(r));
-        const parsed: Row[] = parsedBase.map((r) => ({ ...r, __id: rowKey(r), __status: "idle" }));
+        const parsed: Row[] = parsedBase.map((r, i) => {
+          const key = rowKey(r);
+          return { ...r, __id: `${key}_${i}`, __rowKey: key, __status: "idle" };
+        });
         setRows((prev) => {
-          const saved = new Map(prev.map((r) => [r.__id, r]));
-          return parsed.map((r) => saved.has(r.__id) ? { ...r, ...saved.get(r.__id), __id: r.__id } : r);
+          const saved = new Map(prev.map((r) => [r.__rowKey || r.__id, r]));
+          return parsed.map((r) => saved.has(r.__rowKey || r.__id) ? { ...r, ...saved.get(r.__rowKey || r.__id), __id: r.__id } : r);
         });
         toast.success(`${parsed.length} linha(s) carregada(s) de "${file.name}"`);
       } catch (err: any) {
