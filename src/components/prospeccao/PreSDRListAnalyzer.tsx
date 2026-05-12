@@ -134,6 +134,8 @@ export function PreSDRListAnalyzer() {
   const { segmento, companyId } = useCompanySegmento();
   const fileRef = useRef<HTMLInputElement>(null);
   const cancelRef = useRef(false);
+  const [outcomeFilter, setOutcomeFilter] = useState<"all" | Outcome>("all");
+  const [importingId, setImportingId] = useState<string | null>(null);
 
   // carrega ICP IA salvo + produtos
   useEffect(() => {
