@@ -468,12 +468,44 @@ export function PreSDRListAnalyzer() {
                   <Download className="h-4 w-4" /> Exportar CSV
                 </Button>
               )}
+              <Button size="sm" variant="outline" onClick={importSelectedToColdCall} className="gap-1 border-emerald-300 text-emerald-700 hover:bg-emerald-50">
+                <PhoneCall className="h-4 w-4" /> Enviar visíveis para Cold Call
+              </Button>
+              {importedCount > 0 && (
+                <Badge variant="outline" className="text-emerald-700 border-emerald-300">{importedCount} no Cold Call</Badge>
+              )}
               <Button size="sm" variant="ghost" onClick={() => setRows([])} className="gap-1">
                 <Trash2 className="h-4 w-4" /> Limpar
               </Button>
             </>
           )}
         </div>
+
+        {total > 0 && (
+          <div className="flex flex-wrap items-center gap-1.5 text-[11px]">
+            <span className="text-muted-foreground flex items-center gap-1"><Filter className="h-3 w-3" /> Filtrar:</span>
+            <button
+              onClick={() => setOutcomeFilter("all")}
+              className={`px-2 py-0.5 rounded-full border ${outcomeFilter === "all" ? "bg-primary text-primary-foreground border-primary" : "border-border hover:bg-muted"}`}
+            >
+              Todos ({total})
+            </button>
+            {OUTCOME_ORDER.map((o) => {
+              const meta = OUTCOME_META[o];
+              const count = outcomeCounts[o] || 0;
+              if (count === 0 && o !== "pendente") return null;
+              return (
+                <button
+                  key={o}
+                  onClick={() => setOutcomeFilter(o)}
+                  className={`px-2 py-0.5 rounded-full border ${outcomeFilter === o ? "bg-primary text-primary-foreground border-primary" : `border-border hover:bg-muted ${meta.className}`}`}
+                >
+                  {meta.label} ({count})
+                </button>
+              );
+            })}
+          </div>
+        )}
 
         {running && (
           <div className="space-y-1">
