@@ -11,10 +11,20 @@ import { useCompanySegmento } from "@/hooks/useCompanySegmento";
 
 type Row = Record<string, any> & {
   __id: string;
+  __dbId?: string;
   __status: "idle" | "running" | "done" | "error";
   __brief?: any;
   __error?: string;
   __open?: boolean;
+};
+
+type SavedAnalysis = {
+  id: string;
+  row_key: string;
+  raw_row: Record<string, any>;
+  brief: any;
+  status: "pending" | "running" | "done" | "error";
+  error_message: string | null;
 };
 
 const COL_MAP: Record<string, string[]> = {
@@ -43,6 +53,25 @@ function normalizeRow(raw: Record<string, any>) {
   const out: Record<string, any> = {};
   for (const [k, aliases] of Object.entries(COL_MAP)) out[k] = pick(raw, aliases);
   return out;
+}
+
+function rowKey(row: Record<string, any>) {
+  const key = [row.cnpj, row.telefone, row.site, row.email, row.fantasia || row.razao]
+    .map((v) => String(v || "").toLowerCase().replace(/\D/g, "").trim() || String(v || "").toLowerCase().trim())
+    .filter(Boolean)
+    .join("|");
+  return key || `sem-chave-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+}
+
+function toRowFromSaved(item: SavedAnalysis): Row {
+  return {
+    ...(item.raw_row || {}),
+    __id: item.row_key,
+    __dbId: item.id,
+    __status: item.status === "pending" || item.status === "running" ? "idle" : item.status,
+    __brief: item.brief || undefined,
+    __error: item.error_message || undefined,
+  };
 }
 
 export function PreSDRListAnalyzer() {
