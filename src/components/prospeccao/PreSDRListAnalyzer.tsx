@@ -315,7 +315,7 @@ export function PreSDRListAnalyzer() {
                             </td>
                           </tr>
                         )}
-                      </>
+                      </Fragment>
                     );
                   })}
                 </tbody>
