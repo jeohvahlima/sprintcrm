@@ -707,6 +707,42 @@ export function PreSDRListAnalyzer() {
           </div>
         )}
       </CardContent>
+
+      <Dialog open={waOpen} onOpenChange={setWaOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <MessageCircle className="h-5 w-5 text-emerald-600" />
+              Enviar mensagem no WhatsApp
+            </DialogTitle>
+            <DialogDescription>
+              {waRow ? (
+                <span>
+                  Para <strong>{waRow.fantasia || waRow.razao || "—"}</strong> · {waRow.telefone || "—"}
+                  {waRow.__brief?.decisor_provavel && <> · Decisor: <strong>{waRow.__brief.decisor_provavel}</strong></>}
+                </span>
+              ) : null}
+            </DialogDescription>
+          </DialogHeader>
+          <Textarea
+            value={waMessage}
+            onChange={(e) => setWaMessage(e.target.value)}
+            rows={8}
+            className="text-sm"
+            placeholder="Digite a mensagem..."
+          />
+          <DialogFooter className="gap-2 sm:gap-2">
+            <Button variant="outline" onClick={() => setWaOpen(false)}>Cancelar</Button>
+            <Button variant="outline" onClick={() => sendWhatsApp(false)} className="gap-1">
+              <ExternalLink className="h-4 w-4" /> Abrir WhatsApp Web
+            </Button>
+            <Button onClick={() => sendWhatsApp(true)} disabled={waSending} className="gap-1 bg-emerald-600 hover:bg-emerald-700">
+              {waSending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+              Enviar pelo CRM
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 }
