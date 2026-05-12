@@ -1,5 +1,5 @@
 // Pre-SDR: enriquece um contato (empresa) para prospecção cold call.
-// Usa Lovable AI Gateway (gemini-2.5-flash) com tool calling estruturado e busca na web (google_search_retrieval) quando disponível.
+// Usa Lovable AI com tool calling estruturado e fallback local para não perder contatos em lote.
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -56,6 +56,48 @@ function fmtPhone(v: any): string {
     return `(${ddd}) ${a}-${b}`;
   }
   return s;
+}
+
+function firstDecisionMaker(value: any): string {
+  const text = String(value || "").trim();
+  if (!text) return "a confirmar";
+  return text.split(/[,;|\n•]+/).map((p) => p.trim()).filter(Boolean)[0] || "a confirmar";
+}
+
+function fallbackBrief(empresa: any, produtos: any[] | undefined, motivo: string) {
+  const nome = empresa.fantasia || empresa.razao || "empresa";
+  const decisor = firstDecisionMaker(empresa.socios);
+  const hasSite = Boolean(empresa.site);
+  const hasSocios = decisor !== "a confirmar";
+  const hasPhone = Boolean(empresa.telefone);
+  const fit_score = Math.min(82, 42 + (hasSite ? 12 : 0) + (hasSocios ? 16 : 0) + (hasPhone ? 10 : 0) + (empresa.email ? 6 : 0));
+  const oferta = Array.isArray(produtos) && produtos.length
+    ? `Iniciar pela oferta ${produtos[0]?.nome || produtos[0]?.name || "principal"}, validando aderência na ligação.`
+    : "Diagnóstico de estruturação comercial e implantação do sistema, validando maturidade e volume de prospecção.";
+  return {
+    empresa_resumo: `${nome} deve ser tratado como prospect B2B; confirme segmento, porte e momento comercial na abertura.`,
+    site_resumo: hasSite ? `Site informado: ${empresa.site}. Confirmar posicionamento e serviços antes da abordagem.` : "Site não informado; confirmar presença digital e canais de aquisição na ligação.",
+    porte_estimado: "a confirmar",
+    decisor_provavel: decisor,
+    cargo_decisor: hasSocios ? "sócio / diretor provável" : "a confirmar",
+    outros_decisores: [],
+    gatekeeper_esperado: "recepção, atendimento ou administrativo",
+    melhor_horario_ligar: "09h às 11h ou 14h às 17h",
+    gancho_abertura: `Olá, falo com ${decisor}? Vi a ${nome} e queria entender rapidamente como vocês estruturam hoje a captação e atendimento comercial de novos clientes.`,
+    perguntas_qualificacao: [
+      "Hoje vocês têm alguém dedicado à prospecção ou o atendimento fica com o time comercial/administrativo?",
+      "Quais canais geram mais oportunidades: indicação, tráfego, WhatsApp, ligação ou redes sociais?",
+      "Existe algum processo ou sistema para acompanhar contatos, retornos e propostas?",
+      "Qual seria o principal gargalo comercial hoje: gerar leads, atender rápido, acompanhar propostas ou fechar?",
+    ],
+    dores_provaveis: ["perda de oportunidades por falta de follow-up", "baixa previsibilidade comercial", "atendimento descentralizado em telefone/WhatsApp"],
+    objecoes_provaveis: ["já temos indicações suficientes", "não é prioridade agora", "já usamos planilha ou sistema simples"],
+    oferta_recomendada: oferta,
+    fit_score,
+    prioridade: fit_score >= 70 ? "alta" : fit_score >= 55 ? "média" : "baixa",
+    risco_descarte: hasPhone ? [] : ["telefone não informado na lista"],
+    observacoes: `Gerado com fallback seguro porque a IA não retornou resposta completa (${motivo}). Não inventar dados; validar decisor e contexto na primeira ligação.`,
+  };
 }
 
 Deno.serve(async (req) => {
