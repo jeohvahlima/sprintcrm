@@ -162,7 +162,7 @@ export function PreSDRListAnalyzer() {
       const all: SavedAnalysis[] = [];
       for (let from = 0; ; from += 1000) {
         const { data, error } = await supabase.from("pre_sdr_analyses" as any)
-          .select("id,row_key,raw_row,brief,status,error_message")
+          .select("id,row_key,raw_row,brief,status,error_message,outcome,lead_id,imported_to_coldcall_at")
           .eq("company_id", companyId)
           .order("updated_at", { ascending: false })
           .range(from, from + 999);
