@@ -12,8 +12,9 @@ import {
   ClipboardCheck, ChevronLeft, ChevronRight, Sparkles, Loader2, Trophy,
   AlertTriangle, RotateCcw, Target, TrendingUp, Heart, Users, BarChart3,
   Flame, Lightbulb, ShieldCheck, ShieldAlert, CheckCircle2, Circle, Clock,
-  Zap, DollarSign, Calendar, Map, Settings,
+  Zap, DollarSign, Calendar, Map, Settings, Download,
 } from "lucide-react";
+import jsPDF from "jspdf";
 import {
   useAlavancas, usePerguntas, usePerguntasSegmento, useUltimoDiagnostico,
   useSalvarDiagnostico, useGargalos, useUpdateGargaloStatus, useGerarRoadmapDiagnostico,
@@ -973,9 +974,15 @@ function ResultadoDiagnostico({
         );
       })()}
 
-      <div className="flex gap-2">
+      <div className="flex flex-wrap gap-2">
         <Button variant="outline" onClick={onRefazer} className="gap-2">
           <RotateCcw className="h-4 w-4" /> Refazer diagnóstico
+        </Button>
+        <Button
+          onClick={() => gerarPDFDiagnostico(result, alavancas, gargalos || [])}
+          className="gap-2"
+        >
+          <Download className="h-4 w-4" /> Baixar PDF do diagnóstico
         </Button>
       </div>
     </div>
@@ -1321,4 +1328,129 @@ function RevenueLeakCard({ result }: { result: any }) {
       </CardContent>
     </Card>
   );
+}
+
+// ============================================================
+// 📄 GERADOR DE PDF DO DIAGNÓSTICO
+// ============================================================
+function gerarPDFDiagnostico(result: any, alavancas: any[], gargalos: any[]) {
+  const doc = new jsPDF({ unit: "pt", format: "a4" });
+  const pageW = doc.internal.pageSize.getWidth();
+  const pageH = doc.internal.pageSize.getHeight();
+  const margin = 40;
+  let y = margin;
+
+  const ensureSpace = (need: number) => {
+    if (y + need > pageH - margin) {
+      doc.addPage();
+      y = margin;
+    }
+  };
+
+  const writeLine = (text: string, size = 10, bold = false, color: [number, number, number] = [30, 30, 30]) => {
+    doc.setFont("helvetica", bold ? "bold" : "normal");
+    doc.setFontSize(size);
+    doc.setTextColor(...color);
+    const lines = doc.splitTextToSize(text, pageW - margin * 2);
+    lines.forEach((ln: string) => {
+      ensureSpace(size + 4);
+      doc.text(ln, margin, y);
+      y += size + 4;
+    });
+  };
+
+  const section = (title: string) => {
+    y += 8;
+    ensureSpace(28);
+    doc.setFillColor(34, 197, 94);
+    doc.rect(margin, y - 2, pageW - margin * 2, 22, "F");
+    doc.setTextColor(255, 255, 255);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(12);
+    doc.text(title, margin + 8, y + 13);
+    y += 30;
+  };
+
+  const c = CLASSIFICACOES[result.nota as keyof typeof CLASSIFICACOES];
+
+  // Cabeçalho
+  doc.setFillColor(15, 41, 25);
+  doc.rect(0, 0, pageW, 80, "F");
+  doc.setTextColor(255, 255, 255);
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(20);
+  doc.text("Diagnóstico Comercial 360°", margin, 38);
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(10);
+  doc.text(
+    `Gerado em ${format(new Date(), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}`,
+    margin,
+    58
+  );
+  y = 100;
+
+  // Score
+  section("Resultado Geral");
+  writeLine(`Nota: ${result.nota}  —  ${c?.titulo || ""}`, 14, true);
+  writeLine(`Score: ${result.total_score}/${(alavancas.length || 0) * 10}  (${result.percentual}%)`, 11);
+  if (c?.cenario) writeLine(`Cenário: ${c.cenario}`, 10);
+  if (c?.recomendacao) writeLine(`Recomendação: ${c.recomendacao}`, 10);
+
+  // Meta
+  if (result.faturamento_atual || result.meta_faturamento) {
+    section("Faturamento e Meta");
+    if (result.faturamento_atual)
+      writeLine(`Faturamento atual: R$ ${Number(result.faturamento_atual).toLocaleString("pt-BR")}`);
+    if (result.meta_faturamento)
+      writeLine(`Meta: R$ ${Number(result.meta_faturamento).toLocaleString("pt-BR")}`);
+    if (result.faturamento_atual && result.meta_faturamento) {
+      const gap = Number(result.meta_faturamento) - Number(result.faturamento_atual);
+      writeLine(`GAP em ${result.prazo_meta_meses || 6} meses: R$ ${gap.toLocaleString("pt-BR")}`, 10, true);
+    }
+  }
+
+  // Dores e desejos
+  if (result.principal_dor || result.principal_desejo || result.o_que_travou) {
+    section("Dores, Desejos e Bloqueios");
+    if (result.principal_dor) writeLine(`Principal dor: ${result.principal_dor}`);
+    if (result.principal_desejo) writeLine(`Principal desejo: ${result.principal_desejo}`);
+    if (result.o_que_travou) writeLine(`O que travou: ${result.o_que_travou}`);
+  }
+
+  // SWOT
+  if (result.swot_forcas || result.swot_fraquezas || result.swot_oportunidades || result.swot_ameacas) {
+    section("Análise SWOT");
+    if (result.swot_forcas) writeLine(`Forças: ${result.swot_forcas}`);
+    if (result.swot_fraquezas) writeLine(`Fraquezas: ${result.swot_fraquezas}`);
+    if (result.swot_oportunidades) writeLine(`Oportunidades: ${result.swot_oportunidades}`);
+    if (result.swot_ameacas) writeLine(`Ameaças: ${result.swot_ameacas}`);
+  }
+
+  // Alavancas
+  section("Pontuação por Alavanca");
+  alavancas.forEach((a) => {
+    const score = result.pontuacoes?.[a.id] || 0;
+    writeLine(`• ${a.nome}: ${score}/10`, 10, score < 5);
+  });
+
+  // Gargalos
+  if (gargalos.length > 0) {
+    section("Gargalos Detectados");
+    gargalos.forEach((g, i) => {
+      const status = g.status === "corrigido" ? "✓ Corrigido" : "○ Pendente";
+      writeLine(`${i + 1}. [${status}] ${g.titulo || g.descricao || ""}`, 10, true);
+      if (g.descricao && g.titulo) writeLine(`   ${g.descricao}`, 9, false, [80, 80, 80]);
+    });
+  }
+
+  // Rodapé com paginação
+  const totalPages = doc.getNumberOfPages();
+  for (let i = 1; i <= totalPages; i++) {
+    doc.setPage(i);
+    doc.setFontSize(8);
+    doc.setTextColor(120, 120, 120);
+    doc.text(`Página ${i} de ${totalPages}`, pageW - margin, pageH - 20, { align: "right" });
+  }
+
+  doc.save(`diagnostico-comercial-${format(new Date(), "yyyy-MM-dd")}.pdf`);
 }
