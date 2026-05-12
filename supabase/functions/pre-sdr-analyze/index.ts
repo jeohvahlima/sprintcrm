@@ -100,27 +100,52 @@ Deno.serve(async (req) => {
     }
     ctx.push("\nGere o briefing estruturado para abrir uma cold call assertiva agora. Identifique o sócio mais provável como decisor (geralmente o primeiro listado ou o que tem cargo de direção). Para clínicas/consultórios médicos, o decisor costuma ser o médico-titular; o gatekeeper é a recepção.");
 
-    const resp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
-      body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
-        messages: [
-          { role: "system", content: SYSTEM },
-          { role: "user", content: ctx.join("\n") },
-        ],
-        tools: [TOOL],
-        tool_choice: { type: "function", function: { name: TOOL.function.name } },
-      }),
-    });
+    // Retry com backoff exponencial para 429/5xx
+    const maxAttempts = 4;
+    let resp: Response | null = null;
+    let lastErrText = "";
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+      resp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          model: "google/gemini-2.5-flash",
+          messages: [
+            { role: "system", content: SYSTEM },
+            { role: "user", content: ctx.join("\n") },
+          ],
+          tools: [TOOL],
+          tool_choice: { type: "function", function: { name: TOOL.function.name } },
+        }),
+      });
+      if (resp.ok) break;
+      lastErrText = await resp.text().catch(() => "");
+      // 402 = sem créditos; não adianta tentar de novo
+      if (resp.status === 402) {
+        return new Response(JSON.stringify({ error: "Sem créditos no Lovable AI. Adicione créditos em Settings → Workspace → Usage." }), {
+          status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      // 429 ou 5xx → espera e tenta de novo
+      if (resp.status === 429 || resp.status >= 500) {
+        const wait = Math.min(8000, 800 * Math.pow(2, attempt - 1)) + Math.floor(Math.random() * 400);
+        console.warn(`[pre-sdr-analyze] tentativa ${attempt} falhou (${resp.status}), aguardando ${wait}ms`);
+        await new Promise((r) => setTimeout(r, wait));
+        continue;
+      }
+      // Outros erros: retorna direto
+      return new Response(JSON.stringify({ error: `AI Gateway ${resp.status}: ${lastErrText.slice(0, 300)}` }), {
+        status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
-    if (!resp.ok) {
-      const t = await resp.text();
-      const status = resp.status === 429 ? 429 : resp.status === 402 ? 402 : 500;
-      return new Response(JSON.stringify({ error: `AI Gateway ${resp.status}: ${t.slice(0, 300)}` }), {
+    if (!resp || !resp.ok) {
+      const status = resp?.status === 429 ? 429 : 500;
+      return new Response(JSON.stringify({ error: `AI Gateway ${resp?.status ?? "?"} após ${maxAttempts} tentativas: ${lastErrText.slice(0, 200)}` }), {
         status, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+
     const data = await resp.json();
     const call = data.choices?.[0]?.message?.tool_calls?.[0];
     if (!call) {
@@ -128,7 +153,14 @@ Deno.serve(async (req) => {
         status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
-    const brief = JSON.parse(call.function.arguments);
+    let brief: any;
+    try {
+      brief = JSON.parse(call.function.arguments);
+    } catch (e) {
+      return new Response(JSON.stringify({ error: "Resposta da IA inválida (JSON malformado)" }), {
+        status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
     return new Response(JSON.stringify({ brief }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });

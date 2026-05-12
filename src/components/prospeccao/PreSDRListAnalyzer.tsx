@@ -99,52 +99,80 @@ export function PreSDRListAnalyzer() {
   }
 
   async function analyzeOne(row: Row): Promise<Row> {
-    try {
-      const { data, error } = await supabase.functions.invoke("pre-sdr-analyze", {
-        body: {
-          empresa: {
-            razao: row.razao, fantasia: row.fantasia, cnpj: row.cnpj,
-            telefone: row.telefone, email: row.email, site: row.site,
-            cidade: row.cidade, socios: row.socios, observacoes: row.observacoes,
+    const maxAttempts = 3;
+    let lastErr = "";
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+      try {
+        const { data, error } = await supabase.functions.invoke("pre-sdr-analyze", {
+          body: {
+            empresa: {
+              razao: row.razao, fantasia: row.fantasia, cnpj: row.cnpj,
+              telefone: row.telefone, email: row.email, site: row.site,
+              cidade: row.cidade, socios: row.socios, observacoes: row.observacoes,
+            },
+            icp: icp?.intelligence || null,
+            segmento_vendedor: segmento,
+            produtos,
           },
-          icp: icp?.intelligence || null,
-          segmento_vendedor: segmento,
-          produtos,
-        },
-      });
-      if (error) throw new Error(error.message);
-      if ((data as any)?.error) throw new Error((data as any).error);
-      return { ...row, __status: "done", __brief: (data as any).brief };
-    } catch (e: any) {
-      return { ...row, __status: "error", __error: e.message || "Erro" };
+        });
+        if (error) throw new Error(error.message);
+        if ((data as any)?.error) throw new Error((data as any).error);
+        if (!(data as any)?.brief) throw new Error("Sem briefing retornado");
+        return { ...row, __status: "done", __brief: (data as any).brief };
+      } catch (e: any) {
+        lastErr = e?.message || "Erro";
+        // sem créditos: para imediatamente
+        if (/sem créditos|402|payment/i.test(lastErr)) break;
+        // backoff antes de retry
+        if (attempt < maxAttempts) {
+          const wait = 1000 * Math.pow(2, attempt - 1) + Math.floor(Math.random() * 500);
+          await new Promise((r) => setTimeout(r, wait));
+        }
+      }
     }
+    return { ...row, __status: "error", __error: lastErr };
   }
 
-  async function analyzeAll() {
-    if (!rows.length) return;
+  async function runAnalysis(targetIdxs: number[]) {
+    if (!targetIdxs.length) return;
     cancelRef.current = false;
     setRunning(true);
-    setProgress({ done: 0, total: rows.length });
+    setProgress({ done: 0, total: targetIdxs.length });
 
-    const concurrency = 3;
+    const concurrency = 2;
     let cursor = 0;
     let done = 0;
 
     const next = async () => {
       while (!cancelRef.current) {
-        const idx = cursor++;
-        if (idx >= rows.length) return;
-        setRows((prev) => prev.map((r, i) => (i === idx ? { ...r, __status: "running" } : r)));
+        const i = cursor++;
+        if (i >= targetIdxs.length) return;
+        const idx = targetIdxs[i];
+        setRows((prev) => prev.map((r, j) => (j === idx ? { ...r, __status: "running", __error: undefined } : r)));
         const result = await analyzeOne(rows[idx]);
-        setRows((prev) => prev.map((r, i) => (i === idx ? result : r)));
+        setRows((prev) => prev.map((r, j) => (j === idx ? result : r)));
         done++;
-        setProgress({ done, total: rows.length });
+        setProgress({ done, total: targetIdxs.length });
+        // pequeno respiro entre requests para evitar 429
+        await new Promise((r) => setTimeout(r, 250));
       }
     };
     await Promise.all(Array.from({ length: concurrency }, next));
     setRunning(false);
     if (cancelRef.current) toast.info("Análise interrompida");
     else toast.success("Análise concluída");
+  }
+
+  async function analyzeAll() {
+    const idxs = rows.map((_, i) => i).filter((i) => rows[i].__status !== "done");
+    if (!idxs.length) return toast.info("Nada novo para analisar");
+    await runAnalysis(idxs);
+  }
+
+  async function retryErrors() {
+    const idxs = rows.map((_, i) => i).filter((i) => rows[i].__status === "error");
+    if (!idxs.length) return toast.info("Nenhum erro para reanalisar");
+    await runAnalysis(idxs);
   }
 
   function exportCSV() {
@@ -222,6 +250,11 @@ export function PreSDRListAnalyzer() {
               ) : (
                 <Button size="sm" variant="destructive" onClick={() => { cancelRef.current = true; }} className="gap-1">
                   <Loader2 className="h-4 w-4 animate-spin" /> Parar
+                </Button>
+              )}
+              {!running && errors > 0 && (
+                <Button size="sm" variant="outline" onClick={retryErrors} className="gap-1 border-rose-300 text-rose-600 hover:bg-rose-50">
+                  <Loader2 className="h-4 w-4" /> Reanalisar erros ({errors})
                 </Button>
               )}
               {enriched > 0 && (
