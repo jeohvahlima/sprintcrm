@@ -151,6 +151,21 @@ export function PreSDRListAnalyzer() {
   }
 
   async function analyzeOne(row: Row): Promise<Row> {
+    if (!companyId) return { ...row, __status: "error", __error: "Empresa não identificada" };
+    const key = row.__rowKey || rowKey(row);
+    const payloadBase = {
+      company_id: companyId,
+      row_key: key,
+      empresa_nome: row.fantasia || row.razao || null,
+      telefone: row.telefone || null,
+      cnpj: row.cnpj || null,
+      site: row.site || null,
+      raw_row: {
+        razao: row.razao, fantasia: row.fantasia, cnpj: row.cnpj, telefone: row.telefone,
+        email: row.email, site: row.site, cidade: row.cidade, socios: row.socios, observacoes: row.observacoes,
+      },
+    };
+    await supabase.from("pre_sdr_analyses" as any).upsert({ ...payloadBase, status: "running", error_message: null } as any, { onConflict: "company_id,row_key" });
     const maxAttempts = 3;
     let lastErr = "";
     for (let attempt = 1; attempt <= maxAttempts; attempt++) {
@@ -170,7 +185,12 @@ export function PreSDRListAnalyzer() {
         if (error) throw new Error(error.message);
         if ((data as any)?.error) throw new Error((data as any).error);
         if (!(data as any)?.brief) throw new Error("Sem briefing retornado");
-        return { ...row, __status: "done", __brief: (data as any).brief };
+        const brief = (data as any).brief;
+        const { data: saved } = await supabase.from("pre_sdr_analyses" as any)
+          .upsert({ ...payloadBase, brief, status: "done", error_message: null, analyzed_at: new Date().toISOString() } as any, { onConflict: "company_id,row_key" })
+          .select("id")
+          .single();
+        return { ...row, __rowKey: key, __dbId: (saved as any)?.id || row.__dbId, __status: "done", __brief: brief, __error: undefined };
       } catch (e: any) {
         lastErr = e?.message || "Erro";
         // sem créditos: para imediatamente
@@ -182,6 +202,7 @@ export function PreSDRListAnalyzer() {
         }
       }
     }
+    await supabase.from("pre_sdr_analyses" as any).upsert({ ...payloadBase, status: "error", error_message: lastErr } as any, { onConflict: "company_id,row_key" });
     return { ...row, __status: "error", __error: lastErr };
   }
 
