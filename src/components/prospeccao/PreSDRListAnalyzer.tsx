@@ -105,6 +105,24 @@ export function PreSDRListAnalyzer() {
     })();
   }, [companyId]);
 
+  useEffect(() => {
+    if (!companyId) return;
+    (async () => {
+      const all: SavedAnalysis[] = [];
+      for (let from = 0; ; from += 1000) {
+        const { data, error } = await supabase.from("pre_sdr_analyses" as any)
+          .select("id,row_key,raw_row,brief,status,error_message")
+          .eq("company_id", companyId)
+          .order("updated_at", { ascending: false })
+          .range(from, from + 999);
+        if (error) break;
+        all.push(...((data as SavedAnalysis[]) || []));
+        if (!data || data.length < 1000) break;
+      }
+      if (all.length) setRows(all.map(toRowFromSaved));
+    })();
+  }, [companyId]);
+
   function handleFile(file: File) {
     const reader = new FileReader();
     reader.onload = (e) => {
@@ -113,12 +131,12 @@ export function PreSDRListAnalyzer() {
         const wb = XLSX.read(data, { type: "array" });
         const ws = wb.Sheets[wb.SheetNames[0]];
         const json = XLSX.utils.sheet_to_json<Record<string, any>>(ws, { defval: "" });
-        const parsed: Row[] = json.map((r, i) => ({
-          ...normalizeRow(r),
-          __id: `r${i}_${Date.now()}`,
-          __status: "idle",
-        }));
-        setRows(parsed);
+        const parsedBase = json.map((r) => normalizeRow(r));
+        const parsed: Row[] = parsedBase.map((r) => ({ ...r, __id: rowKey(r), __status: "idle" }));
+        setRows((prev) => {
+          const saved = new Map(prev.map((r) => [r.__id, r]));
+          return parsed.map((r) => saved.has(r.__id) ? { ...r, ...saved.get(r.__id), __id: r.__id } : r);
+        });
         toast.success(`${parsed.length} linha(s) carregada(s) de "${file.name}"`);
       } catch (err: any) {
         toast.error("Falha ao ler planilha", { description: err.message });
