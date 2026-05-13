@@ -670,7 +670,21 @@ export function BlockEditor({ pageId, blocks, onBlocksChange, companyId }: Block
               </PopoverContent>
             </Popover>
             
-            <button className="p-1 hover:bg-muted rounded cursor-grab">
+            <button
+              className="p-1 hover:bg-muted rounded cursor-grab active:cursor-grabbing"
+              draggable
+              onDragStart={(e) => {
+                setDraggingId(block.id);
+                e.dataTransfer.effectAllowed = 'move';
+                try { e.dataTransfer.setData('text/plain', block.id); } catch {}
+              }}
+              onDragEnd={() => {
+                setDraggingId(null);
+                setDragOverId(null);
+              }}
+              aria-label="Arrastar para reordenar"
+              title="Arrastar para mover"
+            >
               <GripVertical className="h-4 w-4 text-muted-foreground" />
             </button>
           </div>
