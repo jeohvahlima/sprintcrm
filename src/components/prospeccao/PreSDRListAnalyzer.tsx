@@ -697,8 +697,7 @@ export function PreSDRListAnalyzer() {
                     <th className="px-2 py-1.5">Decisor (IA)</th>
                     <th className="px-2 py-1.5">Fit</th>
                     <th className="px-2 py-1.5">IA</th>
-                    <th className="px-2 py-1.5">Resultado da prospecção</th>
-                    <th className="px-2 py-1.5">Abordagens</th>
+                    <th className="px-2 py-1.5">Registrar / Resultado</th>
                     <th className="px-2 py-1.5">Ações</th>
                   </tr>
                 </thead>
@@ -732,20 +731,6 @@ export function PreSDRListAnalyzer() {
                             {r.__status === "idle" && <span className="text-muted-foreground">—</span>}
                           </td>
                           <td className="px-2 py-1.5">
-                            <Select value={outcome} onValueChange={(v) => setOutcome(r, v as Outcome)}>
-                              <SelectTrigger className={`h-7 w-[170px] text-xs ${oMeta.className}`}>
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {OUTCOME_ORDER.map((o) => (
-                                  <SelectItem key={o} value={o} className={OUTCOME_META[o].className}>
-                                    {OUTCOME_META[o].label}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                          </td>
-                          <td className="px-2 py-1.5">
                             {(() => {
                               const attempts = r.__attempts || [];
                               const count = r.__attemptsCount ?? attempts.length;
@@ -753,14 +738,14 @@ export function PreSDRListAnalyzer() {
                               const lastMeta = last ? ATTEMPT_META[last.type] : null;
                               const nextNumber = count + 1;
                               return (
-                                <div className="flex items-center gap-1">
+                                <div className="flex items-center gap-1 flex-wrap">
                                   <DropdownMenu>
                                     <DropdownMenuTrigger asChild>
                                       <Button
                                         size="sm"
                                         variant="outline"
                                         className="h-7 px-2 gap-1"
-                                        title="Registrar nova abordagem / tentativa"
+                                        title="Registrar abordagem ou alterar resultado"
                                       >
                                         <Plus className="h-3 w-3" />
                                         <span className="text-[11px]">
@@ -768,7 +753,7 @@ export function PreSDRListAnalyzer() {
                                         </span>
                                       </Button>
                                     </DropdownMenuTrigger>
-                                    <DropdownMenuContent align="start" className="w-56">
+                                    <DropdownMenuContent align="start" className="w-60 max-h-[70vh] overflow-y-auto">
                                       <DropdownMenuLabel>
                                         {count === 0 ? "Primeira abordagem" : `Registrar tentativa #${nextNumber}`}
                                       </DropdownMenuLabel>
@@ -787,6 +772,24 @@ export function PreSDRListAnalyzer() {
                                           </DropdownMenuItem>
                                         );
                                       })}
+                                      <DropdownMenuSeparator />
+                                      <DropdownMenuLabel>Resultado da prospecção</DropdownMenuLabel>
+                                      {OUTCOME_ORDER.map((o) => {
+                                        const om = OUTCOME_META[o];
+                                        const OIcon = om.icon;
+                                        const active = outcome === o;
+                                        return (
+                                          <DropdownMenuItem
+                                            key={o}
+                                            onClick={() => setOutcome(r, o)}
+                                            className={`gap-2 ${om.className} ${active ? "bg-muted font-semibold" : ""}`}
+                                          >
+                                            {OIcon ? <OIcon className="h-3.5 w-3.5" /> : <span className="w-3.5" />}
+                                            <span>{om.label}</span>
+                                            {active && <Check className="h-3 w-3 ml-auto" />}
+                                          </DropdownMenuItem>
+                                        );
+                                      })}
                                       {count > 0 && (
                                         <>
                                           <DropdownMenuSeparator />
@@ -795,12 +798,18 @@ export function PreSDRListAnalyzer() {
                                             className="gap-2 text-rose-600"
                                           >
                                             <X className="h-3.5 w-3.5" />
-                                            Desfazer última
+                                            Desfazer última tentativa
                                           </DropdownMenuItem>
                                         </>
                                       )}
                                     </DropdownMenuContent>
                                   </DropdownMenu>
+                                  <span
+                                    className={`inline-flex items-center px-1.5 py-0.5 rounded-full border text-[10px] ${oMeta.className}`}
+                                    title="Resultado atual"
+                                  >
+                                    {oMeta.label}
+                                  </span>
                                   {count > 0 && (
                                     <Popover>
                                       <PopoverTrigger asChild>
@@ -906,7 +915,7 @@ export function PreSDRListAnalyzer() {
                         </tr>
                         {r.__open && b && (
                           <tr className="bg-muted/20 border-t">
-                            <td colSpan={9} className="px-3 py-3 space-y-2">
+                            <td colSpan={8} className="px-3 py-3 space-y-2">
                               <div className="grid md:grid-cols-2 gap-3">
                                 <Field k="Resumo da empresa" v={b.empresa_resumo} />
                                 <Field k="Site" v={b.site_resumo} />
