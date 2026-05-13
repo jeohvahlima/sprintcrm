@@ -16,6 +16,7 @@ import { PostCallNotesDialog } from "@/components/discador/PostCallNotesDialog";
 import { useTagsManager } from "@/hooks/useTagsManager";
 import { ConversaPopup } from "@/components/leads/ConversaPopup";
 import { HandoffDialog } from "@/components/prospeccao/comercial/HandoffDialog";
+import { ColdCallActions } from "./ColdCallActions";
 
 interface Props {
   channel: ProspectChannel;
