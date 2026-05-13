@@ -196,7 +196,7 @@ export function TarefaModal({ open, onOpenChange, lead, onTarefaCriada }: Tarefa
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md max-h-[90vh] overflow-hidden flex flex-col">
+      <DialogContent className="max-w-md max-h-[90vh] overflow-hidden flex flex-col !z-[300]">
         <DialogHeader>
           <DialogTitle>Nova Tarefa</DialogTitle>
         </DialogHeader>
