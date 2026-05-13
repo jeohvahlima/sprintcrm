@@ -812,6 +812,9 @@ export function PreSDRListAnalyzer() {
                                           <History className="h-3 w-3" />
                                           <strong>{count}</strong>
                                           {lastMeta && <span className="hidden xl:inline">· {lastMeta.label}</span>}
+                                          {last?.user_name && (
+                                            <span className="hidden lg:inline text-[10px] opacity-80">· por {last.user_name.split(" ")[0]}</span>
+                                          )}
                                         </button>
                                       </PopoverTrigger>
                                       <PopoverContent align="start" className="w-72 p-2">
