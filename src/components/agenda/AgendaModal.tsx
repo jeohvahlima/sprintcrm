@@ -297,6 +297,10 @@ export function AgendaModal({ open, onOpenChange, lead, onAgendamentoCriado }: A
 
       const companyId = userRole?.company_id;
 
+      // Profissional efetivo: explícito > responsável da agenda
+      const profEfetivo = profissionalId || agendaSelecionada?.responsavel_id || null;
+      const emailConvidadoFinal = (formData.email_convidado?.trim() || leadEmail || "").trim();
+
       // Criar compromisso no banco de dados
       const { data: compromisso, error: compromissoError } = await supabase
         .from("compromissos")
@@ -307,12 +311,15 @@ export function AgendaModal({ open, onOpenChange, lead, onAgendamentoCriado }: A
             usuario_responsavel_id: session.user.id,
             owner_id: session.user.id,
             agenda_id: agendaIdSelecionada || null,
+            profissional_id: profEfetivo,
             data_hora_inicio: inicioISO,
             data_hora_fim: fimISO,
             tipo_servico: formData.tipo_servico,
             observacoes: formData.observacoes,
             custo_estimado: formData.custo_estimado ? parseFloat(formData.custo_estimado) : 0,
-          },
+            convidar_lead_email: !!formData.convidar_lead_email,
+            email_convidado: formData.convidar_lead_email && emailConvidadoFinal ? emailConvidadoFinal : null,
+          } as any,
         ])
         .select()
         .single();
