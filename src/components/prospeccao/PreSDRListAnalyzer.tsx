@@ -406,7 +406,49 @@ export function PreSDRListAnalyzer() {
     if (error) toast.error("Não foi possível salvar o status", { description: error.message });
   }
 
-  async function importToColdCall(row: Row): Promise<string | null> {
+  async function addAttempt(row: Row, type: AttemptType, note?: string) {
+    if (!companyId) return;
+    const key = row.__rowKey || rowKey(row);
+    const at = new Date().toISOString();
+    const newAttempt: Attempt = { at, type, note };
+    const prevAttempts = Array.isArray(row.__attempts) ? row.__attempts : [];
+    const attempts = [...prevAttempts, newAttempt];
+    const attempts_count = attempts.length;
+    setRows((prev) => prev.map((r) =>
+      r.__id === row.__id ? { ...r, __attempts: attempts, __attemptsCount: attempts_count, __lastAttemptAt: at } : r
+    ));
+    const { error } = await supabase
+      .from("pre_sdr_analyses" as any)
+      .update({ attempts, attempts_count, last_attempt_at: at } as any)
+      .eq("company_id", companyId)
+      .eq("row_key", key);
+    if (error) {
+      toast.error("Não foi possível registrar a tentativa", { description: error.message });
+    } else {
+      toast.success(`Tentativa registrada: ${ATTEMPT_META[type].label}`, {
+        description: `Total de abordagens: ${attempts_count}`,
+      });
+    }
+  }
+
+  async function removeLastAttempt(row: Row) {
+    if (!companyId) return;
+    const prevAttempts = Array.isArray(row.__attempts) ? row.__attempts : [];
+    if (!prevAttempts.length) return;
+    const key = row.__rowKey || rowKey(row);
+    const attempts = prevAttempts.slice(0, -1);
+    const attempts_count = attempts.length;
+    const last_attempt_at = attempts.length ? attempts[attempts.length - 1].at : null;
+    setRows((prev) => prev.map((r) =>
+      r.__id === row.__id ? { ...r, __attempts: attempts, __attemptsCount: attempts_count, __lastAttemptAt: last_attempt_at } : r
+    ));
+    await supabase
+      .from("pre_sdr_analyses" as any)
+      .update({ attempts, attempts_count, last_attempt_at } as any)
+      .eq("company_id", companyId)
+      .eq("row_key", key);
+  }
+
     if (!companyId) return null;
     const phone = String(row.telefone || "").replace(/\D/g, "");
     if (!phone) { toast.error("Linha sem telefone — não dá para importar para Cold Call."); return null; }
