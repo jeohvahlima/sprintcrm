@@ -468,7 +468,7 @@ export function PreSDRListAnalyzer() {
     if (!companyId) return;
     const key = row.__rowKey || rowKey(row);
     const at = new Date().toISOString();
-    const newAttempt: Attempt = { at, type, note };
+    const newAttempt: Attempt = { at, type, note, user_id: currentUser?.id || null, user_name: currentUser?.name || null };
     const prevAttempts = Array.isArray(row.__attempts) ? row.__attempts : [];
     const attempts = [...prevAttempts, newAttempt];
     const attempts_count = attempts.length;
