@@ -23,6 +23,7 @@ import SitePublico from "./pages/SitePublico";
 import SitePublicoAgenda from "./pages/SitePublicoAgenda";
 import Discador from "./pages/Discador";
 import ProcessosComerciais from "./pages/ProcessosComerciais";
+import ProcessPagePublic from "./pages/ProcessPagePublic";
 import Treinamento from "./pages/Treinamento";
 import Financeiro from "./pages/Financeiro";
 import Prospeccao from "./pages/Prospeccao";
