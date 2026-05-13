@@ -499,7 +499,11 @@ export function AgendaModal({ open, onOpenChange, lead, onAgendamentoCriado }: A
         horas_antecedencia: "",
         horas_antecedencia_horas: "1",
         horas_antecedencia_minutos: "0",
-        destinatario_lembrete: "lead"
+        destinatario_lembrete: "lead",
+        lembrete_whatsapp_24h: false,
+        lembrete_email_24h: false,
+        convidar_lead_email: false,
+        email_convidado: "",
       });
     } catch (error: any) {
       console.error("Erro ao criar compromisso:", error);
