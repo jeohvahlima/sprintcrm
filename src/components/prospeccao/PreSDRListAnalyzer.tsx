@@ -253,7 +253,46 @@ export function PreSDRListAnalyzer() {
     })();
   }, [companyId]);
 
-  function handleFile(file: File) {
+  // Realtime: sincroniza tentativas/outcome entre todos os SDRs da empresa
+  useEffect(() => {
+    if (!companyId) return;
+    const channel = supabase
+      .channel(`pre_sdr_analyses:${companyId}`)
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "pre_sdr_analyses", filter: `company_id=eq.${companyId}` },
+        (payload) => {
+          const n: any = payload.new;
+          if (!n) return;
+          setRows((prev) => prev.map((r) => {
+            if (r.__rowKey !== n.row_key && r.__dbId !== n.id) return r;
+            return {
+              ...r,
+              __outcome: (n.outcome as Outcome) || r.__outcome,
+              __leadId: n.lead_id ?? r.__leadId,
+              __importedAt: n.imported_to_coldcall_at ?? r.__importedAt,
+              __attempts: Array.isArray(n.attempts) ? n.attempts : r.__attempts,
+              __attemptsCount: n.attempts_count ?? r.__attemptsCount,
+              __lastAttemptAt: n.last_attempt_at ?? r.__lastAttemptAt,
+            };
+          }));
+        }
+      )
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "pre_sdr_analyses", filter: `company_id=eq.${companyId}` },
+        (payload) => {
+          const n: any = payload.new;
+          if (!n) return;
+          setRows((prev) => {
+            if (prev.some((r) => r.__rowKey === n.row_key)) return prev;
+            return [toRowFromSaved(n as SavedAnalysis), ...prev];
+          });
+        }
+      )
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [companyId]);
     const reader = new FileReader();
     reader.onload = (e) => {
       try {
