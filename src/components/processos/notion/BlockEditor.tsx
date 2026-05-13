@@ -168,7 +168,7 @@ function EditableBlockTextarea({
       onFocus={onFocus}
       className={cn(commonClassName, extraClassName)}
       placeholder={placeholder}
-      style={{ minHeight: '24px', maxHeight: '200px', overflow: localText.length > 200 ? 'hidden' : 'auto' }}
+      style={{ minHeight: '24px', overflow: 'hidden' }}
     />
   );
 
@@ -335,7 +335,7 @@ export function BlockEditor({ pageId, blocks, onBlocksChange, companyId }: Block
   const autoResize = useCallback((el: HTMLTextAreaElement | null) => {
     if (el) {
       el.style.height = 'auto';
-      el.style.height = `${Math.min(el.scrollHeight, 200)}px`; // Max 200px, then show expand button
+      el.style.height = `${el.scrollHeight}px`;
     }
   }, []);
 
@@ -648,7 +648,7 @@ export function BlockEditor({ pageId, blocks, onBlocksChange, companyId }: Block
 
       {/* Add new block at end */}
       {blocks.length > 0 && (
-        <div className="flex items-center gap-2 py-2 px-2 text-muted-foreground opacity-0 hover:opacity-100 transition-opacity">
+        <div className="flex items-center gap-2 py-2 px-2 text-muted-foreground">
           <Popover>
             <PopoverTrigger asChild>
               <button className="flex items-center gap-2 hover:bg-muted/50 rounded p-1">
