@@ -168,7 +168,7 @@ function EditableBlockTextarea({
       onFocus={onFocus}
       className={cn(commonClassName, extraClassName)}
       placeholder={placeholder}
-      style={{ minHeight: '24px', maxHeight: '200px', overflow: localText.length > 200 ? 'hidden' : 'auto' }}
+      style={{ minHeight: '24px', overflow: 'hidden' }}
     />
   );
 
