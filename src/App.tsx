@@ -93,6 +93,7 @@ const App = () => (
             <Route path="/captura/:companyId" element={<CapturaPublica />} />
             <Route path="/site/:slug" element={<SitePublico />} />
             <Route path="/site/:slug/agenda" element={<SitePublicoAgenda />} />
+            <Route path="/processos/page/:id" element={<ProcessPagePublic />} />
             <Route path="/" element={<MainLayout />}>
               <Route index element={<Navigate to="/analytics" replace />} />
               <Route path="dashboard" element={<Navigate to="/analytics" replace />} />
