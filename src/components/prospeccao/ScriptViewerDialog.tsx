@@ -72,7 +72,7 @@ export function ScriptViewerDialog({ open, onOpenChange, contactName }: Props) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl max-h-[85vh] flex flex-col">
+      <DialogContent className="max-w-3xl h-[85vh] flex flex-col overflow-hidden">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <FileText className="h-5 w-5 text-primary" />
@@ -96,7 +96,7 @@ export function ScriptViewerDialog({ open, onOpenChange, contactName }: Props) {
                 className="pl-8"
               />
             </div>
-            <ScrollArea className="flex-1 min-h-0 -mx-6 px-6 max-h-[65vh]">
+            <div className="flex-1 min-h-0 overflow-y-auto -mx-6 px-6">
               {loadingList ? (
                 <div className="flex items-center justify-center py-10 text-muted-foreground gap-2">
                   <Loader2 className="h-4 w-4 animate-spin" /> Carregando...
@@ -124,7 +124,7 @@ export function ScriptViewerDialog({ open, onOpenChange, contactName }: Props) {
                   ))}
                 </div>
               )}
-            </ScrollArea>
+            </div>
           </>
         ) : (
           <>
@@ -141,7 +141,7 @@ export function ScriptViewerDialog({ open, onOpenChange, contactName }: Props) {
                 Abrir em nova aba <ExternalLink className="h-3 w-3" />
               </a>
             </div>
-            <ScrollArea className="flex-1 min-h-0 -mx-6 px-6 max-h-[65vh]">
+            <div className="flex-1 min-h-0 overflow-y-auto -mx-6 px-6">
               {loadingBlocks ? (
                 <div className="flex items-center justify-center py-10 text-muted-foreground gap-2">
                   <Loader2 className="h-4 w-4 animate-spin" /> Carregando script...
@@ -153,7 +153,7 @@ export function ScriptViewerDialog({ open, onOpenChange, contactName }: Props) {
                   {blocks.map((b) => <BlockView key={b.id} block={b} />)}
                 </article>
               )}
-            </ScrollArea>
+            </div>
           </>
         )}
       </DialogContent>
