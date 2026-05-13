@@ -688,6 +688,107 @@ export function PreSDRListAnalyzer() {
                             </Select>
                           </td>
                           <td className="px-2 py-1.5">
+                            {(() => {
+                              const attempts = r.__attempts || [];
+                              const count = r.__attemptsCount ?? attempts.length;
+                              const last = attempts[attempts.length - 1];
+                              const lastMeta = last ? ATTEMPT_META[last.type] : null;
+                              const nextNumber = count + 1;
+                              return (
+                                <div className="flex items-center gap-1">
+                                  <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                      <Button
+                                        size="sm"
+                                        variant="outline"
+                                        className="h-7 px-2 gap-1"
+                                        title="Registrar nova abordagem / tentativa"
+                                      >
+                                        <Plus className="h-3 w-3" />
+                                        <span className="text-[11px]">
+                                          {count === 0 ? "Registrar" : `Tentativa ${nextNumber}`}
+                                        </span>
+                                      </Button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent align="start" className="w-56">
+                                      <DropdownMenuLabel>
+                                        {count === 0 ? "Primeira abordagem" : `Registrar tentativa #${nextNumber}`}
+                                      </DropdownMenuLabel>
+                                      <DropdownMenuSeparator />
+                                      {(Object.keys(ATTEMPT_META) as AttemptType[]).map((t) => {
+                                        const m = ATTEMPT_META[t];
+                                        const Icon = m.icon;
+                                        return (
+                                          <DropdownMenuItem
+                                            key={t}
+                                            onClick={() => addAttempt(r, t)}
+                                            className={`gap-2 ${m.className}`}
+                                          >
+                                            <Icon className="h-3.5 w-3.5" />
+                                            <span>{m.label}</span>
+                                          </DropdownMenuItem>
+                                        );
+                                      })}
+                                      {count > 0 && (
+                                        <>
+                                          <DropdownMenuSeparator />
+                                          <DropdownMenuItem
+                                            onClick={() => removeLastAttempt(r)}
+                                            className="gap-2 text-rose-600"
+                                          >
+                                            <X className="h-3.5 w-3.5" />
+                                            Desfazer última
+                                          </DropdownMenuItem>
+                                        </>
+                                      )}
+                                    </DropdownMenuContent>
+                                  </DropdownMenu>
+                                  {count > 0 && (
+                                    <Popover>
+                                      <PopoverTrigger asChild>
+                                        <button
+                                          type="button"
+                                          className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full border text-[11px] ${lastMeta?.className || "text-muted-foreground"} hover:bg-muted`}
+                                          title="Ver histórico de abordagens"
+                                        >
+                                          <History className="h-3 w-3" />
+                                          <strong>{count}</strong>
+                                          {lastMeta && <span className="hidden xl:inline">· {lastMeta.label}</span>}
+                                        </button>
+                                      </PopoverTrigger>
+                                      <PopoverContent align="start" className="w-72 p-2">
+                                        <p className="text-[11px] uppercase font-medium text-muted-foreground px-1 pb-1">
+                                          Histórico ({count})
+                                        </p>
+                                        <ol className="space-y-1 max-h-60 overflow-y-auto">
+                                          {attempts.slice().reverse().map((a, i) => {
+                                            const m = ATTEMPT_META[a.type];
+                                            const Icon = m?.icon || PhoneCall;
+                                            const num = count - i;
+                                            return (
+                                              <li key={i} className="flex items-start gap-2 text-xs px-1 py-1 rounded hover:bg-muted">
+                                                <Icon className={`h-3.5 w-3.5 mt-0.5 ${m?.className || ""}`} />
+                                                <div className="flex-1">
+                                                  <div className={`font-medium ${m?.className || ""}`}>
+                                                    #{num} · {m?.label || a.type}
+                                                  </div>
+                                                  <div className="text-[10px] text-muted-foreground">
+                                                    {new Date(a.at).toLocaleString("pt-BR")}
+                                                  </div>
+                                                  {a.note && <div className="text-[11px] mt-0.5">{a.note}</div>}
+                                                </div>
+                                              </li>
+                                            );
+                                          })}
+                                        </ol>
+                                      </PopoverContent>
+                                    </Popover>
+                                  )}
+                                </div>
+                              );
+                            })()}
+                          </td>
+                          <td className="px-2 py-1.5">
                             <div className="flex items-center gap-1">
                               {outcome !== "prospectado" && (
                                 <Button
