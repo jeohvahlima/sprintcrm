@@ -26,7 +26,7 @@ type AttemptType =
   | "whatsapp_enviado"
   | "retornar_depois";
 
-type Attempt = { at: string; type: AttemptType; note?: string };
+type Attempt = { at: string; type: AttemptType; note?: string; user_id?: string | null; user_name?: string | null };
 
 const ATTEMPT_META: Record<AttemptType, { label: string; icon: any; className: string }> = {
   primeiro_contato: { label: "Primeiro contato", icon: PhoneCall, className: "text-cyan-600" },
@@ -178,6 +178,23 @@ export function PreSDRListAnalyzer() {
   const [waOpening, setWaOpening] = useState<string | null>(null);
   const [scriptOpen, setScriptOpen] = useState(false);
   const [scriptRow, setScriptRow] = useState<Row | null>(null);
+  const [currentUser, setCurrentUser] = useState<{ id: string; name: string } | null>(null);
+
+  useEffect(() => {
+    (async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      const { data: prof } = await supabase
+        .from("profiles")
+        .select("full_name")
+        .eq("id", user.id)
+        .maybeSingle();
+      setCurrentUser({
+        id: user.id,
+        name: (prof as any)?.full_name || user.email?.split("@")[0] || "Usuário",
+      });
+    })();
+  }, []);
 
   async function openConversa(r: Row) {
     if (!r.telefone) return toast.error("Linha sem telefone para WhatsApp.");
@@ -234,6 +251,47 @@ export function PreSDRListAnalyzer() {
       }
       if (all.length) setRows(all.map(toRowFromSaved));
     })();
+  }, [companyId]);
+
+  // Realtime: sincroniza tentativas/outcome entre todos os SDRs da empresa
+  useEffect(() => {
+    if (!companyId) return;
+    const channel = supabase
+      .channel(`pre_sdr_analyses:${companyId}`)
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "pre_sdr_analyses", filter: `company_id=eq.${companyId}` },
+        (payload) => {
+          const n: any = payload.new;
+          if (!n) return;
+          setRows((prev) => prev.map((r) => {
+            if (r.__rowKey !== n.row_key && r.__dbId !== n.id) return r;
+            return {
+              ...r,
+              __outcome: (n.outcome as Outcome) || r.__outcome,
+              __leadId: n.lead_id ?? r.__leadId,
+              __importedAt: n.imported_to_coldcall_at ?? r.__importedAt,
+              __attempts: Array.isArray(n.attempts) ? n.attempts : r.__attempts,
+              __attemptsCount: n.attempts_count ?? r.__attemptsCount,
+              __lastAttemptAt: n.last_attempt_at ?? r.__lastAttemptAt,
+            };
+          }));
+        }
+      )
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "pre_sdr_analyses", filter: `company_id=eq.${companyId}` },
+        (payload) => {
+          const n: any = payload.new;
+          if (!n) return;
+          setRows((prev) => {
+            if (prev.some((r) => r.__rowKey === n.row_key)) return prev;
+            return [toRowFromSaved(n as SavedAnalysis), ...prev];
+          });
+        }
+      )
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
   }, [companyId]);
 
   function handleFile(file: File) {
@@ -410,7 +468,7 @@ export function PreSDRListAnalyzer() {
     if (!companyId) return;
     const key = row.__rowKey || rowKey(row);
     const at = new Date().toISOString();
-    const newAttempt: Attempt = { at, type, note };
+    const newAttempt: Attempt = { at, type, note, user_id: currentUser?.id || null, user_name: currentUser?.name || null };
     const prevAttempts = Array.isArray(row.__attempts) ? row.__attempts : [];
     const attempts = [...prevAttempts, newAttempt];
     const attempts_count = attempts.length;
@@ -754,6 +812,9 @@ export function PreSDRListAnalyzer() {
                                           <History className="h-3 w-3" />
                                           <strong>{count}</strong>
                                           {lastMeta && <span className="hidden xl:inline">· {lastMeta.label}</span>}
+                                          {last?.user_name && (
+                                            <span className="hidden lg:inline text-[10px] opacity-80">· por {last.user_name.split(" ")[0]}</span>
+                                          )}
                                         </button>
                                       </PopoverTrigger>
                                       <PopoverContent align="start" className="w-72 p-2">
@@ -774,6 +835,7 @@ export function PreSDRListAnalyzer() {
                                                   </div>
                                                   <div className="text-[10px] text-muted-foreground">
                                                     {new Date(a.at).toLocaleString("pt-BR")}
+                                                    {a.user_name && <span className="ml-1">· por <strong>{a.user_name}</strong></span>}
                                                   </div>
                                                   {a.note && <div className="text-[11px] mt-0.5">{a.note}</div>}
                                                 </div>
