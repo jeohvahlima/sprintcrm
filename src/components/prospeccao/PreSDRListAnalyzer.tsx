@@ -130,6 +130,9 @@ function toRowFromSaved(item: SavedAnalysis): Row {
     __outcome: (item.outcome as Outcome) || "pendente",
     __leadId: item.lead_id || null,
     __importedAt: item.imported_to_coldcall_at || null,
+    __attempts: Array.isArray(item.attempts) ? item.attempts : [],
+    __attemptsCount: item.attempts_count ?? (Array.isArray(item.attempts) ? item.attempts.length : 0),
+    __lastAttemptAt: item.last_attempt_at || null,
   };
 }
 
