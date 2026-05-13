@@ -178,6 +178,23 @@ export function PreSDRListAnalyzer() {
   const [waOpening, setWaOpening] = useState<string | null>(null);
   const [scriptOpen, setScriptOpen] = useState(false);
   const [scriptRow, setScriptRow] = useState<Row | null>(null);
+  const [currentUser, setCurrentUser] = useState<{ id: string; name: string } | null>(null);
+
+  useEffect(() => {
+    (async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      const { data: prof } = await supabase
+        .from("profiles")
+        .select("full_name")
+        .eq("id", user.id)
+        .maybeSingle();
+      setCurrentUser({
+        id: user.id,
+        name: (prof as any)?.full_name || user.email?.split("@")[0] || "Usuário",
+      });
+    })();
+  }, []);
 
   async function openConversa(r: Row) {
     if (!r.telefone) return toast.error("Linha sem telefone para WhatsApp.");
