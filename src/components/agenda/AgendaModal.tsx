@@ -813,6 +813,62 @@ export function AgendaModal({ open, onOpenChange, lead, onAgendamentoCriado }: A
                 </div>
               </div>
             )}
+
+            {/* Lembretes adicionais 24h + Convite Google Calendar */}
+            <div className="flex items-center justify-between pt-2 border-t">
+              <Label htmlFor="lembrete_wa_24h" className="text-sm">
+                Lembrete WhatsApp 24h antes
+                {!lead.telefone && <span className="block text-[10px] text-muted-foreground">Lead sem telefone</span>}
+              </Label>
+              <Switch
+                id="lembrete_wa_24h"
+                checked={formData.lembrete_whatsapp_24h && !!lead.telefone}
+                disabled={!lead.telefone}
+                onCheckedChange={(c) => setFormData({ ...formData, lembrete_whatsapp_24h: c })}
+              />
+            </div>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="lembrete_email_24h" className="text-sm">
+                Lembrete por e-mail 24h antes
+                <span className="block text-[10px] text-muted-foreground">
+                  {leadEmail ? `Será enviado para ${leadEmail}` : "Lead sem e-mail cadastrado"}
+                </span>
+              </Label>
+              <Switch
+                id="lembrete_email_24h"
+                checked={formData.lembrete_email_24h && !!leadEmail}
+                disabled={!leadEmail}
+                onCheckedChange={(c) => setFormData({ ...formData, lembrete_email_24h: c })}
+              />
+            </div>
+            <div className="space-y-2 pt-2 border-t">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="convidar_email" className="text-sm">
+                  Convidar por e-mail (Google Agenda)
+                  <span className="block text-[10px] text-muted-foreground">Convite nativo do Google Calendar</span>
+                </Label>
+                <Switch
+                  id="convidar_email"
+                  checked={formData.convidar_lead_email}
+                  onCheckedChange={(c) =>
+                    setFormData({
+                      ...formData,
+                      convidar_lead_email: c,
+                      email_convidado: c && !formData.email_convidado && leadEmail ? leadEmail : formData.email_convidado,
+                    })
+                  }
+                />
+              </div>
+              {formData.convidar_lead_email && (
+                <Input
+                  type="email"
+                  placeholder={leadEmail || "exemplo@email.com"}
+                  value={formData.email_convidado}
+                  onChange={(e) => setFormData({ ...formData, email_convidado: e.target.value })}
+                  className="h-9"
+                />
+              )}
+            </div>
           </div>
 
           <div className="flex justify-end gap-2 pt-3 border-t">
