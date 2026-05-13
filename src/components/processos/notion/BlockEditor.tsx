@@ -576,10 +576,10 @@ export function BlockEditor({ pageId, blocks, onBlocksChange, companyId }: Block
           )}
         >
           {/* Block Controls */}
-          <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity absolute -left-16 top-1">
+          <div className="flex w-14 shrink-0 items-center justify-end gap-0.5 opacity-100 transition-opacity md:opacity-60 md:group-hover:opacity-100">
             <Popover open={showBlockMenu === block.id} onOpenChange={(open) => setShowBlockMenu(open ? block.id : null)}>
               <PopoverTrigger asChild>
-                <button className="p-1 hover:bg-muted rounded">
+                <button className="p-1 hover:bg-muted rounded" aria-label="Adicionar bloco abaixo">
                   <Plus className="h-4 w-4 text-muted-foreground" />
                 </button>
               </PopoverTrigger>
@@ -610,7 +610,7 @@ export function BlockEditor({ pageId, blocks, onBlocksChange, companyId }: Block
                               key={type}
                               className="w-full flex items-center gap-2 px-2 py-1.5 text-sm rounded hover:bg-muted transition-colors"
                               onClick={() => {
-                                changeBlockType(block.id, type);
+                                createBlock(type, index + 1);
                                 setShowBlockMenu(null);
                               }}
                             >
