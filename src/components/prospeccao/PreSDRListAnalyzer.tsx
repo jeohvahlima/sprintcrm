@@ -293,6 +293,8 @@ export function PreSDRListAnalyzer() {
       .subscribe();
     return () => { supabase.removeChannel(channel); };
   }, [companyId]);
+
+  function handleFile(file: File) {
     const reader = new FileReader();
     reader.onload = (e) => {
       try {
