@@ -3,7 +3,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { Phone, Upload, Loader2, Sparkles, FileSpreadsheet, Download, Trash2, Brain, ChevronDown, ChevronRight, PhoneCall, Check, CalendarClock, Flame, X, Trophy, Filter, MessageCircle } from "lucide-react";
+import { Phone, Upload, Loader2, Sparkles, FileSpreadsheet, Download, Trash2, Brain, ChevronDown, ChevronRight, PhoneCall, Check, CalendarClock, Flame, X, Trophy, Filter, MessageCircle, FileText } from "lucide-react";
+import { ScriptViewerDialog } from "./ScriptViewerDialog";
 import { toast } from "sonner";
 import * as XLSX from "xlsx";
 import { supabase } from "@/integrations/supabase/client";
@@ -141,6 +142,8 @@ export function PreSDRListAnalyzer() {
   const [waRow, setWaRow] = useState<Row | null>(null);
   const [waLeadId, setWaLeadId] = useState<string | null>(null);
   const [waOpening, setWaOpening] = useState<string | null>(null);
+  const [scriptOpen, setScriptOpen] = useState(false);
+  const [scriptRow, setScriptRow] = useState<Row | null>(null);
 
   async function openConversa(r: Row) {
     if (!r.telefone) return toast.error("Linha sem telefone para WhatsApp.");
@@ -630,6 +633,16 @@ export function PreSDRListAnalyzer() {
                                 {waOpening === r.__id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <MessageCircle className="h-3.5 w-3.5" />}
                                 <span className="ml-1">Conversa</span>
                               </Button>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                className="h-7 px-2 text-indigo-600 hover:bg-indigo-50"
+                                onClick={() => { setScriptRow(r); setScriptOpen(true); }}
+                                title="Abrir scripts do Workspace"
+                              >
+                                <FileText className="h-3.5 w-3.5" />
+                                <span className="ml-1">Script</span>
+                              </Button>
                               {r.__leadId ? (
                                 <Badge variant="outline" className="text-emerald-700 border-emerald-300 gap-1">
                                   <PhoneCall className="h-3 w-3" /> Cold Call
@@ -691,6 +704,11 @@ export function PreSDRListAnalyzer() {
           leadPhone={String(waRow?.telefone ?? "")}
         />
       )}
+      <ScriptViewerDialog
+        open={scriptOpen}
+        onOpenChange={setScriptOpen}
+        contactName={scriptRow?.fantasia || scriptRow?.razao}
+      />
     </Card>
   );
 }
