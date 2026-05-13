@@ -96,7 +96,7 @@ export function ScriptViewerDialog({ open, onOpenChange, contactName }: Props) {
                 className="pl-8"
               />
             </div>
-            <ScrollArea className="flex-1 -mx-6 px-6">
+            <ScrollArea className="flex-1 min-h-0 -mx-6 px-6 max-h-[65vh]">
               {loadingList ? (
                 <div className="flex items-center justify-center py-10 text-muted-foreground gap-2">
                   <Loader2 className="h-4 w-4 animate-spin" /> Carregando...
