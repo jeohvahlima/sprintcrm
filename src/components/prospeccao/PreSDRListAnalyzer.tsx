@@ -633,6 +633,16 @@ export function PreSDRListAnalyzer() {
                                 {waOpening === r.__id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <MessageCircle className="h-3.5 w-3.5" />}
                                 <span className="ml-1">Conversa</span>
                               </Button>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                className="h-7 px-2 text-indigo-600 hover:bg-indigo-50"
+                                onClick={() => { setScriptRow(r); setScriptOpen(true); }}
+                                title="Abrir scripts do Workspace"
+                              >
+                                <FileText className="h-3.5 w-3.5" />
+                                <span className="ml-1">Script</span>
+                              </Button>
                               {r.__leadId ? (
                                 <Badge variant="outline" className="text-emerald-700 border-emerald-300 gap-1">
                                   <PhoneCall className="h-3 w-3" /> Cold Call
