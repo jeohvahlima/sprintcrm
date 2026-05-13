@@ -820,21 +820,6 @@ export function PreSDRListAnalyzer() {
                                         >
                                           <History className="h-3 w-3" />
                                           <strong>{count}</strong>
-                                          {last?.user_name && (
-                                            <span className="hidden lg:inline text-[10px] opacity-80">· {last.user_name.split(" ")[0]}</span>
-                                          )}
-                                        </button>
-                                      </PopoverTrigger>
-                                  {count > 0 && (
-                                    <Popover>
-                                      <PopoverTrigger asChild>
-                                        <button
-                                          type="button"
-                                          className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full border text-[11px] ${lastMeta?.className || "text-muted-foreground"} hover:bg-muted`}
-                                          title="Ver histórico de abordagens"
-                                        >
-                                          <History className="h-3 w-3" />
-                                          <strong>{count}</strong>
                                           {lastMeta && <span className="hidden xl:inline">· {lastMeta.label}</span>}
                                           {last?.user_name && (
                                             <span className="hidden lg:inline text-[10px] opacity-80">· por {last.user_name.split(" ")[0]}</span>
