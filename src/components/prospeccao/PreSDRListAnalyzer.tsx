@@ -704,6 +704,11 @@ export function PreSDRListAnalyzer() {
           leadPhone={String(waRow?.telefone ?? "")}
         />
       )}
+      <ScriptViewerDialog
+        open={scriptOpen}
+        onOpenChange={setScriptOpen}
+        contactName={scriptRow?.fantasia || scriptRow?.razao}
+      />
     </Card>
   );
 }
