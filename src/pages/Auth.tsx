@@ -12,6 +12,24 @@ import { useToast } from "@/hooks/use-toast";
 import { Session } from "@supabase/supabase-js";
 import { AlertCircle, RefreshCw, Eye, EyeOff } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
+
+const getErrorMessage = (error: unknown, fallback = "Erro desconhecido") => {
+  if (error instanceof Error) return error.message;
+  if (typeof error === "object" && error !== null && "message" in error) {
+    const message = (error as { message?: unknown }).message;
+    if (typeof message === "string") return message;
+  }
+  return fallback;
+};
+
+const getErrorStatus = (error: unknown) => {
+  if (typeof error === "object" && error !== null && "status" in error) {
+    const status = (error as { status?: unknown }).status;
+    if (typeof status === "number") return status;
+  }
+  return undefined;
+};
+
 export default function Auth() {
   const navigate = useNavigate();
   const {
@@ -125,12 +143,12 @@ export default function Auth() {
       }
 
       navigate("/dashboard");
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("❌ Exceção ao fazer login com Google:", err);
       toast({
         variant: "destructive",
         title: "Erro ao fazer login com Google",
-        description: err.message || "Erro desconhecido"
+        description: getErrorMessage(err)
       });
     } finally {
       setLoading(false);
@@ -159,7 +177,7 @@ export default function Auth() {
           description: "O servidor está respondendo. Você pode fazer login agora."
         });
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('❌ Backend check exception:', err);
       setBackendDown(true);
       toast({
@@ -192,7 +210,7 @@ export default function Auth() {
         console.error("❌ Erro ao fazer login:", error);
 
         // Verificar se é erro 503 (backend fora do ar)
-        if ((error as any).status === 503 || error.message.includes("503")) {
+        if (getErrorStatus(error) === 503 || error.message.includes("503")) {
           setBackendDown(true);
           toast({
             variant: "destructive",
@@ -241,18 +259,20 @@ export default function Auth() {
         // ✅ A navegação será feita automaticamente pelo onAuthStateChange
         // Não precisa navegar aqui para evitar navegação duplicada
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("❌ Exceção ao fazer login:", err);
+      const errorMessage = getErrorMessage(err, "Erro desconhecido. Tente novamente.");
+      const errorStatus = getErrorStatus(err);
 
       // Verificar se é erro de conexão (Failed to fetch) - comum quando backend está pausado
-      if (err.message?.includes("Failed to fetch") || err.message?.includes("NetworkError") || err.status === 0) {
+      if (errorMessage.includes("Failed to fetch") || errorMessage.includes("NetworkError") || errorStatus === 0) {
         setBackendDown(true);
         toast({
           variant: "destructive",
           title: "🔴 Não foi possível conectar",
           description: "O backend pode estar pausado ou reiniciando. Aguarde alguns minutos e clique em 'Verificar Status'."
         });
-      } else if (err.status === 503) {
+      } else if (errorStatus === 503) {
         setBackendDown(true);
         toast({
           variant: "destructive",
@@ -263,7 +283,7 @@ export default function Auth() {
         toast({
           variant: "destructive",
           title: "Erro ao fazer login",
-          description: err.message || "Erro desconhecido. Tente novamente."
+          description: errorMessage
         });
       }
     } finally {
