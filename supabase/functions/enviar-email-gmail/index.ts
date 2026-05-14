@@ -54,21 +54,20 @@ async function refreshTokenIfNeeded(supabase: any, companyId: string, integratio
 }
 
 // Função para criar email no formato MIME
-function createEmail(to: string, from: string, subject: string, body: string, isHtml: boolean = false): string {
+function createEmail(to: string, from: string, subject: string, body: string, isHtml: boolean = false, inReplyTo?: string, references?: string): string {
   const mimeType = isHtml ? 'text/html' : 'text/plain';
-  
-  const email = [
+  const lines = [
     `From: ${from}`,
     `To: ${to}`,
     `Subject: =?UTF-8?B?${btoa(unescape(encodeURIComponent(subject)))}?=`,
     `MIME-Version: 1.0`,
     `Content-Type: ${mimeType}; charset=UTF-8`,
     `Content-Transfer-Encoding: base64`,
-    '',
-    btoa(unescape(encodeURIComponent(body))),
-  ].join('\r\n');
-
-  // Converter para base64url
+  ];
+  if (inReplyTo) lines.push(`In-Reply-To: ${inReplyTo}`);
+  if (references) lines.push(`References: ${references}`);
+  lines.push('', btoa(unescape(encodeURIComponent(body))));
+  const email = lines.join('\r\n');
   return btoa(email).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
 }
 
