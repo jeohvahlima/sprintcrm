@@ -19,6 +19,8 @@ import {
 import { toast } from "sonner";
 import { useTagsManager } from "@/hooks/useTagsManager";
 import { EmailComposer } from "@/components/email/EmailComposer";
+import { EmailInbox } from "./EmailInbox";
+import { Tabs as TopTabs, TabsList as TopTabsList, TabsTrigger as TopTabsTrigger, TabsContent as TopTabsContent } from "@/components/ui/tabs";
 
 interface Lead {
   id: string;
