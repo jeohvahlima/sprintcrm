@@ -236,29 +236,6 @@ export function Header({ onToggleSidebar, sidebarCollapsed }: HeaderProps) {
           )}
         </Button>
 
-        {/* Cards de métricas (apenas em Conversas e em desktop) */}
-        {location.pathname?.toLowerCase().includes("conversas") && (
-          <div className="hidden lg:flex items-center gap-2 flex-1 overflow-x-auto">
-            <div className="px-3 py-2 border rounded-lg bg-muted/20 whitespace-nowrap flex items-center gap-2 text-sm">
-              <MessageSquare className="h-4 w-4" /> {conversationsMetrics.totalConversas} Conversas
-            </div>
-            <div className="px-3 py-2 border rounded-lg bg-muted/20 whitespace-nowrap flex items-center gap-2 text-sm">
-              <Users className="h-4 w-4" /> {conversationsMetrics.ativas} Ativas
-            </div>
-            <div className="px-3 py-2 border rounded-lg bg-muted/20 whitespace-nowrap flex items-center gap-2 text-sm">
-              <Clock className="h-4 w-4" /> {conversationsMetrics.mensagensHoje} Hoje
-            </div>
-            <div className="px-3 py-2 border rounded-lg bg-muted/20 whitespace-nowrap flex items-center gap-2 text-sm">
-              <MessageSquare className="h-4 w-4 text-[#25D366]" /> {conversationsMetrics.whatsapp} WhatsApp
-            </div>
-            <div className="px-3 py-2 border rounded-lg bg-muted/20 whitespace-nowrap flex items-center gap-2 text-sm">
-              <Instagram className="h-4 w-4 text-pink-500" /> {conversationsMetrics.instagram} Instagram
-            </div>
-            <div className="px-3 py-2 border rounded-lg bg-muted/20 whitespace-nowrap flex items-center gap-2 text-sm">
-              <Zap className="h-4 w-4" /> {conversationsMetrics.telegram} Telegram
-            </div>
-          </div>
-        )}
 
         {/* Spacer para empurrar ações para direita */}
         <div className="flex-1" />
