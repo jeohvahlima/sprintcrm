@@ -279,22 +279,22 @@ export function LeadActivityTimeline({ leadId, leadCreatedAt, leadName }: Props)
   const count = events.length;
 
   return (
-    <div className="border rounded-lg bg-card">
+    <div className="border-2 border-primary/40 rounded-lg bg-card shadow-sm">
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="w-full flex items-center justify-between px-3 py-2 hover:bg-muted/50 rounded-t-lg"
+        className="w-full flex items-center justify-between px-3 py-2.5 hover:bg-primary/10 rounded-t-lg bg-primary/5"
       >
         <div className="flex items-center gap-2">
           <History className="h-4 w-4 text-primary" />
-          <span className="font-medium text-sm text-foreground">Histórico do Lead</span>
+          <span className="font-semibold text-sm text-foreground">Histórico do Lead</span>
           {open && count > 0 && (
             <Badge variant="secondary" className="h-5 text-xs">
               {count}
             </Badge>
           )}
         </div>
-        {open ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+        {open ? <ChevronUp className="h-4 w-4 text-primary" /> : <ChevronDown className="h-4 w-4 text-primary" />}
       </button>
 
       {open && (
