@@ -57,62 +57,95 @@ export function ChannelProspectPanel({ channel }: Props) {
   const callCenter = useCallCenter();
   const callOpen = channel === "coldcall" && callCenter.callState.isActive && callCenter.callState.status !== "finalizado";
 
-  // Estado por lead (apenas Cold Call) — sincronizado em tempo real
-  type LeadCallState = { outcome: string; attempts: number; last_attempt_at: string | null };
+  // Estado por lead (apenas Cold Call) — sincronizado em tempo real (fonte da verdade global)
+  type LeadCallState = {
+    outcome: string;
+    attempts: number;
+    last_attempt_at: string | null;
+    attemptsList: any[];
+  };
   const [leadStates, setLeadStates] = useState<Record<string, LeadCallState>>({});
+  const [companyIdGlobal, setCompanyIdGlobal] = useState<string | null>(null);
+  const [currentUserGlobal, setCurrentUserGlobal] = useState<{ id: string; name: string } | null>(null);
+
   useEffect(() => {
     if (channel !== "coldcall") return;
+    (async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      const { data: prof } = await supabase
+        .from("profiles").select("full_name").eq("id", user.id).maybeSingle();
+      setCurrentUserGlobal({
+        id: user.id,
+        name: (prof as any)?.full_name || user.email?.split("@")[0] || "Usuário",
+      });
+    })();
+  }, [channel]);
+
+  useEffect(() => {
+    if (channel !== "coldcall") return;
+    let cancelled = false;
     let companyIdLocal: string | null = null;
     (async () => {
       const { data: cid } = await supabase.rpc("get_my_company_id");
-      if (!cid) return;
+      if (!cid || cancelled) return;
       companyIdLocal = cid as string;
-      // pagina (evita limite de 1000)
+      setCompanyIdGlobal(companyIdLocal);
       const map: Record<string, LeadCallState> = {};
       const PAGE = 1000;
       let from = 0;
-      while (true) {
+      while (!cancelled) {
         const { data: rows, error } = await supabase
           .from("pre_sdr_analyses" as any)
-          .select("row_key,outcome,lead_id,attempts_count,last_attempt_at")
+          .select("row_key,outcome,lead_id,attempts,attempts_count,last_attempt_at")
           .eq("company_id", companyIdLocal)
-          .like("row_key", "lead:%")
+          .not("lead_id", "is", null)
           .range(from, from + PAGE - 1);
-        if (error || !rows || rows.length === 0) break;
+        if (error) {
+          console.error("[ChannelProspectPanel] erro carregando estados:", error);
+          break;
+        }
+        if (!rows || rows.length === 0) break;
         rows.forEach((r: any) => {
-          const id = r.lead_id || (r.row_key?.startsWith("lead:") ? r.row_key.slice(5) : null);
+          const id = r.lead_id || (typeof r.row_key === "string" && r.row_key.startsWith("lead:") ? r.row_key.slice(5) : null);
           if (!id) return;
           map[id] = {
             outcome: r.outcome || "pendente",
             attempts: r.attempts_count || 0,
             last_attempt_at: r.last_attempt_at || null,
+            attemptsList: Array.isArray(r.attempts) ? r.attempts : [],
           };
         });
         if (rows.length < PAGE) break;
         from += PAGE;
       }
-      setLeadStates(map);
+      if (!cancelled) setLeadStates(map);
     })();
     const ch = supabase
-      .channel(`coldcall_states_${channel}`)
+      .channel(`coldcall_states_${channel}_${Date.now()}`)
       .on("postgres_changes", { event: "*", schema: "public", table: "pre_sdr_analyses" }, (payload) => {
         const n: any = payload.new || payload.old;
         if (!n) return;
-        const id = n.lead_id || (n.row_key?.startsWith("lead:") ? n.row_key.slice(5) : null);
+        const id = n.lead_id || (typeof n.row_key === "string" && n.row_key.startsWith("lead:") ? n.row_key.slice(5) : null);
         if (!id) return;
         const nn: any = payload.new || {};
-        setLeadStates((prev) => ({
-          ...prev,
-          [id]: {
-            outcome: nn.outcome || "pendente",
-            attempts: nn.attempts_count || 0,
-            last_attempt_at: nn.last_attempt_at || null,
-          },
-        }));
+        setLeadStates((prev) => {
+          const old = prev[id] || { outcome: "pendente", attempts: 0, last_attempt_at: null, attemptsList: [] };
+          return {
+            ...prev,
+            [id]: {
+              outcome: nn.outcome ?? old.outcome,
+              attempts: nn.attempts_count ?? old.attempts,
+              last_attempt_at: nn.last_attempt_at ?? old.last_attempt_at,
+              attemptsList: Array.isArray(nn.attempts) ? nn.attempts : old.attemptsList,
+            },
+          };
+        });
       })
       .subscribe();
-    return () => { supabase.removeChannel(ch); };
+    return () => { cancelled = true; supabase.removeChannel(ch); };
   }, [channel]);
+
 
   const isToday = (iso: string | null) =>
     !!iso && new Date(iso).toDateString() === new Date().toDateString();
@@ -342,7 +375,15 @@ export function ChannelProspectPanel({ channel }: Props) {
                         {meta.cta}
                       </Button>
                       {channel === "coldcall" && (
-                        <ColdCallActions lead={lead} />
+                        <ColdCallActions
+                          lead={lead}
+                          externalCompanyId={companyIdGlobal}
+                          externalUser={currentUserGlobal}
+                          externalState={{
+                            outcome: leadStates[lead.id]?.outcome,
+                            attempts: leadStates[lead.id]?.attemptsList || [],
+                          }}
+                        />
                       )}
                       <Button size="icon" variant="ghost" onClick={() => setHandoffLead({ id: lead.id, name: lead.name || "Lead" })} title="Passar para Closer">
                         <ArrowRightLeft className="h-3.5 w-3.5" />

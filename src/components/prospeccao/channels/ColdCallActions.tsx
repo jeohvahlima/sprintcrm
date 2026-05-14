@@ -49,37 +49,65 @@ const OUTCOME_ORDER: Outcome[] = ["pendente", "prospectado", "sem_resposta", "op
 
 interface Props {
   lead: { id: string; name?: string | null; phone?: string | null; telefone?: string | null };
+  // Estado pré-carregado pelo painel pai (evita 1 query + 1 canal realtime por linha)
+  externalState?: {
+    outcome?: Outcome | string | null;
+    attempts?: Attempt[] | null;
+  };
+  externalCompanyId?: string | null;
+  externalUser?: { id: string; name: string } | null;
 }
 
-export function ColdCallActions({ lead }: Props) {
+export function ColdCallActions({ lead, externalState, externalCompanyId, externalUser }: Props) {
   const phone = lead.phone || lead.telefone || "";
   const rowKey = `lead:${lead.id}`;
-  const [companyId, setCompanyId] = useState<string | null>(null);
-  const [currentUser, setCurrentUser] = useState<{ id: string; name: string } | null>(null);
-  const [attempts, setAttempts] = useState<Attempt[]>([]);
-  const [outcome, setOutcomeState] = useState<Outcome>("pendente");
-  const [loaded, setLoaded] = useState(false);
+  const [companyId, setCompanyId] = useState<string | null>(externalCompanyId || null);
+  const [currentUser, setCurrentUser] = useState<{ id: string; name: string } | null>(externalUser || null);
+  const [attempts, setAttempts] = useState<Attempt[]>(Array.isArray(externalState?.attempts) ? externalState!.attempts! : []);
+  const [outcome, setOutcomeState] = useState<Outcome>(((externalState?.outcome as Outcome) || "pendente"));
+  const [loaded, setLoaded] = useState(!!externalState);
 
   const [conversaOpen, setConversaOpen] = useState(false);
   const [scriptOpen, setScriptOpen] = useState(false);
 
+  // Sincroniza com props externas (pai é fonte da verdade quando fornecido)
   useEffect(() => {
-    (async () => {
-      const { data: cid } = await supabase.rpc("get_my_company_id");
-      if (cid) setCompanyId(cid as string);
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        const { data: prof } = await supabase
-          .from("profiles").select("full_name").eq("id", user.id).maybeSingle();
-        setCurrentUser({
-          id: user.id,
-          name: (prof as any)?.full_name || user.email?.split("@")[0] || "Usuário",
-        });
-      }
-    })();
-  }, []);
+    if (externalCompanyId) setCompanyId(externalCompanyId);
+  }, [externalCompanyId]);
+  useEffect(() => {
+    if (externalUser) setCurrentUser(externalUser);
+  }, [externalUser?.id]);
+  useEffect(() => {
+    if (!externalState) return;
+    setAttempts(Array.isArray(externalState.attempts) ? externalState.attempts! : []);
+    setOutcomeState(((externalState.outcome as Outcome) || "pendente"));
+    setLoaded(true);
+  }, [externalState?.outcome, JSON.stringify(externalState?.attempts || [])]);
 
   useEffect(() => {
+    if (externalCompanyId && externalUser) return; // já temos do pai
+    (async () => {
+      if (!externalCompanyId) {
+        const { data: cid } = await supabase.rpc("get_my_company_id");
+        if (cid) setCompanyId(cid as string);
+      }
+      if (!externalUser) {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          const { data: prof } = await supabase
+            .from("profiles").select("full_name").eq("id", user.id).maybeSingle();
+          setCurrentUser({
+            id: user.id,
+            name: (prof as any)?.full_name || user.email?.split("@")[0] || "Usuário",
+          });
+        }
+      }
+    })();
+  }, [externalCompanyId, externalUser]);
+
+  // Fallback: busca individual só quando o pai NÃO entrega estado externo
+  useEffect(() => {
+    if (externalState) return;
     if (!companyId) return;
     (async () => {
       const { data } = await supabase
@@ -94,10 +122,11 @@ export function ColdCallActions({ lead }: Props) {
       }
       setLoaded(true);
     })();
-  }, [companyId, rowKey]);
+  }, [companyId, rowKey, externalState]);
 
-  // realtime sync para evitar dois SDRs ligando o mesmo
+  // Realtime individual só quando NÃO há estado externo (pai já assina o canal global)
   useEffect(() => {
+    if (externalState !== undefined) return;
     if (!companyId) return;
     const ch = supabase
       .channel(`coldcall_lead:${lead.id}`)
@@ -113,7 +142,8 @@ export function ColdCallActions({ lead }: Props) {
       )
       .subscribe();
     return () => { supabase.removeChannel(ch); };
-  }, [companyId, lead.id, rowKey]);
+  }, [companyId, lead.id, rowKey, externalState]);
+
 
   async function ensureRow() {
     if (!companyId) return false;
