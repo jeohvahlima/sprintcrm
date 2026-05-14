@@ -36,6 +36,7 @@ export function ChannelProspectPanel({ channel }: Props) {
   const [filter, setFilter] = useState<"all" | "marked">("marked");
   const [search, setSearch] = useState("");
   const [tagFilter, setTagFilter] = useState<string>("all");
+  const [outcomeFilter, setOutcomeFilter] = useState<string>("all");
   const [showNotes, setShowNotes] = useState(false);
 
   // Popup de conversa inline (Instagram/WhatsApp)
@@ -56,11 +57,65 @@ export function ChannelProspectPanel({ channel }: Props) {
   const callCenter = useCallCenter();
   const callOpen = channel === "coldcall" && callCenter.callState.isActive && callCenter.callState.status !== "finalizado";
 
-  const filteredData = useMemo(() => {
+  // Outcomes por lead (apenas Cold Call) — sincronizado em tempo real
+  const [outcomes, setOutcomes] = useState<Record<string, string>>({});
+  useEffect(() => {
+    if (channel !== "coldcall") return;
+    let companyIdLocal: string | null = null;
+    (async () => {
+      const { data: cid } = await supabase.rpc("get_my_company_id");
+      if (!cid) return;
+      companyIdLocal = cid as string;
+      const { data: rows } = await supabase
+        .from("pre_sdr_analyses" as any)
+        .select("row_key,outcome,lead_id")
+        .eq("company_id", companyIdLocal)
+        .like("row_key", "lead:%");
+      const map: Record<string, string> = {};
+      (rows || []).forEach((r: any) => {
+        const id = r.lead_id || (r.row_key?.startsWith("lead:") ? r.row_key.slice(5) : null);
+        if (id && r.outcome) map[id] = r.outcome;
+      });
+      setOutcomes(map);
+    })();
+    const ch = supabase
+      .channel(`coldcall_outcomes_${channel}`)
+      .on("postgres_changes", { event: "*", schema: "public", table: "pre_sdr_analyses" }, (payload) => {
+        const n: any = payload.new || payload.old;
+        if (!n) return;
+        const id = n.lead_id || (n.row_key?.startsWith("lead:") ? n.row_key.slice(5) : null);
+        if (!id) return;
+        setOutcomes((prev) => ({ ...prev, [id]: (payload.new as any)?.outcome || "pendente" }));
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(ch); };
+  }, [channel]);
+
+  // Aplicar filtros de tag + (cold call) outcome
+  const tagFiltered = useMemo(() => {
     if (!data) return [];
     if (tagFilter === "all") return data;
     return data.filter((l: any) => Array.isArray(l.tags) && l.tags.includes(tagFilter));
   }, [data, tagFilter]);
+
+  const filteredData = useMemo(() => {
+    if (channel !== "coldcall" || outcomeFilter === "all") return tagFiltered;
+    return tagFiltered.filter((l: any) => {
+      const o = outcomes[l.id] || "pendente";
+      return o === outcomeFilter;
+    });
+  }, [tagFiltered, outcomeFilter, outcomes, channel]);
+
+  // Contagens por outcome (sobre tagFiltered)
+  const outcomeCounts = useMemo(() => {
+    const c: Record<string, number> = { all: tagFiltered.length, pendente: 0, prospectado: 0, sem_resposta: 0, oportunidade: 0, agendamento: 0, follow_up: 0, ganho: 0, descartado: 0 };
+    tagFiltered.forEach((l: any) => {
+      const o = outcomes[l.id] || "pendente";
+      c[o] = (c[o] || 0) + 1;
+    });
+    return c;
+  }, [tagFiltered, outcomes]);
+
 
   const handleAction = async (lead: any) => {
     const phone = lead.phone || lead.telefone;
