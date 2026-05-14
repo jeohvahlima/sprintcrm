@@ -190,7 +190,7 @@ export function ChannelProspectPanel({ channel }: Props) {
       ? filteredData.filter((l: any) => isToday(leadStates[l.id]?.last_attempt_at || null)).length
       : filteredData.filter((l: any) => l.last_prospected_at && new Date(l.last_prospected_at).toDateString() === new Date().toDateString()).length;
     return { total, marked, contactedToday };
-  }, [filteredData]);
+  }, [filteredData, channel, leadStates]);
 
   return (
     <div className="space-y-4">
