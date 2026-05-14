@@ -57,6 +57,15 @@ export function GmailConfig({ companyId }: GmailConfigProps) {
   };
 
   const handleConnect = async () => {
+    const isEmbeddedPreview = (() => {
+      try {
+        return window.self !== window.top;
+      } catch {
+        return true;
+      }
+    })();
+    const oauthWindow = isEmbeddedPreview ? window.open('', 'gmail_oauth') : null;
+
     try {
       setConnecting(true);
       const redirectUri = `${window.location.origin}/oauth/gmail/callback`;
@@ -67,8 +76,14 @@ export function GmailConfig({ companyId }: GmailConfigProps) {
       if (error) throw error;
       if (!data?.auth_url) throw new Error('URL de autorização não gerada');
 
-      window.location.href = data.auth_url;
+      if (oauthWindow && !oauthWindow.closed) {
+        oauthWindow.location.href = data.auth_url;
+        return;
+      }
+
+      window.location.assign(data.auth_url);
     } catch (error: any) {
+      if (oauthWindow && !oauthWindow.closed) oauthWindow.close();
       toast({
         title: "Erro de Configuração",
         description: error?.message || "Não foi possível iniciar a conexão com o Gmail.",
