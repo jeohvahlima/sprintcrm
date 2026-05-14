@@ -78,6 +78,7 @@ export const LeadCard = memo(function LeadCard({ lead, onDelete, onLeadMoved, is
   const [proximaTarefa, setProximaTarefa] = useState<string | null>(null);
   const [isExpanded, setIsExpanded] = useState(false);
   const [conversaOpen, setConversaOpen] = useState(false);
+  const [commentsOpen, setCommentsOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [responsaveisNomes, setResponsaveisNomes] = useState<string[]>([]);
   const [responsaveisData, setResponsaveisData] = useState<{id: string; nome: string; avatar_url?: string | null}[]>([]);
