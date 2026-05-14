@@ -110,7 +110,7 @@ export function ProfissionalSelector({
         <SelectTrigger>
           <SelectValue placeholder="Selecione um profissional" />
         </SelectTrigger>
-        <SelectContent>
+        <SelectContent className="z-[400]">
           <SelectItem value="none">Nenhum profissional</SelectItem>
           {profissionais.map((profissional) => (
             <SelectItem key={profissional.id} value={profissional.id}>
