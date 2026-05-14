@@ -1034,7 +1034,7 @@ export default function KanbanPage() {
   }
 
   return (
-    <div className="container mx-auto p-6">
+    <div className="w-full px-0 py-6">
       {/* Header com indicador de conexão */}
       <div className="flex justify-between items-center mb-6">
         <div>
