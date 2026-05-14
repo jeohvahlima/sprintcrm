@@ -98,7 +98,7 @@ export function LeadActivityTimeline({ leadId, leadCreatedAt, leadName }: Props)
       (tasksRes.data || []).forEach((r: any) => r.assigned_to && userIds.add(r.assigned_to));
       (comprRes.data || []).forEach((r: any) => r.usuario_responsavel_id && userIds.add(r.usuario_responsavel_id));
       (protocolsRes.data || []).forEach((r: any) => r.attending_user_id && userIds.add(r.attending_user_id));
-      if (leadRes.data?.created_by) userIds.add(leadRes.data.created_by);
+      if (leadRes.data?.responsavel_id) userIds.add(leadRes.data.created_by);
       if (leadRes.data?.responsavel_id) userIds.add(leadRes.data.responsavel_id);
 
       const [profilesRes, etapasRes] = await Promise.all([
@@ -125,7 +125,7 @@ export function LeadActivityTimeline({ leadId, leadCreatedAt, leadName }: Props)
           at: createdAt,
           title: "Lead criado",
           description: leadName ? `Contato: ${leadName}` : undefined,
-          userName: leadRes.data?.created_by ? userMap[leadRes.data.created_by] : undefined,
+          userName: leadRes.data?.responsavel_id ? userMap[leadRes.data.created_by] : undefined,
         });
       }
 
