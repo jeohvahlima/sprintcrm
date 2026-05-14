@@ -841,10 +841,12 @@ export const LeadCard = memo(function LeadCard({ lead, onDelete, onLeadMoved, is
                     <TooltipProvider key={tag} delayDuration={100}>
                       <Tooltip>
                         <TooltipTrigger asChild>
-                          <Badge variant="secondary" className="text-xs max-w-[60px] cursor-default flex-shrink-0">
-                            <Tag className="h-2.5 w-2.5 mr-1 flex-shrink-0" />
-                            <span className="truncate">{tag}</span>
-                          </Badge>
+                          <span className="inline-flex flex-shrink-0 cursor-default">
+                            <Badge variant="secondary" className="text-xs max-w-[60px]">
+                              <Tag className="h-2.5 w-2.5 mr-1 flex-shrink-0" />
+                              <span className="truncate">{tag}</span>
+                            </Badge>
+                          </span>
                         </TooltipTrigger>
                         <TooltipContent side="top">
                           <p className="font-medium">{tag}</p>
@@ -856,9 +858,11 @@ export const LeadCard = memo(function LeadCard({ lead, onDelete, onLeadMoved, is
                     <TooltipProvider delayDuration={100}>
                       <Tooltip>
                         <TooltipTrigger asChild>
-                          <Badge variant="secondary" className="text-xs cursor-default flex-shrink-0">
-                            +{lead.tags.length - 2}
-                          </Badge>
+                          <span className="inline-flex flex-shrink-0 cursor-default">
+                            <Badge variant="secondary" className="text-xs">
+                              +{lead.tags.length - 2}
+                            </Badge>
+                          </span>
                         </TooltipTrigger>
                         <TooltipContent side="top">
                           <p className="font-medium">{lead.tags.slice(2).join(', ')}</p>
