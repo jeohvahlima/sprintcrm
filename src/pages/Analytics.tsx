@@ -12,7 +12,7 @@ import { PipelineFinanceiro } from "@/components/analytics/PipelineFinanceiro";
 import { LossReasonsReport } from "@/components/analytics/LossReasonsReport";
 import ProductsAnalytics from "@/components/analytics/ProductsAnalytics";
 import { CustomerLTVAnalytics } from "@/components/analytics/CustomerLTVAnalytics";
-import PropostasAnalytics from "@/components/analytics/PropostasAnalytics";
+
 import { isSegmentoFinanceiro } from "@/lib/segmentos";
 import { useEffect, useState, useCallback, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -1177,12 +1177,6 @@ export default function Analytics() {
             <TrendingUp className="h-4 w-4" />
             <span className="hidden sm:inline">Vendas & Clientes</span>
           </TabsTrigger>
-          {(isMasterAccount || isSegmentoFinanceiro(companySegmento)) && (
-            <TabsTrigger value="propostas" className="gap-2 py-3">
-              <Building2 className="h-4 w-4" />
-              <span className="hidden sm:inline">Propostas</span>
-            </TabsTrigger>
-          )}
           <TabsTrigger value="campaigns" className="gap-2 py-3">
             <Megaphone className="h-4 w-4" />
             <span className="hidden sm:inline">Revenue Engine</span>
@@ -1651,12 +1645,6 @@ export default function Analytics() {
           </Tabs>
         </TabsContent>
 
-        {/* Propostas Bancárias - Apenas para segmentos financeiros */}
-        {(isMasterAccount || isSegmentoFinanceiro(companySegmento)) && (
-          <TabsContent value="propostas" className="space-y-6">
-            <PropostasAnalytics />
-          </TabsContent>
-        )}
 
 
 

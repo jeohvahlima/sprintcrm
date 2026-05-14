@@ -40,7 +40,7 @@ import { TarefaModal } from "@/components/tarefas/TarefaModal";
 import { LeadAttachments } from "@/components/leads/LeadAttachments";
 import { ProdutoSelectorDialog } from "@/components/conversas/ProdutoSelectorDialog";
 import { VendasLeadPanel } from "@/components/conversas/VendasLeadPanel";
-import { PropostasBancariasPanel } from "@/components/conversas/PropostasBancariasPanel";
+
 import { ProcessosJuridicosPanel } from "@/components/conversas/ProcessosJuridicosPanel";
 import { isSegmentoFinanceiro, isSegmentoJuridico } from "@/lib/segmentos";
 import { LembretesAntecipados, LembreteAntecipado } from "@/components/conversas/LembretesAntecipados";
@@ -9995,28 +9995,6 @@ function Conversas() {
                               />
                             </div>
 
-                            {/* ✅ Painel de Propostas Bancárias - Apenas segmentos financeiros */}
-                            {(isMasterAccount || isSegmentoFinanceiro(companySegmento)) && (
-                            <div className="mt-3">
-                              <PropostasBancariasPanel
-                                leadId={leadVinculado.id}
-                                companyId={userCompanyId || ""}
-                                onPropostaUpdated={async () => {
-                                  if (selectedConv && (selectedConv.phoneNumber || selectedConv.id)) {
-                                    const telefoneFormatado = safeFormatPhoneNumber(selectedConv.phoneNumber || selectedConv.id);
-                                    const { data: leadAtualizado } = await supabase
-                                      .from('leads')
-                                      .select('*')
-                                      .or(`phone.eq.${telefoneFormatado},telefone.eq.${telefoneFormatado}`)
-                                      .maybeSingle();
-                                    if (leadAtualizado) {
-                                      setLeadVinculado(leadAtualizado);
-                                    }
-                                  }
-                                }}
-                              />
-                            </div>
-                            )}
 
                             {/* ✅ Painel de Processos Jurídicos - Apenas segmento advocacia */}
                             {(isMasterAccount || isSegmentoJuridico(companySegmento)) && (
