@@ -60,7 +60,7 @@ export default function Prospeccao() {
   const isMobile = useIsMobile();
   const [rpgMode, setRpgMode] = useState<boolean>(() => localStorage.getItem(RPG_KEY) !== "false");
   const [soundOn, setSoundOn] = useState<boolean>(() => localStorage.getItem(SOUND_KEY) === "true");
-  const [activeTab, setActiveTab] = useState<"organic" | "paid" | "followup" | "arena" | "performance" | "coldcall" | "instagram" | "whatsapp" | "funil" | "closer" | "comando" | "fila" | "intel" | "social" | "rotina" | "estrategia">("followup");
+  const [activeTab, setActiveTab] = useState<"organic" | "paid" | "followup" | "arena" | "performance" | "coldcall" | "instagram" | "whatsapp" | "email" | "funil" | "closer" | "comando" | "fila" | "intel" | "social" | "rotina" | "estrategia">("followup");
   const [subTab, setSubTab] = useState<"registros" | "interacoes">("registros");
   const [channelView, setChannelView] = useState<"prospect" | "chat" | "funil">("prospect");
   const [instagramSub, setInstagramSub] = useState<"chat" | "social" | "prospect">("chat");
