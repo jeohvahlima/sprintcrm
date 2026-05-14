@@ -573,7 +573,7 @@ export function AgendaModal({ open, onOpenChange, lead, onAgendamentoCriado }: A
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto !z-[300]">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto !z-[350]">
         <DialogHeader className="pb-3">
           <DialogTitle>Agendar Compromisso - {lead.nome}</DialogTitle>
         </DialogHeader>
@@ -592,7 +592,7 @@ export function AgendaModal({ open, onOpenChange, lead, onAgendamentoCriado }: A
                 <SelectTrigger className="h-9">
                   <SelectValue placeholder="Selecione uma agenda" />
                 </SelectTrigger>
-                <SelectContent className="z-[400]">
+                <SelectContent className="z-[500]">
                   {todasAgendas.map((agenda) => (
                     <SelectItem key={agenda.id} value={agenda.id}>
                       {agenda.nome} {agenda.tipo === 'principal' ? '(Principal)' : ''}
@@ -621,7 +621,7 @@ export function AgendaModal({ open, onOpenChange, lead, onAgendamentoCriado }: A
                 <SelectTrigger className="h-9">
                   <SelectValue placeholder="Selecione" />
                 </SelectTrigger>
-                <SelectContent className="z-[400]">
+                <SelectContent className="z-[500]">
                   <SelectItem value="reuniao">Reunião</SelectItem>
                   <SelectItem value="apresentacao">Apresentação</SelectItem>
                   <SelectItem value="visita">Visita</SelectItem>
@@ -676,7 +676,7 @@ export function AgendaModal({ open, onOpenChange, lead, onAgendamentoCriado }: A
                 <SelectTrigger className="h-9">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent className="z-[400]">
+                <SelectContent className="z-[500]">
                   <SelectItem value="15">15 min</SelectItem>
                   <SelectItem value="30">30 min</SelectItem>
                   <SelectItem value="45">45 min</SelectItem>
@@ -763,7 +763,7 @@ export function AgendaModal({ open, onOpenChange, lead, onAgendamentoCriado }: A
                       <SelectTrigger className="h-9">
                         <SelectValue placeholder="Horas" />
                       </SelectTrigger>
-                      <SelectContent className="z-[400]">
+                      <SelectContent className="z-[500]">
                         {Array.from({ length: 24 }, (_, i) => i).map((hour) => (
                           <SelectItem key={hour} value={hour.toString()}>
                             {hour} hora(s)
@@ -784,7 +784,7 @@ export function AgendaModal({ open, onOpenChange, lead, onAgendamentoCriado }: A
                       <SelectTrigger className="h-9">
                         <SelectValue placeholder="Minutos" />
                       </SelectTrigger>
-                      <SelectContent className="z-[400]">
+                      <SelectContent className="z-[500]">
                         {["0", "15", "30", "45"].map((minute) => (
                           <SelectItem key={minute} value={minute}>
                             {minute} min
@@ -804,7 +804,7 @@ export function AgendaModal({ open, onOpenChange, lead, onAgendamentoCriado }: A
                     <SelectTrigger className="h-9">
                       <SelectValue placeholder="Selecione" />
                     </SelectTrigger>
-                    <SelectContent className="z-[400]">
+                    <SelectContent className="z-[500]">
                       <SelectItem value="lead">Cliente</SelectItem>
                       <SelectItem value="responsavel">Responsável</SelectItem>
                       <SelectItem value="ambos">Ambos</SelectItem>
