@@ -9566,6 +9566,34 @@ function Conversas() {
                           <Zap className="h-5 w-5" />
                         </Button>
                       </DialogTrigger>
+
+                    {/* Botão Enviar Template (ao lado do raio) */}
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      className="text-primary hover:bg-primary/10 border-primary/40"
+                      title="Enviar Template"
+                      onClick={() => setTemplateDialogOpen(true)}
+                    >
+                      <FileText className="h-5 w-5" />
+                    </Button>
+                    {userCompanyId && selectedConv && (
+                      <ConversaTemplateSender
+                        open={templateDialogOpen}
+                        onOpenChange={setTemplateDialogOpen}
+                        companyId={userCompanyId}
+                        contactName={selectedConv.contactName || ""}
+                        contactPhone={selectedConv.phoneNumber || selectedConv.id}
+                        origemApi={selectedConv.origemApi}
+                      />
+                    )}
+
+                    <Dialog open={showQuickRepliesPopup} onOpenChange={setShowQuickRepliesPopup}>
+                      <DialogTrigger asChild>
+                        <Button variant="outline" size="icon" className="text-amber-600 hover:text-amber-700 hover:bg-amber-50 border-amber-300 hidden" title="Respostas Rápidas (oculto)">
+                          <Zap className="h-5 w-5" />
+                        </Button>
+                      </DialogTrigger>
                       <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
                         <DialogHeader>
                           <DialogTitle className="flex items-center gap-2">
