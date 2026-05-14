@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Target, Phone, Instagram, MessageSquare, Trophy, Calendar, DollarSign } from "lucide-react";
+import { Target, Phone, Instagram, MessageSquare, Trophy, Calendar, DollarSign, Mail, Repeat } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
