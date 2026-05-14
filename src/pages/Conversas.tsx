@@ -10288,15 +10288,16 @@ function Conversas() {
                     {/* Quick Actions */}
                     <div>
                       <h4 className="text-foreground font-medium mb-3">Ações Rápidas</h4>
-                      <div className="space-y-2">
+                      <div className="flex flex-wrap gap-2">
                         {/* Quick Messages */}
                         {/* Roteiros Comerciais */}
                         <Button
                           variant="outline"
-                          className="w-full justify-start"
+                          size="icon"
+                          title="Roteiros Comerciais"
                           onClick={() => setRoteirosDialogOpen(true)}
                         >
-                          <Workflow className="h-4 w-4 mr-2" /> Roteiros Comerciais
+                          <Workflow className="h-4 w-4" />
                         </Button>
                         {selectedConv && (
                           <RoteirosComerciaisDialog
@@ -10312,8 +10313,8 @@ function Conversas() {
                         {/* Quick Messages */}
                         <Dialog>
                           <DialogTrigger asChild>
-                            <Button variant="outline" className="w-full justify-start">
-                              <Zap className="h-4 w-4 mr-2" /> Mensagens Rápidas
+                            <Button variant="outline" size="icon" title="Mensagens Rápidas">
+                              <Zap className="h-4 w-4" />
                             </Button>
                           </DialogTrigger>
                           <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
@@ -10651,9 +10652,9 @@ function Conversas() {
                         {/* Schedule Message */}
                         <Dialog>
                           <DialogTrigger asChild>
-                            <Button variant="outline" className="w-full justify-start">
-                              <Clock className="h-4 w-4 mr-2" /> Agendar Mensagem
-                              {scheduledMessages.filter(m => m.status === 'pending').length > 0 && <Badge variant="secondary" className="ml-auto">
+                            <Button variant="outline" size="icon" title="Agendar Mensagem" className="relative">
+                              <Clock className="h-4 w-4" />
+                              {scheduledMessages.filter(m => m.status === 'pending').length > 0 && <Badge variant="secondary" className="absolute -top-1 -right-1 h-4 min-w-4 px-1 text-[10px]">
                                   {scheduledMessages.filter(m => m.status === 'pending').length}
                                 </Badge>}
                             </Button>
@@ -10752,8 +10753,8 @@ function Conversas() {
                         {/* Schedule Reminder */}
                         <Dialog>
                           <DialogTrigger asChild>
-                            <Button variant="outline" className="w-full justify-start">
-                              <Bell className="h-4 w-4 mr-2" /> Gerenciar Lembretes
+                            <Button variant="outline" size="icon" title="Gerenciar Lembretes">
+                              <Bell className="h-4 w-4" />
                             </Button>
                           </DialogTrigger>
                           <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
@@ -11018,7 +11019,7 @@ function Conversas() {
                         }
                         setReunioesDialogOpen(true);
                       }}>
-                              <Calendar className="h-4 w-4 mr-2" /> Compromissos
+                              <Calendar className="h-4 w-4" />
                             </Button>
                           </DialogTrigger>
                           <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
