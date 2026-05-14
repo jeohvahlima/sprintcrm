@@ -83,7 +83,7 @@ export function LeadActivityTimeline({ leadId, leadCreatedAt, leadName }: Props)
         supabase.from("tasks").select("id,title,status,created_at,assigned_to").eq("lead_id", leadId).order("created_at", { ascending: false }),
         supabase.from("compromissos").select("id,titulo,tipo_servico,status,data_hora_inicio,created_at,usuario_responsavel_id").eq("lead_id", leadId).order("created_at", { ascending: false }),
         supabase.from("attendance_protocols").select("id,protocol_number,status,started_at,finished_at,attending_user_name,attending_user_id").eq("lead_id", leadId).order("started_at", { ascending: false }),
-        supabase.from("leads").select("id,name,created_at,created_by,responsavel_id").eq("id", leadId).maybeSingle(),
+        supabase.from("leads").select("id,name,created_at,responsavel_id").eq("id", leadId).maybeSingle(),
       ]);
 
       // Collect user IDs / etapa IDs / funil IDs to resolve names
