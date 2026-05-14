@@ -338,6 +338,7 @@ export function LeadComments({ leadId, initialNotes, onCommentAdded, open, onOpe
                       {editingId === comment.id ? (
                         <div className="flex flex-col gap-1.5">
                           <Textarea
+                            ref={editingRef}
                             value={editingText}
                             onChange={(e) => setEditingText(e.target.value)}
                             rows={1}
