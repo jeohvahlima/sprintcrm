@@ -36,7 +36,8 @@ export default function GmailCallback() {
         let companyId: string | null = null;
         if (stateParam) {
           try {
-            const state = JSON.parse(decodeURIComponent(stateParam));
+            const decodedState = decodeURIComponent(stateParam);
+            const state = JSON.parse(decodedState.startsWith('{') ? decodedState : atob(decodedState));
             companyId = state.company_id;
           } catch (e) {
             console.error('Erro ao parsear state:', e);
@@ -69,6 +70,7 @@ export default function GmailCallback() {
             code,
             company_id: companyId,
             redirect_uri: `${window.location.origin}/oauth/gmail/callback`,
+            state: stateParam,
           },
         });
 
