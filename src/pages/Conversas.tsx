@@ -40,6 +40,7 @@ import { TarefaModal } from "@/components/tarefas/TarefaModal";
 import { LeadAttachments } from "@/components/leads/LeadAttachments";
 import { ProdutoSelectorDialog } from "@/components/conversas/ProdutoSelectorDialog";
 import { VendasLeadPanel } from "@/components/conversas/VendasLeadPanel";
+import { LeadActivityTimeline } from "@/components/conversas/LeadActivityTimeline";
 
 import { ProcessosJuridicosPanel } from "@/components/conversas/ProcessosJuridicosPanel";
 import { isSegmentoFinanceiro, isSegmentoJuridico } from "@/lib/segmentos";
@@ -10255,6 +10256,13 @@ function Conversas() {
                         </DialogContent>
                       </Dialog>
                     </div>
+
+                    {/* Histórico do Lead (timeline) */}
+                    <LeadActivityTimeline
+                      leadId={leadVinculado?.id}
+                      leadCreatedAt={leadVinculado?.created_at}
+                      leadName={leadVinculado?.name || selectedConv?.contactName}
+                    />
 
                     {/* Quick Actions */}
                     <div>
