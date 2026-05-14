@@ -7,7 +7,7 @@
  * 3. Salva comentários como JSON no campo notes
  */
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { MessageCircle, Send, Trash2, User, ChevronDown, ChevronUp, Pencil, X, Check } from "lucide-react";
