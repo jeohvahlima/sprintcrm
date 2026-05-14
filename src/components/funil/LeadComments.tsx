@@ -30,6 +30,9 @@ interface LeadCommentsProps {
   leadId: string;
   initialNotes?: string | null;
   onCommentAdded?: () => void;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  hideToggle?: boolean;
 }
 
 function generateId() {
@@ -106,11 +109,16 @@ function parseComments(notes?: string | null): Comment[] {
   return [];
 }
 
-export function LeadComments({ leadId, initialNotes, onCommentAdded }: LeadCommentsProps) {
+export function LeadComments({ leadId, initialNotes, onCommentAdded, open, onOpenChange, hideToggle }: LeadCommentsProps) {
   const [comments, setComments] = useState<Comment[]>(() => parseComments(initialNotes));
   const [newComment, setNewComment] = useState("");
   const [loading, setLoading] = useState(false);
-  const [showComments, setShowComments] = useState(false);
+  const [internalOpen, setInternalOpen] = useState(false);
+  const showComments = open !== undefined ? open : internalOpen;
+  const setShowComments = (v: boolean) => {
+    if (onOpenChange) onOpenChange(v);
+    else setInternalOpen(v);
+  };
 
   useEffect(() => {
     setComments(parseComments(initialNotes));
@@ -216,19 +224,21 @@ export function LeadComments({ leadId, initialNotes, onCommentAdded }: LeadComme
 
   return (
     <div className="w-full">
-      <Button
-        type="button"
-        variant="ghost"
-        size="sm"
-        onClick={() => setShowComments((v) => !v)}
-        className="flex items-center gap-2 text-xs w-full justify-between"
-      >
-        <span className="flex items-center gap-2">
-          <MessageCircle className="h-3 w-3" />
-          Comentários ({comments.length})
-        </span>
-        {showComments ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
-      </Button>
+      {!hideToggle && (
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          onClick={() => setShowComments(!showComments)}
+          className="flex items-center gap-2 text-xs w-full justify-between"
+        >
+          <span className="flex items-center gap-2">
+            <MessageCircle className="h-3 w-3" />
+            Comentários ({comments.length})
+          </span>
+          {showComments ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
+        </Button>
+      )}
 
       {showComments && (
         <div className="mt-2 space-y-3 border-t pt-3">

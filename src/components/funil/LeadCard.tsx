@@ -78,6 +78,7 @@ export const LeadCard = memo(function LeadCard({ lead, onDelete, onLeadMoved, is
   const [proximaTarefa, setProximaTarefa] = useState<string | null>(null);
   const [isExpanded, setIsExpanded] = useState(false);
   const [conversaOpen, setConversaOpen] = useState(false);
+  const [commentsOpen, setCommentsOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [responsaveisNomes, setResponsaveisNomes] = useState<string[]>([]);
   const [responsaveisData, setResponsaveisData] = useState<{id: string; nome: string; avatar_url?: string | null}[]>([]);
@@ -1010,81 +1011,73 @@ export const LeadCard = memo(function LeadCard({ lead, onDelete, onLeadMoved, is
           </div>
         </div>
 
-        {/* Valor Estimado + Data Prevista + Botões de ação */}
+        {/* Valor Estimado (display) + Botões de ação */}
         <div 
           className="flex items-center justify-between pt-2 border-t border-border/50 gap-2"
           onClick={(e) => e.stopPropagation()}
           onMouseDown={(e) => e.stopPropagation()}
         >
-          {/* Valor Estimado à esquerda + Data Prevista abaixo - CLICÁVEL PARA EDITAR */}
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setValorInput(leadValue?.toString() || "");
-                    setValorDialogOpen(true);
-                  }}
-                  className="flex flex-col items-start hover:bg-muted/50 rounded-md p-1 -m-1 transition-colors group/valor cursor-pointer text-left min-w-0 flex-shrink"
+          {/* Display compacto de valor/probabilidade/data à esquerda */}
+          <div className="flex flex-col items-start min-w-0 flex-shrink gap-0.5">
+            <div className="flex items-center gap-1.5 flex-wrap">
+              {leadValue !== undefined && leadValue > 0 ? (
+                <Badge className="font-semibold bg-gradient-success text-success-foreground shadow-sm w-fit text-xs">
+                  R$ {leadValue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                </Badge>
+              ) : (
+                <span className="text-[11px] text-muted-foreground">Sem valor</span>
+              )}
+              {leadProbability !== undefined && leadProbability > 0 && (
+                <Badge 
+                  variant="outline" 
+                  className={`text-[10px] px-1.5 ${
+                    leadProbability >= 70 
+                      ? 'bg-success/10 border-success/30 text-success' 
+                      : leadProbability >= 40 
+                        ? 'bg-warning/10 border-warning/30 text-warning' 
+                        : 'bg-destructive/10 border-destructive/30 text-destructive'
+                  }`}
                 >
-                  <span className="text-xs text-muted-foreground font-medium flex items-center gap-1">
-                    Valor Estimado
-                    <Pencil className="h-2.5 w-2.5 opacity-0 group-hover/valor:opacity-100 transition-opacity" />
-                  </span>
-                  <div className="flex items-center gap-2 mt-0.5 flex-wrap">
-                    {leadValue !== undefined && leadValue > 0 ? (
-                      <Badge className="font-semibold bg-gradient-success text-success-foreground shadow-sm w-fit text-xs">
-                        R$ {leadValue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                      </Badge>
-                    ) : (
-                      <span className="text-xs text-muted-foreground flex items-center gap-1">
-                        <DollarSign className="h-3 w-3" />
-                        Adicionar valor
-                      </span>
-                    )}
-                    {leadProbability !== undefined && leadProbability > 0 && (
-                      <Badge 
-                        variant="outline" 
-                        className={`text-[10px] px-1.5 ${
-                          leadProbability >= 70 
-                            ? 'bg-success/10 border-success/30 text-success' 
-                            : leadProbability >= 40 
-                              ? 'bg-warning/10 border-warning/30 text-warning' 
-                              : 'bg-destructive/10 border-destructive/30 text-destructive'
-                        }`}
-                      >
-                        {leadProbability}%
-                      </Badge>
-                    )}
-                  </div>
-                  {/* Data Prevista de Fechamento - abaixo do valor */}
-                  {expectedCloseDate && (
-                    <div className="flex items-center gap-1 mt-1">
-                      <Badge 
-                        variant="outline" 
-                        className="text-[10px] bg-primary/10 border-primary/20 text-primary"
-                      >
-                        <Calendar className="h-2 w-2 mr-0.5" />
-                        {new Date(expectedCloseDate).toLocaleDateString('pt-BR')}
-                      </Badge>
-                    </div>
-                  )}
-                </button>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>Clique para {leadValue ? 'editar' : 'adicionar'} o valor</p>
-                {expectedCloseDate && (
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Previsão: {new Date(expectedCloseDate).toLocaleDateString('pt-BR')}
-                  </p>
-                )}
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
+                  {leadProbability}%
+                </Badge>
+              )}
+            </div>
+            {expectedCloseDate && (
+              <Badge 
+                variant="outline" 
+                className="text-[10px] bg-primary/10 border-primary/20 text-primary w-fit"
+              >
+                <Calendar className="h-2 w-2 mr-0.5" />
+                {new Date(expectedCloseDate).toLocaleDateString('pt-BR')}
+              </Badge>
+            )}
+          </div>
 
-          {/* Botões de ação à direita */}
+          {/* Botões de ação à direita - todos na mesma fileira */}
           <div data-lead-card-actions="true" className="flex items-center gap-0.5 flex-shrink-0">
+            {/* Botão Valor (cifrão) */}
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-7 w-7 text-success hover:text-success hover:bg-success/10"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setValorInput(leadValue?.toString() || "");
+                      setValorDialogOpen(true);
+                    }}
+                  >
+                    <DollarSign className="h-3.5 w-3.5" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>{leadValue ? 'Editar' : 'Adicionar'} valor estimado</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+
             {/* Botão Ver Conversas */}
             {lead.telefone && (
               <TooltipProvider>
@@ -1201,6 +1194,26 @@ export const LeadCard = memo(function LeadCard({ lead, onDelete, onLeadMoved, is
               </Tooltip>
             </TooltipProvider>
 
+            {/* Botão Comentários (toggle) */}
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-7 w-7 relative"
+                    onClick={(e) => { e.stopPropagation(); setCommentsOpen(v => !v); }}
+                    onMouseDown={(e) => e.stopPropagation()}
+                  >
+                    <MessageCircle className="h-3.5 w-3.5" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>{commentsOpen ? 'Ocultar' : 'Ver'} comentários</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+
             <Button
               variant="ghost"
               size="icon"
@@ -1211,6 +1224,20 @@ export const LeadCard = memo(function LeadCard({ lead, onDelete, onLeadMoved, is
             </Button>
           </div>
         </div>
+
+        {/* Painel inline de comentários (controlado pelo botão acima) */}
+        {commentsOpen && (
+          <div className="pt-2" onClick={(e) => e.stopPropagation()} onMouseDown={(e) => e.stopPropagation()}>
+            <LeadComments
+              leadId={lead.id}
+              initialNotes={lead.notes ?? null}
+              onCommentAdded={() => onLeadMoved?.()}
+              open={commentsOpen}
+              onOpenChange={setCommentsOpen}
+              hideToggle
+            />
+          </div>
+        )}
 
 
         {/* Modais sempre montados (fora do bloco expandido para funcionarem corretamente) */}
