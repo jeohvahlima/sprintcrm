@@ -1,84 +1,82 @@
-## Objetivo
+## Evolução do GMI → GROW Revenue Intelligence
 
-Reorganizar a sidebar (`src/components/layout/Sidebar.tsx`) para refletir os dois "produtos" comerciais da empresa:
+Hoje o GMI tem 5 pilares (Processos, Prospecção, Gestão, Automação, Pessoas) calculados a partir de dados do CRM. Vou adicionar uma camada de **autodiagnóstico guiado** com 4 novos blocos focados em clínicas, sem quebrar o que já existe.
 
-1. **CRM Padrão** — módulos operacionais que qualquer cliente do CRM tem.
-2. **Estruturação Comercial (GROW Sales Intelligence)** — módulos da metodologia própria, liberados apenas para quem contrata o pacote de estruturação.
+### 1. Novos pilares (peso configurável no score)
 
-Cada grupo vira um item colapsável (estilo "Consórcio" da imagem enviada): um cabeçalho com ícone + nome + chevron, e os submódulos aparecem indentados abaixo quando expandido.
+| Pilar | Mede | Tipo |
+|---|---|---|
+| **Aquisição & Marketing** | Canais de origem (Instagram, Google, indicação, ads, orgânico, convênio), investimento mensal em tráfego, CPL, CAC, ROI, dependência de canal único | Wizard |
+| **Social Selling** | Instagram comercial: tempo de resposta, CTA, prova social, stories diários, antes/depois, autoridade, ponte para WhatsApp | Wizard |
+| **Dependência Operacional** | Continuidade se a secretária sair, scripts documentados, processos escritos, dono acompanha indicadores, rotina comercial | Wizard |
+| **Crescimento Travado** | Faturamento estagnado X meses, teto operacional, gargalo de gestão vs marketing vs atendimento | Wizard |
 
-## Agrupamento proposto
+O score total passa de 100 para **100 normalizados** (peso ajustado). Os 5 pilares antigos continuam contribuindo do CRM; os 4 novos vêm do wizard.
 
-**CRM Padrão**
+### 2. Novo módulo "Diagnóstico Guiado"
 
-- Relatórios
-- Contatos
-- Funil de Vendas
-- Bate-Papo
-- Agenda
-- Tarefas
-- Fluxos e Automação
+Nova aba dentro de `/maturidade` chamada **Diagnóstico Guiado** com:
 
-**Estruturação Comercial (GROW)**
+- Wizard em etapas (uma por pilar novo), ~4–6 perguntas por etapa
+- Tipos de pergunta: escala 0–5, sim/não, múltipla escolha, slider de R$
+- Barra de progresso, possibilidade de pular e voltar depois
+- Ao concluir → calcula sub-score e injeta no GMI
 
-- Discador
-- Processos Comerciais
-- Prospecção
-- Maturidade
-- Mentoria  
-Treinamento  
-Financeiro (master only) quero transforma ele em um BI
+### 3. Diagnóstico de tráfego desperdiçado
 
-**Itens fora dos grupos (ficam soltos no topo ou rodapé, como hoje)**
+Componente dedicado dentro do bloco Aquisição que cruza:
+- Investimento informado em ads
+- Leads recebidos no CRM por origem
+- Conversão lead → consulta → procedimento
 
-- Jurídico (segmento-específico)
-- Configurações
+E mostra em destaque: **"você investiu R$ X, R$ Y virou paciente, R$ Z foi desperdiçado em lead frio / sem follow-up / sem resposta rápida"** — apontando se a culpa é tráfego ou operação.
 
-> Confirmar com o usuário se Treinamento e Jurídico entram em algum grupo ou ficam soltos.
+### 4. Reposicionamento do discurso da IA
 
-## Comportamento dos grupos
+No `advisor-ai` (edge function) e nos textos do `Diagnostico360` / `PlanoIARenderer`:
+- Trocar menções a "IA / inteligência artificial" por: **"resposta instantânea, redução de no-show, recuperação de pacientes, confirmação automática de consultas"**
+- Adaptar copy para clínicas (paciente, consulta, retorno, no-show) quando `segmento = clinica_medica/estetica/odonto/derma`
 
-- Cabeçalho do grupo: ícone (`ShoppingCart`/`Rocket` para Estruturação, `LayoutDashboard` para CRM), título, chevron `ChevronDown`/`ChevronRight`.
-- Estado de expansão controlado por `useState` local, com persistência simples em `localStorage` (`sidebar:group:<key>`) para lembrar entre sessões.
-- Por padrão: ambos os grupos abertos no primeiro acesso. Quando a rota atual pertence a um grupo, esse grupo abre automaticamente.
-- Submódulos: mantém visual atual (ícone + nome + badges de notificação), com `pl-8` para indentar.
-- Quando a sidebar está colapsada (`w-20`): grupos viram apenas ícones; ao passar o mouse, abre um popover lateral com os subitens (aproveita o `Tooltip`/`Popover` já presente).
+### 5. Reorganização visual do GMI (5 blocos GRI)
 
-## Gating de acesso (lógica de billing)
+O Radar e os cards do `/maturidade` passam a agrupar os 9 pilares em 5 áreas:
 
-A separação visual reflete o gating, mas a permissão real continua vindo de `useModuleAccess`/`usePermissions`. O grupo "Estruturação Comercial" deve:
+```
+Aquisição    → Aquisição & Marketing + Social Selling
+Conversão    → Prospecção + Processos
+Operação     → Gestão + Pessoas + Dependência
+Retenção     → (novo) recompra, retorno, LTV (já existe na base)
+Inteligência → Automação + Crescimento Travado
+```
 
-- Esconder o cabeçalho inteiro se a empresa **não** tem nenhum módulo do grupo liberado e **não** é master.
-- Mostrar cadeado nos submódulos individuais que estão bloqueados (mantém comportamento atual de `isLocked`).
-- Master account vê tudo.
-
-O grupo "CRM Padrão" sempre aparece — é a base do produto.
+---
 
 ## Detalhes técnicos
 
-Refatorar `navigation` para uma estrutura agrupada:
+### Banco
+- Nova tabela `wmi_guided_responses` (company_id, pilar, respostas jsonb, score, completed_at) com RLS por `get_my_company_id()`
+- Adicionar colunas `pillar_aquisicao`, `pillar_social`, `pillar_dependencia`, `pillar_crescimento` em `wmi_assessments`
+- Atualizar RPC `calculate_wmi_score` para incluir os 4 novos pilares quando houver respostas
+- Nova RPC `get_traffic_waste_diagnosis(company_id)` cruzando ads_spend ↔ leads ↔ conversões
 
-```ts
-type NavItem = { name; href; icon; menuKey; ...flags };
-type NavGroup = { key: string; label: string; icon; items: NavItem[]; gating?: 'crm'|'grow' };
-type NavEntry = NavItem | NavGroup;
-```
+### Frontend
+- `src/components/wmi/GuidedDiagnosisWizard.tsx` (novo)
+- `src/components/wmi/pillars/AcquisitionStep.tsx`, `SocialSellingStep.tsx`, `DependencyStep.tsx`, `GrowthBlockStep.tsx`
+- `src/components/wmi/TrafficWasteCard.tsx` (novo)
+- `src/hooks/useGuidedDiagnosis.ts` (novo)
+- Atualizar `useWMI.ts` para os novos campos e `RadarPilares.tsx` para 9 eixos (ou agrupar em 5)
+- Atualizar `Maturidade.tsx`: nova aba **"Diagnóstico Guiado"** entre Onboarding e Diagnóstico 360°
+- Atualizar `PILLAR_META` e tipo `WMIScore`
 
-Renderização:
+### Edge function
+- Atualizar `advisor-ai` para receber `guided_responses` e gerar plano referenciando aquisição/social/dependência
+- Reescrita de copy clínica condicional ao segmento
 
-- `isGroup(entry)` → componente `<SidebarGroup>` que controla expand/collapse e mapeia `items` usando o mesmo bloco de render atual (extraído em um `<SidebarItem>` para evitar duplicação).
-- Filtro de visibilidade roda **por item** primeiro; se grupo ficar vazio, o cabeçalho não é renderizado.
-- Badge agregada opcional no cabeçalho do grupo (soma de `conversasUnread + agendaToday + tarefasAlert + aiInsightsCount` para o CRM) — sugiro deixar para um polish posterior.
+### Sem quebrar nada
+- Migration adiciona colunas com `DEFAULT 0` → registros antigos continuam válidos
+- Wizard é opcional; quem não responder mantém score só dos 5 pilares originais
+- Tipos atualizados via migração; nenhum endpoint existente muda assinatura
 
-Arquivos afetados:
+---
 
-- `src/components/layout/Sidebar.tsx` — refator principal.
-- (opcional) extrair `SidebarItem.tsx` e `SidebarGroup.tsx` em `src/components/layout/` para reduzir o tamanho do Sidebar.
-
-Sem mudanças em rotas, hooks de permissão, banco de dados ou backend — é apenas reorganização visual + agrupamento lógico.
-
-## Pontos para confirmar antes de implementar
-
-1. O agrupamento acima está correto (especialmente Treinamento e Jurídico)?
-2. Quer que o grupo "Estruturação Comercial" suma totalmente quando a empresa não contratou, ou prefere mostrar bloqueado com cadeado para fins de upsell?
-3. Quer badge agregada no cabeçalho do grupo CRM (somando notificações dos filhos)?
+**Quer que eu comece pela migration + wizard de Aquisição (passo mais impactante) e depois adicione os outros 3 pilares em sequência?** Ou prefere que eu faça tudo de uma vez (mais demorado, mas entrega o pacote completo numa rodada só)?
