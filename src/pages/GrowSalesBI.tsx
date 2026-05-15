@@ -487,6 +487,75 @@ export default function GrowSalesBI() {
           )}
         </TabsContent>
 
+        {/* ===== GROWTH SCORE ===== */}
+        <TabsContent value="score" className="space-y-4">
+          {isLoading || !data ? skeleton : (
+            <>
+              <Card className="overflow-hidden border-primary/30 bg-gradient-to-br from-primary/15 via-background to-background">
+                <CardContent className="p-8 flex flex-col md:flex-row items-center gap-8">
+                  <div className="relative w-44 h-44 flex-shrink-0">
+                    <svg viewBox="0 0 120 120" className="w-full h-full -rotate-90">
+                      <circle cx="60" cy="60" r="52" fill="none" stroke="hsl(var(--muted))" strokeWidth="10" />
+                      <circle
+                        cx="60" cy="60" r="52" fill="none"
+                        stroke="hsl(var(--primary))" strokeWidth="10" strokeLinecap="round"
+                        strokeDasharray={`${(data.growthScore.total / 100) * 326.7} 326.7`}
+                        className="transition-all duration-1000"
+                      />
+                    </svg>
+                    <div className="absolute inset-0 flex flex-col items-center justify-center">
+                      <span className="text-5xl font-black text-primary">{data.growthScore.total}</span>
+                      <span className="text-xs text-muted-foreground uppercase tracking-wider">Grow Score</span>
+                    </div>
+                  </div>
+                  <div className="flex-1 text-center md:text-left">
+                    <Badge className="bg-primary text-primary-foreground mb-2 text-sm">
+                      <Trophy className="h-3 w-3 mr-1" /> {data.growthScore.classificacao}
+                    </Badge>
+                    <h3 className="text-2xl font-bold mb-2">Sua operação está {data.growthScore.classificacao.toLowerCase()}</h3>
+                    <p className="text-sm text-muted-foreground max-w-xl">
+                      O Grow Score consolida 7 dimensões da sua operação comercial. Use-o como bússola executiva para
+                      decidir onde investir energia neste mês.
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {data.growthScore.breakdown.map((b) => (
+                  <Card key={b.dimensao}>
+                    <CardContent className="p-5">
+                      <div className="flex items-center justify-between mb-3">
+                        <span className="text-sm font-semibold">{b.dimensao}</span>
+                        <span className={`text-2xl font-bold ${
+                          b.nota >= 70 ? "text-primary" : b.nota >= 40 ? "text-orange-500" : "text-destructive"
+                        }`}>{b.nota}</span>
+                      </div>
+                      <div className="w-full bg-muted rounded-full h-2 overflow-hidden mb-2">
+                        <div
+                          className={`h-full ${
+                            b.nota >= 70 ? "bg-primary" : b.nota >= 40 ? "bg-orange-500" : "bg-destructive"
+                          }`}
+                          style={{ width: `${b.nota}%` }}
+                        />
+                      </div>
+                      <p className="text-xs text-muted-foreground">{b.descricao}</p>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+
+              <Card className="bg-muted/30">
+                <CardContent className="p-5 text-sm text-muted-foreground">
+                  <strong className="text-foreground">Como evoluir:</strong> foque primeiro nas dimensões com nota
+                  abaixo de 50. Cada ponto a mais no Grow Score se traduz, na média, em mais previsibilidade de receita
+                  e menos perda oculta no funil.
+                </CardContent>
+              </Card>
+            </>
+          )}
+        </TabsContent>
+
         {/* ===== IA INSIGHTS ===== */}
         <TabsContent value="insights" className="space-y-3">
           {isLoading || !data ? skeleton : (
