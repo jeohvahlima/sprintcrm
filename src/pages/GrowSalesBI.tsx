@@ -260,18 +260,27 @@ export default function GrowSalesBI() {
         <TabsContent value="perdas" className="space-y-4">
           {isLoading || !data ? skeleton : (
             <>
-              <Card className="border-destructive/40 bg-destructive/5">
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-muted-foreground">Você está deixando de faturar</p>
-                      <p className="text-4xl font-black text-destructive mt-1">{formatBRL(data.perdas.total)}</p>
-                      <p className="text-xs text-muted-foreground mt-1">no período selecionado</p>
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                <Card className="border-destructive/40 bg-gradient-to-br from-destructive/10 to-transparent lg:col-span-2">
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm text-muted-foreground">Você está deixando de faturar</p>
+                        <p className="text-4xl font-black text-destructive mt-1">{formatBRL(data.perdas.total)}</p>
+                        <p className="text-xs text-muted-foreground mt-1">no período selecionado</p>
+                      </div>
+                      <AlertTriangle className="h-12 w-12 text-destructive/40" />
                     </div>
-                    <AlertTriangle className="h-12 w-12 text-destructive/40" />
-                  </div>
-                </CardContent>
-              </Card>
+                  </CardContent>
+                </Card>
+                <Card className="border-primary/40 bg-gradient-to-br from-primary/10 to-transparent">
+                  <CardContent className="p-6">
+                    <p className="text-sm text-muted-foreground">Recuperável em 30 dias</p>
+                    <p className="text-3xl font-black text-primary mt-1">{formatBRL(data.recuperavel30d)}</p>
+                    <p className="text-xs text-muted-foreground mt-2">Estimativa com retomada de no-show, follow-up e atendimento.</p>
+                  </CardContent>
+                </Card>
+              </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 <KpiCard icon={AlertTriangle} label="No-shows" value={formatBRL(data.perdas.noShow.valor)} hint={`${data.perdas.noShow.qty} compromissos`} tone="bad" />
