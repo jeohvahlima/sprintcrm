@@ -2257,7 +2257,8 @@ export default function Agenda() {
     total: compromissosDoMes.length,
     agendados: compromissosDoMes.filter(c => c.status === 'agendado').length,
     concluidos: compromissosDoMes.filter(c => c.status === 'concluido').length,
-    cancelados: compromissosDoMes.filter(c => c.status === 'cancelado').length
+    cancelados: compromissosDoMes.filter(c => c.status === 'cancelado').length,
+    retornos: compromissosDoMes.filter(c => (c as any).tipo === 'retorno').length,
   }), [compromissosDoMes]);
   const hoje = new Date();
   hoje.setHours(0, 0, 0, 0);
@@ -2861,26 +2862,33 @@ export default function Agenda() {
           <CalendarDays className="h-4 w-4 text-muted-foreground" />
           <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Compromissos do mês</h2>
         </div>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
           {[
-            { key: 'all', label: 'Total', value: estatisticas.total, icon: CalendarDays, accent: 'primary', ring: 'ring-primary' },
-            { key: 'agendado', label: 'Agendados', value: estatisticas.agendados, icon: Clock, accent: 'blue', ring: 'ring-blue-500' },
-            { key: 'concluido', label: 'Concluídos', value: estatisticas.concluidos, icon: CheckCircle2, accent: 'green', ring: 'ring-green-500' },
-            { key: 'cancelado', label: 'Cancelados', value: estatisticas.cancelados, icon: XCircle, accent: 'red', ring: 'ring-red-500' },
+            { key: 'all', label: 'Total', value: estatisticas.total, icon: CalendarDays, accent: 'primary', ring: 'ring-primary', tipo: false },
+            { key: 'agendado', label: 'Agendados', value: estatisticas.agendados, icon: Clock, accent: 'blue', ring: 'ring-blue-500', tipo: false },
+            { key: 'concluido', label: 'Concluídos', value: estatisticas.concluidos, icon: CheckCircle2, accent: 'green', ring: 'ring-green-500', tipo: false },
+            { key: 'cancelado', label: 'Cancelados', value: estatisticas.cancelados, icon: XCircle, accent: 'red', ring: 'ring-red-500', tipo: false },
+            { key: 'retorno', label: 'Retornos', value: estatisticas.retornos, icon: Repeat, accent: 'purple', ring: 'ring-purple-500', tipo: true },
           ].map((s) => {
             const Icon = s.icon;
-            const active = filterStatus === s.key;
+            const active = s.tipo ? filtroTipoServico === 'retorno' : (filtroTipoServico !== 'retorno' && filterStatus === s.key);
             const accentClass = s.accent === 'primary' ? 'text-primary bg-primary/10'
               : s.accent === 'blue' ? 'text-blue-600 bg-blue-500/10'
               : s.accent === 'green' ? 'text-green-600 bg-green-500/10'
+              : s.accent === 'purple' ? 'text-purple-600 bg-purple-500/10'
               : 'text-red-600 bg-red-500/10';
+            const barClass = s.accent === 'primary' ? 'bg-primary' : s.accent === 'blue' ? 'bg-blue-500' : s.accent === 'green' ? 'bg-green-500' : s.accent === 'purple' ? 'bg-purple-500' : 'bg-red-500';
             return (
               <Card
                 key={s.key}
-                onClick={() => { setFilterStatus(s.key); setActiveMainTab('lista'); }}
+                onClick={() => {
+                  if (s.tipo) { setFiltroTipoServico('retorno'); setFilterStatus('all'); }
+                  else { setFiltroTipoServico('all'); setFilterStatus(s.key); }
+                  setActiveMainTab('lista');
+                }}
                 className={`group relative cursor-pointer overflow-hidden border transition-all hover:shadow-md hover:-translate-y-0.5 ${active ? `ring-2 ${s.ring} shadow-md` : ''}`}
               >
-                <div className={`absolute top-0 left-0 right-0 h-0.5 ${s.accent === 'primary' ? 'bg-primary' : s.accent === 'blue' ? 'bg-blue-500' : s.accent === 'green' ? 'bg-green-500' : 'bg-red-500'} ${active ? 'opacity-100' : 'opacity-40 group-hover:opacity-100'} transition-opacity`} />
+                <div className={`absolute top-0 left-0 right-0 h-0.5 ${barClass} ${active ? 'opacity-100' : 'opacity-40 group-hover:opacity-100'} transition-opacity`} />
                 <CardContent className="p-4 flex items-center gap-3">
                   <div className={`flex h-10 w-10 items-center justify-center rounded-lg ${accentClass}`}>
                     <Icon className="h-5 w-5" />
