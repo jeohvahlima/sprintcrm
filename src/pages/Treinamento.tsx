@@ -162,6 +162,7 @@ export default function Treinamento() {
         // Admin Panel
         <TrainingAdminPanel
           modules={modules}
+          canCreateGlobal={isSuperAdmin}
           onCreateModule={createModule}
           onUpdateModule={updateModule}
           onDeleteModule={deleteModule}
