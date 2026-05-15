@@ -267,7 +267,6 @@ export default function Prospeccao() {
               <TabsTrigger value="rotina">🧠 {labels.rotina}</TabsTrigger>
               <TabsTrigger value="estrategia">✨ {labels.estrategia}</TabsTrigger>
               {gamificationOn && <TabsTrigger value="arena">{labels.arena}</TabsTrigger>}
-              <TabsTrigger value="performance">🏆 {labels.performance}</TabsTrigger>
             </TabsList>
 
             {/* Sub-abas Registros/Interações ocultas conforme solicitado */}
@@ -303,10 +302,6 @@ export default function Prospeccao() {
             ) : isComandoTab ? (
               <div className="mt-4">
                 <ManagerCommandCenter />
-              </div>
-            ) : activeTab === "performance" ? (
-              <div className="mt-4">
-                <PerformanceHubPanel meta={0} />
               </div>
             ) : activeTab === "arena" ? (
               <div className="space-y-6 mt-4">
