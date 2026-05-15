@@ -166,6 +166,7 @@ export function Sidebar({ collapsed = false, onNavigate }: SidebarProps) {
     if (permissionsLoading || moduleLoading) return true;
     if (item.menuKey === 'configuracoes') return true;
     if (item.masterOnly && !isMasterAccount) return false;
+    if (item.masterOnly && isMasterAccount) return true;
     if (item.juridicoOnly) {
       const isMaster = isMasterAccount || isMasterFromSegmento;
       if (isMaster) return true;
