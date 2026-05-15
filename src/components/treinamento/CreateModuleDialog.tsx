@@ -56,30 +56,33 @@ export function CreateModuleDialog({
   open, 
   onOpenChange, 
   onSubmit,
-  editingModule 
+  editingModule,
+  canCreateGlobal = false,
 }: CreateModuleDialogProps) {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [icon, setIcon] = useState("book");
+  const [scope, setScope] = useState<'global' | 'company'>('company');
   const [selectedModules, setSelectedModules] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
 
-  // Reset form when dialog opens/closes or editingModule changes
   useEffect(() => {
     if (open) {
       if (editingModule) {
         setTitle(editingModule.title);
         setDescription(editingModule.description || "");
         setIcon(editingModule.icon);
+        setScope(editingModule.scope || 'company');
         setSelectedModules(editingModule.related_modules || []);
       } else {
         setTitle("");
         setDescription("");
         setIcon("book");
+        setScope(canCreateGlobal ? 'global' : 'company');
         setSelectedModules([]);
       }
     }
-  }, [open, editingModule]);
+  }, [open, editingModule, canCreateGlobal]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -87,11 +90,7 @@ export function CreateModuleDialog({
     
     setLoading(true);
     try {
-      await onSubmit({ title, description, icon, related_modules: selectedModules });
-      setTitle("");
-      setDescription("");
-      setIcon("book");
-      setSelectedModules([]);
+      await onSubmit({ title, description, icon, related_modules: selectedModules, scope });
       onOpenChange(false);
     } finally {
       setLoading(false);
