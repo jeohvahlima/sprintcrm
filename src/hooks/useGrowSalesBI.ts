@@ -108,7 +108,9 @@ export function useGrowSalesBI(range: BIRange = "30d") {
             .select(
               "id,name,value,status,stage,owner_id,responsavel_id,source,utm_source,utm_campaign,utm_medium,lead_source_type,ad_id,won_at,lost_at,created_at,updated_at,last_engagement_at,probability,expected_close_date,etapa_id,funil_id"
             )
-            .gte("created_at", since)
+            .or(
+              `created_at.gte.${since},won_at.gte.${since},lost_at.gte.${since},updated_at.gte.${since}`
+            )
             .order("created_at", { ascending: false })
         ),
         fetchAllPaginated<any>(() =>
