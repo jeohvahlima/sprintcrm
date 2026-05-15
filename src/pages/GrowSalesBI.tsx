@@ -15,6 +15,9 @@ import {
   CheckCircle2,
   ArrowRight,
   RefreshCw,
+  Gauge,
+  Sparkles,
+  Trophy,
 } from "lucide-react";
 import {
   ResponsiveContainer,
@@ -88,16 +91,16 @@ export default function GrowSalesBI() {
       <div className="flex items-start justify-between flex-wrap gap-4">
         <div>
           <h1 className="text-3xl font-bold flex items-center gap-3">
-            <div className="p-2 rounded-xl bg-gradient-to-br from-primary/30 to-primary/10">
-              <Brain className="h-7 w-7 text-primary" />
+            <div className="p-2.5 rounded-xl bg-gradient-to-br from-primary/40 via-primary/20 to-transparent ring-1 ring-primary/20 shadow-[0_0_30px_-5px_hsl(var(--primary)/0.5)]">
+              <Sparkles className="h-7 w-7 text-primary" />
             </div>
-            Grow Sales BI
+            Revenue Intelligence BI
             <Badge className="bg-gradient-to-r from-primary to-primary/70 text-primary-foreground border-0">
-              Revenue Intelligence
+              Grow Sales
             </Badge>
           </h1>
           <p className="text-muted-foreground mt-1">
-            Inteligência de crescimento — receita, funil, perdas ocultas e forecast em tempo real.
+            Transforme dados comerciais em previsibilidade de crescimento.
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -128,6 +131,7 @@ export default function GrowSalesBI() {
           <TabsTrigger value="performance" className="gap-2"><Users className="h-4 w-4" /> Performance</TabsTrigger>
           <TabsTrigger value="forecast" className="gap-2"><Target className="h-4 w-4" /> Forecast & Metas</TabsTrigger>
           <TabsTrigger value="campanhas" className="gap-2"><Megaphone className="h-4 w-4" /> Campanhas / ROI</TabsTrigger>
+          <TabsTrigger value="score" className="gap-2"><Trophy className="h-4 w-4" /> Growth Score</TabsTrigger>
           <TabsTrigger value="insights" className="gap-2"><Brain className="h-4 w-4" /> IA Insights</TabsTrigger>
         </TabsList>
 
