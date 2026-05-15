@@ -47,7 +47,14 @@ export function TrainingModuleCard({ module, onClick }: TrainingModuleCardProps)
             <IconComponent className="h-6 w-6" />
           </div>
           <div className="flex-1 min-w-0">
-            <CardTitle className="text-lg line-clamp-1">{module.title}</CardTitle>
+            <div className="flex items-center gap-2 flex-wrap">
+              <CardTitle className="text-lg line-clamp-1">{module.title}</CardTitle>
+              {module.scope === 'company' && (
+                <span className="text-[10px] uppercase tracking-wide font-semibold px-2 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20">
+                  Sua Empresa
+                </span>
+              )}
+            </div>
             {module.description && (
               <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
                 {module.description}
