@@ -186,7 +186,7 @@ export function useGrowSalesBI(range: BIRange = "30d") {
         .slice(-6);
 
       // ============= FUNIL =============
-      const leadsNovos = leads.length;
+      const leadsNovos = leads.filter((l) => new Date(l.created_at).getTime() >= new Date(since).getTime()).length;
       const leadIdsAgendados = new Set(compromissos.map((c) => c.lead_id).filter(Boolean));
       const agendados = leadIdsAgendados.size;
       const compareceramSet = new Set(
