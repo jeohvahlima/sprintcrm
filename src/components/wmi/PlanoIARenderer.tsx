@@ -27,19 +27,47 @@ const ICONS: Record<string, { icon: any; gradient: string; tone: string }> = {
   "📈": { icon: TrendingUp, gradient: "from-emerald-500/15 to-emerald-500/5", tone: "text-emerald-500 border-emerald-500/30" },
 };
 
+// Regex que detecta um cabeçalho de seção:
+// 1) "## Título"
+// 2) "💸 1. Título"  (emoji + número + ponto)
+// 3) "1. Título"     (apenas número + ponto, em linha curta)
+const HEAD_RE = /^(?:##\s+.+|(?:\p{Extended_Pictographic}|\p{Emoji_Presentation})\s*\d+\.\s+.+|\d+\.\s+[A-ZÁÉÍÓÚÂÊÔÃÕÇ][^\n]{3,80})$/u;
+
 function parseSections(md: string): Section[] {
   if (!md) return [];
-  // Divide nos H2 (##)
-  const parts = md.split(/^##\s+/m).filter(Boolean);
-  return parts.map((p) => {
-    const [headLine, ...rest] = p.split("\n");
-    const head = headLine.replace(/^#+\s*/, "").trim();
-    // Extrai emoji inicial (primeiro caractere não-letra/dígito)
-    const emojiMatch = head.match(/^([^\w\s]+|\p{Emoji_Presentation}|\p{Extended_Pictographic})/u);
-    const emoji = emojiMatch ? emojiMatch[0].trim() : "📌";
-    const title = head.replace(emoji, "").replace(/^[\s\.\-:]*/, "").trim();
-    return { title, emoji, body: rest.join("\n").trim() };
-  });
+  const lines = md.split("\n");
+  const sections: Section[] = [];
+  let current: { head: string; body: string[] } | null = null;
+  let preamble: string[] = [];
+
+  for (const line of lines) {
+    const trimmed = line.trim();
+    if (HEAD_RE.test(trimmed)) {
+      if (current) sections.push(toSection(current));
+      current = { head: trimmed.replace(/^##\s+/, ""), body: [] };
+    } else if (current) {
+      current.body.push(line);
+    } else {
+      preamble.push(line);
+    }
+  }
+  if (current) sections.push(toSection(current));
+
+  // Se temos preâmbulo relevante, vira a primeira seção "Resumo"
+  const preambleText = preamble.join("\n").trim();
+  if (preambleText && sections.length) {
+    sections.unshift({ title: "Resumo", emoji: "📌", body: preambleText });
+  }
+
+  return sections;
+}
+
+function toSection(c: { head: string; body: string[] }): Section {
+  const head = c.head.replace(/^#+\s*/, "").trim();
+  const emojiMatch = head.match(/^(\p{Extended_Pictographic}|\p{Emoji_Presentation})/u);
+  const emoji = emojiMatch ? emojiMatch[0] : "📌";
+  const title = head.replace(emoji, "").replace(/^[\s\.\-:]*/, "").trim();
+  return { title, emoji, body: c.body.join("\n").trim() };
 }
 
 export function PlanoIARenderer({ markdown }: { markdown: string }) {
