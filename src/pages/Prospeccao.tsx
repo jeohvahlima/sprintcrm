@@ -4,7 +4,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Button } from "@/components/ui/button";
 import { Plus, Download, FileText, UserPlus, Settings, Volume2, VolumeX, PanelRightClose, PanelRightOpen, Table as TableIcon, LayoutGrid } from "lucide-react";
 import { PipelineFunnelVisual } from "@/components/prospeccao/PipelineFunnelVisual";
-import { QuickActionCards } from "@/components/prospeccao/QuickActionCards";
+
 import { ProspeccaoKanbanView } from "@/components/prospeccao/ProspeccaoKanbanView";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
