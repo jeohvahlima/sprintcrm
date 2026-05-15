@@ -121,6 +121,8 @@ export default function Treinamento() {
           <div className="lg:col-span-2">
             <TrainingVideoPlayer 
               videoId={selectedLesson?.youtube_video_id || null}
+              videoUrl={selectedLesson?.video_url || null}
+              videoType={selectedLesson?.video_type || 'youtube'}
               title={selectedLesson?.title}
             />
             
