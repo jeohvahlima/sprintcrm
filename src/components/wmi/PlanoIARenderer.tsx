@@ -6,30 +6,31 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import {
   Flame, Target, AlertTriangle, Settings, BarChart3, Zap, Link2, Sparkles,
-  TrendingUp, FileText, Rocket, Map, ListChecks, Package,
+  TrendingUp, FileText, Rocket, Map, ListChecks, Package, CheckCircle2,
 } from "lucide-react";
 
 interface Section {
   title: string;
   emoji: string;
   body: string;
+  kind: "intro" | "topic";
 }
 
 const ICONS: Record<string, { icon: any; gradient: string; tone: string }> = {
-  "💸": { icon: Flame, gradient: "from-rose-500/15 to-rose-500/5", tone: "text-rose-500 border-rose-500/30" },
+  "💸": { icon: Flame, gradient: "from-destructive/15 to-destructive/5", tone: "text-destructive border-destructive/30" },
   "🎯": { icon: Target, gradient: "from-primary/15 to-primary/5", tone: "text-primary border-primary/30" },
-  "🚨": { icon: AlertTriangle, gradient: "from-orange-500/15 to-orange-500/5", tone: "text-orange-500 border-orange-500/30" },
-  "⚙️": { icon: Settings, gradient: "from-blue-500/15 to-blue-500/5", tone: "text-blue-500 border-blue-500/30" },
-  "⚙": { icon: Settings, gradient: "from-blue-500/15 to-blue-500/5", tone: "text-blue-500 border-blue-500/30" },
-  "📊": { icon: BarChart3, gradient: "from-violet-500/15 to-violet-500/5", tone: "text-violet-500 border-violet-500/30" },
-  "⚡": { icon: Zap, gradient: "from-amber-500/15 to-amber-500/5", tone: "text-amber-500 border-amber-500/30" },
-  "🔗": { icon: Link2, gradient: "from-cyan-500/15 to-cyan-500/5", tone: "text-cyan-500 border-cyan-500/30" },
-  "🔥": { icon: Sparkles, gradient: "from-fuchsia-500/15 to-fuchsia-500/5", tone: "text-fuchsia-500 border-fuchsia-500/30" },
+  "🚨": { icon: AlertTriangle, gradient: "from-warning/20 to-warning/5", tone: "text-warning border-warning/40" },
+  "⚙️": { icon: Settings, gradient: "from-primary/15 to-primary/5", tone: "text-primary border-primary/30" },
+  "⚙": { icon: Settings, gradient: "from-primary/15 to-primary/5", tone: "text-primary border-primary/30" },
+  "📊": { icon: BarChart3, gradient: "from-secondary/10 to-secondary/5", tone: "text-secondary border-secondary/25" },
+  "⚡": { icon: Zap, gradient: "from-warning/20 to-warning/5", tone: "text-warning border-warning/40" },
+  "🔗": { icon: Link2, gradient: "from-primary/15 to-primary/5", tone: "text-primary border-primary/30" },
+  "🔥": { icon: Sparkles, gradient: "from-destructive/15 to-destructive/5", tone: "text-destructive border-destructive/30" },
   "📈": { icon: TrendingUp, gradient: "from-emerald-500/15 to-emerald-500/5", tone: "text-emerald-500 border-emerald-500/30" },
-  "🚀": { icon: Rocket, gradient: "from-indigo-500/15 to-indigo-500/5", tone: "text-indigo-500 border-indigo-500/30" },
-  "🗺️": { icon: Map, gradient: "from-teal-500/15 to-teal-500/5", tone: "text-teal-500 border-teal-500/30" },
-  "📋": { icon: ListChecks, gradient: "from-sky-500/15 to-sky-500/5", tone: "text-sky-500 border-sky-500/30" },
-  "📦": { icon: Package, gradient: "from-amber-600/15 to-amber-600/5", tone: "text-amber-600 border-amber-600/30" },
+  "🚀": { icon: Rocket, gradient: "from-primary/15 to-primary/5", tone: "text-primary border-primary/30" },
+  "🗺️": { icon: Map, gradient: "from-primary/15 to-primary/5", tone: "text-primary border-primary/30" },
+  "📋": { icon: ListChecks, gradient: "from-primary/15 to-primary/5", tone: "text-primary border-primary/30" },
+  "📦": { icon: Package, gradient: "from-warning/20 to-warning/5", tone: "text-warning border-warning/40" },
   "📌": { icon: FileText, gradient: "from-muted to-muted/50", tone: "text-muted-foreground border-border" },
 };
 
