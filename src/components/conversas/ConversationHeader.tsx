@@ -349,23 +349,6 @@ import { MarkProspectionButton } from "./MarkProspectionButton";
 
             {/* Ações - Versão Mobile (apenas ícones) */}
             <div className="flex md:hidden items-center gap-0.5">
-              {/* Botão Puxar Histórico do WhatsApp - Mobile */}
-              {onRestoreConversation && (
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={onRestoreConversation}
-                  disabled={restoringConversation}
-                  className="h-8 w-8"
-                  title="Puxar histórico do WhatsApp"
-                >
-                  {restoringConversation ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <RotateCcw className="h-4 w-4" />
-                  )}
-                </Button>
-              )}
               {/* Botão IA - Dropdown Mobile */}
               {onChangeAIMode && (
                 <AIModeSelectorDropdown
