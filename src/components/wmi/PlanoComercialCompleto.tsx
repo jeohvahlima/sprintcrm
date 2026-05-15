@@ -16,7 +16,7 @@ import {
 } from "@/hooks/useDiagnostico360";
 import { useWMIScore, useWMIBenchmarks, useWMIRoadmap, useGenerateRoadmap, useUpdateRoadmapItem, type WMIScore } from "@/hooks/useWMI";
 import { AdvisorChat } from "@/components/wmi/AdvisorChat";
-import ReactMarkdown from "react-markdown";
+import { PlanoIARenderer } from "@/components/wmi/PlanoIARenderer";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -305,9 +305,7 @@ export function PlanoComercialCompleto({ score }: { score?: WMIScore }) {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="prose prose-sm dark:prose-invert max-w-none">
-                  <ReactMarkdown>{ultimo.diagnostico_ia}</ReactMarkdown>
-                </div>
+                <PlanoIARenderer markdown={ultimo.diagnostico_ia} />
                 <div className="flex gap-2 pt-4 border-t mt-4">
                   <Button variant="outline" size="sm" onClick={() => {
                     setRespostasMap({}); setCurrentAlav(0); setStep("form");
