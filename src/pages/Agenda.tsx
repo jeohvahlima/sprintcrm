@@ -2834,6 +2834,8 @@ export default function Agenda() {
             </DialogContent>
           </Dialog>
         </div>
+          </div>
+        </div>
       </div>
 
       {/* Estatísticas de Compromissos - Clicáveis para filtrar */}
