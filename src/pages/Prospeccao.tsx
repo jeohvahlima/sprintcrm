@@ -266,7 +266,7 @@ export default function Prospeccao() {
               <TabsTrigger value="intel">🎯 {labels.intel}</TabsTrigger>
               <TabsTrigger value="rotina">🧠 {labels.rotina}</TabsTrigger>
               <TabsTrigger value="estrategia">✨ {labels.estrategia}</TabsTrigger>
-              {gamificationOn && <TabsTrigger value="arena">{labels.arena}</TabsTrigger>}
+              
             </TabsList>
 
             {/* Sub-abas Registros/Interações ocultas conforme solicitado */}
@@ -302,18 +302,6 @@ export default function Prospeccao() {
             ) : isComandoTab ? (
               <div className="mt-4">
                 <ManagerCommandCenter />
-              </div>
-            ) : activeTab === "arena" ? (
-              <div className="space-y-6 mt-4">
-                <WeeklyLeaderboard companyId={companyId} currentUserId={userId} />
-                <div className="bg-card border border-border rounded-lg p-4">
-                  <h3 className="text-sm font-semibold text-foreground mb-3">🏆 Conquistas e Trilha de Carreira</h3>
-                  <Button variant="outline" onClick={() => setShowAchievements(true)}>Abrir Galeria</Button>
-                  <Button variant="outline" className="ml-2" onClick={() => setShowRanks(true)}>Ver Ranks</Button>
-                </div>
-                {gamificationCfg?.shop_enabled && (
-                  <RewardShop companyId={companyId} userCoins={profile?.coins ?? 0} />
-                )}
               </div>
             ) : activeTab === "email" ? (
               <div className="mt-4">
