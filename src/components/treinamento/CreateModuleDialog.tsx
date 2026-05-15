@@ -47,8 +47,9 @@ const moduleAccessOptions = [
 interface CreateModuleDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSubmit: (data: { title: string; description?: string; icon?: string; related_modules?: string[] }) => Promise<void>;
-  editingModule?: { id: string; title: string; description: string | null; icon: string; related_modules?: string[] } | null;
+  canCreateGlobal?: boolean;
+  onSubmit: (data: { title: string; description?: string; icon?: string; related_modules?: string[]; scope?: 'global' | 'company' }) => Promise<void>;
+  editingModule?: { id: string; title: string; description: string | null; icon: string; related_modules?: string[]; scope?: 'global' | 'company' } | null;
 }
 
 export function CreateModuleDialog({ 
