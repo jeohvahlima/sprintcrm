@@ -10,6 +10,8 @@ export interface WMIPillar {
 export interface WMIScore {
   company_id: string;
   total_score: number;
+  total_score_raw?: number;
+  total_score_max?: number;
   classification: "Inicial" | "Estruturando" | "Previsível" | "Escalável";
   pillars: {
     processos: WMIPillar;
@@ -17,6 +19,10 @@ export interface WMIScore {
     gestao: WMIPillar;
     automacao: WMIPillar;
     pessoas: WMIPillar;
+    aquisicao?: WMIPillar;
+    social?: WMIPillar;
+    dependencia?: WMIPillar;
+    crescimento?: WMIPillar;
   };
   calculated_at: string;
 }
