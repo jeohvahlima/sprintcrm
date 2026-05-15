@@ -2278,11 +2278,46 @@ export default function Agenda() {
   };
   return <div className="space-y-6 p-6">
       {/* Header */}
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold text-foreground">Agenda Individual e Muti-Agendas</h1>
-          <p className="text-muted-foreground">Gerencie seus compromissos e agendamentos</p>
-        </div>
+      <div className="relative overflow-hidden rounded-2xl border bg-gradient-to-br from-primary/10 via-card to-card p-6 shadow-sm">
+        <div className="absolute -top-16 -right-16 h-48 w-48 rounded-full bg-primary/10 blur-3xl pointer-events-none" />
+        <div className="relative flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+          <div className="flex items-start gap-4">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-primary/15 ring-1 ring-primary/20">
+              <CalendarDays className="h-6 w-6 text-primary" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2 flex-wrap">
+                <h1 className="text-2xl lg:text-3xl font-bold tracking-tight text-foreground">Agenda</h1>
+                <Badge variant="secondary" className="gap-1 text-[10px] uppercase tracking-wide">
+                  <Sparkles className="h-3 w-3" /> Multi-agendas
+                </Badge>
+              </div>
+              <p className="text-sm text-muted-foreground mt-1">
+                Gerencie compromissos, lembretes e a sincronização com o Google Calendar.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2">
+            {/* Google Calendar status pill */}
+            <div className={`flex items-center gap-2 rounded-xl border px-3 py-2 text-xs ${googleCal.isConnected ? 'border-primary/30 bg-primary/5' : 'border-border bg-muted/40'}`}>
+              <span className={`h-2 w-2 rounded-full ${googleCal.isConnected ? 'bg-primary animate-pulse' : 'bg-muted-foreground/40'}`} />
+              <span className="font-medium text-foreground">Google Calendar</span>
+              <span className="text-muted-foreground hidden sm:inline">
+                {googleCal.isConnected ? (googleCal.integration?.google_email || 'Conectado') : 'Desconectado'}
+              </span>
+              {googleCal.isConnected ? (
+                <Button size="sm" variant="ghost" className="h-6 px-2 text-xs gap-1" disabled={googleCal.busy} onClick={() => googleCal.sync()}>
+                  <RefreshCw className={`h-3 w-3 ${googleCal.busy ? 'animate-spin' : ''}`} />
+                  Sincronizar
+                </Button>
+              ) : (
+                <Button size="sm" variant="ghost" className="h-6 px-2 text-xs gap-1" disabled={googleCal.busy} onClick={() => googleCal.connect()}>
+                  <Link2 className="h-3 w-3" />
+                  Conectar
+                </Button>
+              )}
+            </div>
         <div className="flex gap-2">
           <Dialog open={configuracoesOpen} onOpenChange={open => {
           setConfiguracoesOpen(open);
