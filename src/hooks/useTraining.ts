@@ -81,25 +81,26 @@ export function useTraining() {
       // Get current user
       const { data: { user } } = await supabase.auth.getUser();
       
-      // Verificar se é subconta e obter company_id da conta mestre
+      // Detect master account context
       const { data: companyData } = await supabase
         .from('companies')
         .select('id, is_master_account, parent_company_id')
         .eq('id', cid)
         .single();
       
-      // Se for subconta, buscar treinamentos da conta mestre
-      // Se for conta mestre, buscar da própria conta
-      const trainingCompanyId = companyData?.is_master_account 
-        ? cid 
+      // Master company id (used to fetch GLOBAL trainings produced by Grow Sales Inteligência)
+      const masterCompanyId = companyData?.is_master_account
+        ? cid
         : (companyData?.parent_company_id || cid);
       
-      // Fetch modules da conta mestre (treinamentos são globais)
+      // Fetch modules:
+      //  - GLOBAL modules from the master account (visible to all subaccounts)
+      //  - COMPANY modules owned by the user's own company (custom recordings for this team)
       const { data: modulesData, error: modulesError } = await supabase
         .from('training_modules')
         .select('*')
-        .eq('company_id', trainingCompanyId)
         .eq('is_active', true)
+        .or(`and(company_id.eq.${masterCompanyId},scope.eq.global),and(company_id.eq.${cid},scope.eq.company)`)
         .order('order_index', { ascending: true });
       
       if (modulesError) throw modulesError;
