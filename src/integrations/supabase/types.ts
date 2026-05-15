@@ -9447,7 +9447,9 @@ export type Database = {
           order_index: number | null
           title: string
           updated_at: string | null
-          youtube_url: string
+          video_type: string
+          video_url: string | null
+          youtube_url: string | null
           youtube_video_id: string | null
         }
         Insert: {
@@ -9461,7 +9463,9 @@ export type Database = {
           order_index?: number | null
           title: string
           updated_at?: string | null
-          youtube_url: string
+          video_type?: string
+          video_url?: string | null
+          youtube_url?: string | null
           youtube_video_id?: string | null
         }
         Update: {
@@ -9475,7 +9479,9 @@ export type Database = {
           order_index?: number | null
           title?: string
           updated_at?: string | null
-          youtube_url?: string
+          video_type?: string
+          video_url?: string | null
+          youtube_url?: string | null
           youtube_video_id?: string | null
         }
         Relationships: [
@@ -9498,6 +9504,7 @@ export type Database = {
           id: string
           is_active: boolean | null
           order_index: number | null
+          scope: string
           title: string
           updated_at: string | null
         }
@@ -9510,6 +9517,7 @@ export type Database = {
           id?: string
           is_active?: boolean | null
           order_index?: number | null
+          scope?: string
           title: string
           updated_at?: string | null
         }
@@ -9522,6 +9530,7 @@ export type Database = {
           id?: string
           is_active?: boolean | null
           order_index?: number | null
+          scope?: string
           title?: string
           updated_at?: string | null
         }
