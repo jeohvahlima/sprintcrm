@@ -232,14 +232,6 @@ export default function Prospeccao() {
       {/* Topo de Foco — meta do dia, perda estimada, posição */}
       <TopoFoco onRecuperar={() => setActiveTab("followup")} />
 
-      {/* Cards de Ação Rápida */}
-      <QuickActionCards
-        onRegister={handleRegister}
-        onInteraction={() => setShowInteractionForm(true)}
-        onScripts={() => setShowScripts(true)}
-        onExport={handleExportCSV}
-      />
-
       {/* Arena ao vivo (topo) */}
       {gamificationOn && <ArenaTopBar companyId={companyId} currentUserId={userId} />}
 
