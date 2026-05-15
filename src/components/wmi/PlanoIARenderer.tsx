@@ -111,6 +111,25 @@ function normalizeBody(body: string): string {
       out.push("");
       continue;
     }
+    if (/^(Fase\s+\d+|Ação\s+\d+)\s*:/i.test(line)) {
+      if (out.length && out[out.length - 1] !== "") out.push("");
+      out.push(`### ${line}`);
+      out.push("");
+      inList = false;
+      continue;
+    }
+    if (/^Ação\s+Responsável\s+KPI\s+Módulo\s+GROW$/i.test(line)) {
+      if (out.length && out[out.length - 1] !== "") out.push("");
+      out.push("### Ações, responsáveis, KPIs e módulos");
+      inList = false;
+      continue;
+    }
+    if (/^Métrica\s+Hoje\s+/i.test(line)) {
+      if (out.length && out[out.length - 1] !== "") out.push("");
+      out.push(`### ${line.replace(/\s{2,}/g, " · ")}`);
+      inList = false;
+      continue;
+    }
     if (/^[#>\-\*\|]/.test(line) || /^\d+\.\s/.test(line)) {
       inList = false;
       out.push(/^(Fase|Ação|Meta|KPI|Módulo GROW|Métrica)\b/i.test(line) ? `### ${line}` : line);
