@@ -188,6 +188,8 @@ export function useTraining() {
       toast({ variant: 'destructive', title: 'Erro', description: 'Não foi possível criar o módulo' });
     }
   };
+
+  const updateModule = async (id: string, data: { title?: string; description?: string; icon?: string }) => {
     try {
       const { error } = await supabase
         .from('training_modules')
