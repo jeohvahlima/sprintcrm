@@ -163,6 +163,9 @@ export default function Maturidade() {
           <TabsTrigger value="onboarding" className="gap-2">
             <Zap className="h-4 w-4" /> Onboarding 7 Dias
           </TabsTrigger>
+          <TabsTrigger value="guiado" className="gap-2">
+            <ListChecks className="h-4 w-4" /> Diagnóstico Guiado
+          </TabsTrigger>
           <TabsTrigger value="diagnostico" className="gap-2">
             <Sparkles className="h-4 w-4" /> Diagnóstico 360°
           </TabsTrigger>
@@ -173,6 +176,10 @@ export default function Maturidade() {
 
         <TabsContent value="onboarding">
           <Onboarding7Days />
+        </TabsContent>
+
+        <TabsContent value="guiado">
+          <GuidedDiagnosisWizard />
         </TabsContent>
 
         <TabsContent value="diagnostico">
