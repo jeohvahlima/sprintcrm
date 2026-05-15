@@ -1141,36 +1141,74 @@ function RevenueLeakCard({ result }: { result: any }) {
             </span>
           </button>
           {showConfig && (
-            <div className="p-3 pt-0 grid sm:grid-cols-2 lg:grid-cols-5 gap-3 border-t">
-              <div className="space-y-1">
-                <Label className="text-[11px]">Ticket médio</Label>
-                <Input value={fmt(ticket)} onChange={(e) => setTicket(parseBR(e.target.value))} />
-              </div>
-              <div className="space-y-1">
-                <Label className="text-[11px]">Taxa de conversão (%)</Label>
-                <Input type="number" value={conv} onChange={(e) => setConv(Number(e.target.value) || 0)} />
-              </div>
-              <div className="space-y-1">
-                <Label className="text-[11px]">Prospecções/dia hoje</Label>
-                <Input type="number" value={atualDia} onChange={(e) => setAtualDia(Number(e.target.value) || 0)} />
-              </div>
-              <div className="space-y-1">
-                <Label className="text-[11px]">Prospecções/dia meta</Label>
-                <Input type="number" value={idealDia} onChange={(e) => setIdealDia(Number(e.target.value) || 0)} />
-              </div>
-              <div className="space-y-1">
-                <Label className="text-[11px]">Horizonte (meses)</Label>
-                <div className="flex gap-1">
-                  {[3, 6, 12].map((m) => (
-                    <Button
-                      key={m} size="sm" variant={prazo === m ? "default" : "outline"}
-                      onClick={() => setPrazo(m)} className="flex-1 h-9 text-xs"
-                    >{m}m</Button>
-                  ))}
+            <div className="p-3 pt-0 border-t space-y-3">
+              {/* Parâmetros compartilhados (valem para os 2 cenários) */}
+              <div className="rounded-md border bg-background p-3">
+                <div className="text-[10px] uppercase font-bold text-muted-foreground mb-2">
+                  Parâmetros do produto (valem para os 2 cenários)
+                </div>
+                <div className="grid sm:grid-cols-3 gap-3">
+                  <div className="space-y-1">
+                    <Label className="text-[11px]">Ticket médio (R$)</Label>
+                    <Input value={fmt(ticket)} onChange={(e) => setTicket(parseBR(e.target.value))} />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-[11px]">Taxa de conversão (%)</Label>
+                    <Input type="number" value={conv} onChange={(e) => setConv(Number(e.target.value) || 0)} />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-[11px]">Horizonte (meses)</Label>
+                    <div className="flex gap-1">
+                      {[3, 6, 12].map((m) => (
+                        <Button
+                          key={m} size="sm" variant={prazo === m ? "default" : "outline"}
+                          onClick={() => setPrazo(m)} className="flex-1 h-9 text-xs"
+                        >{m}m</Button>
+                      ))}
+                    </div>
+                  </div>
                 </div>
               </div>
-              <p className="sm:col-span-2 lg:col-span-5 text-[10px] text-muted-foreground">
-                💡 Recomendamos meta realista: <b>2x a 3x a sua prospecção atual</b>. Metas muito agressivas geram cenários irreais.
+
+              {/* Duas colunas: ATUAL vs META */}
+              <div className="grid md:grid-cols-2 gap-3">
+                {/* COLUNA ATUAL */}
+                <div className="rounded-md border-2 border-muted bg-muted/30 p-3">
+                  <div className="flex items-center justify-between mb-2">
+                    <Badge variant="outline" className="text-[10px]">📊 CENÁRIO ATUAL</Badge>
+                    <span className="text-[10px] text-muted-foreground">o que você faz hoje</span>
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-[11px]">Prospecções por dia (hoje)</Label>
+                    <Input type="number" value={atualDia} onChange={(e) => setAtualDia(Number(e.target.value) || 0)} />
+                  </div>
+                  <div className="text-[11px] text-muted-foreground mt-2 leading-relaxed">
+                    {atualDia} × {defaults.dias} dias = <b>{atualDia * defaults.dias} leads/mês</b><br/>
+                    {atualDia * defaults.dias} × {conv}% = <b>{Math.round(atualDia * defaults.dias * conv / 100)} vendas/mês</b><br/>
+                    × {fmt(ticket)} = <b className="text-foreground">{fmt(leak.receita_atual_estimada)}/mês</b>
+                  </div>
+                </div>
+
+                {/* COLUNA META */}
+                <div className="rounded-md border-2 border-emerald-500/40 bg-emerald-500/5 p-3">
+                  <div className="flex items-center justify-between mb-2">
+                    <Badge className="bg-emerald-600 text-white border-0 text-[10px]">🎯 CENÁRIO META</Badge>
+                    <span className="text-[10px] text-muted-foreground">se prospectasse mais</span>
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-[11px]">Prospecções por dia (meta)</Label>
+                    <Input type="number" value={idealDia} onChange={(e) => setIdealDia(Number(e.target.value) || 0)} />
+                  </div>
+                  <div className="text-[11px] text-muted-foreground mt-2 leading-relaxed">
+                    {idealDia} × {defaults.dias} dias = <b>{idealDia * defaults.dias} leads/mês</b><br/>
+                    {idealDia * defaults.dias} × {conv}% = <b>{Math.round(idealDia * defaults.dias * conv / 100)} vendas/mês</b><br/>
+                    × {fmt(ticket)} = <b className="text-emerald-700">{fmt(leak.receita_potencial)}/mês</b>
+                  </div>
+                </div>
+              </div>
+
+              <p className="text-[10px] text-muted-foreground">
+                💡 Meta realista: <b>2x a 3x a sua prospecção atual</b>. Metas muito agressivas geram cenários irreais.
               </p>
             </div>
           )}
