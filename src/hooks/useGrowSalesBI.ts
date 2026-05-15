@@ -59,6 +59,13 @@ export interface BISnapshot {
     porCampanha: { campanha: string; leads: number; ganhos: number; receita: number; conv: number }[];
     porFonte: { fonte: string; leads: number; ganhos: number; receita: number }[];
   };
+  recuperavel30d: number;
+  capacidade: { utilizada: number; abertosPorVendedor: number; vendedoresAtivos: number };
+  growthScore: {
+    total: number;
+    classificacao: string;
+    breakdown: { dimensao: string; nota: number; descricao: string }[];
+  };
   insights: { tipo: "alerta" | "oportunidade" | "ok"; titulo: string; descricao: string }[];
   generatedAt: string;
 }
@@ -371,6 +378,52 @@ export function useGrowSalesBI(range: BIRange = "30d") {
         });
       }
 
+      // ============= RECUPERÁVEL 30D =============
+      // Estimativa: 30% no-show + 25% sem resposta + 15% sem follow-up
+      const recuperavel30d =
+        perdas.noShow.valor * 0.3 +
+        perdas.leadSemResposta.valor * 0.25 +
+        perdas.semFollowUp.valor * 0.15;
+
+      // ============= CAPACIDADE COMERCIAL =============
+      const vendedoresAtivos = sdrs.length || closers.length || 1;
+      const abertosPorVendedor = vendedoresAtivos > 0 ? abertos.length / vendedoresAtivos : 0;
+      // Considera saudável até 50 leads ativos por vendedor
+      const capacidadeUtilizada = Math.min((abertosPorVendedor / 50) * 100, 100);
+
+      // ============= GROWTH SCORE =============
+      const score = (n: number) => Math.max(0, Math.min(100, n));
+      const sAtendimento = score(100 - (perdas.leadSemResposta.qty / Math.max(leadsNovos, 1)) * 100);
+      const sConversao = score(convFechamento * 3); // 33% = 100
+      const sGestao = score(metaAtual > 0 ? pctMeta : 50);
+      const sProcessos = score(convCompareceu); // % comparecimento
+      const sAutomacao = score(100 - (perdas.semFollowUp.qty / Math.max(leadsNovos, 1)) * 100);
+      const sReceita = score((bruto / Math.max(metaAtual || bruto * 1.3, 1)) * 100);
+      const sPerformance = score(closers.length > 0 ? (closers[0].conv || 0) * 2 : 50);
+      const totalScore = Math.round(
+        (sAtendimento + sConversao + sGestao + sProcessos + sAutomacao + sReceita + sPerformance) / 7
+      );
+      const classificacao =
+        totalScore >= 85 ? "Referência"
+        : totalScore >= 70 ? "Operação previsível"
+        : totalScore >= 55 ? "Escalando"
+        : totalScore >= 35 ? "Estruturando"
+        : "Iniciante";
+
+      const growthScore = {
+        total: totalScore,
+        classificacao,
+        breakdown: [
+          { dimensao: "Atendimento", nota: Math.round(sAtendimento), descricao: "Velocidade de 1ª resposta" },
+          { dimensao: "Conversão", nota: Math.round(sConversao), descricao: "Compareceu → Fechado" },
+          { dimensao: "Gestão", nota: Math.round(sGestao), descricao: "Realização de meta" },
+          { dimensao: "Processos", nota: Math.round(sProcessos), descricao: "Show-rate de agendamentos" },
+          { dimensao: "Automação", nota: Math.round(sAutomacao), descricao: "Follow-up consistente" },
+          { dimensao: "Receita", nota: Math.round(sReceita), descricao: "Volume vs potencial" },
+          { dimensao: "Performance", nota: Math.round(sPerformance), descricao: "Eficiência do top closer" },
+        ],
+      };
+
       return {
         range,
         receita: { bruto, ticketMedio, ltv, deals, porCanal, porVendedor, porMes },
@@ -397,6 +450,13 @@ export function useGrowSalesBI(range: BIRange = "30d") {
           pctMeta,
         },
         campanhas: { porCampanha, porFonte },
+        recuperavel30d,
+        capacidade: {
+          utilizada: capacidadeUtilizada,
+          abertosPorVendedor,
+          vendedoresAtivos,
+        },
+        growthScore,
         insights,
         generatedAt: new Date().toISOString(),
       };
