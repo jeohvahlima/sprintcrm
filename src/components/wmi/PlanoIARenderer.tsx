@@ -26,7 +26,7 @@ const ICONS: Record<string, { icon: any; gradient: string; tone: string }> = {
   "⚡": { icon: Zap, gradient: "from-warning/20 to-warning/5", tone: "text-warning border-warning/40" },
   "🔗": { icon: Link2, gradient: "from-primary/15 to-primary/5", tone: "text-primary border-primary/30" },
   "🔥": { icon: Sparkles, gradient: "from-destructive/15 to-destructive/5", tone: "text-destructive border-destructive/30" },
-  "📈": { icon: TrendingUp, gradient: "from-emerald-500/15 to-emerald-500/5", tone: "text-emerald-500 border-emerald-500/30" },
+  "📈": { icon: TrendingUp, gradient: "from-success/15 to-success/5", tone: "text-success border-success/30" },
   "🚀": { icon: Rocket, gradient: "from-primary/15 to-primary/5", tone: "text-primary border-primary/30" },
   "🗺️": { icon: Map, gradient: "from-primary/15 to-primary/5", tone: "text-primary border-primary/30" },
   "📋": { icon: ListChecks, gradient: "from-primary/15 to-primary/5", tone: "text-primary border-primary/30" },
@@ -127,6 +127,34 @@ function normalizeBody(body: string): string {
   }
   return out.join("\n").trim();
 }
+
+const markdownComponents = {
+  h1: ({ children }: any) => <h4 className="text-base font-bold text-foreground mt-3 mb-2 border-b border-border pb-2">{children}</h4>,
+  h2: ({ children }: any) => <h4 className="text-base font-bold text-foreground mt-3 mb-2 border-b border-border pb-2">{children}</h4>,
+  h3: ({ children }: any) => <h5 className="text-sm font-semibold text-foreground mt-4 mb-2 bg-muted/70 border border-border rounded-md px-3 py-2">{children}</h5>,
+  p: ({ children }: any) => <p className="text-sm leading-7 text-foreground/90 mb-3 last:mb-0">{children}</p>,
+  strong: ({ children }: any) => <strong className="font-bold text-foreground">{children}</strong>,
+  ul: ({ children }: any) => <ul className="space-y-2 my-3">{children}</ul>,
+  ol: ({ children }: any) => <ol className="space-y-2 my-3 list-decimal pl-5">{children}</ol>,
+  li: ({ children }: any) => (
+    <li className="text-sm leading-6 text-foreground/90 pl-0 marker:text-primary">
+      <span className="inline-flex align-top gap-2">
+        <CheckCircle2 className="h-4 w-4 text-primary mt-1 shrink-0" />
+        <span>{children}</span>
+      </span>
+    </li>
+  ),
+  table: ({ children }: any) => (
+    <div className="my-4 overflow-x-auto rounded-lg border border-border bg-card">
+      <table className="w-full min-w-[640px] text-sm">{children}</table>
+    </div>
+  ),
+  thead: ({ children }: any) => <thead className="bg-secondary text-secondary-foreground">{children}</thead>,
+  th: ({ children }: any) => <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-wide border-r border-secondary-foreground/20 last:border-r-0">{children}</th>,
+  td: ({ children }: any) => <td className="px-4 py-3 align-top border-t border-r border-border last:border-r-0 text-foreground/90">{children}</td>,
+  blockquote: ({ children }: any) => <blockquote className="my-3 rounded-md border-l-4 border-primary bg-muted/60 px-4 py-3 text-sm">{children}</blockquote>,
+  code: ({ children }: any) => <code className="rounded bg-muted px-1.5 py-0.5 text-xs font-semibold text-foreground">{children}</code>,
+};
 
 export function PlanoIARenderer({ markdown }: { markdown: string }) {
   const sections = useMemo(() => parseSections(markdown), [markdown]);
