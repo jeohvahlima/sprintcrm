@@ -2,6 +2,9 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
+export type TrainingScope = 'global' | 'company';
+export type VideoType = 'youtube' | 'upload';
+
 export interface TrainingModule {
   id: string;
   company_id: string;
@@ -10,6 +13,7 @@ export interface TrainingModule {
   icon: string;
   order_index: number;
   is_active: boolean;
+  scope: TrainingScope;
   created_by: string | null;
   created_at: string;
   updated_at: string;
@@ -23,8 +27,10 @@ export interface TrainingLesson {
   module_id: string;
   title: string;
   description: string | null;
-  youtube_url: string;
+  youtube_url: string | null;
   youtube_video_id: string | null;
+  video_url: string | null;
+  video_type: VideoType;
   duration_minutes: number | null;
   order_index: number;
   is_active: boolean;
