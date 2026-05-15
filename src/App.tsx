@@ -26,6 +26,7 @@ import ProcessosComerciais from "./pages/ProcessosComerciais";
 import ProcessPagePublic from "./pages/ProcessPagePublic";
 import Treinamento from "./pages/Treinamento";
 import Financeiro from "./pages/Financeiro";
+import GrowSalesBI from "./pages/GrowSalesBI";
 import Prospeccao from "./pages/Prospeccao";
 
 import Maturidade from "./pages/Maturidade";
@@ -117,7 +118,8 @@ const App = () => (
               <Route path="juridico" element={<Juridico />} />
               <Route path="configuracoes/gamificacao" element={<ConfiguracoesGamificacao />} />
               <Route path="configuracoes/comercial" element={<ConfiguracoesComercial />} />
-              <Route path="financeiro" element={<Financeiro />} />
+              <Route path="financeiro" element={<GrowSalesBI />} />
+              <Route path="master-billing" element={<Financeiro />} />
               <Route path="treinamento" element={<Treinamento />} />
               <Route path="automacoes/diagnostico" element={<AutomacaoDiagnostico />} />
             </Route>

@@ -69,10 +69,11 @@ const navigation: NavEntry[] = [
       { name: "Maturidade", href: "/maturidade", icon: Activity, menuKey: "maturidade" },
       { name: "Mentoria", href: "/mentoria", icon: Sparkles, menuKey: "mentoria", masterOnly: true },
       { name: "Treinamento", href: "/treinamento", icon: GraduationCap, menuKey: "treinamento" },
-      { name: "Financeiro / BI", href: "/financeiro", icon: DollarSign, menuKey: "financeiro", masterOnly: true },
+      { name: "Grow Sales BI", href: "/financeiro", icon: DollarSign, menuKey: "financeiro" },
     ],
   },
   { name: "Jurídico", href: "/juridico", icon: Scale, menuKey: "juridico", juridicoOnly: true },
+  { name: "Master Billing", href: "/master-billing", icon: DollarSign, menuKey: "master-billing", masterOnly: true },
   { name: "Configurações", href: "/configuracoes", icon: Settings, menuKey: "configuracoes" },
 ];
 
