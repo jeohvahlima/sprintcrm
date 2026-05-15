@@ -10289,12 +10289,16 @@ export type Database = {
           company_id: string
           created_at: string
           id: string
+          pillar_aquisicao: number
           pillar_automacao: number
+          pillar_crescimento: number
+          pillar_dependencia: number
           pillar_details: Json | null
           pillar_gestao: number
           pillar_pessoas: number
           pillar_processos: number
           pillar_prospeccao: number
+          pillar_social: number
           total_score: number
         }
         Insert: {
@@ -10304,12 +10308,16 @@ export type Database = {
           company_id: string
           created_at?: string
           id?: string
+          pillar_aquisicao?: number
           pillar_automacao?: number
+          pillar_crescimento?: number
+          pillar_dependencia?: number
           pillar_details?: Json | null
           pillar_gestao?: number
           pillar_pessoas?: number
           pillar_processos?: number
           pillar_prospeccao?: number
+          pillar_social?: number
           total_score?: number
         }
         Update: {
@@ -10319,12 +10327,16 @@ export type Database = {
           company_id?: string
           created_at?: string
           id?: string
+          pillar_aquisicao?: number
           pillar_automacao?: number
+          pillar_crescimento?: number
+          pillar_dependencia?: number
           pillar_details?: Json | null
           pillar_gestao?: number
           pillar_pessoas?: number
           pillar_processos?: number
           pillar_prospeccao?: number
+          pillar_social?: number
           total_score?: number
         }
         Relationships: []
@@ -10358,6 +10370,39 @@ export type Database = {
           segmento?: string
           source?: string | null
           unit?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      wmi_guided_responses: {
+        Row: {
+          company_id: string
+          completed_at: string | null
+          created_at: string
+          id: string
+          pilar: string
+          responses: Json
+          score: number
+          updated_at: string
+        }
+        Insert: {
+          company_id: string
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          pilar: string
+          responses?: Json
+          score?: number
+          updated_at?: string
+        }
+        Update: {
+          company_id?: string
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          pilar?: string
+          responses?: Json
+          score?: number
           updated_at?: string
         }
         Relationships: []
