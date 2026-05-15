@@ -69,7 +69,7 @@ export function TrainingAdminPanel({
     }
   };
 
-  const handleLessonSubmit = async (data: { title: string; description?: string; youtube_url: string; duration_minutes?: number }) => {
+  const handleLessonSubmit = async (data: { title: string; description?: string; youtube_url?: string; video_url?: string; video_type?: VideoType; duration_minutes?: number }) => {
     if (editingLesson) {
       await onUpdateLesson(editingLesson.lesson.id, data);
       setEditingLesson(null);
