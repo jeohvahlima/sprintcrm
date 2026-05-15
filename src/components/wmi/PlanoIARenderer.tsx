@@ -73,7 +73,41 @@ function toSection(c: { head: string; body: string[] }): Section {
   const emojiMatch = head.match(/^(\p{Extended_Pictographic}|\p{Emoji_Presentation})/u);
   const emoji = emojiMatch ? emojiMatch[0] : "📌";
   const title = head.replace(emoji, "").replace(/^[\s\.\-:]*/, "").trim();
-  return { title, emoji, body: c.body.join("\n").trim() };
+  return { title, emoji, body: normalizeBody(c.body.join("\n")) };
+}
+
+// Garante que cada linha "Label: valor" vire um bullet/parágrafo próprio (legibilidade).
+function normalizeBody(body: string): string {
+  const raw = body.trim();
+  if (!raw) return "";
+  const lines = raw.split("\n").map((l) => l.trim());
+  const out: string[] = [];
+  let inList = false;
+  for (const line of lines) {
+    if (!line) {
+      inList = false;
+      out.push("");
+      continue;
+    }
+    if (/^[#>\-\*\|]/.test(line) || /^\d+\.\s/.test(line)) {
+      inList = false;
+      out.push(line);
+      continue;
+    }
+    const kv = line.match(/^\*{0,2}([A-ZÁÉÍÓÚÂÊÔÃÕÇ][^:*\n]{1,60})\*{0,2}\s*:\s*(.+)$/);
+    if (kv) {
+      if (!inList) {
+        if (out.length && out[out.length - 1] !== "") out.push("");
+        inList = true;
+      }
+      out.push(`- **${kv[1].trim()}:** ${kv[2].trim()}`);
+      continue;
+    }
+    inList = false;
+    if (out.length && out[out.length - 1] !== "") out.push("");
+    out.push(line);
+  }
+  return out.join("\n").trim();
 }
 
 export function PlanoIARenderer({ markdown }: { markdown: string }) {
