@@ -726,3 +726,54 @@ body.lead-conversa-popup-open .lead-card-conversa-active * {
     border: 2px solid hsl(var(--background));
   }
 }
+
+/* ============================================ */
+/* HUNTER COCKPIT — visual neon de alta perf    */
+/* ============================================ */
+@layer utilities {
+  .cockpit-grid-bg {
+    background-image:
+      linear-gradient(hsl(var(--primary) / 0.08) 1px, transparent 1px),
+      linear-gradient(90deg, hsl(var(--primary) / 0.08) 1px, transparent 1px);
+    background-size: 32px 32px;
+  }
+  .cockpit-scanline {
+    background: linear-gradient(180deg, transparent 0%, hsl(var(--primary) / 0.06) 50%, transparent 100%);
+  }
+  .neon-glow-primary {
+    box-shadow:
+      0 0 20px hsl(var(--primary) / 0.35),
+      0 0 40px hsl(var(--primary) / 0.15),
+      inset 0 0 20px hsl(var(--primary) / 0.05);
+  }
+  .neon-text {
+    text-shadow: 0 0 10px currentColor, 0 0 24px currentColor;
+  }
+  @keyframes cockpit-shimmer {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+  }
+  .cockpit-shimmer {
+    background: linear-gradient(90deg,
+      transparent 0%,
+      hsl(var(--primary) / 0.4) 50%,
+      transparent 100%);
+    background-size: 200% 100%;
+    animation: cockpit-shimmer 2.5s linear infinite;
+  }
+  @keyframes pulse-ring {
+    0% { transform: scale(0.95); opacity: 0.7; }
+    50% { transform: scale(1.05); opacity: 0.3; }
+    100% { transform: scale(0.95); opacity: 0.7; }
+  }
+  .pulse-ring { animation: pulse-ring 2.5s ease-in-out infinite; }
+  @keyframes float-y {
+    0%,100% { transform: translateY(0); }
+    50% { transform: translateY(-4px); }
+  }
+  .float-y { animation: float-y 3s ease-in-out infinite; }
+  @keyframes bar-fill {
+    from { width: 0; }
+  }
+  .bar-fill { animation: bar-fill 1.2s cubic-bezier(0.16, 1, 0.3, 1); }
+}
