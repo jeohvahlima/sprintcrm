@@ -727,8 +727,7 @@ function ResultadoDiagnostico({
       {/* === CUSTO DA INAÇÃO (Revenue Leak Engine) === */}
       <RevenueLeakCard result={result} />
 
-      {/* === IMPACTO FINANCEIRO EXPANDIDO — risco, 4 escalas, custos invisíveis, cenários e CTA === */}
-      <ImpactoFinanceiroExpandido result={result} />
+      {/* ImpactoFinanceiroExpandido removido — dados já cobertos pelo RevenueLeakCard */}
 
       {/* === ANÁLISE DO TIME COMERCIAL — custo x produção x ROI === */}
       <TimeComercialResultCard result={result} />
