@@ -164,9 +164,6 @@ export default function Maturidade() {
           <TabsTrigger value="onboarding" className="gap-2">
             <Zap className="h-4 w-4" /> Onboarding 7 Dias
           </TabsTrigger>
-          <TabsTrigger value="guiado" className="gap-2">
-            <ListChecks className="h-4 w-4" /> Diagnóstico Guiado
-          </TabsTrigger>
           <TabsTrigger value="diagnostico" className="gap-2">
             <Sparkles className="h-4 w-4" /> Diagnóstico 360°
           </TabsTrigger>
@@ -179,12 +176,21 @@ export default function Maturidade() {
           <Onboarding7Days />
         </TabsContent>
 
-        <TabsContent value="guiado">
-          <GuidedDiagnosisWizard />
-        </TabsContent>
-
-        <TabsContent value="diagnostico">
-          <Diagnostico360 />
+        <TabsContent value="diagnostico" className="space-y-8">
+          <section className="space-y-3">
+            <div className="flex items-center gap-2">
+              <ListChecks className="h-5 w-5 text-primary" />
+              <h2 className="text-lg font-semibold">Diagnóstico Guiado</h2>
+            </div>
+            <GuidedDiagnosisWizard />
+          </section>
+          <section className="space-y-3">
+            <div className="flex items-center gap-2">
+              <Sparkles className="h-5 w-5 text-primary" />
+              <h2 className="text-lg font-semibold">Diagnóstico 360° Consultivo</h2>
+            </div>
+            <Diagnostico360 />
+          </section>
         </TabsContent>
 
         {/* MATURIDADE & EVOLUÇÃO — agrupa Pilares, CRM, RH, Fase, Métricas Norte e Ritmos */}
