@@ -667,7 +667,7 @@ export const LeadCard = memo(function LeadCard({ lead, onDelete, onLeadMoved, is
           setIsExpanded(!isExpanded);
         }
       }}
-      className={`group relative p-4 mb-3 cursor-grab active:cursor-grabbing border-0 shadow-card hover:shadow-lg transition-all duration-300 bg-card overflow-hidden min-h-[120px] touch-none ${
+      className={`group relative p-2 mb-2 cursor-grab active:cursor-grabbing border-0 shadow-card hover:shadow-lg transition-all duration-300 bg-card overflow-hidden touch-none ${
         conversaOpen ? 'lead-card-conversa-active' : ''
       } ${
         isDragging ? 'shadow-2xl scale-105 z-50 ring-2 ring-primary/50 bg-gradient-to-br from-card to-primary/5' : ''
