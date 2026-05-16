@@ -18,6 +18,7 @@ import { CriarTarefaAoMoverDialog } from "@/components/funil/CriarTarefaAoMoverD
 import { useGlobalSync } from "@/hooks/useGlobalSync";
 import { useWorkflowAutomation } from "@/hooks/useWorkflowAutomation";
 import { usePermissions } from "@/hooks/usePermissions";
+import { FunilFiltrosResponsaveis, type ViewMode } from "@/components/funil/FunilFiltrosResponsaveis";
 
 interface Lead {
   id: string;
@@ -101,7 +102,7 @@ function SortableColumn({
 }
 
 export default function KanbanPage() {
-  const { canManageStructure, isAdmin, hasPermission } = usePermissions();
+  const { canManageStructure, isAdmin, isGestor, currentUserId, currentCompanyId, hasPermission } = usePermissions();
   const [canCreateFunil, setCanCreateFunil] = useState(true); // Padrão: permitir (comportamento atual)
   const [leads, setLeads] = useState<Lead[]>([]);
   const [etapas, setEtapas] = useState<Etapa[]>([]);
