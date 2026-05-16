@@ -692,8 +692,8 @@ export const LeadCard = memo(function LeadCard({ lead, onDelete, onLeadMoved, is
 
       <div className="relative space-y-2">
         {/* Header sempre visível */}
-        <div className="flex justify-between items-start gap-2">
-          <div className="flex items-start gap-2 flex-1">
+        <div className="flex justify-between items-start gap-2 min-w-0">
+          <div className="flex items-start gap-2 flex-1 min-w-0 pr-1">
             <Avatar className="h-8 w-8">
               <AvatarImage 
                 src={avatarUrl || lead.avatar_url || undefined} 
@@ -780,7 +780,7 @@ export const LeadCard = memo(function LeadCard({ lead, onDelete, onLeadMoved, is
                 ) : (
                   <button
                     type="button"
-                    className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded px-1 py-0.5 -ml-1 transition-colors group/title cursor-pointer"
+                    className="flex max-w-full min-w-0 items-center gap-1 text-xs text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded px-1 py-0.5 -ml-1 transition-colors group/title cursor-pointer"
                     onClick={(e) => {
                       e.preventDefault();
                       e.stopPropagation();
@@ -796,8 +796,8 @@ export const LeadCard = memo(function LeadCard({ lead, onDelete, onLeadMoved, is
                   >
                     {leadTitle ? (
                       <>
-                        <span className="font-medium text-foreground">{leadTitle}</span>
-                        <Pencil className="h-2.5 w-2.5 opacity-0 group-hover/title:opacity-100 transition-opacity" />
+                        <span className="font-medium text-foreground truncate min-w-0">{leadTitle}</span>
+                        <Pencil className="h-2.5 w-2.5 flex-shrink-0 opacity-0 group-hover/title:opacity-100 transition-opacity" />
                       </>
                     ) : (
                       <>
@@ -808,6 +808,41 @@ export const LeadCard = memo(function LeadCard({ lead, onDelete, onLeadMoved, is
                   </button>
                 )}
               </div>
+              {(diasNoFunil !== null || attachmentsCount > 0 || proximoCompromissoData) && (
+                <div className="mb-1 flex min-w-0 flex-wrap items-center gap-1">
+                  {diasNoFunil !== null && (
+                    <Badge 
+                      variant="outline" 
+                      className={`text-xs cursor-default ${
+                        diasNoFunil <= 7 
+                          ? 'bg-success/10 border-success/20 text-success' 
+                          : diasNoFunil <= 30 
+                            ? 'bg-warning/10 border-warning/20 text-warning' 
+                            : 'bg-destructive/10 border-destructive/20 text-destructive'
+                      }`}
+                    >
+                      <Clock className="h-2.5 w-2.5 mr-1" />
+                      {diasNoFunil}d
+                    </Badge>
+                  )}
+                  {attachmentsCount > 0 && (
+                    <Badge 
+                      variant="outline" 
+                      className="text-xs bg-primary/10 border-primary/20 text-primary cursor-pointer hover:bg-primary/20"
+                      onClick={(e) => { e.stopPropagation(); setAttachmentsOpen(true); }}
+                    >
+                      <Paperclip className="h-2.5 w-2.5 mr-1" />
+                      {attachmentsCount}
+                    </Badge>
+                  )}
+                  {proximoCompromissoData && (
+                    <Badge variant="outline" className="text-xs bg-success/10 border-success/20 text-success cursor-pointer">
+                      <Calendar className="h-2.5 w-2.5 mr-1" />
+                      {proximoCompromissoData}
+                    </Badge>
+                  )}
+                </div>
+              )}
               
               {/* Responsáveis (múltiplos) com foto */}
               {responsaveisData.length > 0 && (
@@ -876,85 +911,16 @@ export const LeadCard = memo(function LeadCard({ lead, onDelete, onLeadMoved, is
           </div>
 
           {/* Ações (menu) + agenda + expandir */}
-          <div className="flex items-center gap-1 flex-shrink-0 flex-nowrap">
-            {/* Dias no funil */}
-            {diasNoFunil !== null && (
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Badge 
-                      variant="outline" 
-                      className={`text-xs cursor-default ${
-                        diasNoFunil <= 7 
-                          ? 'bg-success/10 border-success/20 text-success' 
-                          : diasNoFunil <= 30 
-                            ? 'bg-warning/10 border-warning/20 text-warning' 
-                            : 'bg-destructive/10 border-destructive/20 text-destructive'
-                      }`}
-                    >
-                      <Clock className="h-2.5 w-2.5 mr-1" />
-                      {diasNoFunil}d
-                    </Badge>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p className="font-medium">
-                      {diasNoFunil === 0 
-                        ? 'Entrou hoje no funil' 
-                        : diasNoFunil === 1 
-                          ? '1 dia no funil' 
-                          : `${diasNoFunil} dias no funil`}
-                    </p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            )}
-
-            {/* Indicador de anexos/prontuário */}
-            {attachmentsCount > 0 && (
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Badge 
-                      variant="outline" 
-                      className="text-xs bg-primary/10 border-primary/20 text-primary cursor-pointer hover:bg-primary/20"
-                      onClick={(e) => { e.stopPropagation(); setAttachmentsOpen(true); }}
-                    >
-                      <Paperclip className="h-2.5 w-2.5 mr-1" />
-                      {attachmentsCount}
-                    </Badge>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p className="font-medium">{attachmentsCount} arquivo(s) no prontuário</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            )}
-
-            {/* Data da Agenda - Mostrar ao lado do botão apagar */}
-            {proximoCompromissoData && (
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Badge variant="outline" className="text-xs bg-success/10 border-success/20 text-success cursor-pointer">
-                      <Calendar className="h-2.5 w-2.5 mr-1" />
-                      {proximoCompromissoData}
-                    </Badge>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p className="font-medium">{proximoCompromisso}</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            )}
-
+          <div className="flex w-[76px] flex-shrink-0 items-start justify-end gap-1 flex-nowrap">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="h-8 w-8 p-0"
+                  className="h-8 w-8 shrink-0 p-0"
                   onClick={(e) => { e.stopPropagation(); }}
                   onMouseDown={(e) => { e.stopPropagation(); }}
+                  aria-label="Abrir ações do lead"
                 >
                   <MoreVertical className="h-4 w-4" />
                 </Button>
@@ -1004,7 +970,8 @@ export const LeadCard = memo(function LeadCard({ lead, onDelete, onLeadMoved, is
                 e.stopPropagation();
                 setIsExpanded(!isExpanded);
               }}
-              className="h-8 w-8 p-0"
+              className="h-8 w-8 shrink-0 p-0"
+              aria-label={isExpanded ? "Recolher lead" : "Expandir lead"}
             >
               {isExpanded ? (
                 <ChevronUp className="h-4 w-4" />
