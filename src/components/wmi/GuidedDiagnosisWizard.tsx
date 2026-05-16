@@ -323,173 +323,220 @@ const PILARES: PilarDef[] = [
 ];
 
 /* ============================================================
-   COMPONENT
+   COMPONENT — UNIFIED SINGLE-FLOW DIAGNOSIS
    ============================================================ */
+type FlatItem = { pilarIdx: number; qIdx: number; pilar: PilarDef; q: Question };
+
+const FLAT: FlatItem[] = PILARES.flatMap((p, pilarIdx) =>
+  p.questions.map((q, qIdx) => ({ pilarIdx, qIdx, pilar: p, q }))
+);
+
 export function GuidedDiagnosisWizard() {
   const { data: existing, isLoading } = useGuidedDiagnosis();
   const save = useSaveGuidedPilar();
-  const [activePilar, setActivePilar] = useState<GuidedPilar | null>(null);
-  const [answers, setAnswers] = useState<Record<string, any>>({});
+  const [answersByPilar, setAnswersByPilar] = useState<Record<string, Record<string, any>>>({});
   const [step, setStep] = useState(0);
+  const [savedPilares, setSavedPilares] = useState<Record<string, boolean>>({});
+  const [done, setDone] = useState(false);
 
-  const def = PILARES.find((p) => p.key === activePilar) || null;
-  const currentQ = def?.questions[step];
-  const liveScore = useMemo(() => (def ? def.computeScore(answers) : 0), [def, answers]);
-  const totalDone = Object.values(existing || {}).filter((r) => r?.completed_at).length;
+  // Hidrata respostas já salvas
+  useMemo(() => {
+    if (!existing) return;
+    const seed: Record<string, Record<string, any>> = {};
+    const savedFlags: Record<string, boolean> = {};
+    PILARES.forEach((p) => {
+      const prev = (existing as any)?.[p.key];
+      if (prev?.responses) seed[p.key] = prev.responses;
+      if (prev?.completed_at) savedFlags[p.key] = true;
+    });
+    setAnswersByPilar((cur) => (Object.keys(cur).length ? cur : seed));
+    setSavedPilares((cur) => (Object.keys(cur).length ? cur : savedFlags));
+  }, [existing]);
 
-  function startPilar(p: GuidedPilar) {
-    const prev = existing?.[p];
-    setActivePilar(p);
-    setAnswers(prev?.responses || {});
-    setStep(0);
+  const current = FLAT[step];
+  const def = current?.pilar;
+  const currentQ = current?.q;
+  const Icon = def?.icon;
+  const totalQuestions = FLAT.length;
+  const progress = ((step + 1) / totalQuestions) * 100;
+
+  const currentAnswers = (def && answersByPilar[def.key]) || {};
+  const liveScore = useMemo(() => (def ? def.computeScore(currentAnswers) : 0), [def, currentAnswers]);
+  const answered =
+    currentQ &&
+    currentAnswers[currentQ.id] !== undefined &&
+    currentAnswers[currentQ.id] !== null &&
+    (currentQ.type !== "multi" ||
+      (Array.isArray(currentAnswers[currentQ.id]) && currentAnswers[currentQ.id].length > 0));
+
+  function setAnswer(value: any) {
+    if (!def || !currentQ) return;
+    setAnswersByPilar((prev) => ({
+      ...prev,
+      [def.key]: { ...(prev[def.key] || {}), [currentQ.id]: value },
+    }));
   }
 
-  function next() {
-    if (!def) return;
-    if (step < def.questions.length - 1) setStep(step + 1);
-    else finish();
-  }
-
-  async function finish() {
-    if (!def) return;
+  async function persistPilar(pilar: PilarDef) {
+    const responses = answersByPilar[pilar.key] || {};
+    const score = pilar.computeScore(responses);
     try {
-      await save.mutateAsync({ pilar: def.key, responses: answers, score: liveScore });
-      toast.success(`${def.title} concluído! Score: ${liveScore}/20`);
-      setActivePilar(null);
-      setAnswers({});
-      setStep(0);
+      await save.mutateAsync({ pilar: pilar.key, responses, score });
+      setSavedPilares((s) => ({ ...s, [pilar.key]: true }));
     } catch (e: any) {
-      toast.error(e.message || "Erro ao salvar");
+      toast.error(e.message || `Erro ao salvar ${pilar.title}`);
+      throw e;
     }
   }
 
-  /* ---------------- LIST VIEW ---------------- */
-  if (!activePilar) {
+  async function next() {
+    if (!current) return;
+    const isLastOfPilar = current.qIdx === current.pilar.questions.length - 1;
+    const isLastOverall = step === FLAT.length - 1;
+
+    if (isLastOfPilar) {
+      try {
+        await persistPilar(current.pilar);
+        toast.success(`${current.pilar.title} salvo (${current.pilar.computeScore(currentAnswers)}/20)`);
+      } catch {
+        return;
+      }
+    }
+
+    if (isLastOverall) {
+      setDone(true);
+      return;
+    }
+    setStep(step + 1);
+  }
+
+  function prev() {
+    if (step > 0) setStep(step - 1);
+  }
+
+  function jumpToPilar(pilarIdx: number) {
+    const idx = FLAT.findIndex((f) => f.pilarIdx === pilarIdx);
+    if (idx >= 0) {
+      setDone(false);
+      setStep(idx);
+    }
+  }
+
+  /* ---------------- DONE VIEW ---------------- */
+  if (done) {
+    const totals = PILARES.map((p) => ({
+      pilar: p,
+      score: p.computeScore(answersByPilar[p.key] || {}),
+      saved: !!savedPilares[p.key],
+    }));
     return (
-      <div className="space-y-6">
-        <Card className="border-2 border-primary/20 bg-gradient-to-br from-primary/5 to-transparent">
-          <CardContent className="p-6">
-            <div className="flex items-start gap-4">
-              <div className="p-3 rounded-xl bg-primary/15">
-                <Sparkles className="h-6 w-6 text-primary" />
-              </div>
-              <div className="flex-1">
-                <h3 className="text-lg font-semibold">GROW Revenue Intelligence</h3>
-                <p className="text-sm text-muted-foreground mt-1">
-                  Quatro blocos guiados que aprofundam o GMI além do que conseguimos ler do CRM.
-                  Responda cada bloco em ~2 minutos. Você pode pular e voltar quando quiser.
-                </p>
-                <div className="flex items-center gap-3 mt-3">
-                  <Progress value={(totalDone / 4) * 100} className="h-2 flex-1" />
-                  <span className="text-xs font-mono text-muted-foreground">
-                    {totalDone}/4 blocos
-                  </span>
-                </div>
-              </div>
+      <div className="space-y-4 max-w-3xl mx-auto">
+        <Card className="border-2 border-emerald-500/40 bg-emerald-500/5">
+          <CardContent className="p-6 flex items-start gap-4">
+            <CheckCircle2 className="h-8 w-8 text-emerald-500 shrink-0" />
+            <div className="flex-1">
+              <h3 className="text-lg font-semibold">Diagnóstico GROW Revenue Intelligence concluído</h3>
+              <p className="text-sm text-muted-foreground mt-1">
+                Os 4 pilares já estão refletidos no seu GMI Score na aba <strong>Maturidade & Evolução</strong>.
+              </p>
             </div>
           </CardContent>
         </Card>
 
-        <div className="grid md:grid-cols-2 gap-4">
-          {PILARES.map((p) => {
-            const Icon = p.icon;
-            const done = existing?.[p.key];
+        <div className="grid sm:grid-cols-2 gap-3">
+          {totals.map(({ pilar, score, saved }) => {
+            const I = pilar.icon;
             return (
-              <Card
-                key={p.key}
-                className={`overflow-hidden transition hover:border-primary/40 ${
-                  done?.completed_at ? "border-emerald-500/40" : ""
-                }`}
-              >
-                <div className={`h-1.5 bg-gradient-to-r ${p.color}`} />
-                <CardHeader className="pb-3">
-                  <div className="flex items-start gap-3">
-                    <div className={`p-2.5 rounded-lg bg-gradient-to-br ${p.color} text-white`}>
-                      <Icon className="h-5 w-5" />
+              <Card key={pilar.key} className="overflow-hidden">
+                <div className={`h-1.5 bg-gradient-to-r ${pilar.color}`} />
+                <CardHeader className="pb-2">
+                  <div className="flex items-center gap-2">
+                    <div className={`p-2 rounded-lg bg-gradient-to-br ${pilar.color} text-white`}>
+                      <I className="h-4 w-4" />
                     </div>
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2">
-                        <CardTitle className="text-base">{p.title}</CardTitle>
-                        {done?.completed_at && (
-                          <Badge variant="secondary" className="font-mono text-xs">
-                            <CheckCircle2 className="h-3 w-3 mr-1 text-emerald-500" />
-                            {done.score}/20
-                          </Badge>
-                        )}
-                      </div>
-                      <CardDescription className="mt-1">{p.subtitle}</CardDescription>
-                    </div>
+                    <CardTitle className="text-sm flex-1">{pilar.title}</CardTitle>
+                    <Badge variant="secondary" className="font-mono text-xs">{score}/20</Badge>
                   </div>
                 </CardHeader>
-                <CardContent>
-                  {done?.completed_at && (
-                    <div className="mb-3 text-xs text-muted-foreground bg-muted/50 rounded-md p-2 border-l-2 border-primary/40">
-                      {p.insight(done.responses, done.score)}
-                    </div>
-                  )}
-                  <Button
-                    variant={done?.completed_at ? "outline" : "default"}
-                    size="sm"
-                    className="w-full"
-                    onClick={() => startPilar(p.key)}
-                  >
-                    {done?.completed_at ? "Revisar respostas" : "Iniciar bloco"}
-                    <ArrowRight className="h-3.5 w-3.5 ml-1" />
+                <CardContent className="pt-0 space-y-2">
+                  <p className="text-xs text-muted-foreground">{pilar.insight(answersByPilar[pilar.key] || {}, score)}</p>
+                  <Button variant="ghost" size="sm" className="h-7 text-xs w-full" onClick={() => jumpToPilar(PILARES.indexOf(pilar))}>
+                    Revisar respostas <ArrowRight className="h-3 w-3 ml-1" />
                   </Button>
+                  {!saved && <p className="text-[10px] text-amber-600">Não persistido — revise e conclua novamente.</p>}
                 </CardContent>
               </Card>
             );
           })}
         </div>
-
-        {totalDone === 4 && (
-          <Card className="border-emerald-500/40 bg-emerald-500/5">
-            <CardContent className="p-5 flex items-center gap-3">
-              <CheckCircle2 className="h-6 w-6 text-emerald-500" />
-              <div>
-                <div className="font-semibold">Diagnóstico guiado completo</div>
-                <p className="text-sm text-muted-foreground">
-                  Os 4 novos pilares já estão refletidos no seu GMI Score na aba Maturidade & Evolução.
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-        )}
       </div>
     );
   }
 
-  /* ---------------- WIZARD VIEW ---------------- */
+  /* ---------------- WIZARD VIEW (single unified flow) ---------------- */
   if (!def || !currentQ) return null;
-  const Icon = def.icon;
-  const progress = ((step + 1) / def.questions.length) * 100;
-  const answered = answers[currentQ.id] !== undefined && answers[currentQ.id] !== null
-    && (currentQ.type !== "multi" || (Array.isArray(answers[currentQ.id]) && answers[currentQ.id].length > 0));
 
   return (
     <div className="space-y-4 max-w-2xl mx-auto">
+      {/* Header global de progresso (4 pilares) */}
+      <Card className="border-2 border-primary/20 bg-gradient-to-br from-primary/5 to-transparent">
+        <CardContent className="p-4">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="p-2 rounded-lg bg-primary/15">
+              <Sparkles className="h-4 w-4 text-primary" />
+            </div>
+            <div className="flex-1">
+              <div className="text-sm font-semibold">GROW Revenue Intelligence — Diagnóstico unificado</div>
+              <p className="text-xs text-muted-foreground">
+                Pergunta {step + 1} de {totalQuestions} — todos os 4 pilares em um único fluxo.
+              </p>
+            </div>
+            <Badge variant="outline" className="font-mono text-xs">{Math.round(progress)}%</Badge>
+          </div>
+          <Progress value={progress} className="h-2" />
+          <div className="grid grid-cols-4 gap-1 mt-2">
+            {PILARES.map((p, i) => {
+              const isCurrent = i === current.pilarIdx;
+              const isPast = i < current.pilarIdx || savedPilares[p.key];
+              return (
+                <button
+                  key={p.key}
+                  onClick={() => jumpToPilar(i)}
+                  className={`text-[10px] py-1 px-2 rounded text-left truncate transition border ${
+                    isCurrent ? "border-primary bg-primary/10 font-medium" :
+                    isPast ? "border-emerald-500/40 bg-emerald-500/5 text-emerald-700 dark:text-emerald-400" :
+                    "border-border text-muted-foreground hover:bg-muted"
+                  }`}
+                >
+                  {isPast && <CheckCircle2 className="h-2.5 w-2.5 inline mr-0.5" />}
+                  {p.title.split(" ")[0]}
+                </button>
+              );
+            })}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Card da pergunta atual */}
       <Card className="overflow-hidden">
         <div className={`h-1.5 bg-gradient-to-r ${def.color}`} />
         <CardHeader className="pb-4">
           <div className="flex items-center gap-3">
             <div className={`p-2 rounded-lg bg-gradient-to-br ${def.color} text-white`}>
-              <Icon className="h-5 w-5" />
+              {Icon && <Icon className="h-5 w-5" />}
             </div>
             <div className="flex-1">
               <CardTitle className="text-base">{def.title}</CardTitle>
               <CardDescription>
-                Pergunta {step + 1} de {def.questions.length}
+                Bloco {current.pilarIdx + 1}/4 · Pergunta {current.qIdx + 1} de {def.questions.length}
               </CardDescription>
             </div>
-            <Badge variant="secondary" className="font-mono">
-              Score: {liveScore}/20
-            </Badge>
+            <Badge variant="secondary" className="font-mono">Score parcial: {liveScore}/20</Badge>
           </div>
-          <Progress value={progress} className="h-2 mt-2" />
         </CardHeader>
 
         <CardContent className="space-y-5">
-          {step === 0 && (
+          {current.qIdx === 0 && (
             <p className="text-sm text-muted-foreground bg-muted/50 rounded-md p-3 border-l-2 border-primary/40">
               {def.intro}
             </p>
@@ -506,15 +553,15 @@ export function GuidedDiagnosisWizard() {
           {currentQ.type === "scale" && (
             <div className="space-y-3">
               <Slider
-                value={[answers[currentQ.id] ?? 0]}
-                onValueChange={(v) => setAnswers({ ...answers, [currentQ.id]: v[0] })}
+                value={[currentAnswers[currentQ.id] ?? 0]}
+                onValueChange={(v) => setAnswer(v[0])}
                 min={0}
                 max={5}
                 step={1}
               />
               <div className="flex justify-between text-xs text-muted-foreground">
                 {[0, 1, 2, 3, 4, 5].map((n) => (
-                  <span key={n} className={answers[currentQ.id] === n ? "font-bold text-primary" : ""}>
+                  <span key={n} className={currentAnswers[currentQ.id] === n ? "font-bold text-primary" : ""}>
                     {n}
                   </span>
                 ))}
@@ -525,8 +572,8 @@ export function GuidedDiagnosisWizard() {
           {/* YES/NO */}
           {currentQ.type === "yesno" && (
             <RadioGroup
-              value={answers[currentQ.id] === true ? "yes" : answers[currentQ.id] === false ? "no" : ""}
-              onValueChange={(v) => setAnswers({ ...answers, [currentQ.id]: v === "yes" })}
+              value={currentAnswers[currentQ.id] === true ? "yes" : currentAnswers[currentQ.id] === false ? "no" : ""}
+              onValueChange={(v) => setAnswer(v === "yes")}
               className="grid grid-cols-2 gap-3"
             >
               {[{ v: "yes", l: "Sim" }, { v: "no", l: "Não" }].map((o) => (
@@ -545,8 +592,8 @@ export function GuidedDiagnosisWizard() {
           {/* CHOICE */}
           {currentQ.type === "choice" && (
             <RadioGroup
-              value={answers[currentQ.id] ?? ""}
-              onValueChange={(v) => setAnswers({ ...answers, [currentQ.id]: v })}
+              value={currentAnswers[currentQ.id] ?? ""}
+              onValueChange={(v) => setAnswer(v)}
               className="space-y-2"
             >
               {currentQ.options.map((o) => (
@@ -566,7 +613,7 @@ export function GuidedDiagnosisWizard() {
           {currentQ.type === "multi" && (
             <div className="grid sm:grid-cols-2 gap-2">
               {currentQ.options.map((o) => {
-                const arr: string[] = answers[currentQ.id] || [];
+                const arr: string[] = currentAnswers[currentQ.id] || [];
                 const checked = arr.includes(o.v);
                 return (
                   <Label
@@ -576,8 +623,8 @@ export function GuidedDiagnosisWizard() {
                     <Checkbox
                       checked={checked}
                       onCheckedChange={(c) => {
-                        const next = c ? [...arr, o.v] : arr.filter((x) => x !== o.v);
-                        setAnswers({ ...answers, [currentQ.id]: next });
+                        const nextArr = c ? [...arr, o.v] : arr.filter((x) => x !== o.v);
+                        setAnswer(nextArr);
                       }}
                     />
                     <span className="text-sm">{o.label}</span>
@@ -597,10 +644,8 @@ export function GuidedDiagnosisWizard() {
                   inputMode="numeric"
                   min={0}
                   max={currentQ.max ?? 100000}
-                  value={answers[currentQ.id] ?? ""}
-                  onChange={(e) =>
-                    setAnswers({ ...answers, [currentQ.id]: Number(e.target.value) || 0 })
-                  }
+                  value={currentAnswers[currentQ.id] ?? ""}
+                  onChange={(e) => setAnswer(Number(e.target.value) || 0)}
                   placeholder="0"
                 />
               </div>
@@ -608,7 +653,7 @@ export function GuidedDiagnosisWizard() {
                 variant="ghost"
                 size="sm"
                 className="text-xs"
-                onClick={() => setAnswers({ ...answers, [currentQ.id]: 0 })}
+                onClick={() => setAnswer(0)}
               >
                 Não invisto / pular
               </Button>
@@ -616,21 +661,17 @@ export function GuidedDiagnosisWizard() {
           )}
 
           <div className="flex items-center justify-between pt-2 border-t">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => (step === 0 ? setActivePilar(null) : setStep(step - 1))}
-            >
+            <Button variant="ghost" size="sm" onClick={prev} disabled={step === 0}>
               <ArrowLeft className="h-3.5 w-3.5 mr-1" />
-              {step === 0 ? "Voltar" : "Anterior"}
+              Anterior
             </Button>
             <div className="flex gap-2">
               <Button variant="ghost" size="sm" onClick={next}>
                 Pular
               </Button>
               <Button size="sm" onClick={next} disabled={!answered && currentQ.type !== "money"}>
-                {step === def.questions.length - 1 ? (
-                  <>Concluir <CheckCircle2 className="h-3.5 w-3.5 ml-1" /></>
+                {step === FLAT.length - 1 ? (
+                  <>Concluir diagnóstico <CheckCircle2 className="h-3.5 w-3.5 ml-1" /></>
                 ) : (
                   <>Próximo <ArrowRight className="h-3.5 w-3.5 ml-1" /></>
                 )}
@@ -644,7 +685,7 @@ export function GuidedDiagnosisWizard() {
         <Card className="border-l-4 border-l-primary">
           <CardContent className="p-4 flex items-start gap-3">
             <Sparkles className="h-4 w-4 text-primary mt-0.5" />
-            <p className="text-sm text-muted-foreground">{def.insight(answers, liveScore)}</p>
+            <p className="text-sm text-muted-foreground">{def.insight(currentAnswers, liveScore)}</p>
           </CardContent>
         </Card>
       )}
@@ -657,3 +698,4 @@ export function GuidedDiagnosisWizard() {
     </div>
   );
 }
+
