@@ -1154,7 +1154,7 @@ export default function KanbanPage() {
             )}
           </h1>
           <p className="text-muted-foreground">
-            Gerencie seus leads por etapas • {isOnline ? 'Online' : 'Offline'}
+            {leadsFiltrados.length} oportunidades • {isOnline ? 'Online' : 'Offline'}
           </p>
         </div>
         <div className="flex gap-2">
