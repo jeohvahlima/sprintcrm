@@ -822,6 +822,82 @@ export default function KanbanPage() {
     [etapas, selectedFunil]
   );
 
+  // 🎯 Helpers de responsável (suporta legado responsavel_id + array responsaveis)
+  const leadResponsaveis = useCallback((l: any): string[] => {
+    const arr: string[] = [];
+    if (l?.responsavel_id) arr.push(l.responsavel_id);
+    if (Array.isArray(l?.responsaveis)) {
+      l.responsaveis.forEach((id: string) => {
+        if (id && !arr.includes(id)) arr.push(id);
+      });
+    }
+    return arr;
+  }, []);
+
+  // Leads do funil selecionado (base para filtros e contadores)
+  const leadsDoFunil = useMemo(() => {
+    const etapaIds = new Set(etapasFiltradas.map((e) => e.id));
+    return leads.filter((l) => l.etapa_id && etapaIds.has(l.etapa_id));
+  }, [leads, etapasFiltradas]);
+
+  // Contadores por modo (para badges nos botões)
+  const viewCounts = useMemo(() => {
+    const meus = leadsDoFunil.filter((l) =>
+      currentUserId ? leadResponsaveis(l).includes(currentUserId) : false
+    ).length;
+    const semResp = leadsDoFunil.filter((l) => leadResponsaveis(l).length === 0).length;
+    const equipe = leadsDoFunil.filter((l) => {
+      const r = leadResponsaveis(l);
+      return r.length > 0 && (!currentUserId || !r.includes(currentUserId));
+    }).length;
+    return {
+      meus,
+      equipe,
+      todos: leadsDoFunil.length,
+      "sem-responsavel": semResp,
+    } as Record<ViewMode, number>;
+  }, [leadsDoFunil, currentUserId, leadResponsaveis]);
+
+  // Contadores por responsável (para dropdown)
+  const responsavelCounts = useMemo(() => {
+    const map: Record<string, number> = {};
+    leadsDoFunil.forEach((l) => {
+      leadResponsaveis(l).forEach((id) => {
+        map[id] = (map[id] || 0) + 1;
+      });
+    });
+    return map;
+  }, [leadsDoFunil, leadResponsaveis]);
+
+  // Aplica viewMode + dropdown de responsável
+  const leadsFiltrados = useMemo(() => {
+    let result = leadsDoFunil;
+    switch (viewMode) {
+      case "meus":
+        result = result.filter((l) =>
+          currentUserId ? leadResponsaveis(l).includes(currentUserId) : false
+        );
+        break;
+      case "equipe":
+        result = result.filter((l) => {
+          const r = leadResponsaveis(l);
+          return r.length > 0 && (!currentUserId || !r.includes(currentUserId));
+        });
+        break;
+      case "sem-responsavel":
+        result = result.filter((l) => leadResponsaveis(l).length === 0);
+        break;
+      case "todos":
+      default:
+        break;
+    }
+    if (responsavelFiltro !== "all") {
+      result = result.filter((l) => leadResponsaveis(l).includes(responsavelFiltro));
+    }
+    return result;
+  }, [leadsDoFunil, viewMode, responsavelFiltro, currentUserId, leadResponsaveis]);
+
+
   // 🎯 Pré-calcular totais e métricas avançadas de todas as etapas de uma vez (mais eficiente)
   const etapaStats = useMemo(() => {
     const stats: Record<string, { 
