@@ -18,6 +18,9 @@ export function usePermissions() {
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
   const [isSuperAdmin, setIsSuperAdmin] = useState(false);
+  const [isGestor, setIsGestor] = useState(false);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [currentCompanyId, setCurrentCompanyId] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchPermissions = async () => {
@@ -42,6 +45,7 @@ export function usePermissions() {
           setLoading(false);
           return;
         }
+        setCurrentUserId(user.id);
 
         const { data: rolesData, error: rolesError } = await supabase
           .from('user_roles')
@@ -53,8 +57,11 @@ export function usePermissions() {
 
         const isSuper = rolesData?.some(r => r.role === 'super_admin') || false;
         const isCompanyAdmin = rolesData?.some(r => r.role === 'company_admin') || false;
+        const isGestorRole = rolesData?.some(r => r.role === 'gestor') || false;
         setIsSuperAdmin(isSuper);
         setIsAdmin(isSuper || isCompanyAdmin);
+        setIsGestor(isSuper || isCompanyAdmin || isGestorRole);
+        setCurrentCompanyId(rolesData?.[0]?.company_id || null);
 
         // Fetch all permissions
         const { data: permissionsData, error: permissionsError } = await supabase
@@ -130,6 +137,9 @@ export function usePermissions() {
     loading,
     isAdmin,
     isSuperAdmin,
+    isGestor,
+    currentUserId,
+    currentCompanyId,
     hasPermission,
     canAccess,
     canManageStructure,

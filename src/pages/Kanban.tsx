@@ -18,6 +18,7 @@ import { CriarTarefaAoMoverDialog } from "@/components/funil/CriarTarefaAoMoverD
 import { useGlobalSync } from "@/hooks/useGlobalSync";
 import { useWorkflowAutomation } from "@/hooks/useWorkflowAutomation";
 import { usePermissions } from "@/hooks/usePermissions";
+import { FunilFiltrosResponsaveis, type ViewMode } from "@/components/funil/FunilFiltrosResponsaveis";
 
 interface Lead {
   id: string;
@@ -101,7 +102,7 @@ function SortableColumn({
 }
 
 export default function KanbanPage() {
-  const { canManageStructure, isAdmin, hasPermission } = usePermissions();
+  const { canManageStructure, isAdmin, isGestor, currentUserId, currentCompanyId, hasPermission } = usePermissions();
   const [canCreateFunil, setCanCreateFunil] = useState(true); // Padrão: permitir (comportamento atual)
   const [leads, setLeads] = useState<Lead[]>([]);
   const [etapas, setEtapas] = useState<Etapa[]>([]);
@@ -179,6 +180,36 @@ export default function KanbanPage() {
   const LEADS_PER_PAGE = 10;
   const isMovingRef = useRef(false);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+  // 🎯 Filtros de visibilidade por responsável (controle de pipeline por usuário)
+  const VIEW_MODE_KEY = "kanban:viewMode";
+  const RESP_FILTER_KEY = "kanban:responsavelFiltro";
+  const [viewMode, setViewMode] = useState<ViewMode>(() => {
+    const saved = (typeof window !== "undefined" && localStorage.getItem(VIEW_MODE_KEY)) as ViewMode | null;
+    return saved || "meus";
+  });
+  const [responsavelFiltro, setResponsavelFiltro] = useState<string>(() => {
+    return (typeof window !== "undefined" && localStorage.getItem(RESP_FILTER_KEY)) || "all";
+  });
+
+  // Quando carrega papel, ajusta default apenas se o usuário não tinha preferência salva
+  useEffect(() => {
+    if (!currentUserId) return;
+    const saved = localStorage.getItem(VIEW_MODE_KEY);
+    if (!saved && isGestor) setViewMode("todos");
+  }, [currentUserId, isGestor]);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") localStorage.setItem(VIEW_MODE_KEY, viewMode);
+  }, [viewMode]);
+  useEffect(() => {
+    if (typeof window !== "undefined") localStorage.setItem(RESP_FILTER_KEY, responsavelFiltro);
+  }, [responsavelFiltro]);
+
+  // Se vendedor (não gestor) acessar um modo restrito, força "meus"
+  useEffect(() => {
+    if (!isGestor && viewMode !== "meus") setViewMode("meus");
+  }, [isGestor, viewMode]);
 
   useEffect(() => {
     let mounted = true;
@@ -791,6 +822,82 @@ export default function KanbanPage() {
     [etapas, selectedFunil]
   );
 
+  // 🎯 Helpers de responsável (suporta legado responsavel_id + array responsaveis)
+  const leadResponsaveis = useCallback((l: any): string[] => {
+    const arr: string[] = [];
+    if (l?.responsavel_id) arr.push(l.responsavel_id);
+    if (Array.isArray(l?.responsaveis)) {
+      l.responsaveis.forEach((id: string) => {
+        if (id && !arr.includes(id)) arr.push(id);
+      });
+    }
+    return arr;
+  }, []);
+
+  // Leads do funil selecionado (base para filtros e contadores)
+  const leadsDoFunil = useMemo(() => {
+    const etapaIds = new Set(etapasFiltradas.map((e) => e.id));
+    return leads.filter((l) => l.etapa_id && etapaIds.has(l.etapa_id));
+  }, [leads, etapasFiltradas]);
+
+  // Contadores por modo (para badges nos botões)
+  const viewCounts = useMemo(() => {
+    const meus = leadsDoFunil.filter((l) =>
+      currentUserId ? leadResponsaveis(l).includes(currentUserId) : false
+    ).length;
+    const semResp = leadsDoFunil.filter((l) => leadResponsaveis(l).length === 0).length;
+    const equipe = leadsDoFunil.filter((l) => {
+      const r = leadResponsaveis(l);
+      return r.length > 0 && (!currentUserId || !r.includes(currentUserId));
+    }).length;
+    return {
+      meus,
+      equipe,
+      todos: leadsDoFunil.length,
+      "sem-responsavel": semResp,
+    } as Record<ViewMode, number>;
+  }, [leadsDoFunil, currentUserId, leadResponsaveis]);
+
+  // Contadores por responsável (para dropdown)
+  const responsavelCounts = useMemo(() => {
+    const map: Record<string, number> = {};
+    leadsDoFunil.forEach((l) => {
+      leadResponsaveis(l).forEach((id) => {
+        map[id] = (map[id] || 0) + 1;
+      });
+    });
+    return map;
+  }, [leadsDoFunil, leadResponsaveis]);
+
+  // Aplica viewMode + dropdown de responsável
+  const leadsFiltrados = useMemo(() => {
+    let result = leadsDoFunil;
+    switch (viewMode) {
+      case "meus":
+        result = result.filter((l) =>
+          currentUserId ? leadResponsaveis(l).includes(currentUserId) : false
+        );
+        break;
+      case "equipe":
+        result = result.filter((l) => {
+          const r = leadResponsaveis(l);
+          return r.length > 0 && (!currentUserId || !r.includes(currentUserId));
+        });
+        break;
+      case "sem-responsavel":
+        result = result.filter((l) => leadResponsaveis(l).length === 0);
+        break;
+      case "todos":
+      default:
+        break;
+    }
+    if (responsavelFiltro !== "all") {
+      result = result.filter((l) => leadResponsaveis(l).includes(responsavelFiltro));
+    }
+    return result;
+  }, [leadsDoFunil, viewMode, responsavelFiltro, currentUserId, leadResponsaveis]);
+
+
   // 🎯 Pré-calcular totais e métricas avançadas de todas as etapas de uma vez (mais eficiente)
   const etapaStats = useMemo(() => {
     const stats: Record<string, { 
@@ -803,7 +910,7 @@ export default function KanbanPage() {
     }> = {};
     
     etapasFiltradas.forEach((etapa, index) => {
-      const leadsNaEtapa = leads.filter(l => l.etapa_id === etapa.id);
+      const leadsNaEtapa = leadsFiltrados.filter(l => l.etapa_id === etapa.id);
       const total = leadsNaEtapa.reduce((sum, lead) => sum + (lead.value || 0), 0);
       const count = leadsNaEtapa.length;
       
@@ -814,7 +921,7 @@ export default function KanbanPage() {
       let taxaConversao = 0;
       if (index < etapasFiltradas.length - 1) {
         const proximaEtapa = etapasFiltradas[index + 1];
-        const leadsProximaEtapa = leads.filter(l => l.etapa_id === proximaEtapa.id).length;
+        const leadsProximaEtapa = leadsFiltrados.filter(l => l.etapa_id === proximaEtapa.id).length;
         taxaConversao = count > 0 ? (leadsProximaEtapa / count) * 100 : 0;
       }
       
@@ -840,7 +947,7 @@ export default function KanbanPage() {
     });
     
     return stats;
-  }, [etapasFiltradas, leads]);
+  }, [etapasFiltradas, leadsFiltrados]);
 
   // 🎯 Função otimizada para obter total de uma etapa
   const calcularTotalEtapa = useCallback((etapaId: string) => {
@@ -1047,7 +1154,7 @@ export default function KanbanPage() {
             )}
           </h1>
           <p className="text-muted-foreground">
-            Gerencie seus leads por etapas • {isOnline ? 'Online' : 'Offline'}
+            {leadsFiltrados.length} oportunidades • {isOnline ? 'Online' : 'Offline'}
           </p>
         </div>
         <div className="flex gap-2">
@@ -1072,6 +1179,18 @@ export default function KanbanPage() {
           )}
         </div>
       </div>
+
+      {/* Barra de filtros por responsável - controle de pipeline */}
+      <FunilFiltrosResponsaveis
+        viewMode={viewMode}
+        onViewModeChange={setViewMode}
+        responsavelFiltro={responsavelFiltro}
+        onResponsavelChange={setResponsavelFiltro}
+        isGestor={isGestor || isAdmin}
+        companyId={currentCompanyId}
+        counts={viewCounts}
+        responsavelCounts={responsavelCounts}
+      />
 
       <div className="mb-6 flex items-center gap-3">
         <div className="flex-1 max-w-xs">

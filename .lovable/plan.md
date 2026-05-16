@@ -1,82 +1,71 @@
-## Evolução do GMI → GROW Revenue Intelligence
+## Objetivo
 
-Hoje o GMI tem 5 pilares (Processos, Prospecção, Gestão, Automação, Pessoas) calculados a partir de dados do CRM. Vou adicionar uma camada de **autodiagnóstico guiado** com 4 novos blocos focados em clínicas, sem quebrar o que já existe.
+Confirmar e implementar o controle de visibilidade do funil (pipeline) por usuário, exatamente como mostram seus prints:
 
-### 1. Novos pilares (peso configurável no score)
+- **Vendedor** vê por padrão apenas os leads onde ele é responsável (botão "Meus Leads" ativo).
+- **Gestor / Admin / Super Admin** podem alternar entre **Meus Leads**, **Equipe**, **Todos**, **Sem Responsável** e ainda filtrar por um usuário específico no dropdown "Todos os responsáveis".
+- Cada card mostra um tooltip "Criado por: {nome}" no hover (como na primeira foto).
 
-| Pilar | Mede | Tipo |
-|---|---|---|
-| **Aquisição & Marketing** | Canais de origem (Instagram, Google, indicação, ads, orgânico, convênio), investimento mensal em tráfego, CPL, CAC, ROI, dependência de canal único | Wizard |
-| **Social Selling** | Instagram comercial: tempo de resposta, CTA, prova social, stories diários, antes/depois, autoridade, ponte para WhatsApp | Wizard |
-| **Dependência Operacional** | Continuidade se a secretária sair, scripts documentados, processos escritos, dono acompanha indicadores, rotina comercial | Wizard |
-| **Crescimento Travado** | Faturamento estagnado X meses, teto operacional, gargalo de gestão vs marketing vs atendimento | Wizard |
+## Situação atual (auditada)
 
-O score total passa de 100 para **100 normalizados** (peso ajustado). Os 5 pilares antigos continuam contribuindo do CRM; os 4 novos vêm do wizard.
+- `src/pages/Kanban.tsx` carrega `select("*") from leads` **sem nenhum filtro por responsável** e não existe a barra de filtros ("Meus Leads / Equipe / Todos / Sem Responsável" + dropdown).
+- A tabela `leads` já possui `responsavel_id` (legado), `responsaveis uuid[]` (múltiplos) e `created_by`. O `usePermissions()` já expõe `isAdmin` (super_admin / company_admin).
+- As RLS já permitem ver leads da mesma empresa — o filtro será aplicado no client, mantendo segurança no banco.
+- Existe um documento `CORRECOES_RESPONSAVEIS.md` confirmando o suporte a múltiplos responsáveis no `LeadCard`.
 
-### 2. Novo módulo "Diagnóstico Guiado"
+## O que vai mudar
 
-Nova aba dentro de `/maturidade` chamada **Diagnóstico Guiado** com:
+### 1. Estado e papéis no `Kanban.tsx`
 
-- Wizard em etapas (uma por pilar novo), ~4–6 perguntas por etapa
-- Tipos de pergunta: escala 0–5, sim/não, múltipla escolha, slider de R$
-- Barra de progresso, possibilidade de pular e voltar depois
-- Ao concluir → calcula sub-score e injeta no GMI
+- Buscar `user.id` atual e expandir `usePermissions` para também devolver `isGestor` (roles: `super_admin`, `company_admin`, `gestor`).
+- Adicionar estados:
+  - `viewMode: 'meus' | 'equipe' | 'todos' | 'sem-responsavel'`
+  - `responsavelFiltro: string | 'all'`
+- Default:
+  - vendedor/suporte → `meus`, sem dropdown de responsáveis e sem botões Equipe/Todos/Sem Responsável (ocultos).
+  - gestor/admin → `todos`, com todos os controles visíveis.
 
-### 3. Diagnóstico de tráfego desperdiçado
+### 2. Barra de filtros (igual ao print)
 
-Componente dedicado dentro do bloco Aquisição que cruza:
-- Investimento informado em ads
-- Leads recebidos no CRM por origem
-- Conversão lead → consulta → procedimento
+Logo abaixo do título "Funil de Vendas / X oportunidades":
 
-E mostra em destaque: **"você investiu R$ X, R$ Y virou paciente, R$ Z foi desperdiçado em lead frio / sem follow-up / sem resposta rápida"** — apontando se a culpa é tráfego ou operação.
-
-### 4. Reposicionamento do discurso da IA
-
-No `advisor-ai` (edge function) e nos textos do `Diagnostico360` / `PlanoIARenderer`:
-- Trocar menções a "IA / inteligência artificial" por: **"resposta instantânea, redução de no-show, recuperação de pacientes, confirmação automática de consultas"**
-- Adaptar copy para clínicas (paciente, consulta, retorno, no-show) quando `segmento = clinica_medica/estetica/odonto/derma`
-
-### 5. Reorganização visual do GMI (5 blocos GRI)
-
-O Radar e os cards do `/maturidade` passam a agrupar os 9 pilares em 5 áreas:
-
-```
-Aquisição    → Aquisição & Marketing + Social Selling
-Conversão    → Prospecção + Processos
-Operação     → Gestão + Pessoas + Dependência
-Retenção     → (novo) recompra, retorno, LTV (já existe na base)
-Inteligência → Automação + Crescimento Travado
+```text
+[ Meus Leads ] [ Equipe ] [ Todos ] [ ⚠ Sem Responsável ]      [ 👤 Todos os responsáveis ▾ ]
 ```
 
----
+- Botões usam `variant` default/outline conforme ativo.
+- Dropdown lista profiles da mesma empresa com contagem de leads no funil selecionado.
+- A contagem em "X oportunidades" passa a refletir o filtro ativo.
+
+### 3. Lógica de filtragem (client-side, sem tocar RLS)
+
+Aplicada sobre `leads` antes de distribuir nas etapas:
+
+- `meus` → `responsavel_id === user.id` **OU** `responsaveis?.includes(user.id)`.
+- `equipe` → leads de qualquer responsável que pertença à empresa do gestor, **exceto** os do próprio user (visão "do time").
+- `todos` → sem filtro de responsável.
+- `sem-responsavel` → `!responsavel_id && (!responsaveis || responsaveis.length === 0)`.
+- Se `responsavelFiltro !== 'all'`, intersecta com `responsavel_id === filtro || responsaveis?.includes(filtro)`.
+
+### 4. Tooltip "Criado por" no `LeadCard`
+
+- Buscar `profiles.full_name` para `lead.created_by` e exibir num `Tooltip` no canto do card (o badge "Criado por: jeohvah" do seu print).
+
+### 5. Persistência da preferência
+
+- Salvar `viewMode` e `responsavelFiltro` em `localStorage` por usuário, para manter a escolha entre sessões.
 
 ## Detalhes técnicos
 
-### Banco
-- Nova tabela `wmi_guided_responses` (company_id, pilar, respostas jsonb, score, completed_at) com RLS por `get_my_company_id()`
-- Adicionar colunas `pillar_aquisicao`, `pillar_social`, `pillar_dependencia`, `pillar_crescimento` em `wmi_assessments`
-- Atualizar RPC `calculate_wmi_score` para incluir os 4 novos pilares quando houver respostas
-- Nova RPC `get_traffic_waste_diagnosis(company_id)` cruzando ads_spend ↔ leads ↔ conversões
+- **Arquivos a editar:**
+  - `src/pages/Kanban.tsx` — estados, barra de filtros, `useMemo` de `leadsFiltrados`, passar para `DroppableColumn`.
+  - `src/hooks/usePermissions.ts` — expor `isGestor` (soma de `gestor` + admins).
+  - `src/components/funil/LeadCard.tsx` — tooltip "Criado por".
+  - Novo: `src/components/funil/FunilFiltrosResponsaveis.tsx` — componente puro da barra (botões + dropdown).
+- **Sem migrations**: as colunas necessárias (`responsavel_id`, `responsaveis`, `created_by`, `company_id`) já existem; RLS atual continua válida.
+- **Realtime**: o listener atual continua atualizando `leads`; o filtro é recomputado via `useMemo`.
 
-### Frontend
-- `src/components/wmi/GuidedDiagnosisWizard.tsx` (novo)
-- `src/components/wmi/pillars/AcquisitionStep.tsx`, `SocialSellingStep.tsx`, `DependencyStep.tsx`, `GrowthBlockStep.tsx`
-- `src/components/wmi/TrafficWasteCard.tsx` (novo)
-- `src/hooks/useGuidedDiagnosis.ts` (novo)
-- Atualizar `useWMI.ts` para os novos campos e `RadarPilares.tsx` para 9 eixos (ou agrupar em 5)
-- Atualizar `Maturidade.tsx`: nova aba **"Diagnóstico Guiado"** entre Onboarding e Diagnóstico 360°
-- Atualizar `PILLAR_META` e tipo `WMIScore`
+## Fora do escopo (a confirmar depois se quiser)
 
-### Edge function
-- Atualizar `advisor-ai` para receber `guided_responses` e gerar plano referenciando aquisição/social/dependência
-- Reescrita de copy clínica condicional ao segmento
-
-### Sem quebrar nada
-- Migration adiciona colunas com `DEFAULT 0` → registros antigos continuam válidos
-- Wizard é opcional; quem não responder mantém score só dos 5 pilares originais
-- Tipos atualizados via migração; nenhum endpoint existente muda assinatura
-
----
-
-**Quer que eu comece pela migration + wizard de Aquisição (passo mais impactante) e depois adicione os outros 3 pilares em sequência?** Ou prefere que eu faça tudo de uma vez (mais demorado, mas entrega o pacote completo numa rodada só)?
+- Forçar via RLS que vendedor só consiga `SELECT` dos próprios leads (hoje o vendedor pode ver todos da empresa via SQL direto, embora a UI não mostre). Se quiser **bloqueio real no banco**, faço uma migration separada criando policy específica.
+- Transferência em massa de responsável entre usuários.
