@@ -65,8 +65,9 @@ export default function Maturidade() {
   }
 
   const cls = CLASS_STYLE[score.classification] || CLASS_STYLE["Inicial"];
-  const bottlenecks = Object.entries(score.pillars)
-    .map(([k, p]) => ({ key: k, ...p, pct: (p.score / p.max) * 100 }))
+  const bottlenecks = Object.entries(score.pillars ?? {})
+    .filter(([k, p]) => p && PILLAR_META[k])
+    .map(([k, p]: any) => ({ key: k, ...p, pct: p.max ? (p.score / p.max) * 100 : 0 }))
     .sort((a, b) => a.pct - b.pct)
     .slice(0, 2);
 
