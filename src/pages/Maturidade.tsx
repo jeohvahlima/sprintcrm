@@ -196,10 +196,11 @@ export default function Maturidade() {
               <h2 className="text-lg font-semibold">Pilares & Evolução</h2>
             </div>
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {Object.entries(score.pillars).map(([key, p]) => {
+              {Object.entries(score.pillars ?? {}).map(([key, p]: any) => {
                 const meta = PILLAR_META[key];
+                if (!meta || !p) return null;
                 const Icon = meta.icon;
-                const pct = Math.round((p.score / p.max) * 100);
+                const pct = p.max ? Math.round((p.score / p.max) * 100) : 0;
                 return (
                   <Card key={key} className="overflow-hidden hover:border-primary/40 transition">
                     <div className={`h-1.5 bg-gradient-to-r ${meta.color}`} />
@@ -215,10 +216,10 @@ export default function Maturidade() {
                     <CardContent className="space-y-3">
                       <Progress value={pct} className="h-2" />
                       <div className="space-y-1.5 pt-1">
-                        {Object.entries(p.metrics).map(([k, v]) => (
+                        {Object.entries(p.metrics ?? {}).map(([k, v]) => (
                           <div key={k} className="flex justify-between text-xs">
                             <span className="text-muted-foreground capitalize">{k.replace(/_/g, " ")}</span>
-                            <span className="font-medium">{typeof v === "number" ? v.toLocaleString("pt-BR") : v}</span>
+                            <span className="font-medium">{typeof v === "number" ? v.toLocaleString("pt-BR") : String(v ?? "")}</span>
                           </div>
                         ))}
                       </div>
