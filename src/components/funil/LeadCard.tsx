@@ -973,7 +973,7 @@ export const LeadCard = memo(function LeadCard({ lead, onDelete, onLeadMoved, is
 
         {/* Valor Estimado (display) + Botões de ação */}
         <div 
-          className="flex items-center justify-between pt-2 border-t border-border/50 gap-2"
+          className="flex items-center justify-between pt-1 border-t border-border/50 gap-2"
           onClick={(e) => e.stopPropagation()}
           onMouseDown={(e) => e.stopPropagation()}
         >
