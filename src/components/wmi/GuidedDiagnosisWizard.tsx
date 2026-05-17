@@ -331,7 +331,11 @@ const FLAT: FlatItem[] = PILARES.flatMap((p, pilarIdx) =>
   p.questions.map((q, qIdx) => ({ pilarIdx, qIdx, pilar: p, q }))
 );
 
-export function GuidedDiagnosisWizard() {
+export interface GuidedDiagnosisWizardProps {
+  onComplete?: () => void;
+  completeLabel?: string;
+}
+export function GuidedDiagnosisWizard({ onComplete, completeLabel }: GuidedDiagnosisWizardProps = {}) {
   const { data: existing, isLoading } = useGuidedDiagnosis();
   const save = useSaveGuidedPilar();
   const [answersByPilar, setAnswersByPilar] = useState<Record<string, Record<string, any>>>({});
@@ -469,6 +473,14 @@ export function GuidedDiagnosisWizard() {
             );
           })}
         </div>
+
+        {onComplete && (
+          <div className="flex justify-end">
+            <Button size="lg" onClick={onComplete} className="gap-2">
+              {completeLabel || "Avançar para próxima etapa"} <ArrowRight className="h-4 w-4" />
+            </Button>
+          </div>
+        )}
       </div>
     );
   }

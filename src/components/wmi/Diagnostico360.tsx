@@ -24,6 +24,7 @@ import {
 } from "@/hooks/useDiagnostico360";
 import { useWMIRoadmap, useUpdateRoadmapItem } from "@/hooks/useWMI";
 import { PlanoIARenderer } from "./PlanoIARenderer";
+import { GuidedDiagnosisWizard } from "./GuidedDiagnosisWizard";
 import { ImpactoFinanceiroExpandido } from "./ImpactoFinanceiroExpandido";
 import { TimeComercialInputs, TimeComercialResultCard } from "./TimeComercialAnalysis";
 import { CurvaABCEditor } from "./CurvaABCEditor";
@@ -40,7 +41,7 @@ import { cn } from "@/lib/utils";
 
 const ICON_MAP: Record<string, any> = { Target, TrendingUp, Heart, Users, BarChart3 };
 
-type Step = "intro" | "dores" | "swot" | "intel" | "alavancas" | "result";
+type Step = "intro" | "guided" | "dores" | "swot" | "intel" | "alavancas" | "result";
 
 const EMPTY_DORES: DoresDesejos = {
   principal_dor: "",
@@ -118,18 +119,19 @@ export function Diagnostico360() {
               <Badge variant="outline" className="mb-2">Avaliação 360° + SWOT · Metodologia GROW</Badge>
               <h2 className="text-2xl font-bold">Diagnóstico Comercial Estratégico</h2>
               <p className="text-muted-foreground mt-2 max-w-2xl">
-                Em 4 etapas guiadas você terá: dores mapeadas, análise SWOT, score por pilar e plano de ação IA com roadmap de 90 dias gerado automaticamente.
+                Em 5 etapas guiadas você terá: diagnóstico GROW Revenue Intelligence (4 pilares), dores mapeadas, análise SWOT, score por pilar e plano de ação IA com roadmap de 90 dias gerado automaticamente.
               </p>
             </div>
           </div>
 
           {/* Trilha das fases */}
-          <div className="grid sm:grid-cols-4 gap-3">
+          <div className="grid sm:grid-cols-5 gap-3">
             {[
-              { icon: Flame, label: "1. Dores & Metas", desc: "O que dói e onde quer chegar" },
-              { icon: Map, label: "2. SWOT", desc: "Forças, fraquezas, oportunidades" },
-              { icon: BarChart3, label: "3. Alavancas", desc: `5 pilares + perguntas de ${segmentoLabel}` },
-              { icon: Sparkles, label: "4. Plano IA", desc: "Roadmap 90 dias + acompanhamento" },
+              { icon: Sparkles, label: "1. GROW Intel", desc: "4 pilares · 27 perguntas guiadas" },
+              { icon: Flame, label: "2. Dores & Metas", desc: "O que dói e onde quer chegar" },
+              { icon: Map, label: "3. SWOT", desc: "Forças, fraquezas, oportunidades" },
+              { icon: BarChart3, label: "4. Alavancas", desc: `5 pilares + ${segmentoLabel}` },
+              { icon: Sparkles, label: "5. Plano IA", desc: "Roadmap 90 dias + acompanhamento" },
             ].map((f, i) => (
               <div key={i} className="border rounded-lg p-3 hover-scale bg-gradient-to-br from-card to-muted/20">
                 <div className="inline-flex p-2 rounded-lg bg-primary/10 text-primary mb-2">
@@ -178,7 +180,7 @@ export function Diagnostico360() {
               size="lg" className="gap-2 flex-1"
               onClick={() => {
                 setRespostasMap({}); setDores(EMPTY_DORES); setCurrentAlavanca(0);
-                setStep("dores");
+                setStep("guided");
               }}
             >
               <Sparkles className="h-4 w-4" />
@@ -189,6 +191,39 @@ export function Diagnostico360() {
                 Ver último resultado
               </Button>
             )}
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // ============ STEP: GUIDED (GROW Revenue Intelligence) ============
+  if (step === "guided") {
+    return (
+      <Card className="border-2 animate-fade-in">
+        <div className="h-2 bg-gradient-to-r from-primary via-primary/80 to-primary/40" />
+        <CardHeader>
+          <Badge variant="outline" className="w-fit mb-1">Etapa 1 de 5</Badge>
+          <CardTitle className="flex items-center gap-2">
+            <Sparkles className="h-5 w-5 text-primary" />
+            GROW Revenue Intelligence — Diagnóstico Guiado
+          </CardTitle>
+          <CardDescription>
+            27 perguntas rápidas em 4 pilares. Depois seguimos para dores, SWOT e plano de ação IA.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <GuidedDiagnosisWizard
+            onComplete={() => setStep("dores")}
+            completeLabel="Avançar para Dores & Metas"
+          />
+          <div className="flex justify-between pt-2 border-t">
+            <Button variant="ghost" size="sm" onClick={() => setStep("intro")}>
+              <ChevronLeft className="h-4 w-4 mr-1" /> Voltar
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => setStep("dores")}>
+              Pular para Dores & Metas <ChevronRight className="h-4 w-4 ml-1" />
+            </Button>
           </div>
         </CardContent>
       </Card>
