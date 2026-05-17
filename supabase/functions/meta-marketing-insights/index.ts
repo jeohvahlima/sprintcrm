@@ -137,13 +137,19 @@ Deno.serve(async (req) => {
     
     if (accountData.error) {
       console.error('[meta-marketing-insights] Account error:', accountData.error)
-      return new Response(JSON.stringify({ 
-        error: 'Meta API Error',
-        details: accountData.error.message,
-        code: accountData.error.code
-      }), { 
-        status: 400, 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+      // Soft-degrade: return empty payload so callers (BI, dashboards) don't blank-screen.
+      // Token invalid/expired (code 190) → user must reconnect Meta in Integrations.
+      return new Response(JSON.stringify({
+        token_invalid: accountData.error.code === 190,
+        error_meta: accountData.error.message,
+        code: accountData.error.code,
+        account: null,
+        campaigns: [],
+        adsets: [],
+        ads: [],
+      }), {
+        status: 200,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       })
     }
 
