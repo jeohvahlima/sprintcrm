@@ -473,6 +473,14 @@ export function GuidedDiagnosisWizard({ onComplete, completeLabel }: GuidedDiagn
             );
           })}
         </div>
+
+        {onComplete && (
+          <div className="flex justify-end">
+            <Button size="lg" onClick={onComplete} className="gap-2">
+              {completeLabel || "Avançar para próxima etapa"} <ArrowRight className="h-4 w-4" />
+            </Button>
+          </div>
+        )}
       </div>
     );
   }
