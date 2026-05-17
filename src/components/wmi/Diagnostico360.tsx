@@ -40,7 +40,7 @@ import { cn } from "@/lib/utils";
 
 const ICON_MAP: Record<string, any> = { Target, TrendingUp, Heart, Users, BarChart3 };
 
-type Step = "intro" | "dores" | "swot" | "intel" | "alavancas" | "result";
+type Step = "intro" | "guided" | "dores" | "swot" | "intel" | "alavancas" | "result";
 
 const EMPTY_DORES: DoresDesejos = {
   principal_dor: "",
