@@ -160,6 +160,7 @@ export default function GrowSalesBI() {
           <TabsTrigger value="performance" className="gap-2"><Users className="h-4 w-4" /> Performance</TabsTrigger>
           <TabsTrigger value="forecast" className="gap-2"><Target className="h-4 w-4" /> Forecast & Metas</TabsTrigger>
           <TabsTrigger value="campanhas" className="gap-2"><Megaphone className="h-4 w-4" /> Campanhas / ROI</TabsTrigger>
+          <TabsTrigger value="grow-financeiro" className="gap-2"><Compass className="h-4 w-4" /> GROW Financeiro</TabsTrigger>
           <TabsTrigger value="score" className="gap-2"><Trophy className="h-4 w-4" /> Growth Score</TabsTrigger>
           <TabsTrigger value="insights" className="gap-2"><Brain className="h-4 w-4" /> IA Insights</TabsTrigger>
         </TabsList>
