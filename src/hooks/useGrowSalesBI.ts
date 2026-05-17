@@ -67,8 +67,41 @@ export interface BISnapshot {
     breakdown: { dimensao: string; nota: number; descricao: string }[];
   };
   insights: { tipo: "alerta" | "oportunidade" | "ok"; titulo: string; descricao: string }[];
+
+  // ===== Novos indicadores GROW =====
+  /** Custo de Aquisição de Cliente (R$) — total mídia / clientes ganhos. null se sem dados de spend. */
+  cac: number | null;
+  /** Custo por Lead (R$) — total mídia / leads pagos. null se sem dados. */
+  cpl: number | null;
+  /** Investimento total em mídia paga no período (R$). */
+  investimentoMidia: number;
+  /** Retorno sobre investimento em ads (receita atribuída / spend). null se sem dados. */
+  roas: number | null;
+  /** Razão LTV / CAC. null se sem CAC. */
+  ltvCac: number | null;
+  /** Meses para recuperar o CAC (assumindo receita média recorrente = ticket médio). null se sem CAC. */
+  paybackMeses: number | null;
+  /** Win Rate global = ganhos / (ganhos + perdidos). */
+  winRate: number;
+  /** Ciclo médio em dias (created_at -> won_at) dos deals ganhos. */
+  cicloMedioDias: number;
+  /** Sales Velocity diário em R$ = (#abertos × ticket × winRate) / cicloMedio. */
+  salesVelocity: number;
+  /** % de receita concentrada nos top 3 canais (alerta de dependência). */
+  concentracaoTop3: number;
+  /** Snapshot do período anterior para comparativo. */
+  previous: {
+    receita: number;
+    ticketMedio: number;
+    deals: number;
+    winRate: number;
+    cicloMedioDias: number;
+  };
+  /** Cohort: leads entrados em cada mês e quantos fecharam. */
+  cohorts: { mes: string; entrados: number; fechados: number; receita: number; conv: number }[];
   generatedAt: string;
 }
+
 
 const safeNum = (v: any, d = 0) => {
   const n = Number(v);
