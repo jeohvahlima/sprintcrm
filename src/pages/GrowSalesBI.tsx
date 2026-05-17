@@ -591,6 +591,176 @@ export default function GrowSalesBI() {
           )}
         </TabsContent>
 
+        {/* ===== GROW FINANCEIRO (5 pilares × R$) ===== */}
+        <TabsContent value="grow-financeiro" className="space-y-4">
+          {isLoading || !data ? skeleton : (
+            <>
+              <Card className="border-primary/30 bg-gradient-to-br from-primary/10 to-transparent">
+                <CardContent className="p-5">
+                  <div className="flex items-start gap-3">
+                    <Compass className="h-6 w-6 text-primary mt-0.5" />
+                    <div>
+                      <h3 className="font-semibold">GROW Financeiro — Os 5 pilares traduzidos em dinheiro</h3>
+                      <p className="text-sm text-muted-foreground mt-1">
+                        Cada pilar da metodologia GROW com seus indicadores monetários, score 0–100 e diagnóstico de saúde.
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                <PillarCard
+                  icon={Megaphone}
+                  title="Aquisição & Marketing"
+                  score={data.cac != null && data.roas != null
+                    ? Math.min(100, Math.round((data.roas / 4) * 100))
+                    : Math.round(100 - data.concentracaoTop3 * 0.5)}
+                  rows={[
+                    ["Investimento em mídia", formatBRL(data.investimentoMidia)],
+                    ["CPL", data.cpl != null ? formatBRL(data.cpl) : "—"],
+                    ["CAC", data.cac != null ? formatBRL(data.cac) : "—"],
+                    ["ROAS", data.roas != null ? `${data.roas.toFixed(2)}x` : "—"],
+                    ["Concentração top 3 canais", formatPct(data.concentracaoTop3)],
+                  ]}
+                  alert={data.concentracaoTop3 > 70
+                    ? `Alta dependência: ${formatPct(data.concentracaoTop3)} da receita vem só dos top 3 canais.`
+                    : data.roas != null && data.roas < 1
+                    ? `ROAS abaixo de 1x: você está perdendo dinheiro em ads.`
+                    : null}
+                />
+
+                <PillarCard
+                  icon={Activity}
+                  title="Processos Comerciais"
+                  score={Math.min(100, Math.round(data.winRate * 2 + (data.cicloMedioDias > 0 ? Math.max(0, 100 - data.cicloMedioDias) : 0)) / 2)}
+                  rows={[
+                    ["Win Rate global", formatPct(data.winRate)],
+                    ["Ciclo médio de vendas", data.cicloMedioDias > 0 ? `${data.cicloMedioDias.toFixed(0)} dias` : "—"],
+                    ["Sales Velocity / dia", formatBRL(data.salesVelocity)],
+                    ["Gargalo do funil", data.funil.gargalo],
+                    ["Comparecimento", formatPct(data.funil.convCompareceu)],
+                  ]}
+                  alert={data.winRate < 20
+                    ? `Win Rate de ${formatPct(data.winRate)} — reveja qualificação e script.`
+                    : null}
+                />
+
+                <PillarCard
+                  icon={Target}
+                  title="Gestão Comercial"
+                  score={data.forecast.metaAtual > 0
+                    ? Math.min(100, Math.round(data.forecast.pctMeta))
+                    : 50}
+                  rows={[
+                    ["Realizado", formatBRL(data.forecast.realizadoAtual)],
+                    ["Meta do período", data.forecast.metaAtual > 0 ? formatBRL(data.forecast.metaAtual) : "Sem meta"],
+                    ["% da meta", data.forecast.metaAtual > 0 ? formatPct(data.forecast.pctMeta) : "—"],
+                    ["Forecast 30d (ponderado)", formatBRL(data.forecast.forecast30d)],
+                    ["Pipeline aberto", formatBRL(data.forecast.pipelineAberto)],
+                  ]}
+                  alert={data.forecast.metaAtual > 0 && data.forecast.pctMeta < 60
+                    ? `Faltam ${formatBRL(Math.max(data.forecast.metaAtual - data.forecast.realizadoAtual, 0))} para bater a meta.`
+                    : data.forecast.metaAtual === 0
+                    ? "Configure uma meta de receita em Configurações → Comercial."
+                    : null}
+                />
+
+                <PillarCard
+                  icon={Zap}
+                  title="Automação & Resposta"
+                  score={Math.max(0, 100 - Math.round((data.perdas.leadSemResposta.qty + data.perdas.semFollowUp.qty) / Math.max(data.funil.leadsNovos, 1) * 100))}
+                  rows={[
+                    ["Leads sem 1ª resposta", `${data.perdas.leadSemResposta.qty} (${formatBRL(data.perdas.leadSemResposta.valor)})`],
+                    ["Leads sem follow-up 7d+", `${data.perdas.semFollowUp.qty} (${formatBRL(data.perdas.semFollowUp.valor)})`],
+                    ["No-shows", `${data.perdas.noShow.qty} (${formatBRL(data.perdas.noShow.valor)})`],
+                    ["Recuperável em 30 dias", formatBRL(data.recuperavel30d)],
+                    ["Perda total estimada", formatBRL(data.perdas.total)],
+                  ]}
+                  alert={data.perdas.total > 0
+                    ? `Recuperando 30% das perdas você fatura mais ${formatBRL(data.recuperavel30d)} sem investir 1 real em ads.`
+                    : null}
+                />
+
+                <PillarCard
+                  icon={Users}
+                  title="Pessoas & Performance"
+                  score={Math.min(100, Math.round(data.capacidade.utilizada * 0.5 + (data.performance.closers[0]?.conv || 0)))}
+                  rows={[
+                    ["Vendedores ativos", String(data.capacidade.vendedoresAtivos)],
+                    ["Oportunidades / vendedor", data.capacidade.abertosPorVendedor.toFixed(1)],
+                    ["Capacidade utilizada", formatPct(data.capacidade.utilizada)],
+                    ["Top closer", data.performance.closers[0]?.user || "—"],
+                    ["Receita top closer", data.performance.closers[0] ? formatBRL(data.performance.closers[0].receita) : "—"],
+                  ]}
+                  alert={data.capacidade.utilizada >= 90
+                    ? "Time saturado — contrate ou redistribua a base."
+                    : data.capacidade.vendedoresAtivos <= 1
+                    ? "Operação dependente de 1 pessoa. Risco alto."
+                    : null}
+                />
+
+                <PillarCard
+                  icon={Trophy}
+                  title="Crescimento & LTV"
+                  score={data.ltvCac != null
+                    ? Math.min(100, Math.round(data.ltvCac * 25))
+                    : 50}
+                  rows={[
+                    ["LTV (proxy)", formatBRL(data.receita.ltv)],
+                    ["LTV / CAC", data.ltvCac != null ? `${data.ltvCac.toFixed(2)}x` : "—"],
+                    ["Payback do CAC", data.paybackMeses != null ? `${data.paybackMeses.toFixed(1)} meses` : "—"],
+                    ["Δ Receita vs período anterior", `${deltaPct(data.receita.bruto, data.previous.receita)?.toFixed(1) ?? "—"}%`],
+                    ["Δ Win Rate vs anterior", `${deltaPct(data.winRate, data.previous.winRate)?.toFixed(1) ?? "—"}%`],
+                  ]}
+                  alert={data.ltvCac != null && data.ltvCac < 3
+                    ? `LTV/CAC de ${data.ltvCac.toFixed(1)}x está abaixo de 3x. Otimize retenção ou reduza CAC.`
+                    : null}
+                />
+              </div>
+
+              {/* Cohort */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <Clock className="h-4 w-4 text-primary" /> Cohort por mês de entrada
+                  </CardTitle>
+                  <CardDescription>Quantos leads entraram em cada mês e quantos fecharam.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="text-xs text-muted-foreground border-b">
+                        <th className="text-left py-2">Mês</th>
+                        <th className="text-right">Entrados</th>
+                        <th className="text-right">Fechados</th>
+                        <th className="text-right">Conversão</th>
+                        <th className="text-right">Receita</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {data.cohorts.map((c) => (
+                        <tr key={c.mes} className="border-b last:border-0">
+                          <td className="py-2 font-medium">{c.mes}</td>
+                          <td className="text-right">{c.entrados}</td>
+                          <td className="text-right">{c.fechados}</td>
+                          <td className="text-right">
+                            <Badge variant={c.conv >= 20 ? "default" : "secondary"}>{formatPct(c.conv)}</Badge>
+                          </td>
+                          <td className="text-right font-semibold text-primary">{formatBRL(c.receita)}</td>
+                        </tr>
+                      ))}
+                      {data.cohorts.length === 0 && (
+                        <tr><td colSpan={5} className="text-center py-6 text-muted-foreground">Sem dados de cohort no período.</td></tr>
+                      )}
+                    </tbody>
+                  </table>
+                </CardContent>
+              </Card>
+            </>
+          )}
+        </TabsContent>
+
         {/* ===== GROWTH SCORE ===== */}
         <TabsContent value="score" className="space-y-4">
           {isLoading || !data ? skeleton : (
