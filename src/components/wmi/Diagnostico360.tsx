@@ -180,7 +180,7 @@ export function Diagnostico360() {
               size="lg" className="gap-2 flex-1"
               onClick={() => {
                 setRespostasMap({}); setDores(EMPTY_DORES); setCurrentAlavanca(0);
-                setStep("dores");
+                setStep("guided");
               }}
             >
               <Sparkles className="h-4 w-4" />
