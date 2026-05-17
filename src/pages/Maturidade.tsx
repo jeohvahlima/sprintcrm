@@ -176,19 +176,15 @@ export default function Maturidade() {
           <Onboarding7Days />
         </TabsContent>
 
-        <TabsContent value="diagnostico" className="space-y-8">
-          <section className="space-y-3">
-            <div className="flex items-center gap-2">
-              <ListChecks className="h-5 w-5 text-primary" />
-              <h2 className="text-lg font-semibold">Diagnóstico Guiado</h2>
-            </div>
-            <GuidedDiagnosisWizard />
-          </section>
+        <TabsContent value="diagnostico" className="space-y-6">
           <section className="space-y-3">
             <div className="flex items-center gap-2">
               <Sparkles className="h-5 w-5 text-primary" />
-              <h2 className="text-lg font-semibold">Diagnóstico 360° Consultivo</h2>
+              <h2 className="text-lg font-semibold">Diagnóstico Comercial Unificado</h2>
             </div>
+            <p className="text-sm text-muted-foreground max-w-3xl">
+              Um único fluxo: começamos pelo GROW Revenue Intelligence (4 pilares guiados) e seguimos direto para dores, SWOT, alavancas e plano de ação IA.
+            </p>
             <Diagnostico360 />
           </section>
         </TabsContent>
