@@ -130,7 +130,12 @@ export function useGrowSalesBI(range: BIRange = "30d") {
     queryKey: ["grow-sales-bi", range],
     staleTime: 60_000,
     queryFn: async (): Promise<BISnapshot> => {
-      const since = rangeToDate(range).toISOString();
+      const sinceDate = rangeToDate(range);
+      const since = sinceDate.toISOString();
+      // Período anterior: mesma janela imediatamente antes
+      const periodMs = Date.now() - sinceDate.getTime();
+      const prevStart = new Date(sinceDate.getTime() - periodMs).toISOString();
+      const prevEnd = since;
 
       // Parallel fetch
       const [companyRes, leadsRaw, compromissosRaw, goalsRaw, profilesRaw] = await Promise.all([
