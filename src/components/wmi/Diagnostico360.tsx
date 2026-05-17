@@ -119,18 +119,19 @@ export function Diagnostico360() {
               <Badge variant="outline" className="mb-2">Avaliação 360° + SWOT · Metodologia GROW</Badge>
               <h2 className="text-2xl font-bold">Diagnóstico Comercial Estratégico</h2>
               <p className="text-muted-foreground mt-2 max-w-2xl">
-                Em 4 etapas guiadas você terá: dores mapeadas, análise SWOT, score por pilar e plano de ação IA com roadmap de 90 dias gerado automaticamente.
+                Em 5 etapas guiadas você terá: diagnóstico GROW Revenue Intelligence (4 pilares), dores mapeadas, análise SWOT, score por pilar e plano de ação IA com roadmap de 90 dias gerado automaticamente.
               </p>
             </div>
           </div>
 
           {/* Trilha das fases */}
-          <div className="grid sm:grid-cols-4 gap-3">
+          <div className="grid sm:grid-cols-5 gap-3">
             {[
-              { icon: Flame, label: "1. Dores & Metas", desc: "O que dói e onde quer chegar" },
-              { icon: Map, label: "2. SWOT", desc: "Forças, fraquezas, oportunidades" },
-              { icon: BarChart3, label: "3. Alavancas", desc: `5 pilares + perguntas de ${segmentoLabel}` },
-              { icon: Sparkles, label: "4. Plano IA", desc: "Roadmap 90 dias + acompanhamento" },
+              { icon: Sparkles, label: "1. GROW Intel", desc: "4 pilares · 27 perguntas guiadas" },
+              { icon: Flame, label: "2. Dores & Metas", desc: "O que dói e onde quer chegar" },
+              { icon: Map, label: "3. SWOT", desc: "Forças, fraquezas, oportunidades" },
+              { icon: BarChart3, label: "4. Alavancas", desc: `5 pilares + ${segmentoLabel}` },
+              { icon: Sparkles, label: "5. Plano IA", desc: "Roadmap 90 dias + acompanhamento" },
             ].map((f, i) => (
               <div key={i} className="border rounded-lg p-3 hover-scale bg-gradient-to-br from-card to-muted/20">
                 <div className="inline-flex p-2 rounded-lg bg-primary/10 text-primary mb-2">
