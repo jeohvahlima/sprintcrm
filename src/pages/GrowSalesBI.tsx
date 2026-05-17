@@ -169,11 +169,85 @@ export default function GrowSalesBI() {
         <TabsContent value="overview" className="space-y-4">
           {isLoading || !data ? skeleton : (
             <>
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <KpiCard icon={DollarSign} label="Receita" value={formatBRL(data.receita.bruto)} hint={`${data.receita.deals} deals fechados`} tone="good" />
-                <KpiCard icon={TrendingUp} label="Ticket Médio" value={formatBRL(data.receita.ticketMedio)} />
-                <KpiCard icon={AlertTriangle} label="Perda Estimada" value={formatBRL(data.perdas.total)} hint={`${data.perdas.noShow.qty} no-shows`} tone="bad" />
-                <KpiCard icon={Target} label="Pipeline Aberto" value={formatBRL(data.forecast.pipelineAberto)} hint={`Forecast 30d: ${formatBRL(data.forecast.forecast30d)}`} />
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <KpiCard
+                  icon={DollarSign}
+                  label="Receita"
+                  value={formatBRL(data.receita.bruto)}
+                  hint={`${data.receita.deals} deals · vs ${formatBRL(data.previous.receita)}`}
+                  tone="good"
+                  delta={deltaPct(data.receita.bruto, data.previous.receita)}
+                />
+                <KpiCard
+                  icon={TrendingUp}
+                  label="Ticket Médio"
+                  value={formatBRL(data.receita.ticketMedio)}
+                  hint={`vs ${formatBRL(data.previous.ticketMedio)} anterior`}
+                  delta={deltaPct(data.receita.ticketMedio, data.previous.ticketMedio)}
+                />
+                <KpiCard
+                  icon={Users}
+                  label="LTV"
+                  value={formatBRL(data.receita.ltv)}
+                  hint="Receita por cliente"
+                />
+                <KpiCard
+                  icon={Trophy}
+                  label="LTV / CAC"
+                  value={data.ltvCac != null ? `${data.ltvCac.toFixed(1)}x` : "—"}
+                  hint={data.ltvCac != null ? (data.ltvCac >= 3 ? "Saudável (≥3x)" : "Abaixo do ideal") : "Sem dados de CAC"}
+                  tone={data.ltvCac != null ? (data.ltvCac >= 3 ? "good" : "warn") : "default"}
+                />
+                <KpiCard
+                  icon={Megaphone}
+                  label="CAC"
+                  value={data.cac != null ? formatBRL(data.cac) : "—"}
+                  hint={data.investimentoMidia > 0 ? `Mídia: ${formatBRL(data.investimentoMidia)}` : "Conecte Meta Ads"}
+                />
+                <KpiCard
+                  icon={Zap}
+                  label="ROAS"
+                  value={data.roas != null ? `${data.roas.toFixed(1)}x` : "—"}
+                  hint={data.cpl != null ? `CPL ${formatBRL(data.cpl)}` : "Sem investimento"}
+                  tone={data.roas != null ? (data.roas >= 3 ? "good" : data.roas < 1 ? "bad" : "warn") : "default"}
+                />
+                <KpiCard
+                  icon={CheckCircle2}
+                  label="Win Rate"
+                  value={formatPct(data.winRate)}
+                  hint={`vs ${formatPct(data.previous.winRate)} anterior`}
+                  delta={deltaPct(data.winRate, data.previous.winRate)}
+                />
+                <KpiCard
+                  icon={Activity}
+                  label="Sales Velocity / dia"
+                  value={formatBRL(data.salesVelocity)}
+                  hint={data.cicloMedioDias > 0 ? `Ciclo ${data.cicloMedioDias.toFixed(0)}d` : "Sem ciclo"}
+                />
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <KpiCard
+                  icon={AlertTriangle}
+                  label="Perda Estimada"
+                  value={formatBRL(data.perdas.total)}
+                  hint={`Recuperável 30d: ${formatBRL(data.recuperavel30d)}`}
+                  tone="bad"
+                />
+                <KpiCard
+                  icon={Target}
+                  label="Pipeline Aberto"
+                  value={formatBRL(data.forecast.pipelineAberto)}
+                  hint={`Forecast 30d: ${formatBRL(data.forecast.forecast30d)}`}
+                />
+                <KpiCard
+                  icon={Gauge}
+                  label="Concentração Top 3 canais"
+                  value={formatPct(data.concentracaoTop3)}
+                  hint={data.concentracaoTop3 > 70 ? "Alta dependência" : "Mix saudável"}
+                  tone={data.concentracaoTop3 > 70 ? "warn" : "default"}
+                  deltaInverse
+                />
               </div>
 
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
