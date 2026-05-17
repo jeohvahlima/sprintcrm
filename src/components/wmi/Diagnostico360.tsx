@@ -24,6 +24,7 @@ import {
 } from "@/hooks/useDiagnostico360";
 import { useWMIRoadmap, useUpdateRoadmapItem } from "@/hooks/useWMI";
 import { PlanoIARenderer } from "./PlanoIARenderer";
+import { GuidedDiagnosisWizard } from "./GuidedDiagnosisWizard";
 import { ImpactoFinanceiroExpandido } from "./ImpactoFinanceiroExpandido";
 import { TimeComercialInputs, TimeComercialResultCard } from "./TimeComercialAnalysis";
 import { CurvaABCEditor } from "./CurvaABCEditor";
