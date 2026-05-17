@@ -473,6 +473,114 @@ export function useGrowSalesBI(range: BIRange = "30d") {
         ],
       };
 
+      // ============= NOVOS INDICADORES GROW =============
+
+      // Win Rate global e Ciclo médio (dias)
+      const winRate = (ganhos.length + perdidosArr.length) > 0
+        ? (ganhos.length / (ganhos.length + perdidosArr.length))
+        : 0;
+      const ciclosDias = ganhos
+        .map((l) => {
+          if (!l.won_at || !l.created_at) return null;
+          return (new Date(l.won_at).getTime() - new Date(l.created_at).getTime()) / 86400000;
+        })
+        .filter((v): v is number => v != null && v > 0);
+      const cicloMedioDias = ciclosDias.length > 0
+        ? ciclosDias.reduce((s, v) => s + v, 0) / ciclosDias.length
+        : 0;
+
+      // Sales Velocity ($/dia) = #abertos × ticket × winRate / ciclo
+      const salesVelocity = cicloMedioDias > 0
+        ? (abertos.length * ticketMedio * winRate) / cicloMedioDias
+        : 0;
+
+      // Concentração de receita (top 3 canais / total)
+      const top3Receita = porCanal.slice(0, 3).reduce((s, c) => s + c.valor, 0);
+      const concentracaoTop3 = bruto > 0 ? (top3Receita / bruto) * 100 : 0;
+
+      // Período anterior (snapshot leve)
+      const prevLeads = (prevLeadsRaw as any[]) || [];
+      const prevGanhos = prevLeads.filter((l) => l.status === "ganho" || l.won_at);
+      const prevPerdidos = prevLeads.filter((l) => l.status === "perdido" || l.lost_at);
+      const prevReceita = prevGanhos.reduce((s, l) => s + safeNum(l.value), 0);
+      const prevTicket = prevGanhos.length > 0 ? prevReceita / prevGanhos.length : 0;
+      const prevWinRate = (prevGanhos.length + prevPerdidos.length) > 0
+        ? prevGanhos.length / (prevGanhos.length + prevPerdidos.length)
+        : 0;
+      const prevCiclos = prevGanhos
+        .map((l) => l.won_at && l.created_at
+          ? (new Date(l.won_at).getTime() - new Date(l.created_at).getTime()) / 86400000
+          : null)
+        .filter((v): v is number => v != null && v > 0);
+      const prevCicloMedio = prevCiclos.length > 0
+        ? prevCiclos.reduce((s, v) => s + v, 0) / prevCiclos.length
+        : 0;
+
+      // Cohorts (últimos 6 meses)
+      const cohortMap: Record<string, { entrados: number; fechados: number; receita: number }> = {};
+      leads.forEach((l) => {
+        const dt = new Date(l.created_at);
+        const key = `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, "0")}`;
+        if (!cohortMap[key]) cohortMap[key] = { entrados: 0, fechados: 0, receita: 0 };
+        cohortMap[key].entrados += 1;
+        if (l.status === "ganho" || l.won_at) {
+          cohortMap[key].fechados += 1;
+          cohortMap[key].receita += safeNum(l.value);
+        }
+      });
+      const cohorts = Object.entries(cohortMap)
+        .map(([mes, v]) => ({
+          mes,
+          ...v,
+          conv: v.entrados > 0 ? (v.fechados / v.entrados) * 100 : 0,
+        }))
+        .sort((a, b) => a.mes.localeCompare(b.mes))
+        .slice(-6);
+
+      // ===== Mídia paga / CAC / ROAS (best effort via meta-marketing-insights) =====
+      let investimentoMidia = 0;
+      let cpl: number | null = null;
+      let cac: number | null = null;
+      let roas: number | null = null;
+      let ltvCac: number | null = null;
+      let paybackMeses: number | null = null;
+
+      try {
+        const datePresetMap: Record<BIRange, string> = {
+          "7d": "last_7d",
+          "30d": "last_30d",
+          "90d": "last_90d",
+          "ytd": "this_year",
+        };
+        const preset = datePresetMap[range] || "last_30d";
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session && companyId) {
+          const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/meta-marketing-insights?company_id=${companyId}&date_preset=${preset}`;
+          const r = await fetch(url, { headers: { Authorization: `Bearer ${session.access_token}` } });
+          if (r.ok) {
+            const meta = await r.json();
+            investimentoMidia = (meta.campaigns || []).reduce(
+              (s: number, c: any) => s + safeNum(c.spend),
+              0
+            );
+            const leadsPagos = leads.filter((l) =>
+              ["facebook", "instagram", "meta", "google", "ads"].some((k) =>
+                (l.utm_source || l.source || l.lead_source_type || "").toLowerCase().includes(k)
+              ) || l.ad_id
+            ).length;
+            cpl = leadsPagos > 0 && investimentoMidia > 0 ? investimentoMidia / leadsPagos : null;
+            cac = ganhos.length > 0 && investimentoMidia > 0 ? investimentoMidia / ganhos.length : null;
+            roas = investimentoMidia > 0 ? bruto / investimentoMidia : null;
+            if (cac && cac > 0) {
+              ltvCac = ltv / cac;
+              paybackMeses = ticketMedio > 0 ? cac / ticketMedio : null;
+            }
+          }
+        }
+      } catch (e) {
+        console.warn("[useGrowSalesBI] meta-marketing-insights fetch failed:", e);
+      }
+
       return {
         range,
         receita: { bruto, ticketMedio, ltv, deals, porCanal, porVendedor, porMes },
@@ -507,6 +615,24 @@ export function useGrowSalesBI(range: BIRange = "30d") {
         },
         growthScore,
         insights,
+        cac,
+        cpl,
+        investimentoMidia,
+        roas,
+        ltvCac,
+        paybackMeses,
+        winRate: winRate * 100,
+        cicloMedioDias,
+        salesVelocity,
+        concentracaoTop3,
+        previous: {
+          receita: prevReceita,
+          ticketMedio: prevTicket,
+          deals: prevGanhos.length,
+          winRate: prevWinRate * 100,
+          cicloMedioDias: prevCicloMedio,
+        },
+        cohorts,
         generatedAt: new Date().toISOString(),
       };
     },
