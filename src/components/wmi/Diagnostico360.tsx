@@ -197,6 +197,39 @@ export function Diagnostico360() {
     );
   }
 
+  // ============ STEP: GUIDED (GROW Revenue Intelligence) ============
+  if (step === "guided") {
+    return (
+      <Card className="border-2 animate-fade-in">
+        <div className="h-2 bg-gradient-to-r from-primary via-primary/80 to-primary/40" />
+        <CardHeader>
+          <Badge variant="outline" className="w-fit mb-1">Etapa 1 de 5</Badge>
+          <CardTitle className="flex items-center gap-2">
+            <Sparkles className="h-5 w-5 text-primary" />
+            GROW Revenue Intelligence — Diagnóstico Guiado
+          </CardTitle>
+          <CardDescription>
+            27 perguntas rápidas em 4 pilares. Depois seguimos para dores, SWOT e plano de ação IA.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <GuidedDiagnosisWizard
+            onComplete={() => setStep("dores")}
+            completeLabel="Avançar para Dores & Metas"
+          />
+          <div className="flex justify-between pt-2 border-t">
+            <Button variant="ghost" size="sm" onClick={() => setStep("intro")}>
+              <ChevronLeft className="h-4 w-4 mr-1" /> Voltar
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => setStep("dores")}>
+              Pular para Dores & Metas <ChevronRight className="h-4 w-4 ml-1" />
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
   // ============ STEP: DORES & DESEJOS ============
   if (step === "dores") {
     return (
