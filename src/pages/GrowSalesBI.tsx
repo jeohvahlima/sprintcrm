@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   TrendingUp,
+  TrendingDown,
   AlertTriangle,
   Users,
   Target,
@@ -18,6 +19,9 @@ import {
   Gauge,
   Sparkles,
   Trophy,
+  Zap,
+  Clock,
+  Compass,
 } from "lucide-react";
 import {
   ResponsiveContainer,
