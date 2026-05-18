@@ -1695,6 +1695,29 @@ export default function Tarefas() {
             <option value="">Tag</option>
             {Array.from(new Set(tasks.flatMap((t: any) => Array.isArray(t.tags) ? t.tags : []))).map(tag => <option key={tag} value={tag}>{tag}</option>)}
           </select>
+          <Button
+            variant="outline"
+            onClick={async () => {
+              const t = toast.loading("Sincronizando com Google Tasks...");
+              try {
+                const { data, error } = await supabase.functions.invoke("google-tasks-pull", { body: {} });
+                if (error) throw error;
+                if ((data as any)?.skipped) {
+                  toast.dismiss(t);
+                  toast.warning("Conecte o Google Agenda primeiro (Agenda → Conectar Google)");
+                  return;
+                }
+                toast.dismiss(t);
+                toast.success(`Sync OK: ${(data as any)?.created || 0} novas, ${(data as any)?.updated || 0} atualizadas`);
+                window.dispatchEvent(new CustomEvent("tarefas:refresh"));
+              } catch (e: any) {
+                toast.dismiss(t);
+                toast.error("Falha ao sincronizar", { description: e?.message });
+              }
+            }}
+          >
+            🔄 Sincronizar Google
+          </Button>
           {(isAdmin || canManageTaskStructure) && <>
               <Button variant="outline" onClick={() => setDialogNovoBoard(true)}>
                 <Plus className="mr-2 h-4 w-4" />
