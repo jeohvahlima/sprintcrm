@@ -2540,7 +2540,7 @@ export default function Agenda() {
           <QuickTaskDialog
             open={quickTaskOpen}
             onOpenChange={setQuickTaskOpen}
-            defaultDueDate={dataSelecionada}
+            defaultDueDate={selectedDate}
             onCreated={() => { carregarCompromissos?.(); }}
           />
 
