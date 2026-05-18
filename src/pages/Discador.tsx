@@ -191,6 +191,10 @@ const Discador = () => {
           <TabsContent value="especializacao">
             <SDRSpecializationPanel />
           </TabsContent>
+
+          <TabsContent value="conta-nvoip">
+            <NvoipAccountPanel />
+          </TabsContent>
         </Tabs>
       </div>
 
