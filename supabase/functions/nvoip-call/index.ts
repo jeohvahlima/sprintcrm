@@ -7,32 +7,17 @@ const corsHeaders = {
 };
 
 const NVOIP_BASE = "https://api.nvoip.com.br/v2";
+const NVOIP_BASIC_AUTH = "Basic TnZvaXBBcGlWMjpUblp2YVhCQmNHbFdNakl3TWpFPQ==";
 
-// Cache token in memory (resets on cold start, but good enough for burst calls)
-let cachedToken: string | null = null;
-let tokenExpiresAt = 0;
+// Cache token per (numberSip+userToken) combo
+const tokenCache = new Map<string, { token: string; expiresAt: number }>();
 
-async function getAccessToken(): Promise<string> {
-  if (cachedToken && Date.now() < tokenExpiresAt) {
-    return cachedToken;
-  }
-
-  const userToken = Deno.env.get("NVOIP_USER_TOKEN");
-  if (!userToken) throw new Error("NVOIP_USER_TOKEN not configured");
-
-  // Nvoip requires x-www-form-urlencoded with Basic auth
-  // username = NumberSIP, password = user_token, grant_type = password
-  // Basic auth header is fixed: NvoipApiV2:TnZvaXBBcGlWMjIwMjE=
-  const NVOIP_BASIC_AUTH = "Basic TnZvaXBBcGlWMjpUblp2YVhCQmNHbFdNakl3TWpFPQ==";
-
-  // We need the NumberSIP from nvoip_config - but at this layer we receive it from the caller
-  // For OAuth, use a default or pass it. Let's get it from env or use a stored value.
-  const numberSip = Deno.env.get("NVOIP_NUMBER_SIP") || "137715001";
+async function getAccessTokenFor(numberSip: string, userToken: string): Promise<string> {
+  const key = `${numberSip}:${userToken}`;
+  const cached = tokenCache.get(key);
+  if (cached && Date.now() < cached.expiresAt) return cached.token;
 
   const body = `username=${numberSip}&password=${encodeURIComponent(userToken)}&grant_type=password`;
-
-  console.log("Requesting Nvoip OAuth token...");
-
   const res = await fetch(`${NVOIP_BASE}/oauth/token`, {
     method: "POST",
     headers: {
@@ -41,18 +26,42 @@ async function getAccessToken(): Promise<string> {
     },
     body,
   });
-
   if (!res.ok) {
     const text = await res.text();
     throw new Error(`OAuth failed (${res.status}): ${text}`);
   }
-
   const data = await res.json();
-  cachedToken = data.access_token;
-  // Expire 1h before actual expiry to be safe
-  tokenExpiresAt = Date.now() + (data.expires_in - 3600) * 1000;
-  console.log("Nvoip OAuth token obtained successfully");
-  return cachedToken!;
+  tokenCache.set(key, {
+    token: data.access_token,
+    expiresAt: Date.now() + (data.expires_in - 3600) * 1000,
+  });
+  return data.access_token;
+}
+
+async function resolveCreds(supabase: any, companyId: string) {
+  const { data: cfg } = await supabase
+    .from("nvoip_config")
+    .select("number_sip, user_token, napikey")
+    .eq("company_id", companyId)
+    .eq("is_active", true)
+    .maybeSingle();
+
+  const numberSip = cfg?.number_sip || Deno.env.get("NVOIP_NUMBER_SIP") || "137715001";
+  const userToken = cfg?.user_token || Deno.env.get("NVOIP_USER_TOKEN");
+  const napikey = cfg?.napikey || Deno.env.get("NVOIP_NAPIKEY");
+  if (!userToken) throw new Error("Conta Nvoip não conectada. Configure suas credenciais em Call Center → Conta Nvoip.");
+  return { numberSip, userToken, napikey };
+}
+
+async function getAccessToken(supabase?: any, companyId?: string): Promise<{ token: string; napikey?: string }> {
+  if (supabase && companyId) {
+    const { numberSip, userToken, napikey } = await resolveCreds(supabase, companyId);
+    return { token: await getAccessTokenFor(numberSip, userToken), napikey };
+  }
+  const userToken = Deno.env.get("NVOIP_USER_TOKEN");
+  const numberSip = Deno.env.get("NVOIP_NUMBER_SIP") || "137715001";
+  if (!userToken) throw new Error("NVOIP_USER_TOKEN not configured");
+  return { token: await getAccessTokenFor(numberSip, userToken), napikey: Deno.env.get("NVOIP_NAPIKEY") };
 }
 
 async function makeCall(caller: string, called: string): Promise<any> {
