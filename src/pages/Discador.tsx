@@ -100,6 +100,10 @@ const Discador = () => {
             <TabsTrigger value="especializacao" className="flex items-center gap-2">
               ✨ Especialização SDR
             </TabsTrigger>
+            <TabsTrigger value="conta-nvoip" className="flex items-center gap-2">
+              <KeyRound className="w-4 h-4" />
+              Conta Nvoip
+            </TabsTrigger>
           </TabsList>
 
           {/* Tab: Fazer Ligação */}
