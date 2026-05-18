@@ -8491,13 +8491,32 @@ function Conversas() {
     const confirmar = window.confirm(`Tem certeza que deseja excluir a conversa com ${conv.contactName}?`);
     if (!confirmar) return;
     try {
-      // Deletar no Supabase (contatos: por telefone_formatado; grupos: por numero JID)
+      // Deletar no Supabase (contatos: por telefone_formatado; grupos: por numero JID; Instagram: por ID bruto)
       const isGroup = /@g\.us$/.test(String(conv.id));
-      const numeroNormalizado = isGroup ? null : normalizePhoneForWA(conv.phoneNumber || conv.id);
-      const base = supabase.from('conversas').delete().eq('company_id', userCompanyId);
-      const {
-        error
-      } = await (isGroup ? base.eq('numero', conv.id) : base.eq('telefone_formatado', numeroNormalizado!));
+      const isInstagram = conv.channel === 'instagram';
+      const isMessenger = conv.channel === 'facebook';
+      let error: any = null;
+      if (isGroup) {
+        const res = await supabase.from('conversas').delete()
+          .eq('company_id', userCompanyId)
+          .eq('numero', conv.id);
+        error = res.error;
+      } else if (isInstagram || isMessenger) {
+        // Instagram/Messenger: o telefone_formatado guarda o user ID (sem normalização)
+        const rawId = String(conv.phoneNumber || conv.id).replace(/^ig_/, '');
+        const origem = isInstagram ? 'Instagram' : 'Messenger';
+        const res = await supabase.from('conversas').delete()
+          .eq('company_id', userCompanyId)
+          .eq('origem', origem)
+          .or(`telefone_formatado.eq.${rawId},numero.eq.${rawId}`);
+        error = res.error;
+      } else {
+        const numeroNormalizado = normalizePhoneForWA(conv.phoneNumber || conv.id);
+        const res = await supabase.from('conversas').delete()
+          .eq('company_id', userCompanyId)
+          .eq('telefone_formatado', numeroNormalizado!);
+        error = res.error;
+      }
       if (error) throw error;
 
       // Remover localmente
