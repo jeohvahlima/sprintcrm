@@ -20,6 +20,7 @@ import { GrowScoreHero } from "@/components/wmi/GrowScoreHero";
 import { NorthMetricsPanel } from "@/components/wmi/NorthMetricsPanel";
 import { RhythmTemplatesPanel } from "@/components/wmi/RhythmTemplatesPanel";
 import { Onboarding7Days } from "@/components/wmi/Onboarding7Days";
+import { GrowPhasesPanel } from "@/components/wmi/GrowPhasesPanel";
 import {
   Activity, Trophy, Sparkles, ArrowRight, GraduationCap, AlertTriangle,
   TrendingUp, Target, FileText, BarChart3, Bot, Users, ClipboardCheck,
@@ -89,6 +90,9 @@ export default function Maturidade() {
           Diagnóstico estratégico 360° + plano de ação executivo gerado pela IA com base nos 5 pilares do GROW OS.
         </p>
       </div>
+
+      {/* 4 FASES G.R.O.W. — jornada da metodologia */}
+      <GrowPhasesPanel />
 
       {/* GROW SCORE CONSOLIDADO (selo da metodologia) */}
       <GrowScoreHero />
