@@ -8636,13 +8636,12 @@ function Conversas() {
     } as const;
   };
 
-  // Normaliza destino: preserva JID de grupo (@g.us). Para contatos, mantém apenas dígitos com prefixo 55.
+  // Normaliza destino: preserva JID de grupo (@g.us), DDI estrangeiro e aplica 55 apenas para BR local.
   const normalizePhoneForWA = (raw: string | undefined | null): string => {
     const value = String(raw || '');
     if (/@g\.us$/.test(value)) return value; // grupo
-    const digits = value.replace(/[^0-9]/g, '');
-    if (!digits) return '';
-    return digits.startsWith('55') ? digits : `55${digits}`;
+    const { formatted } = robustFormatPhoneNumber(value);
+    return formatted || value.replace(/[^0-9]/g, '');
   };
 
   // Função para limpar histórico de conversas
