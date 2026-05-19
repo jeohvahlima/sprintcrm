@@ -224,17 +224,15 @@ export const NvoipAccountPanel: React.FC = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
+                {connectionError && (
+                  <Alert variant="destructive">
+                    <AlertDescription>
+                      {connectionError} O User Token fica no painel Nvoip em Configurações → API; não use senha, código SMS ou token de 6 dígitos.
+                    </AlertDescription>
+                  </Alert>
+                )}
+
                 <div className="grid gap-4 md:grid-cols-2">
-                  <div className="space-y-2">
-                    <Label htmlFor="login_email">Email de acesso</Label>
-                    <Input
-                      id="login_email"
-                      type="email"
-                      placeholder="seuemail@empresa.com"
-                      value={form.login_email}
-                      onChange={(e) => setForm({ ...form, login_email: e.target.value })}
-                    />
-                  </div>
                   <div className="space-y-2">
                     <Label htmlFor="number_sip">NumberSIP *</Label>
                     <Input
@@ -253,6 +251,9 @@ export const NvoipAccountPanel: React.FC = () => {
                       value={form.user_token}
                       onChange={(e) => setForm({ ...form, user_token: e.target.value })}
                     />
+                    <p className="text-xs text-muted-foreground">
+                      Cole o User Token completo gerado em Configurações → API da Nvoip.
+                    </p>
                   </div>
                 </div>
 
