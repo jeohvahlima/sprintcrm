@@ -1,91 +1,101 @@
+# Confirmação de Compromisso via Link Público
 
-# Plano: Criar Tarefa direto da Agenda + Sync Google Tasks
+Hoje o lembrete é apenas texto. Vamos transformar em uma experiência clicável: o lead recebe a mensagem com um **link único** que abre uma página com botões **"Confirmar"** / **"Não confirmar"** (igual ao exemplo da Revitalle), e o status volta automaticamente para o CRM e a agenda.
 
-Replicar o comportamento do Google Agenda: dentro do módulo Agenda, o usuário escolhe se quer criar um **Compromisso** (reunião com hora fim) ou uma **Tarefa** (to-do com data de entrega), podendo já vincular um contato/lead. Tarefas criadas aqui sincronizam nos dois sentidos com o Google Tasks.
+## O que será criado
 
-## 1. UI — botão unificado "Criar ▾"
+### 1. Página pública de confirmação `/c/:token`
 
-Trocar o atual botão "Novo Compromisso" por um `DropdownMenu` em 3 pontos:
+Rota pública (sem login) que mostra:
 
-- **Header da Agenda** (`src/pages/Agenda.tsx`, próximo ao `setNovoCompromissoOpen`)
-- **Clique em slot vazio** do `AgendaDayView` / `AgendaWeekView` (passa a data/hora pré-selecionada)
-- **Botão flutuante global** novo: `src/components/agenda/CriarFlutuanteButton.tsx`, exibido em todas as rotas exceto `/auth`, posicionado canto inferior direito (acima do FloatingDialerButton)
+- Logo da empresa
+- Nome do lead, data/hora, profissional, serviço
+- Botões **Confirmar** e **Não confirmar**
+- Tela final: "Seu agendamento foi confirmado!" / "Recebemos sua resposta."
 
-Opções do dropdown (estilo Google):
+Visual no padrão do site público existente (mesma vibe da automação da aba Site).
+
+### 2. Token único por compromisso
+
+Nova coluna `confirmation_token` (uuid) em `compromissos`, gerado quando o compromisso é criado. O link enviado vira:
+
 ```
-+ Criar ▾
-  ├── 🗓  Compromisso  → abre Dialog atual de novo compromisso
-  └── ✓  Tarefa        → abre TarefaModal com lead opcional
+https://app.growos.online/c/{token}
 ```
 
-## 2. TarefaModal aceita contato/lead na criação rápida
+### 3. Mensagem do lembrete clicável
 
-Hoje `TarefaModal` já tem campo `lead_id`. Garantir que:
-- Quando aberto pelo dropdown da Agenda, recebe prop `defaultDueDate` (do slot clicado) e `defaultLeadId` (opcional, via combobox de busca de leads igual ao do `NovoCompromissoDialog`)
-- Salva via `criarTarefa()` → o trigger existente `upsertCompromissoParaTarefa` já cria sombra na Agenda
-- **Marca `task.source = 'agenda_quick_create'`** para diferenciar visualmente
+O template padrão de lembrete passa a incluir o link curto. Variáveis novas:
 
-## 3. Distinção visual na grade da Agenda
+- `{link_confirmacao}` — URL completa
+- `{botao_confirmar}` — link "✅ Confirmar"
+- `{botao_recusar}` — link "❌ Cancelar"
 
-Em `AgendaDayView` e `AgendaWeekView`, renderizar tarefas com:
-- Ícone `CircleDashed` (estilo Google Tasks) no canto
-- Borda esquerda azul claro (vs. verde do compromisso)
-- Sem bloco de duração se a tarefa não tiver hora exata (apenas "all-day" no topo do dia)
-- Click → abre `EditarTarefaDialog`, não `EditarCompromissoDialog`
+Exemplo gerado:
 
-Diferenciar pela coluna `compromissos.tipo_servico = 'tarefa'` (já usado pelo `upsertCompromissoParaTarefa`) ou pela presença de `referencia_id` apontando para `tasks`.
+```
+Olá {nome}, confirme seu agendamento para {data} às {hora}.
+👉 {link_confirmacao}
+```
 
-## 4. Sync Google Tasks (bidirecional)
+Para conexões **Meta Oficial** podemos opcionalmente enviar como **mensagem interativa com botões nativos** (Sim/Não) — fallback para texto+link quando for Evolution API.
 
-Hoje `google-calendar-event` só sincroniza eventos. Adicionar:
+### 4. Edge Function `confirmar-compromisso`
 
-**Backend — 3 novas Edge Functions:**
+Pública (sem JWT). Recebe `{ token, acao: "confirmar" | "recusar" }` e:
 
-- `supabase/functions/google-tasks-push/index.ts` — recebe `{ action, task_id }`, busca task, chama Google Tasks API (`https://www.googleapis.com/tasks/v1/lists/@default/tasks`) usando o mesmo token OAuth (reaproveita `_shared/google-calendar.ts` `getValidAccessToken`). Persiste `google_task_id` em nova coluna.
-- `supabase/functions/google-tasks-pull/index.ts` — invocada pelo `google-calendar-sync` existente, lê tarefas remotas e faz upsert em `tasks` (via `external_source = 'google_tasks'`).
-- Estender escopo OAuth: adicionar `https://www.googleapis.com/auth/tasks` em `google-calendar-oauth-start`. **Requer reconexão** dos usuários que já estavam conectados (mostrar banner).
+- Valida token
+- Atualiza `compromissos.status_confirmacao` (`confirmado` / `recusado` / `pendente`)
+- Grava `confirmado_em` e `confirmado_via` (whatsapp/link)
+- Cancela lembretes futuros desse compromisso se confirmado
+- Cria notificação no CRM para o responsável
+- Posta mensagem automática no chat do lead ("Cliente confirmou via link")
 
-**Frontend:**
-- `tarefaService.ts` chama `google-tasks-push` no create/update/delete quando o user tem integração ativa
-- Hook `useGoogleCalendar` ganha flag `tasksScopeGranted`
+### 5. UI da Agenda
 
-## 5. Schema (1 migração)
+- Badge de status no card do compromisso: 🟡 Aguardando · 🟢 Confirmado · 🔴 Recusado
+- Filtro por status de confirmação
+- Botão "Copiar link de confirmação" no compromisso
+
+### 6. Configurações do template (por empresa)
+
+Em Configurações → Agenda/Lembretes:
+
+- Editor do template com preview
+- Toggle "Incluir link de confirmação"
+- Toggle "Usar botões interativos (Meta Oficial)"
+- Personalização da página: logo, cor primária, texto de boas-vindas
+
+## Detalhes técnicos
+
+**Banco (migração):**
 
 ```sql
-ALTER TABLE tasks 
-  ADD COLUMN google_task_id text,
-  ADD COLUMN google_synced_at timestamptz,
-  ADD COLUMN external_source text DEFAULT 'crm';
+alter table compromissos
+  add column confirmation_token uuid unique default gen_random_uuid(),
+  add column status_confirmacao text default 'pendente',
+  add column confirmado_em timestamptz,
+  add column confirmado_via text;
 
-CREATE INDEX idx_tasks_google_task_id ON tasks(google_task_id);
+create index on compromissos(confirmation_token);
 ```
 
-Sem alteração em `compromissos` (já tem `referencia_id` + `tipo_servico = 'tarefa'`).
+Trigger para popular `confirmation_token` em registros antigos.
 
-## 6. Benefícios entregues
+**RLS:** policy de SELECT pública apenas via RPC `get_compromisso_by_token(token)` (SECURITY DEFINER) que retorna só os campos seguros (nome do lead, data, serviço, profissional, logo da empresa). Nada de telefone/dados sensíveis.
 
-| Hoje | Depois |
-|---|---|
-| Agenda só cria reunião; tarefa exige sair do módulo | Tudo do dia criado em 1 clique no contexto |
-| Reunião e to-do parecem iguais visualmente | Ícone/cor distintos como no Google |
-| Sync Google só de Calendar; Google Tasks fica fora | Tasks CRM ↔ Google Tasks bidirecional |
-| Lead/contato amarrado é manual depois | Tarefa criada da Agenda já leva contato e cai no histórico do lead |
-| Lembretes idênticos para tudo | Tarefa lembra na manhã do due_date; reunião lembra 10min antes |
-| Vendedor precisa de 2 abas (Agenda + Tarefas) | Agenda vira tela única do dia |
+**Rota frontend:** `src/pages/ConfirmarCompromisso.tsx` adicionada em `App.tsx` como rota pública.
 
-## 7. Ordem de implementação
+**Edge function:** `supabase/functions/confirmar-compromisso/index.ts` com `verify_jwt = false` em `supabase/config.toml`.
 
-1. Migração schema (`tasks` + colunas Google)
-2. Dropdown "Criar ▾" no header da Agenda + `TarefaModal` com `defaultDueDate`/`defaultLeadId`
-3. Click em slot vazio passa data/hora pré-selecionada
-4. Distinção visual tarefas vs. compromissos nas views Dia/Semana
-5. Botão flutuante global
-6. Extensão OAuth scope `tasks` + edge functions push/pull
-7. Banner pedindo reconexão para users existentes
+**Integração com `enviar-lembretes`:** interpolar `{link_confirmacao}` antes de enviar, usando `VITE_APP_URL` (ou domínio configurado da empresa).
 
-## Notas técnicas
+**Reenvio inteligente:** se faltar X horas e ainda estiver `pendente`, dispara segundo lembrete ("Você ainda não confirmou..."). Configurável.
 
-- Reuso máximo: `TarefaModal`, `NovoCompromissoDialog`, `useGoogleCalendar`, `_shared/google-calendar.ts`, `upsertCompromissoParaTarefa` permanecem como base
-- Google Tasks API usa o **mesmo token OAuth** do Calendar, só muda o scope — não precisa de novo connector
-- Etapas 1-5 entregam valor sozinhas (UX completa interna); 6-7 adicionam o sync externo
+## Fora de escopo desta entrega
 
+- Reagendamento pelo próprio lead (pode ser fase 2)
+- Pagamento/sinal pela página
+- Multi-idioma da página pública
+
+Posso seguir com a implementação?
