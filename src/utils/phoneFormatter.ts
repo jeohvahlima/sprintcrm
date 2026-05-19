@@ -51,6 +51,22 @@ function startsWithForeignCountryCode(digits: string): boolean {
   return false;
 }
 
+/** Remove +55 inserido por engano antes de um DDI estrangeiro (ex.: 55351926699471 → 351926699471). */
+function removeAccidentalBrazilPrefix(digits: string): string {
+  if (!digits.startsWith('55') || digits.length <= 13) return digits;
+
+  const withoutBrazilCode = digits.substring(2);
+  if (
+    withoutBrazilCode.length >= 8 &&
+    withoutBrazilCode.length <= 15 &&
+    startsWithForeignCountryCode(withoutBrazilCode)
+  ) {
+    return withoutBrazilCode;
+  }
+
+  return digits;
+}
+
 /**
  * Formata e valida número de telefone.
  * - Aceita números brasileiros (adiciona 55 quando necessário)
@@ -72,6 +88,8 @@ export function formatPhoneNumber(phone: string): string {
 
   // Remove zero de tronco se houver
   if (cleaned.startsWith('0')) cleaned = cleaned.substring(1);
+
+  cleaned = removeAccidentalBrazilPrefix(cleaned);
 
   // Já tem código de país estrangeiro conhecido
   if (startsWithForeignCountryCode(cleaned) && cleaned.length >= 8 && cleaned.length <= 15) {
@@ -122,6 +140,8 @@ export function robustFormatPhoneNumber(phone: string | undefined | null): { for
     cleaned = cleaned.substring(1);
   }
 
+  cleaned = removeAccidentalBrazilPrefix(cleaned);
+
   // BR já com 55
   if (cleaned.startsWith('55') && (cleaned.length === 12 || cleaned.length === 13)) {
     return { formatted: cleaned, isValid: true };
@@ -157,6 +177,7 @@ export function normalizePhoneForComparison(phone: string | null | undefined): s
   let digits = String(phone).replace(/\D/g, '');
   if (hadPlus) return digits;
   if (digits.startsWith('0')) digits = digits.substring(1);
+  digits = removeAccidentalBrazilPrefix(digits);
   if (digits.startsWith('55')) return digits;
   if (startsWithForeignCountryCode(digits) && digits.length >= 8) return digits;
   if (digits.length >= 10 && digits.length <= 11) return `55${digits}`;
@@ -168,7 +189,7 @@ export function normalizePhoneForComparison(phone: string | null | undefined): s
  * "+<code> <restante>" simples.
  */
 export function displayPhoneNumber(phone: string): string {
-  const cleaned = phone.replace(/\D/g, '');
+  const cleaned = removeAccidentalBrazilPrefix(phone.replace(/\D/g, ''));
 
   if (cleaned.startsWith('55') && cleaned.length === 13) {
     return `+${cleaned.substring(0, 2)} (${cleaned.substring(2, 4)}) ${cleaned.substring(4, 9)}-${cleaned.substring(9)}`;
