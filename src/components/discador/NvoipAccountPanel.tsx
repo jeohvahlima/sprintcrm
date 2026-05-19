@@ -228,19 +228,6 @@ export const NvoipAccountPanel: React.FC = () => {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="login_password">Senha (opcional)</Label>
-                    <Input
-                      id="login_password"
-                      type="password"
-                      placeholder="••••••••"
-                      value={form.login_password}
-                      onChange={(e) => setForm({ ...form, login_password: e.target.value })}
-                    />
-                  </div>
-                </div>
-
-                <div className="grid gap-4 md:grid-cols-2">
-                  <div className="space-y-2">
                     <Label htmlFor="number_sip">ID da Central *</Label>
                     <Input
                       id="number_sip"
@@ -250,11 +237,11 @@ export const NvoipAccountPanel: React.FC = () => {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="user_token">Chave de Acesso *</Label>
+                    <Label htmlFor="user_token">Senha da conta Nvoip *</Label>
                     <Input
                       id="user_token"
                       type="password"
-                      placeholder={hasToken ? 'Mantenha em branco para preservar' : 'Cole sua chave'}
+                      placeholder={hasToken ? 'Mantenha em branco para preservar' : 'Digite sua senha Nvoip'}
                       value={form.user_token}
                       onChange={(e) => setForm({ ...form, user_token: e.target.value })}
                     />
