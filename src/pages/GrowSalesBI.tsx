@@ -123,7 +123,7 @@ export default function GrowSalesBI() {
             <div className="p-2.5 rounded-xl bg-gradient-to-br from-primary/40 via-primary/20 to-transparent ring-1 ring-primary/20 shadow-[0_0_30px_-5px_hsl(var(--primary)/0.5)]">
               <Sparkles className="h-7 w-7 text-primary" />
             </div>
-            Revenue Intelligence BI
+            BI
             <Badge className="bg-gradient-to-r from-primary to-primary/70 text-primary-foreground border-0">
               Grow Sales
             </Badge>
