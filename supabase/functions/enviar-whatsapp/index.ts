@@ -32,6 +32,22 @@ function startsWithForeignCountryCode(digits: string): boolean {
   return [3, 2, 1].some((len) => FOREIGN_COUNTRY_CODES.includes(digits.substring(0, len)));
 }
 
+function ensureBrazilMobileNinth(digits: string): string {
+  // Espera-se: 55 + DDD(2) + numero. Mobile BR exige 9 inicial após o DDD.
+  // Casos: 55 + 10 dígitos (DDD + 8) → mobile antigo, inserir 9
+  //         55 + 11 dígitos (DDD + 9 + 8) → já correto
+  if (!digits.startsWith('55')) return digits;
+  const rest = digits.substring(2);
+  if (rest.length !== 10) return digits; // 11 já está ok, outros tamanhos não tocamos
+  const ddd = rest.substring(0, 2);
+  const localFirst = rest.charAt(2);
+  // DDDs válidos BR: 11-99. Mobile inicia com 6,7,8,9 após o DDD.
+  if (/^[1-9][1-9]$/.test(ddd) && /[6-9]/.test(localFirst)) {
+    return `55${ddd}9${rest.substring(2)}`;
+  }
+  return digits;
+}
+
 function normalizeRecipientNumber(raw: string): string {
   let digits = String(raw || '').replace(/[^0-9]/g, '');
   if (digits.startsWith('55') && digits.length > 13) {
@@ -40,7 +56,11 @@ function normalizeRecipientNumber(raw: string): string {
       return withoutBrazilCode;
     }
   }
-  if (!digits.startsWith('55') && (digits.length === 10 || digits.length === 11)) return `55${digits}`;
+  if (!digits.startsWith('55') && (digits.length === 10 || digits.length === 11)) {
+    digits = `55${digits}`;
+  }
+  // Corrigir números BR mobile sem o 9 (ex: 558791426333 → 5587991426333)
+  digits = ensureBrazilMobileNinth(digits);
   return digits;
 }
 
