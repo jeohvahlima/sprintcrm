@@ -47,7 +47,7 @@ import { isSegmentoFinanceiro, isSegmentoJuridico } from "@/lib/segmentos";
 import { LembretesAntecipados, LembreteAntecipado } from "@/components/conversas/LembretesAntecipados";
 import { ProductivityPanel } from "@/components/conversas/ProductivityPanel";
 import { PastedImagePreview } from "@/components/conversas/PastedImagePreview";
-import { formatPhoneNumber, safeFormatPhoneNumber, normalizePhoneForComparison } from "@/utils/phoneFormatter";
+import { formatPhoneNumber, safeFormatPhoneNumber, normalizePhoneForComparison, robustFormatPhoneNumber } from "@/utils/phoneFormatter";
 import { cleanAllConversationsHistory } from "@/utils/cleanConversationsHistory";
 import { getMediaUrl, MediaExpiredError } from "@/utils/mediaLoader";
 import { throttledProfilePicture } from "@/utils/profilePictureThrottle";
