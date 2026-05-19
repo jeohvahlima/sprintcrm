@@ -28,7 +28,6 @@ export const NvoipAccountPanel: React.FC = () => {
     user_token: '',
     napikey: '',
     login_email: '',
-    login_password: '',
   });
 
   const loadAccount = useCallback(async () => {
@@ -38,10 +37,15 @@ export const NvoipAccountPanel: React.FC = () => {
         body: { action: 'account-info' },
       });
       if (error) throw error;
+      if (data?.success === false) throw new Error(data.error || 'Credenciais inválidas');
       setAccount(data);
+      return true;
     } catch (e: any) {
       console.error('Erro ao buscar dados da central:', e);
-      toast.error('Não foi possível buscar dados da central');
+      setAccount(null);
+      setShowForm(true);
+      toast.error(e.message || 'Não foi possível buscar dados da central');
+      return false;
     } finally {
       setRefreshing(false);
     }
@@ -65,7 +69,8 @@ export const NvoipAccountPanel: React.FC = () => {
         }));
         setHasToken(!!cfg.has_token);
         if (cfg.has_token) {
-          await loadAccount();
+          const ok = await loadAccount();
+          if (!ok) setShowForm(true);
         } else {
           setShowForm(true);
         }
@@ -83,22 +88,26 @@ export const NvoipAccountPanel: React.FC = () => {
   useEffect(() => { load(); }, [load]);
 
   const handleSave = async () => {
-    if (!form.number_sip.trim() || (!hasToken && !form.user_token.trim())) {
-      toast.error('Preencha o ID da central e a chave de acesso');
+    const passwordToSave = form.user_token.trim();
+    const shouldPreservePassword = hasToken && passwordToSave === '••••••••';
+
+    if (!form.login_email.trim() || !form.number_sip.trim() || (!shouldPreservePassword && !passwordToSave)) {
+      toast.error('Preencha o email, a senha Nvoip e o ID da central');
       return;
     }
     setSaving(true);
     try {
-      const { error } = await supabase.functions.invoke('nvoip-call', {
+      const { data, error } = await supabase.functions.invoke('nvoip-call', {
         body: {
           action: 'save-config',
           number_sip: form.number_sip,
-          user_token: form.user_token,
+          user_token: passwordToSave || undefined,
           napikey: form.napikey,
           login_email: form.login_email,
         },
       });
       if (error) throw error;
+      if (data?.success === false) throw new Error(data.error || 'Credenciais inválidas');
       toast.success('Central conectada com sucesso');
       setShowForm(false);
       await load();
