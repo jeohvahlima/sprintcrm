@@ -100,6 +100,12 @@ export const NvoipAccountPanel: React.FC = () => {
       toast.error('Preencha o NumberSIP e o User Token');
       return;
     }
+    if (!shouldPreservePassword && passwordToSave.length <= 8) {
+      const message = 'Esse valor parece ser um código temporário. Cole o User Token completo da Nvoip em Configurações → API.';
+      setConnectionError(message);
+      toast.error(message);
+      return;
+    }
     setSaving(true);
     try {
       const { data, error } = await supabase.functions.invoke('nvoip-call', {
