@@ -12,12 +12,12 @@ const NVOIP_BASIC_AUTH = "Basic TnZvaXBBcGlWMjpUblp2YVhCQmNHbFdNakl3TWpFPQ==";
 // Cache token per (numberSip+userToken) combo
 const tokenCache = new Map<string, { token: string; expiresAt: number }>();
 
-async function getAccessTokenFor(numberSip: string, userToken: string): Promise<string> {
-  const key = `${numberSip}:${userToken}`;
+async function getAccessTokenFor(username: string, password: string): Promise<string> {
+  const key = `${username}:${password}`;
   const cached = tokenCache.get(key);
   if (cached && Date.now() < cached.expiresAt) return cached.token;
 
-  const body = `username=${encodeURIComponent(numberSip)}&password=${encodeURIComponent(userToken)}&grant_type=password`;
+  const body = `username=${encodeURIComponent(username)}&password=${encodeURIComponent(password)}&grant_type=password`;
   const res = await fetch(`${NVOIP_BASE}/oauth/token`, {
     method: "POST",
     headers: {
@@ -28,7 +28,7 @@ async function getAccessTokenFor(numberSip: string, userToken: string): Promise<
   });
   if (!res.ok) {
     const text = await res.text();
-    throw new Error(`OAuth failed (${res.status}): ${text}`);
+    throw new Error(`OAuth Nvoip falhou (${res.status}): verifique e-mail e senha da sua conta Nvoip. Detalhe: ${text}`);
   }
   const data = await res.json();
   if (!data.access_token) {
@@ -45,7 +45,7 @@ async function getAccessTokenFor(numberSip: string, userToken: string): Promise<
 async function resolveCreds(supabase: any, companyId: string) {
   const { data: cfg } = await supabase
     .from("nvoip_config")
-    .select("number_sip, user_token, napikey")
+    .select("number_sip, user_token, napikey, login_email")
     .eq("company_id", companyId)
     .eq("is_active", true)
     .maybeSingle();
@@ -53,19 +53,22 @@ async function resolveCreds(supabase: any, companyId: string) {
   const numberSip = cfg?.number_sip || Deno.env.get("NVOIP_NUMBER_SIP") || "137715001";
   const userToken = cfg?.user_token || Deno.env.get("NVOIP_USER_TOKEN");
   const napikey = cfg?.napikey || Deno.env.get("NVOIP_NAPIKEY");
-  if (!userToken) throw new Error("Conta Nvoip não conectada. Configure suas credenciais em Call Center → Conta Nvoip.");
-  return { numberSip, userToken, napikey };
+  const loginEmail = cfg?.login_email || Deno.env.get("NVOIP_LOGIN_EMAIL");
+  if (!loginEmail || !userToken) {
+    throw new Error("Conta Nvoip não conectada. Configure e-mail e senha em Call Center → Conta Nvoip.");
+  }
+  return { numberSip, userToken, napikey, loginEmail };
 }
 
 async function getAccessToken(supabase?: any, companyId?: string): Promise<{ token: string; napikey?: string }> {
   if (supabase && companyId) {
-    const { numberSip, userToken, napikey } = await resolveCreds(supabase, companyId);
-    return { token: await getAccessTokenFor(numberSip, userToken), napikey };
+    const { loginEmail, userToken, napikey } = await resolveCreds(supabase, companyId);
+    return { token: await getAccessTokenFor(loginEmail, userToken), napikey };
   }
   const userToken = Deno.env.get("NVOIP_USER_TOKEN");
-  const numberSip = Deno.env.get("NVOIP_NUMBER_SIP") || "137715001";
-  if (!userToken) throw new Error("NVOIP_USER_TOKEN not configured");
-  return { token: await getAccessTokenFor(numberSip, userToken), napikey: Deno.env.get("NVOIP_NAPIKEY") };
+  const loginEmail = Deno.env.get("NVOIP_LOGIN_EMAIL");
+  if (!userToken || !loginEmail) throw new Error("NVOIP_LOGIN_EMAIL/NVOIP_USER_TOKEN not configured");
+  return { token: await getAccessTokenFor(loginEmail, userToken), napikey: Deno.env.get("NVOIP_NAPIKEY") };
 }
 
 async function makeCall(caller: string, called: string, supabase: any, companyId: string): Promise<any> {
@@ -197,8 +200,8 @@ Deno.serve(async (req) => {
         break;
       }
       case "test-connection": {
-        const { numberSip, userToken } = await resolveCreds(supabase, companyId);
-        await getAccessTokenFor(numberSip, userToken);
+        const { numberSip, userToken, loginEmail } = await resolveCreds(supabase, companyId);
+        await getAccessTokenFor(loginEmail, userToken);
         result = { success: true, numberSip };
         break;
       }
