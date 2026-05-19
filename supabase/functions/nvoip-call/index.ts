@@ -249,10 +249,16 @@ Deno.serve(async (req) => {
     });
   } catch (error: any) {
     console.error("nvoip-call error:", error);
+    const message = error.message || "Internal error";
+    const isExpectedNvoipError =
+      message.includes("OAuth Nvoip falhou") ||
+      message.includes("Conta Nvoip") ||
+      message.includes("obrigatór");
+
     return new Response(
-      JSON.stringify({ error: error.message || "Internal error" }),
+      JSON.stringify({ success: false, error: message }),
       {
-        status: 400,
+        status: isExpectedNvoipError ? 200 : 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       }
     );

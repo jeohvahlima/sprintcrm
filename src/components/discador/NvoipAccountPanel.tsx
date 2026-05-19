@@ -37,7 +37,9 @@ export const NvoipAccountPanel: React.FC = () => {
         body: { action: 'account-info' },
       });
       if (error) throw error;
-      if (data?.success === false) throw new Error(data.error || 'Credenciais inválidas');
+      if (data?.success === false) {
+        throw new Error('Não foi possível autenticar na Nvoip. Verifique se o e-mail e a senha da conta Nvoip estão corretos.');
+      }
       setAccount(data);
       return true;
     } catch (e: any) {
@@ -107,7 +109,9 @@ export const NvoipAccountPanel: React.FC = () => {
         },
       });
       if (error) throw error;
-      if (data?.success === false) throw new Error(data.error || 'Credenciais inválidas');
+      if (data?.success === false) {
+        throw new Error('Não foi possível autenticar na Nvoip. Verifique se o e-mail e a senha da conta Nvoip estão corretos.');
+      }
       toast.success('Central conectada com sucesso');
       setShowForm(false);
       await load();
