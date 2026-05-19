@@ -457,7 +457,22 @@ serve(async (req) => {
 
             // Enviar UMA mensagem para o telefone definido
             const telefoneFormatado = telefoneEnvio.replace(/\D/g, '');
-            const mensagemLembrete = lembrete.mensagem || `Olá! Lembramos do compromisso de ${lembrete.compromisso.tipo_servico} agendado para ${new Date(lembrete.compromisso.data_hora_inicio).toLocaleString('pt-BR')}.`;
+            let mensagemLembrete = lembrete.mensagem || `Olá! Lembramos do compromisso de ${lembrete.compromisso.tipo_servico} agendado para ${new Date(lembrete.compromisso.data_hora_inicio).toLocaleString('pt-BR')}.`;
+
+            // 🔗 Inserir link público de confirmação (token único do compromisso)
+            const appBaseUrl = (Deno.env.get('PUBLIC_APP_URL') || 'https://app.wazecrm.online').replace(/\/$/, '');
+            const token = (lembrete.compromisso as any)?.confirmation_token;
+            const jaConfirmado = (lembrete.compromisso as any)?.status_confirmacao === 'confirmado';
+            if (token && !jaConfirmado) {
+              const linkConfirmacao = `${appBaseUrl}/c/${token}`;
+              if (mensagemLembrete.includes('{link_confirmacao}')) {
+                mensagemLembrete = mensagemLembrete.replace(/\{link_confirmacao\}/g, linkConfirmacao);
+              } else if (!mensagemLembrete.includes('/c/')) {
+                // Auto-append se não houver placeholder
+                mensagemLembrete = `${mensagemLembrete}\n\n✅ Confirme seu agendamento clicando aqui:\n${linkConfirmacao}`;
+              }
+            }
+
             const midiaUrl = lembrete.midia_url || null;
             
             console.log(`📱 Enviando WhatsApp para: ${telefoneFormatado} via edge function ${midiaUrl ? '(com mídia)' : ''}`);
