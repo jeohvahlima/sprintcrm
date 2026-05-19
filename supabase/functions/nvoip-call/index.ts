@@ -252,6 +252,7 @@ Deno.serve(async (req) => {
     const isExpectedNvoipError =
       message.includes("OAuth Nvoip falhou") ||
       message.includes("Conta Nvoip") ||
+      message.includes("NumberSIP") ||
       message.includes("obrigatór");
 
     return new Response(
