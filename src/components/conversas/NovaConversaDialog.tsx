@@ -22,30 +22,24 @@ export function NovaConversaDialog({ onNovaConversa }: NovaConversaDialogProps) 
       return;
     }
 
-    // Remove tudo que não é número e zeros à esquerda
-    let numeroLimpo = numeroSemCodigo.replace(/\D/g, '');
-    
-    // Remove zero inicial se presente (087... -> 87...)
-    if (numeroLimpo.startsWith('0')) {
-      numeroLimpo = numeroLimpo.substring(1);
-    }
-    
-    if (numeroLimpo.length < 10 || numeroLimpo.length > 11) {
-      toast.error("Digite um número válido (DDD + número)");
+    const numeroOriginal = numeroSemCodigo.trim();
+    const digitos = numeroOriginal.replace(/\D/g, '');
+
+    if (digitos.length < 8 || digitos.length > 15) {
+      toast.error("Digite um número válido com DDI. Ex: +351 926 699 471 ou 87991426333");
       return;
     }
 
-    // Usa formatação robusta para garantir formato consistente 55DDDXXXXXXXX
-    const { formatted, isValid } = robustFormatPhoneNumber(numeroLimpo);
+    const { formatted, isValid } = robustFormatPhoneNumber(numeroOriginal);
     
     if (!isValid || !formatted) {
-      toast.error("Número de telefone inválido");
+      toast.error("Número de telefone inválido. Para outro país, informe o DDI com +. Ex: +351 926 699 471");
       return;
     }
     
     console.log('📱 [NovaConversa] Número formatado:', {
       input: numeroSemCodigo,
-      limpo: numeroLimpo,
+      digitos,
       formatado: formatted
     });
     
@@ -58,15 +52,20 @@ export function NovaConversaDialog({ onNovaConversa }: NovaConversaDialogProps) 
   };
 
   const handleNumeroChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const valor = e.target.value.replace(/\D/g, '');
-    
-    // Limitar a 11 dígitos (DDD + 9 dígitos)
-    if (valor.length <= 11) {
-      setNumeroSemCodigo(valor);
-    }
+    const valor = e.target.value
+      .replace(/[^\d+\s().-]/g, '')
+      .replace(/(?!^)\+/g, '');
+
+    if (valor.replace(/\D/g, '').length <= 15) setNumeroSemCodigo(valor);
   };
 
   const formatarNumeroDisplay = (num: string) => {
+    const valor = num.trim();
+
+    if (valor.startsWith('+') || valor.replace(/\D/g, '').length > 11) {
+      return num;
+    }
+
     // Remove tudo que não é número
     const numeros = num.replace(/\D/g, '');
     
@@ -105,21 +104,15 @@ export function NovaConversaDialog({ onNovaConversa }: NovaConversaDialogProps) 
           </div>
           <div className="space-y-2">
             <Label htmlFor="numero">Número do WhatsApp</Label>
-            <div className="flex gap-2">
-              <div className="flex items-center px-3 rounded-md border border-input bg-muted text-sm">
-                +55
-              </div>
-              <Input
-                id="numero"
-                placeholder="87991426333"
-                value={formatarNumeroDisplay(numeroSemCodigo)}
-                onChange={handleNumeroChange}
-                onKeyDown={(e) => e.key === 'Enter' && handleSalvar()}
-                className="flex-1"
-              />
-            </div>
+            <Input
+              id="numero"
+              placeholder="+351 926 699 471 ou 87991426333"
+              value={formatarNumeroDisplay(numeroSemCodigo)}
+              onChange={handleNumeroChange}
+              onKeyDown={(e) => e.key === 'Enter' && handleSalvar()}
+            />
             <p className="text-xs text-muted-foreground">
-              Digite o DDD + número (ex: 87991426333)
+              Para números internacionais, digite o DDI com +. Ex: +351 926 699 471
             </p>
           </div>
         </div>
