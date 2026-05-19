@@ -12,12 +12,12 @@ const NVOIP_BASIC_AUTH = "Basic TnZvaXBBcGlWMjpUblp2YVhCQmNHbFdNakl3TWpFPQ==";
 // Cache token per (numberSip+userToken) combo
 const tokenCache = new Map<string, { token: string; expiresAt: number }>();
 
-async function getAccessTokenFor(numberSip: string, userToken: string): Promise<string> {
-  const key = `${numberSip}:${userToken}`;
+async function getAccessTokenFor(username: string, password: string): Promise<string> {
+  const key = `${username}:${password}`;
   const cached = tokenCache.get(key);
   if (cached && Date.now() < cached.expiresAt) return cached.token;
 
-  const body = `username=${encodeURIComponent(numberSip)}&password=${encodeURIComponent(userToken)}&grant_type=password`;
+  const body = `username=${encodeURIComponent(username)}&password=${encodeURIComponent(password)}&grant_type=password`;
   const res = await fetch(`${NVOIP_BASE}/oauth/token`, {
     method: "POST",
     headers: {
@@ -28,7 +28,7 @@ async function getAccessTokenFor(numberSip: string, userToken: string): Promise<
   });
   if (!res.ok) {
     const text = await res.text();
-    throw new Error(`OAuth failed (${res.status}): ${text}`);
+    throw new Error(`OAuth Nvoip falhou (${res.status}): verifique e-mail e senha da sua conta Nvoip. Detalhe: ${text}`);
   }
   const data = await res.json();
   if (!data.access_token) {
