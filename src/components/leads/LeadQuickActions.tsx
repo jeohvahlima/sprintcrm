@@ -22,6 +22,7 @@ import {
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { FinalizarNegociacaoDialog } from "./FinalizarNegociacaoDialog";
+import { safeFormatPhoneNumber } from "@/utils/phoneFormatter";
 
 interface LeadQuickActionsProps {
   leadId: string;
@@ -80,8 +81,12 @@ export function LeadQuickActions({
 
   const ligarWhatsApp = () => {
     if (leadPhone) {
-      const numero = leadPhone.replace(/\D/g, "");
-      window.open(`https://wa.me/55${numero}`, "_blank");
+      const numero = safeFormatPhoneNumber(leadPhone);
+      if (!numero) {
+        toast.error("Telefone inválido");
+        return;
+      }
+      window.open(`https://wa.me/${numero}`, "_blank");
     } else {
       toast.error("Lead não possui telefone cadastrado");
     }
