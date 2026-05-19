@@ -423,7 +423,7 @@ export function NovaSubcontaDialog({ open, onOpenChange, onSuccess }: NovaSubcon
                   />
                   <label htmlFor="allow_discador" className="text-sm flex items-center gap-1.5 cursor-pointer">
                     <Phone className="h-3.5 w-3.5 text-muted-foreground" />
-                    Discador
+                    Call Center
                   </label>
                 </div>
                 <div className="flex items-center space-x-2">
