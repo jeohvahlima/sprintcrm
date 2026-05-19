@@ -2120,6 +2120,9 @@ export type Database = {
           agenda_id: string | null
           company_id: string | null
           compromisso_origem_id: string | null
+          confirmado_em: string | null
+          confirmado_via: string | null
+          confirmation_token: string | null
           convidar_lead_email: boolean | null
           created_at: string | null
           custo_estimado: number | null
@@ -2140,6 +2143,7 @@ export type Database = {
           paciente: string | null
           profissional_id: string | null
           status: string | null
+          status_confirmacao: string
           telefone: string | null
           tipo_servico: string
           titulo: string | null
@@ -2150,6 +2154,9 @@ export type Database = {
           agenda_id?: string | null
           company_id?: string | null
           compromisso_origem_id?: string | null
+          confirmado_em?: string | null
+          confirmado_via?: string | null
+          confirmation_token?: string | null
           convidar_lead_email?: boolean | null
           created_at?: string | null
           custo_estimado?: number | null
@@ -2170,6 +2177,7 @@ export type Database = {
           paciente?: string | null
           profissional_id?: string | null
           status?: string | null
+          status_confirmacao?: string
           telefone?: string | null
           tipo_servico: string
           titulo?: string | null
@@ -2180,6 +2188,9 @@ export type Database = {
           agenda_id?: string | null
           company_id?: string | null
           compromisso_origem_id?: string | null
+          confirmado_em?: string | null
+          confirmado_via?: string | null
+          confirmation_token?: string | null
           convidar_lead_email?: boolean | null
           created_at?: string | null
           custo_estimado?: number | null
@@ -2200,6 +2211,7 @@ export type Database = {
           paciente?: string | null
           profissional_id?: string | null
           status?: string | null
+          status_confirmacao?: string
           telefone?: string | null
           tipo_servico?: string
           titulo?: string | null
@@ -10572,6 +10584,10 @@ export type Database = {
       }
       claim_quest_reward: { Args: { p_progress_id: string }; Returns: Json }
       compute_social_score: { Args: { p_lead_id: string }; Returns: number }
+      confirmar_compromisso_by_token: {
+        Args: { _acao: string; _token: string }
+        Returns: Json
+      }
       count_business_days: {
         Args: { p_end: string; p_start: string }
         Returns: number
@@ -10629,6 +10645,21 @@ export type Database = {
       get_commercial_maturity_score: {
         Args: { p_company_id?: string }
         Returns: Json
+      }
+      get_compromisso_by_token: {
+        Args: { _token: string }
+        Returns: {
+          data_hora_fim: string
+          data_hora_inicio: string
+          empresa_nome: string
+          id: string
+          observacoes: string
+          paciente: string
+          profissional_nome: string
+          status_confirmacao: string
+          tipo_servico: string
+          titulo: string
+        }[]
       }
       get_grow_score_consolidated: {
         Args: { p_company_id?: string }
