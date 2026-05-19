@@ -39,7 +39,7 @@ const ATIVIDADES_LIST = [
   { key: "whatsapp", label: "Prospecção via WhatsApp", icon: Phone },
 ];
 
-const FERRAMENTAS_LIST = ["CRM", "Discador", "WhatsApp Business", "E-mail marketing", "LinkedIn Sales Navigator", "Planilhas"];
+const FERRAMENTAS_LIST = ["CRM", "Call Center", "WhatsApp Business", "E-mail marketing", "LinkedIn Sales Navigator", "Planilhas"];
 
 export function SalesMachineWizard() {
   const [phase, setPhase] = useState<"1" | "2" | "3" | "4" | "5">("1");
