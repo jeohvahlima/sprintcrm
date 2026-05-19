@@ -200,8 +200,8 @@ Deno.serve(async (req) => {
         break;
       }
       case "test-connection": {
-        const { numberSip, userToken } = await resolveCreds(supabase, companyId);
-        await getAccessTokenFor(numberSip, userToken);
+        const { numberSip, userToken, loginEmail } = await resolveCreds(supabase, companyId);
+        await getAccessTokenFor(loginEmail, userToken);
         result = { success: true, numberSip };
         break;
       }
