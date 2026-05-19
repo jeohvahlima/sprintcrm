@@ -228,7 +228,7 @@ export const NvoipAccountPanel: React.FC = () => {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="number_sip">ID da Central *</Label>
+                    <Label htmlFor="number_sip">NumberSIP *</Label>
                     <Input
                       id="number_sip"
                       placeholder="Ex: 137715001"
@@ -237,11 +237,11 @@ export const NvoipAccountPanel: React.FC = () => {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="user_token">Senha da conta Nvoip *</Label>
+                    <Label htmlFor="user_token">User Token *</Label>
                     <Input
                       id="user_token"
                       type="password"
-                      placeholder={hasToken ? 'Mantenha em branco para preservar' : 'Digite sua senha Nvoip'}
+                      placeholder={hasToken ? 'Mantenha em branco para preservar' : 'Cole o User Token'}
                       value={form.user_token}
                       onChange={(e) => setForm({ ...form, user_token: e.target.value })}
                     />
