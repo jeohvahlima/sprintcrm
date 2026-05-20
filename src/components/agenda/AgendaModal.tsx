@@ -473,7 +473,7 @@ export function AgendaModal({ open, onOpenChange, lead, onAgendamentoCriado }: A
               ? formData.tipo_servico.charAt(0).toUpperCase() + formData.tipo_servico.slice(1)
               : null;
             const confirmToken = (compromisso as any)?.confirmation_token;
-            const linkConfirmacao = confirmToken ? `${window.location.origin}/c/${confirmToken}` : '';
+            const linkConfirmacao = confirmToken ? `https://app.growos.online/c/${confirmToken}` : '';
             const blocoConfirmacao = linkConfirmacao
               ? `\\\\n👉 *Confirme seu agendamento clicando no link abaixo:*\\\\n${linkConfirmacao}\\\\n`
               : '';
