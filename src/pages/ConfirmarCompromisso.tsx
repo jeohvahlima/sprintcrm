@@ -44,6 +44,33 @@ export default function ConfirmarCompromisso() {
 
   useEffect(() => {
     document.title = "Confirmar Agendamento";
+
+    // Garante que nenhum Service Worker antigo (PWA instalado) intercepte esta rota pública.
+    // Sem isso, navegadores que já visitaram o app servem um index.html em cache que pode
+    // não conhecer a rota /c/:token, fazendo o link "não abrir" fora da guia anônima.
+    (async () => {
+      try {
+        if ("serviceWorker" in navigator) {
+          const regs = await navigator.serviceWorker.getRegistrations();
+          if (regs.length > 0) {
+            await Promise.all(regs.map((r) => r.unregister()));
+            if ("caches" in window) {
+              const keys = await caches.keys();
+              await Promise.all(keys.map((k) => caches.delete(k)));
+            }
+            const reloadedKey = "__confirm_sw_reloaded__";
+            if (!sessionStorage.getItem(reloadedKey)) {
+              sessionStorage.setItem(reloadedKey, "1");
+              window.location.reload();
+              return;
+            }
+          }
+        }
+      } catch {
+        // ignora
+      }
+    })();
+
     if (!token) {
       setError("Link inválido.");
       setLoading(false);
