@@ -94,6 +94,10 @@ interface Compromisso {
   titulo?: string;
   paciente?: string;
   telefone?: string;
+  confirmation_token?: string | null;
+  status_confirmacao?: string | null;
+  confirmado_em?: string | null;
+  confirmado_via?: string | null;
   lead?: {
     name: string;
     phone?: string;
