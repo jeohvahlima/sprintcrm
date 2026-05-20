@@ -6991,7 +6991,7 @@ function Conversas() {
               const profLinha = profSel ? `👨‍⚕️ *Profissional:* ${profSel.nome}${profSel.especialidade ? ` (${profSel.especialidade})` : ''}\n` : '';
               const empresaLinha = meetingCompanyNome ? `🏢 *Empresa:* ${meetingCompanyNome}\n` : '';
               const confirmToken = (compromisso as any)?.confirmation_token;
-              const linkConfirmacao = confirmToken ? `${window.location.origin}/c/${confirmToken}` : '';
+              const linkConfirmacao = confirmToken ? `https://app.growos.online/c/${confirmToken}` : '';
               const blocoConfirmacao = linkConfirmacao
                 ? `\n👉 *Confirme seu agendamento clicando no link abaixo:*\n${linkConfirmacao}\n\n`
                 : '';

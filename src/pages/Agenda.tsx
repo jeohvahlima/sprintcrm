@@ -1648,7 +1648,7 @@ export default function Agenda() {
                 : '';
               const empresaLinha = companyNome ? `🏢 *Empresa:* ${companyNome}\n` : '';
               const confirmToken = (compromisso as any)?.confirmation_token;
-              const linkConfirmacao = confirmToken ? `${window.location.origin}/c/${confirmToken}` : '';
+              const linkConfirmacao = confirmToken ? `https://app.growos.online/c/${confirmToken}` : '';
               const blocoConfirmacao = linkConfirmacao
                 ? `\n👉 *Confirme seu agendamento clicando no link abaixo:*\n${linkConfirmacao}\n\n`
                 : '';
@@ -2241,7 +2241,7 @@ export default function Agenda() {
       toast.error("Este compromisso ainda não possui link de confirmação");
       return;
     }
-    const url = `${window.location.origin}/c/${token}`;
+    const url = `https://app.growos.online/c/${token}`;
     try {
       await navigator.clipboard.writeText(url);
       toast.success("Link de confirmação copiado!");
