@@ -21,6 +21,9 @@ verify_jwt = true
 [functions.api-waze-agenda]
 verify_jwt = false
 
+[functions.notificar-confirmacao-compromisso]
+verify_jwt = false
+
 [functions.enviar-whatsapp]
 verify_jwt = true
 

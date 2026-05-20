@@ -74,11 +74,20 @@ export default function ConfirmarCompromisso() {
       "confirmar_compromisso_by_token",
       { _token: token, _acao: acao }
     );
-    setActing(false);
     if (rpcError || !(resp as any)?.success) {
+      setActing(false);
       toast.error("Erro ao registrar resposta. Tente novamente.");
       return;
     }
+    // Dispara WhatsApp real ao cliente (não bloqueia UI se falhar)
+    try {
+      await supabase.functions.invoke("notificar-confirmacao-compromisso", {
+        body: { token, acao },
+      });
+    } catch (e) {
+      console.warn("Falha ao notificar via WhatsApp:", e);
+    }
+    setActing(false);
     setResultado(acao === "confirmar" ? "confirmado" : "recusado");
   };
 
