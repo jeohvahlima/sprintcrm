@@ -1486,91 +1486,69 @@ export default function Agenda() {
             // 🛡️ Guard: se a janela do lembrete já passou (ou está em até 2 min),
             // não cria — a mensagem de confirmação acabou de ser enviada e o
             // lembrete viraria mensagem duplicada imediata para o cliente.
-            if (dataEnvio.getTime() <= Date.now() + 2 * 60 * 1000) {
+            const pularLembretePrincipal = dataEnvio.getTime() <= Date.now() + 2 * 60 * 1000;
+            if (pularLembretePrincipal) {
               console.log('⏭️ [LEMBRETE] Pulado: data_envio já passou ou está muito próxima', {
                 dataEnvio: dataEnvio.toISOString(),
                 agora: new Date().toISOString()
               });
-              // Sai do bloco de criação do lembrete principal
-              // (lembretes antecipados configurados continuam abaixo se houver)
-              // eslint-disable-next-line no-var
-              var __pularLembrete = true as boolean;
-            }
-
-            // Preparar dados do lembrete - usar NUMERIC para horas_antecedencia
-            const lembreteData = {
-              compromisso_id: compromisso.id,
-              canal: 'whatsapp',
-              horas_antecedencia: tempoAntecedenciaDecimal,
-              // NUMERIC aceita decimais
-              mensagem: mensagemLembrete,
-              status_envio: 'pendente',
-              data_envio: dataEnvio.toISOString(),
-              destinatario: formData.destinatario_lembrete || 'lead',
-              telefone_responsavel: leadSelecionado?.phone || leadSelecionado?.telefone || null,
-              company_id: userRole.company_id
-            };
-            console.log('📝 [LEMBRETE] Dados do lembrete:', {
-              compromisso_id: lembreteData.compromisso_id,
-              data_envio: lembreteData.data_envio,
-              horas_antecedencia: lembreteData.horas_antecedencia,
-              horas_antecedencia_tipo: typeof lembreteData.horas_antecedencia,
-              destinatario: lembreteData.destinatario,
-              data_compromisso: dataHoraInicio.toISOString()
-            });
-
-            // Criar lembrete de forma síncrona e garantida
-            let lembreteCriado = null;
-            let lembreteError = null;
-
-            // Tentar inserir com valor decimal
-            const resultado = await supabase.from('lembretes').insert(lembreteData).select().single();
-            lembreteCriado = resultado.data;
-            lembreteError = resultado.error;
-
-            // Se erro for de tipo INTEGER, tentar novamente arredondando para inteiro (fallback temporário)
-            if (lembreteError && (lembreteError.message?.includes('integer') || lembreteError.message?.includes('INTEGER'))) {
-              console.warn('⚠️ [LEMBRETE] Erro de tipo INTEGER detectado, tentando com valor arredondado (fallback)...');
-
-              // Criar novo objeto com valor arredondado para inteiro (horas completas)
-              const lembreteDataFallback = {
-                ...lembreteData,
-                horas_antecedencia: Math.round(tempoAntecedenciaDecimal) || 1 // Arredondar para horas completas
-              };
-
-              // Recalcular data de envio com valor arredondado
-              const dataEnvioFallback = new Date(dataHoraInicio);
-              dataEnvioFallback.setTime(dataEnvioFallback.getTime() - lembreteDataFallback.horas_antecedencia * 60 * 60 * 1000);
-              lembreteDataFallback.data_envio = dataEnvioFallback.toISOString();
-              console.log('🔄 [LEMBRETE] Tentando novamente com valor arredondado:', lembreteDataFallback.horas_antecedencia);
-              const retryResult = await supabase.from('lembretes').insert(lembreteDataFallback).select().single();
-              lembreteCriado = retryResult.data;
-              lembreteError = retryResult.error;
-              if (!lembreteError) {
-                console.log('✅ [LEMBRETE] Lembrete criado com valor arredondado (fallback temporário)');
-                toast.warning(`Lembrete criado com ${lembreteDataFallback.horas_antecedencia} hora(s) de antecedência (arredondado). Para usar minutos, execute a migração SQL.`, {
-                  duration: 8000
-                });
-              }
-            }
-            if (lembreteError) {
-              console.error('❌ [LEMBRETE] Erro ao criar lembrete:', lembreteError);
-              console.error('❌ [LEMBRETE] Dados que causaram erro:', {
-                compromisso_id: lembreteData.compromisso_id,
-                horas_antecedencia: lembreteData.horas_antecedencia,
-                tipo_horas_antecedencia: typeof lembreteData.horas_antecedencia,
-                data_envio: lembreteData.data_envio,
-                erro_completo: JSON.stringify(lembreteError, null, 2)
-              });
-              toast.error(`Erro ao criar lembrete. Execute o SQL em APLICAR_MIGRACAO_LEMBRETES.sql no Supabase Dashboard para corrigir.`, {
-                duration: 10000
-              });
             } else {
-              console.log('✅ [LEMBRETE] Lembrete criado automaticamente e sincronizado:', lembreteCriado?.id);
-              console.log('📅 [LEMBRETE] Data de envio calculada:', dataEnvio.toISOString());
-              console.log('📅 [LEMBRETE] Data do compromisso:', dataHoraInicio.toISOString());
-              console.log('⏰ [LEMBRETE] Antecedência:', tempoAntecedenciaDecimal, 'horas');
-              console.log('🔗 [LEMBRETE] Vinculado ao compromisso:', compromisso.id);
+              // Preparar dados do lembrete - usar NUMERIC para horas_antecedencia
+              const lembreteData = {
+                compromisso_id: compromisso.id,
+                canal: 'whatsapp',
+                horas_antecedencia: tempoAntecedenciaDecimal,
+                mensagem: mensagemLembrete,
+                status_envio: 'pendente',
+                data_envio: dataEnvio.toISOString(),
+                destinatario: formData.destinatario_lembrete || 'lead',
+                telefone_responsavel: leadSelecionado?.phone || leadSelecionado?.telefone || null,
+                company_id: userRole.company_id
+              };
+              console.log('📝 [LEMBRETE] Dados do lembrete:', {
+                compromisso_id: lembreteData.compromisso_id,
+                data_envio: lembreteData.data_envio,
+                horas_antecedencia: lembreteData.horas_antecedencia,
+                destinatario: lembreteData.destinatario,
+                data_compromisso: dataHoraInicio.toISOString()
+              });
+
+              // Criar lembrete de forma síncrona e garantida
+              let lembreteCriado = null;
+              let lembreteError = null;
+
+              const resultado = await supabase.from('lembretes').insert(lembreteData).select().single();
+              lembreteCriado = resultado.data;
+              lembreteError = resultado.error;
+
+              if (lembreteError && (lembreteError.message?.includes('integer') || lembreteError.message?.includes('INTEGER'))) {
+                console.warn('⚠️ [LEMBRETE] Erro de tipo INTEGER detectado, tentando com valor arredondado (fallback)...');
+                const lembreteDataFallback = {
+                  ...lembreteData,
+                  horas_antecedencia: Math.round(tempoAntecedenciaDecimal) || 1
+                };
+                const dataEnvioFallback = new Date(dataHoraInicio);
+                dataEnvioFallback.setTime(dataEnvioFallback.getTime() - lembreteDataFallback.horas_antecedencia * 60 * 60 * 1000);
+                lembreteDataFallback.data_envio = dataEnvioFallback.toISOString();
+                // Reaplica o guard ao valor arredondado
+                if (dataEnvioFallback.getTime() > Date.now() + 2 * 60 * 1000) {
+                  const retryResult = await supabase.from('lembretes').insert(lembreteDataFallback).select().single();
+                  lembreteCriado = retryResult.data;
+                  lembreteError = retryResult.error;
+                  if (!lembreteError) {
+                    toast.warning(`Lembrete criado com ${lembreteDataFallback.horas_antecedencia} hora(s) de antecedência (arredondado).`, { duration: 8000 });
+                  }
+                } else {
+                  console.log('⏭️ [LEMBRETE] Fallback também pulado: já passou');
+                  lembreteError = null;
+                }
+              }
+              if (lembreteError) {
+                console.error('❌ [LEMBRETE] Erro ao criar lembrete:', lembreteError);
+                toast.error(`Erro ao criar lembrete.`, { duration: 10000 });
+              } else if (lembreteCriado) {
+                console.log('✅ [LEMBRETE] Lembrete criado automaticamente:', lembreteCriado?.id);
+              }
             }
 
             // 🔔 Lembretes ANTECIPADOS configurados pelo usuário (mesmo padrão do módulo Bate-papo)
