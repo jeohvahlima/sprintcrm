@@ -33,17 +33,19 @@ function startsWithForeignCountryCode(digits: string): boolean {
 }
 
 function ensureBrazilMobileNinth(digits: string): string {
-  // Espera-se: 55 + DDD(2) + numero. Mobile BR exige 9 inicial após o DDD.
-  // Casos: 55 + 10 dígitos (DDD + 8) → mobile antigo, inserir 9
-  //         55 + 11 dígitos (DDD + 9 + 8) → já correto
+  // Espera-se: 55 + DDD(2) + numero.
+  // ⚠️ IMPORTANTE: Apenas DDDs 11-28 (SP/RJ/MG/ES) exigem o "9" obrigatório no WhatsApp.
+  // Para os demais DDDs (Nordeste, Norte, Centro-Oeste, Sul), o JID do WhatsApp
+  // normalmente NÃO possui o 9 — adicionar o 9 gera um número inexistente e
+  // a mensagem é aceita pela Evolution (200 OK) mas nunca entregue.
   if (!digits.startsWith('55')) return digits;
   const rest = digits.substring(2);
-  if (rest.length !== 10) return digits; // 11 já está ok, outros tamanhos não tocamos
-  const ddd = rest.substring(0, 2);
+  if (rest.length !== 10) return digits; // 11 já tem 9; outros tamanhos não mexemos
+  const dddNum = parseInt(rest.substring(0, 2), 10);
+  if (!(dddNum >= 11 && dddNum <= 28)) return digits; // mantém sem 9 para DDDs ≥ 30
   const localFirst = rest.charAt(2);
-  // DDDs válidos BR: 11-99. Mobile inicia com 6,7,8,9 após o DDD.
-  if (/^[1-9][1-9]$/.test(ddd) && /[6-9]/.test(localFirst)) {
-    return `55${ddd}9${rest.substring(2)}`;
+  if (/[6-9]/.test(localFirst)) {
+    return `55${rest.substring(0, 2)}9${rest.substring(2)}`;
   }
   return digits;
 }
