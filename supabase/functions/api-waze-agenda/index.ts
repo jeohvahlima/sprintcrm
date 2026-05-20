@@ -481,20 +481,26 @@ Deno.serve(async (req) => {
             }
 
             // Montar mensagem com informações completas
-            let mensagemConfirmacao = `✅ *Agendamento Confirmado*\n\n` +
-              `Olá ${nomeContato}! Seu agendamento foi confirmado com sucesso.\n\n` +
+            let mensagemConfirmacao = `✅ *Compromisso Agendado!*\n\n` +
+              `Olá ${nomeContato}! Seu agendamento foi registrado com sucesso.\n\n` +
               `📅 *Data:* ${dataFormatada}\n` +
               `⏰ *Horário:* ${horaFormatada}\n` +
               `📋 *Serviço:* ${tipoServicoFormatado}\n` +
-              `✅ *Status:* Agendado\n`
+              `⏳ *Status:* Aguardando sua confirmação\n`
             
             // Adicionar observações se existir
             if (observacoes?.trim()) {
               mensagemConfirmacao += `📝 *Observações:* ${observacoes}\n`
             }
-            
-            mensagemConfirmacao += `\nAguardamos você no dia e horário agendados!\n\n` +
-              `_Esta é uma confirmação automática do seu agendamento._`
+
+            // Link público de confirmação
+            const appBaseUrl = (Deno.env.get('PUBLIC_APP_URL') || 'https://app.wazecrm.online').replace(/\/$/, '')
+            const confirmToken = (novoCompromisso as any)?.confirmation_token
+            if (confirmToken) {
+              mensagemConfirmacao += `\n👉 *Confirme seu agendamento clicando no link abaixo:*\n${appBaseUrl}/c/${confirmToken}\n`
+            }
+
+            mensagemConfirmacao += `\n_Esta é uma mensagem automática do seu agendamento._`
 
             console.log('[api-waze-agenda] Enviando confirmação para:', telefoneNormalizado)
 

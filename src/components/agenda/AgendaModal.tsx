@@ -472,15 +472,20 @@ export function AgendaModal({ open, onOpenChange, lead, onAgendamentoCriado }: A
             const tipoServicoFormatado = formData.tipo_servico?.trim()
               ? formData.tipo_servico.charAt(0).toUpperCase() + formData.tipo_servico.slice(1)
               : null;
-            const mensagemConfirmacao = `✅ *Compromisso Confirmado!*\\\\n\\\\n` +
+            const confirmToken = (compromisso as any)?.confirmation_token;
+            const linkConfirmacao = confirmToken ? `${window.location.origin}/c/${confirmToken}` : '';
+            const blocoConfirmacao = linkConfirmacao
+              ? `\\\\n👉 *Confirme seu agendamento clicando no link abaixo:*\\\\n${linkConfirmacao}\\\\n`
+              : '';
+            const mensagemConfirmacao = `✅ *Compromisso Agendado!*\\\\n\\\\n` +
               `Olá ${lead.nome}! Seu compromisso foi agendado com sucesso.\\\\n\\\\n` +
               `📅 *Data:* ${format(dataHoraInicio, "dd/MM/yyyy", { locale: ptBR })}\\\\n` +
               `🕐 *Horário:* ${format(dataHoraInicio, "HH:mm", { locale: ptBR })} às ${format(dataHoraFim, "HH:mm", { locale: ptBR })}\\\\n` +
               (tipoServicoFormatado ? `📋 *Tipo:* ${tipoServicoFormatado}\\\\n` : '') +
               (formData.descricao || formData.observacoes ? `\\\\n💬 *Observações:*\\\\n${formData.descricao || ''}${formData.descricao && formData.observacoes ? '\\\\n' : ''}${formData.observacoes || ''}\\\\n` : '') +
-              `\\\\n✅ *Status:* Agendado\\\\n\\\\n` +
-              `Aguardamos você no dia e horário agendados!\\\\n\\\\n` +
-              `_Esta é uma confirmação automática do seu agendamento._`;
+              `\\\\n⏳ *Status:* Aguardando sua confirmação\\\\n` +
+              blocoConfirmacao +
+              `\\\\n_Esta é uma mensagem automática do seu agendamento._`;
 
             // Enviar confirmação via WhatsApp
             const { data: whatsappResponse, error: whatsappError } = await supabase.functions.invoke('enviar-whatsapp', {

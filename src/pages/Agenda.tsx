@@ -1647,7 +1647,12 @@ export default function Agenda() {
                 ? `👨‍⚕️ *Profissional:* ${profissionalSel.nome}${profissionalSel.especialidade ? ` (${profissionalSel.especialidade})` : ''}\n`
                 : '';
               const empresaLinha = companyNome ? `🏢 *Empresa:* ${companyNome}\n` : '';
-              const mensagemConfirmacao = `✅ *Compromisso Confirmado!*\n\n` + `Olá ${leadSelecionado.name}! Seu compromisso foi agendado com sucesso.\n\n` + empresaLinha + `📅 *Data:* ${format(dataHoraInicio, "dd/MM/yyyy", {
+              const confirmToken = (compromisso as any)?.confirmation_token;
+              const linkConfirmacao = confirmToken ? `${window.location.origin}/c/${confirmToken}` : '';
+              const blocoConfirmacao = linkConfirmacao
+                ? `\n👉 *Confirme seu agendamento clicando no link abaixo:*\n${linkConfirmacao}\n\n`
+                : '';
+              const mensagemConfirmacao = `✅ *Compromisso Agendado!*\n\n` + `Olá ${leadSelecionado.name}! Seu compromisso foi agendado com sucesso.\n\n` + empresaLinha + `📅 *Data:* ${format(dataHoraInicio, "dd/MM/yyyy", {
                 locale: ptBR
               })}\n` + `🕐 *Horário:* ${format(dataHoraInicio, "HH:mm", {
                 locale: ptBR
@@ -1655,7 +1660,7 @@ export default function Agenda() {
                 locale: ptBR
               })}\n` + (tipoServicoFormatado ? `📋 *Tipo:* ${tipoServicoFormatado}\n` : '') + profissionalLinha + (
               // Título removido - coluna não existe no banco
-              formData.observacoes ? `\n💬 *Observações:*\n${formData.observacoes}\n` : '') + `\n✅ *Status:* Agendado\n\n` + `Aguardamos você no dia e horário agendados!\n\n` + `_Esta é uma confirmação automática do seu agendamento._`;
+              formData.observacoes ? `\n💬 *Observações:*\n${formData.observacoes}\n` : '') + `\n⏳ *Status:* Aguardando sua confirmação\n` + blocoConfirmacao + `_Esta é uma mensagem automática do seu agendamento._`;
               console.log('📱 [CONFIRMAÇÃO] Enviando mensagem de confirmação imediata...');
               const {
                 error: confirmacaoError
