@@ -94,6 +94,10 @@ interface Compromisso {
   titulo?: string;
   paciente?: string;
   telefone?: string;
+  confirmation_token?: string | null;
+  status_confirmacao?: string | null;
+  confirmado_em?: string | null;
+  confirmado_via?: string | null;
   lead?: {
     name: string;
     phone?: string;
@@ -2217,6 +2221,29 @@ export default function Agenda() {
     };
     return badges[status] || badges.agendado;
   };
+  const getConfirmacaoBadge = (statusConfirmacao?: string | null) => {
+    const sc = statusConfirmacao || 'pendente';
+    if (sc === 'confirmado') {
+      return <Badge className="bg-emerald-600 hover:bg-emerald-600"><CheckCircle2 className="h-3 w-3 mr-1" /> Confirmado</Badge>;
+    }
+    if (sc === 'recusado') {
+      return <Badge className="bg-rose-600 hover:bg-rose-600"><XCircle className="h-3 w-3 mr-1" /> Recusado</Badge>;
+    }
+    return <Badge variant="outline" className="border-amber-500 text-amber-600"><Clock className="h-3 w-3 mr-1" /> Aguardando confirmação</Badge>;
+  };
+  const copiarLinkConfirmacao = async (token?: string | null) => {
+    if (!token) {
+      toast.error("Este compromisso ainda não possui link de confirmação");
+      return;
+    }
+    const url = `${window.location.origin}/c/${token}`;
+    try {
+      await navigator.clipboard.writeText(url);
+      toast.success("Link de confirmação copiado!");
+    } catch {
+      toast.error("Não foi possível copiar o link");
+    }
+  };
   const reenviarLembrete = async (lembreteId: string) => {
     try {
       const {
@@ -3191,6 +3218,7 @@ export default function Agenda() {
                               <div className="flex items-center gap-2 flex-wrap">
                                 <span className="font-medium text-base">{compromisso.titulo || compromisso.tipo_servico}</span>
                                 {getStatusBadge(compromisso.status)}
+                                {compromisso.status === 'agendado' && getConfirmacaoBadge(compromisso.status_confirmacao)}
                               </div>
                               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                                 <CalendarDays className="h-4 w-4" />
@@ -3265,6 +3293,9 @@ export default function Agenda() {
                                 </p>}
                             </div>
                             <div className="flex gap-1">
+                              <Button size="sm" variant="ghost" onClick={() => copiarLinkConfirmacao(compromisso.confirmation_token)} title="Copiar link de confirmação">
+                                <Link2 className="h-4 w-4" />
+                              </Button>
                               <Button size="sm" variant="ghost" onClick={() => duplicarCompromisso(compromisso)} title="Duplicar compromisso">
                                 <Copy className="h-4 w-4" />
                               </Button>
