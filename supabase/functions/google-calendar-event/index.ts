@@ -23,14 +23,20 @@ Deno.serve(async (req) => {
     if (!action || !compromisso_id) throw new Error("action and compromisso_id required");
 
     const authHeader = req.headers.get("Authorization") ?? "";
-    const supabase = createClient(
+    const userClient = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_ANON_KEY")!,
       { global: { headers: { Authorization: authHeader } } }
     );
-    const { data: userData, error: userErr } = await supabase.auth.getUser();
+    const { data: userData, error: userErr } = await userClient.auth.getUser();
     if (userErr || !userData.user) throw new Error("Not authenticated");
     const userId = userData.user.id;
+
+    // Cliente com service_role para bypassar RLS nos joins (lead/agenda/profissional)
+    const supabase = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+    );
 
     // Buscar compromisso + lead + agenda + profissional
     const { data: comp, error: compErr } = await supabase
@@ -43,7 +49,11 @@ Deno.serve(async (req) => {
       `)
       .eq("id", compromisso_id)
       .maybeSingle();
-    if (compErr || !comp) throw new Error("Compromisso not found");
+    if (compErr) {
+      console.error("[gcal-event] compErr:", compErr);
+      throw new Error(`Compromisso query failed: ${compErr.message}`);
+    }
+    if (!comp) throw new Error(`Compromisso not found (id=${compromisso_id})`);
 
     const { access_token, calendar_id } = await getValidAccessToken(supabase, userId);
 
