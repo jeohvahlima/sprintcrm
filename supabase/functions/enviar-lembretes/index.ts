@@ -782,6 +782,10 @@ serve(async (req) => {
     try {
       const agoraISO = new Date().toISOString();
       const limiteISO = new Date(Date.now() + 3 * 60 * 60 * 1000).toISOString();
+      // 🛡️ Só envia cobrança para compromissos criados há pelo menos 15 min.
+      // Isso evita disparar logo após o usuário criar o agendamento (a mensagem
+      // de confirmação inicial acabou de ir e o lembrete de cobrança viraria spam).
+      const criadoAntesISO = new Date(Date.now() - 15 * 60 * 1000).toISOString();
       const appBaseUrl = (Deno.env.get('PUBLIC_APP_URL') || 'https://app.growos.online').replace(/\/$/, '');
 
       const { data: pendentes } = await supabase
@@ -791,6 +795,7 @@ serve(async (req) => {
         .is('cobranca_enviada_em', null)
         .gte('data_hora_inicio', agoraISO)
         .lte('data_hora_inicio', limiteISO)
+        .lte('created_at', criadoAntesISO)
         .limit(50);
 
       for (const c of pendentes || []) {
