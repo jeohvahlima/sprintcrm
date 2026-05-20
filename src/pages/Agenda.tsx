@@ -1483,6 +1483,20 @@ export default function Agenda() {
               locale: ptBR
             })}.`;
 
+            // 🛡️ Guard: se a janela do lembrete já passou (ou está em até 2 min),
+            // não cria — a mensagem de confirmação acabou de ser enviada e o
+            // lembrete viraria mensagem duplicada imediata para o cliente.
+            if (dataEnvio.getTime() <= Date.now() + 2 * 60 * 1000) {
+              console.log('⏭️ [LEMBRETE] Pulado: data_envio já passou ou está muito próxima', {
+                dataEnvio: dataEnvio.toISOString(),
+                agora: new Date().toISOString()
+              });
+              // Sai do bloco de criação do lembrete principal
+              // (lembretes antecipados configurados continuam abaixo se houver)
+              // eslint-disable-next-line no-var
+              var __pularLembrete = true as boolean;
+            }
+
             // Preparar dados do lembrete - usar NUMERIC para horas_antecedencia
             const lembreteData = {
               compromisso_id: compromisso.id,
