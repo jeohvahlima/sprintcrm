@@ -1,101 +1,87 @@
-# Confirmação de Compromisso via Link Público
+# Evolução da Confirmação de Compromissos
 
-Hoje o lembrete é apenas texto. Vamos transformar em uma experiência clicável: o lead recebe a mensagem com um **link único** que abre uma página com botões **"Confirmar"** / **"Não confirmar"** (igual ao exemplo da Revitalle), e o status volta automaticamente para o CRM e a agenda.
+Implementar 5 melhorias na página `/c/:token` e no fluxo de lembretes.
 
-## O que será criado
+## 1. Reenvio inteligente (item 3)
 
-### 1. Página pública de confirmação `/c/:token`
+Quando o cron `enviar-lembretes` rodar, além dos lembretes já configurados, dispara um **segundo lembrete de cobrança** se:
+- Faltam ≤ `X` horas para o compromisso (padrão: 3h)
+- `status_confirmacao = 'pendente'`
+- Ainda não foi enviado lembrete de cobrança (nova coluna `cobranca_enviada_em`)
 
-Rota pública (sem login) que mostra:
+Mensagem: "Olá {nome}, ainda não recebemos sua confirmação para {data} às {hora}. 👉 {link}"
 
-- Logo da empresa
-- Nome do lead, data/hora, profissional, serviço
-- Botões **Confirmar** e **Não confirmar**
-- Tela final: "Seu agendamento foi confirmado!" / "Recebemos sua resposta."
+## 2. Cancelar lembretes futuros ao confirmar (item 8)
 
-Visual no padrão do site público existente (mesma vibe da automação da aba Site).
+Quando o lead clica em "Confirmar" na página pública, a função `confirmar_compromisso_by_token` marca todos os `lembretes_agendados` futuros do compromisso como `cancelado`, evitando spam.
 
-### 2. Token único por compromisso
+## 3. Postar mensagem no chat do lead (item 4)
 
-Nova coluna `confirmation_token` (uuid) em `compromissos`, gerado quando o compromisso é criado. O link enviado vira:
+Após confirmar/recusar, dispara edge function `notificar-confirmacao-compromisso` que:
+- Insere mensagem no chat do lead: "✅ Cliente confirmou o agendamento via link às 14:32" (ou ❌ recusou)
+- Usa `mensagens` table com `tipo='sistema'` e `from_me=true`
 
-```
-https://app.growos.online/c/{token}
-```
+## 4. Notificação no CRM para o responsável (item 5)
 
-### 3. Mensagem do lembrete clicável
+Mesma edge function cria registro em `notifications` para o `responsavel_id` do compromisso:
+- Título: "Agendamento confirmado" / "Agendamento recusado"
+- Mensagem com nome do lead e horário
+- Link para a Agenda
 
-O template padrão de lembrete passa a incluir o link curto. Variáveis novas:
+## 5. Reagendamento pelo próprio lead (item 9)
 
-- `{link_confirmacao}` — URL completa
-- `{botao_confirmar}` — link "✅ Confirmar"
-- `{botao_recusar}` — link "❌ Cancelar"
-
-Exemplo gerado:
-
-```
-Olá {nome}, confirme seu agendamento para {data} às {hora}.
-👉 {link_confirmacao}
-```
-
-Para conexões **Meta Oficial** podemos opcionalmente enviar como **mensagem interativa com botões nativos** (Sim/Não) — fallback para texto+link quando for Evolution API.
-
-### 4. Edge Function `confirmar-compromisso`
-
-Pública (sem JWT). Recebe `{ token, acao: "confirmar" | "recusar" }` e:
-
-- Valida token
-- Atualiza `compromissos.status_confirmacao` (`confirmado` / `recusado` / `pendente`)
-- Grava `confirmado_em` e `confirmado_via` (whatsapp/link)
-- Cancela lembretes futuros desse compromisso se confirmado
-- Cria notificação no CRM para o responsável
-- Posta mensagem automática no chat do lead ("Cliente confirmou via link")
-
-### 5. UI da Agenda
-
-- Badge de status no card do compromisso: 🟡 Aguardando · 🟢 Confirmado · 🔴 Recusado
-- Filtro por status de confirmação
-- Botão "Copiar link de confirmação" no compromisso
-
-### 6. Configurações do template (por empresa)
-
-Em Configurações → Agenda/Lembretes:
-
-- Editor do template com preview
-- Toggle "Incluir link de confirmação"
-- Toggle "Usar botões interativos (Meta Oficial)"
-- Personalização da página: logo, cor primária, texto de boas-vindas
+Na página `/c/:token`, adicionar terceiro botão **"Quero remarcar"** que:
+- Abre um seletor de horários disponíveis (próximos 14 dias) consultando RPC pública `get_horarios_disponiveis(_token, _data_inicio, _data_fim)`
+- Respeita horário comercial da empresa, profissional do compromisso e blocos já ocupados
+- Ao escolher novo horário, chama RPC `reagendar_compromisso_by_token(_token, _nova_data)`:
+  - Atualiza `data_hora_inicio` / `data_hora_fim` (preserva duração)
+  - Seta `status_confirmacao='confirmado'`, `confirmado_via='link_reagendamento'`
+  - Cancela lembretes futuros e cria novos para a nova data
+  - Notifica responsável: "Lead remarcou para {nova data}"
+- Tela final: "Reagendamento confirmado! Te esperamos em {nova data}"
 
 ## Detalhes técnicos
 
-**Banco (migração):**
+**Migração SQL (`supabase/migrations/...`):**
 
 ```sql
-alter table compromissos
-  add column confirmation_token uuid unique default gen_random_uuid(),
-  add column status_confirmacao text default 'pendente',
-  add column confirmado_em timestamptz,
-  add column confirmado_via text;
+alter table compromissos add column if not exists cobranca_enviada_em timestamptz;
 
-create index on compromissos(confirmation_token);
+-- Função: cancela lembretes futuros de um compromisso
+create or replace function public.cancelar_lembretes_futuros(_compromisso_id uuid)
+returns void language sql security definer set search_path = public as $$
+  update lembretes_agendados
+     set status = 'cancelado'
+   where compromisso_id = _compromisso_id
+     and status = 'pendente'
+     and data_envio > now();
+$$;
+
+-- Atualiza confirmar_compromisso_by_token para:
+-- 1) cancelar lembretes futuros se confirmado
+-- 2) inserir notificação no CRM
+-- 3) inserir mensagem-sistema no chat do lead
+
+-- Nova RPC pública: get_horarios_disponiveis(_token, _data_inicio, _data_fim)
+-- Retorna slots de 30min livres respeitando horário comercial e ocupação
+
+-- Nova RPC pública: reagendar_compromisso_by_token(_token, _nova_data)
+-- Atualiza compromisso, cria lembretes novos, notifica responsável
 ```
 
-Trigger para popular `confirmation_token` em registros antigos.
+**Edge functions:**
 
-**RLS:** policy de SELECT pública apenas via RPC `get_compromisso_by_token(token)` (SECURITY DEFINER) que retorna só os campos seguros (nome do lead, data, serviço, profissional, logo da empresa). Nada de telefone/dados sensíveis.
+- `enviar-lembretes/index.ts`: adicionar loop que busca compromissos `pendente` com `data_hora_inicio` entre `now()` e `now()+3h` e `cobranca_enviada_em IS NULL`. Envia mensagem e marca `cobranca_enviada_em`.
 
-**Rota frontend:** `src/pages/ConfirmarCompromisso.tsx` adicionada em `App.tsx` como rota pública.
+**Frontend (`src/pages/ConfirmarCompromisso.tsx`):**
 
-**Edge function:** `supabase/functions/confirmar-compromisso/index.ts` com `verify_jwt = false` em `supabase/config.toml`.
+- Adicionar botão "Quero remarcar" abaixo dos dois atuais
+- Novo estado `view: 'inicial' | 'remarcar' | 'sucesso-remarcacao'`
+- Grid de horários disponíveis (data → slots), 2 colunas no mobile
+- Loading e tratamento de erro
 
-**Integração com `enviar-lembretes`:** interpolar `{link_confirmacao}` antes de enviar, usando `VITE_APP_URL` (ou domínio configurado da empresa).
+## Fora de escopo
 
-**Reenvio inteligente:** se faltar X horas e ainda estiver `pendente`, dispara segundo lembrete ("Você ainda não confirmou..."). Configurável.
-
-## Fora de escopo desta entrega
-
-- Reagendamento pelo próprio lead (pode ser fase 2)
-- Pagamento/sinal pela página
-- Multi-idioma da página pública
-
-Posso seguir com a implementação?
+- Edição de duração / observações pelo lead
+- Notificação por email/push (só in-app + WhatsApp)
+- Horários disponíveis multi-profissional (usa só o profissional original)

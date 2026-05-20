@@ -3,7 +3,16 @@ import { useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { CheckCircle2, XCircle, CalendarClock, User, Stethoscope, Loader2 } from "lucide-react";
+import {
+  CheckCircle2,
+  XCircle,
+  CalendarClock,
+  User,
+  Stethoscope,
+  Loader2,
+  CalendarSync,
+  ArrowLeft,
+} from "lucide-react";
 import { toast } from "sonner";
 
 interface CompromissoData {
@@ -19,6 +28,8 @@ interface CompromissoData {
   empresa_nome: string;
 }
 
+type ViewMode = "inicial" | "remarcar" | "sucesso-remarcacao";
+
 export default function ConfirmarCompromisso() {
   const { token } = useParams<{ token: string }>();
   const [loading, setLoading] = useState(true);
@@ -26,6 +37,10 @@ export default function ConfirmarCompromisso() {
   const [data, setData] = useState<CompromissoData | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [resultado, setResultado] = useState<"confirmado" | "recusado" | null>(null);
+  const [view, setView] = useState<ViewMode>("inicial");
+  const [slots, setSlots] = useState<string[]>([]);
+  const [loadingSlots, setLoadingSlots] = useState(false);
+  const [novoHorarioConfirmado, setNovoHorarioConfirmado] = useState<string | null>(null);
 
   useEffect(() => {
     document.title = "Confirmar Agendamento";
@@ -67,6 +82,42 @@ export default function ConfirmarCompromisso() {
     setResultado(acao === "confirmar" ? "confirmado" : "recusado");
   };
 
+  const abrirReagendamento = async () => {
+    if (!token) return;
+    setView("remarcar");
+    setLoadingSlots(true);
+    const hoje = new Date();
+    const dataInicio = hoje.toISOString().slice(0, 10);
+    const { data: rows, error } = await supabase.rpc("get_horarios_disponiveis_by_token", {
+      _token: token,
+      _data_inicio: dataInicio,
+      _dias: 14,
+    });
+    setLoadingSlots(false);
+    if (error) {
+      toast.error("Erro ao buscar horários disponíveis.");
+      return;
+    }
+    const ss = (rows as any[] || []).map((r) => r.slot).filter(Boolean);
+    setSlots(ss);
+  };
+
+  const handleReagendar = async (slot: string) => {
+    if (!token) return;
+    setActing(true);
+    const { data: resp, error } = await supabase.rpc("reagendar_compromisso_by_token", {
+      _token: token,
+      _nova_data: slot,
+    });
+    setActing(false);
+    if (error || !(resp as any)?.success) {
+      toast.error((resp as any)?.error || "Erro ao remarcar. Tente outro horário.");
+      return;
+    }
+    setNovoHorarioConfirmado(slot);
+    setView("sucesso-remarcacao");
+  };
+
   const formatDateTime = (iso: string) => {
     const d = new Date(iso);
     return d.toLocaleString("pt-BR", {
@@ -78,6 +129,15 @@ export default function ConfirmarCompromisso() {
     });
   };
 
+  // Agrupa slots por dia
+  const slotsPorDia: Record<string, string[]> = {};
+  for (const s of slots) {
+    const d = new Date(s);
+    const key = d.toLocaleDateString("pt-BR", { weekday: "short", day: "2-digit", month: "2-digit" });
+    if (!slotsPorDia[key]) slotsPorDia[key] = [];
+    slotsPorDia[key].push(s);
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-muted flex items-center justify-center p-4">
       <div className="w-full max-w-xl">
@@ -88,8 +148,11 @@ export default function ConfirmarCompromisso() {
           <h1 className="text-2xl font-bold text-foreground">
             {data?.empresa_nome || "Confirmação de Agendamento"}
           </h1>
-          {!resultado && (
+          {!resultado && view === "inicial" && (
             <p className="text-muted-foreground mt-1">Confirme seu agendamento abaixo</p>
+          )}
+          {view === "remarcar" && (
+            <p className="text-muted-foreground mt-1">Escolha um novo horário</p>
           )}
         </div>
 
@@ -110,7 +173,24 @@ export default function ConfirmarCompromisso() {
 
             {!loading && data && !error && (
               <>
-                {resultado === "confirmado" && (
+                {/* Tela de sucesso – reagendamento */}
+                {view === "sucesso-remarcacao" && novoHorarioConfirmado && (
+                  <div className="text-center py-8">
+                    <CheckCircle2 className="h-16 w-16 text-green-500 mx-auto mb-3" />
+                    <h2 className="text-xl font-bold text-foreground mb-1">
+                      Reagendamento confirmado!
+                    </h2>
+                    <p className="text-muted-foreground">
+                      Te esperamos em{" "}
+                      <span className="font-semibold text-foreground">
+                        {formatDateTime(novoHorarioConfirmado)}
+                      </span>
+                    </p>
+                  </div>
+                )}
+
+                {/* Confirmado / Recusado finais */}
+                {view === "inicial" && resultado === "confirmado" && (
                   <div className="text-center py-8">
                     <CheckCircle2 className="h-16 w-16 text-green-500 mx-auto mb-3" />
                     <h2 className="text-xl font-bold text-foreground mb-1">
@@ -119,8 +199,7 @@ export default function ConfirmarCompromisso() {
                     <p className="text-muted-foreground">Essa janela já pode ser fechada.</p>
                   </div>
                 )}
-
-                {resultado === "recusado" && (
+                {view === "inicial" && resultado === "recusado" && (
                   <div className="text-center py-8">
                     <XCircle className="h-16 w-16 text-destructive mx-auto mb-3" />
                     <h2 className="text-xl font-bold text-foreground mb-1">
@@ -132,7 +211,8 @@ export default function ConfirmarCompromisso() {
                   </div>
                 )}
 
-                {!resultado && (
+                {/* Tela inicial: detalhes + botões */}
+                {view === "inicial" && !resultado && (
                   <>
                     <div className="space-y-3">
                       {data.paciente && (
@@ -211,6 +291,78 @@ export default function ConfirmarCompromisso() {
                         Não confirmar
                       </Button>
                     </div>
+
+                    <Button
+                      variant="ghost"
+                      className="w-full mt-2 text-primary hover:text-primary"
+                      onClick={abrirReagendamento}
+                      disabled={acting}
+                    >
+                      <CalendarSync className="h-4 w-4 mr-1.5" />
+                      Quero remarcar para outro horário
+                    </Button>
+                  </>
+                )}
+
+                {/* Tela de reagendamento */}
+                {view === "remarcar" && (
+                  <>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setView("inicial")}
+                      className="mb-3"
+                    >
+                      <ArrowLeft className="h-4 w-4 mr-1" />
+                      Voltar
+                    </Button>
+
+                    {loadingSlots && (
+                      <div className="flex items-center justify-center py-12">
+                        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+                      </div>
+                    )}
+
+                    {!loadingSlots && slots.length === 0 && (
+                      <div className="text-center py-8">
+                        <p className="text-muted-foreground">
+                          Nenhum horário disponível nos próximos 14 dias.
+                          <br />
+                          Entre em contato com a empresa.
+                        </p>
+                      </div>
+                    )}
+
+                    {!loadingSlots && slots.length > 0 && (
+                      <div className="space-y-4 max-h-[60vh] overflow-y-auto">
+                        {Object.entries(slotsPorDia).map(([dia, listaSlots]) => (
+                          <div key={dia}>
+                            <p className="text-sm font-semibold text-foreground mb-2 capitalize">
+                              {dia}
+                            </p>
+                            <div className="grid grid-cols-3 gap-2">
+                              {listaSlots.map((s) => {
+                                const horario = new Date(s).toLocaleTimeString("pt-BR", {
+                                  hour: "2-digit",
+                                  minute: "2-digit",
+                                });
+                                return (
+                                  <Button
+                                    key={s}
+                                    variant="outline"
+                                    size="sm"
+                                    disabled={acting}
+                                    onClick={() => handleReagendar(s)}
+                                  >
+                                    {horario}
+                                  </Button>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </>
                 )}
               </>

@@ -774,7 +774,73 @@ serve(async (req) => {
       }
     }
 
-    console.log(`✅ Processamento concluído: ${totalProcessados} enviados, ${totalErros} erros`);
+    // ============================================================
+    // 🔔 REENVIO INTELIGENTE — cobrança para quem não confirmou
+    // Envia 1 mensagem extra se faltar ≤ 3h e ainda estiver pendente
+    // ============================================================
+    let cobrancasEnviadas = 0;
+    try {
+      const agoraISO = new Date().toISOString();
+      const limiteISO = new Date(Date.now() + 3 * 60 * 60 * 1000).toISOString();
+      const appBaseUrl = (Deno.env.get('PUBLIC_APP_URL') || 'https://app.growos.online').replace(/\/$/, '');
+
+      const { data: pendentes } = await supabase
+        .from('compromissos')
+        .select('id, data_hora_inicio, tipo_servico, titulo, telefone, lead_id, company_id, confirmation_token, paciente')
+        .eq('status_confirmacao', 'pendente')
+        .is('cobranca_enviada_em', null)
+        .gte('data_hora_inicio', agoraISO)
+        .lte('data_hora_inicio', limiteISO)
+        .limit(50);
+
+      for (const c of pendentes || []) {
+        if (!c.confirmation_token) continue;
+        let telefone: string | null = c.telefone || null;
+        let nome: string = c.paciente || 'Cliente';
+
+        if (c.lead_id) {
+          const { data: lead } = await supabase
+            .from('leads')
+            .select('name, phone, telefone')
+            .eq('id', c.lead_id)
+            .maybeSingle();
+          if (lead) {
+            nome = (lead as any).name || nome;
+            telefone = telefone || (lead as any).phone || (lead as any).telefone || null;
+          }
+        }
+        if (!telefone) continue;
+
+        const dataFmt = new Date(c.data_hora_inicio).toLocaleString('pt-BR', {
+          day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit', timeZone: 'America/Sao_Paulo'
+        });
+        const link = `${appBaseUrl}/c/${c.confirmation_token}`;
+        const msg = `Olá ${nome}! Ainda não recebemos sua confirmação para ${c.titulo || c.tipo_servico || 'seu agendamento'} às ${dataFmt}.\n\n👉 Confirme agora:\n${link}`;
+
+        try {
+          await supabase.functions.invoke('enviar-whatsapp', {
+            body: {
+              numero: telefone.replace(/\D/g, ''),
+              mensagem: msg,
+              company_id: c.company_id,
+            },
+          });
+          await supabase
+            .from('compromissos')
+            .update({ cobranca_enviada_em: new Date().toISOString() })
+            .eq('id', c.id);
+          cobrancasEnviadas++;
+          console.log(`📨 Cobrança enviada para ${nome} (${telefone}) - compromisso ${c.id}`);
+        } catch (errCob) {
+          console.error(`❌ Erro ao enviar cobrança ${c.id}:`, errCob);
+        }
+      }
+      console.log(`🔁 Cobranças de confirmação: ${cobrancasEnviadas} enviadas (${pendentes?.length || 0} pendentes encontrados)`);
+    } catch (errCobrancaLoop) {
+      console.error('❌ Erro no loop de cobranças:', errCobrancaLoop);
+    }
+
+    console.log(`✅ Processamento concluído: ${totalProcessados} enviados, ${totalErros} erros, ${cobrancasEnviadas} cobranças`);
 
     return new Response(
       JSON.stringify({

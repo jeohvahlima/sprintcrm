@@ -2118,6 +2118,7 @@ export type Database = {
       compromissos: {
         Row: {
           agenda_id: string | null
+          cobranca_enviada_em: string | null
           company_id: string | null
           compromisso_origem_id: string | null
           confirmado_em: string | null
@@ -2152,6 +2153,7 @@ export type Database = {
         }
         Insert: {
           agenda_id?: string | null
+          cobranca_enviada_em?: string | null
           company_id?: string | null
           compromisso_origem_id?: string | null
           confirmado_em?: string | null
@@ -2186,6 +2188,7 @@ export type Database = {
         }
         Update: {
           agenda_id?: string | null
+          cobranca_enviada_em?: string | null
           company_id?: string | null
           compromisso_origem_id?: string | null
           confirmado_em?: string | null
@@ -10665,6 +10668,12 @@ export type Database = {
         Args: { p_company_id?: string }
         Returns: Json
       }
+      get_horarios_disponiveis_by_token: {
+        Args: { _data_inicio?: string; _dias?: number; _token: string }
+        Returns: {
+          slot: string
+        }[]
+      }
       get_monthly_cost_comparison: {
         Args: { p_master_company_id: string; p_months?: number }
         Returns: {
@@ -10832,6 +10841,10 @@ export type Database = {
         Returns: undefined
       }
       purge_automation_skip_logs: { Args: never; Returns: undefined }
+      reagendar_compromisso_by_token: {
+        Args: { _nova_data: string; _token: string }
+        Returns: Json
+      }
       recalc_quest_progress: {
         Args: { p_company_id: string; p_user_id: string }
         Returns: undefined
