@@ -494,7 +494,7 @@ Deno.serve(async (req) => {
             }
 
             // Link público de confirmação
-            const appBaseUrl = (Deno.env.get('PUBLIC_APP_URL') || 'https://app.wazecrm.online').replace(/\/$/, '')
+            const appBaseUrl = (Deno.env.get('PUBLIC_APP_URL') || 'https://app.growos.online').replace(/\/$/, '')
             const confirmToken = (novoCompromisso as any)?.confirmation_token
             if (confirmToken) {
               mensagemConfirmacao += `\n👉 *Confirme seu agendamento clicando no link abaixo:*\n${appBaseUrl}/c/${confirmToken}\n`
