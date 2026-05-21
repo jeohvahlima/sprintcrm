@@ -108,7 +108,7 @@ export function ScheduleCallbackDialog({
             ) : (
               <UserPlus className="h-4 w-4 text-purple-600" />
             )}
-            {mode === "agendamento" ? "Agendar retorno" : "Salvar contato do responsável"}
+            {mode === "agendamento" ? "Retornar Call" : "Contato do Responsável"}
           </DialogTitle>
           <DialogDescription>
             {mode === "agendamento"
@@ -138,7 +138,7 @@ export function ScheduleCallbackDialog({
               onClick={() => setMode("agendamento")}
             >
               <CalendarClock className="h-3.5 w-3.5 mr-1" />
-              Agendar retorno
+              Retornar Call
             </Button>
           </div>
         </div>
