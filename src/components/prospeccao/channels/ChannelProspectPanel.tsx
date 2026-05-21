@@ -221,8 +221,10 @@ export function ChannelProspectPanel({ channel }: Props) {
   const stats = useMemo(() => {
     const total = filteredData.length;
     const marked = filteredData.filter((l: any) => l.to_prospect).length;
+    // Para Cold Call usamos a fonte global (leadStates) para refletir TODOS os
+    // contatos prospectados hoje, e não só os que estão na lista visível (200).
     const contactedToday = channel === "coldcall"
-      ? filteredData.filter((l: any) => isToday(leadStates[l.id]?.last_attempt_at || null)).length
+      ? Object.values(leadStates).filter((s) => isToday(s?.last_attempt_at || null)).length
       : filteredData.filter((l: any) => l.last_prospected_at && new Date(l.last_prospected_at).toDateString() === new Date().toDateString()).length;
     return { total, marked, contactedToday };
   }, [filteredData, channel, leadStates]);
