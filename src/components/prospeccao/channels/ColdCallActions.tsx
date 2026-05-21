@@ -17,6 +17,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { ConversaPopup } from "@/components/leads/ConversaPopup";
 import { ScriptViewerDialog } from "@/components/prospeccao/ScriptViewerDialog";
+import { ScheduleCallbackDialog, type ScheduleInfo } from "@/components/prospeccao/channels/ScheduleCallbackDialog";
 
 type Outcome = "pendente" | "prospectado" | "sem_resposta" | "oportunidade" | "agendamento" | "follow_up" | "ganho" | "descartado";
 type AttemptType =
