@@ -115,13 +115,14 @@ export function ColdCallActions({ lead, externalState, externalCompanyId, extern
     (async () => {
       const { data } = await supabase
         .from("pre_sdr_analyses" as any)
-        .select("attempts, attempts_count, outcome")
+        .select("attempts, attempts_count, outcome, schedule_info")
         .eq("company_id", companyId)
         .eq("row_key", rowKey)
         .maybeSingle();
       if (data) {
         setAttempts(Array.isArray((data as any).attempts) ? (data as any).attempts : []);
         setOutcomeState(((data as any).outcome as Outcome) || "pendente");
+        setScheduleInfo(((data as any).schedule_info as ScheduleInfo) || null);
       }
       setLoaded(true);
     })();
