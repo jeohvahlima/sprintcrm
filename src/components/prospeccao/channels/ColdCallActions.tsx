@@ -299,6 +299,56 @@ export function ColdCallActions({ lead, externalState, externalCompanyId, extern
           </span>
         )}
 
+        {outcome === "agendamento" && scheduleInfo?.callback_at && (
+          <Popover>
+            <PopoverTrigger asChild>
+              <button
+                type="button"
+                className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full border border-purple-300 text-[10px] text-purple-700 bg-purple-50 hover:bg-purple-100"
+                title="Detalhes do agendamento"
+              >
+                <CalendarClock className="h-3 w-3" />
+                <span>
+                  {new Date(scheduleInfo.callback_at).toLocaleString("pt-BR", {
+                    day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit",
+                  })}
+                </span>
+              </button>
+            </PopoverTrigger>
+            <PopoverContent align="start" className="w-72 p-3 text-xs space-y-2">
+              <div>
+                <p className="text-[10px] uppercase font-medium text-muted-foreground">Retornar em</p>
+                <p className="font-semibold text-purple-700">
+                  {new Date(scheduleInfo.callback_at).toLocaleString("pt-BR")}
+                </p>
+              </div>
+              {scheduleInfo.reason && (
+                <div>
+                  <p className="text-[10px] uppercase font-medium text-muted-foreground">Motivo</p>
+                  <p>{scheduleInfo.reason}</p>
+                </div>
+              )}
+              {scheduleInfo.alt_contact && (scheduleInfo.alt_contact.name || scheduleInfo.alt_contact.phone || scheduleInfo.alt_contact.email) && (
+                <div className="rounded border p-2 bg-muted/30">
+                  <p className="text-[10px] uppercase font-medium text-muted-foreground mb-1">Contato alternativo</p>
+                  {scheduleInfo.alt_contact.name && <p><strong>{scheduleInfo.alt_contact.name}</strong>{scheduleInfo.alt_contact.role ? ` · ${scheduleInfo.alt_contact.role}` : ""}</p>}
+                  {scheduleInfo.alt_contact.phone && <p>📞 {scheduleInfo.alt_contact.phone}</p>}
+                  {scheduleInfo.alt_contact.email && <p>✉️ {scheduleInfo.alt_contact.email}</p>}
+                </div>
+              )}
+              {scheduleInfo.notes && (
+                <div>
+                  <p className="text-[10px] uppercase font-medium text-muted-foreground">Observações</p>
+                  <p className="whitespace-pre-wrap">{scheduleInfo.notes}</p>
+                </div>
+              )}
+              <Button size="sm" variant="outline" className="w-full h-7 text-[11px]" onClick={() => setScheduleOpen(true)}>
+                Editar agendamento
+              </Button>
+            </PopoverContent>
+          </Popover>
+        )}
+
         {count > 0 && (
           <Popover>
             <PopoverTrigger asChild>
