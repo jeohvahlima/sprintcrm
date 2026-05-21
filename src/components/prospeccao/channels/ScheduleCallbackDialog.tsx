@@ -7,10 +7,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
-import { CalendarClock } from "lucide-react";
+import { CalendarClock, UserPlus } from "lucide-react";
 
 export interface ScheduleInfo {
-  callback_at?: string | null; // ISO
+  callback_at?: string | null; // ISO (opcional)
   reason?: string | null;
   alt_contact?: {
     name?: string | null;
@@ -33,12 +33,7 @@ interface Props {
 }
 
 function toLocalInputValue(iso?: string | null) {
-  if (!iso) {
-    const d = new Date();
-    d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
-    d.setHours(d.getHours() + 1, 0, 0, 0);
-    return d.toISOString().slice(0, 16);
-  }
+  if (!iso) return "";
   const d = new Date(iso);
   d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
   return d.toISOString().slice(0, 16);
@@ -47,9 +42,13 @@ function toLocalInputValue(iso?: string | null) {
 export function ScheduleCallbackDialog({
   open, onOpenChange, initial, defaultContactName, defaultPhone, onSave,
 }: Props) {
+  // Modo: "responsavel" (só salva contato do responsável, sem data)
+  //       "agendamento" (define data/horário de retorno)
+  const [mode, setMode] = useState<"responsavel" | "agendamento">(
+    initial?.callback_at ? "agendamento" : "responsavel"
+  );
   const [callbackLocal, setCallbackLocal] = useState<string>(toLocalInputValue(initial?.callback_at));
   const [reason, setReason] = useState(initial?.reason || "");
-  const [useAlt, setUseAlt] = useState<boolean>(!!initial?.alt_contact?.name || !!initial?.alt_contact?.phone || !!initial?.alt_contact?.email);
   const [altName, setAltName] = useState(initial?.alt_contact?.name || "");
   const [altRole, setAltRole] = useState(initial?.alt_contact?.role || "");
   const [altPhone, setAltPhone] = useState(initial?.alt_contact?.phone || "");
@@ -59,10 +58,9 @@ export function ScheduleCallbackDialog({
 
   useEffect(() => {
     if (!open) return;
+    setMode(initial?.callback_at ? "agendamento" : "responsavel");
     setCallbackLocal(toLocalInputValue(initial?.callback_at));
     setReason(initial?.reason || "");
-    const hasAlt = !!initial?.alt_contact?.name || !!initial?.alt_contact?.phone || !!initial?.alt_contact?.email;
-    setUseAlt(hasAlt);
     setAltName(initial?.alt_contact?.name || "");
     setAltRole(initial?.alt_contact?.role || "");
     setAltPhone(initial?.alt_contact?.phone || "");
@@ -70,15 +68,21 @@ export function ScheduleCallbackDialog({
     setNotes(initial?.notes || "");
   }, [open]);
 
+  const hasAltContact = !!(altName.trim() || altPhone.trim() || altEmail.trim() || altRole.trim());
+  const canSave =
+    mode === "agendamento"
+      ? !!callbackLocal
+      : hasAltContact;
+
   async function handleSave() {
     setSaving(true);
     try {
-      const iso = callbackLocal ? new Date(callbackLocal).toISOString() : null;
+      const iso = mode === "agendamento" && callbackLocal ? new Date(callbackLocal).toISOString() : null;
       const info: ScheduleInfo = {
         callback_at: iso,
         reason: reason.trim() || null,
         notes: notes.trim() || null,
-        alt_contact: useAlt
+        alt_contact: hasAltContact
           ? {
               name: altName.trim() || null,
               role: altRole.trim() || null,
@@ -99,72 +103,107 @@ export function ScheduleCallbackDialog({
       <DialogContent className="max-w-lg">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <CalendarClock className="h-4 w-4 text-purple-600" />
-            Agendar retorno
+            {mode === "agendamento" ? (
+              <CalendarClock className="h-4 w-4 text-purple-600" />
+            ) : (
+              <UserPlus className="h-4 w-4 text-purple-600" />
+            )}
+            {mode === "agendamento" ? "Agendar retorno" : "Salvar contato do responsável"}
           </DialogTitle>
           <DialogDescription>
-            Defina o melhor dia e horário para retornar a ligação. Se o retorno for com outra pessoa (responsável, setor, gerente), preencha os dados do contato alternativo.
+            {mode === "agendamento"
+              ? "Defina o melhor dia e horário para retornar. Se for com outra pessoa (responsável, setor), preencha os dados abaixo."
+              : "Quando a recepcionista/secretária passar o contato do responsável ou setor, salve aqui para contatar em outro momento — sem precisar marcar data."}
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-4 py-2">
-          <div className="grid grid-cols-1 gap-2">
-            <Label htmlFor="callback-at">Data e horário do retorno *</Label>
-            <Input
-              id="callback-at"
-              type="datetime-local"
-              value={callbackLocal}
-              onChange={(e) => setCallbackLocal(e.target.value)}
-            />
+        {/* Seletor de modo */}
+        <div className="flex items-center justify-between rounded-md border p-2 bg-muted/30">
+          <div className="flex items-center gap-2">
+            <Button
+              type="button"
+              size="sm"
+              variant={mode === "responsavel" ? "default" : "outline"}
+              className={mode === "responsavel" ? "bg-purple-600 hover:bg-purple-700 h-7" : "h-7"}
+              onClick={() => setMode("responsavel")}
+            >
+              <UserPlus className="h-3.5 w-3.5 mr-1" />
+              Só contato do responsável
+            </Button>
+            <Button
+              type="button"
+              size="sm"
+              variant={mode === "agendamento" ? "default" : "outline"}
+              className={mode === "agendamento" ? "bg-purple-600 hover:bg-purple-700 h-7" : "h-7"}
+              onClick={() => setMode("agendamento")}
+            >
+              <CalendarClock className="h-3.5 w-3.5 mr-1" />
+              Agendar retorno
+            </Button>
           </div>
+        </div>
 
-          <div className="grid grid-cols-1 gap-2">
-            <Label htmlFor="reason">Motivo do retorno</Label>
-            <Input
-              id="reason"
-              placeholder='Ex.: "Recepcionista pediu para ligar depois das 14h"'
-              value={reason}
-              onChange={(e) => setReason(e.target.value)}
-            />
-          </div>
+        <div className="space-y-4 py-2">
+          {mode === "agendamento" && (
+            <>
+              <div className="grid grid-cols-1 gap-2">
+                <Label htmlFor="callback-at">Data e horário do retorno *</Label>
+                <Input
+                  id="callback-at"
+                  type="datetime-local"
+                  value={callbackLocal}
+                  onChange={(e) => setCallbackLocal(e.target.value)}
+                />
+              </div>
+
+              <div className="grid grid-cols-1 gap-2">
+                <Label htmlFor="reason">Motivo do retorno</Label>
+                <Input
+                  id="reason"
+                  placeholder='Ex.: "Recepcionista pediu para ligar depois das 14h"'
+                  value={reason}
+                  onChange={(e) => setReason(e.target.value)}
+                />
+              </div>
+            </>
+          )}
 
           <div className="rounded-md border p-3 space-y-3 bg-muted/30">
-            <div className="flex items-center justify-between">
-              <div>
-                <Label htmlFor="use-alt" className="text-sm font-medium">Retornar para outro contato</Label>
-                <p className="text-xs text-muted-foreground">
-                  Use quando quem atendeu não é o decisor (recepcionista, secretária, etc).
-                </p>
-              </div>
-              <Switch id="use-alt" checked={useAlt} onCheckedChange={setUseAlt} />
+            <div>
+              <Label className="text-sm font-medium">
+                Contato do responsável {mode === "responsavel" ? "*" : "(opcional)"}
+              </Label>
+              <p className="text-xs text-muted-foreground">
+                {mode === "responsavel"
+                  ? "Preencha pelo menos um campo (nome, telefone ou e-mail) do responsável/setor passado pela recepção."
+                  : "Use quando quem atendeu não é o decisor (recepcionista, secretária)."}
+              </p>
             </div>
 
-            {useAlt && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
-                <div className="space-y-1">
-                  <Label htmlFor="alt-name" className="text-xs">Nome do responsável</Label>
-                  <Input id="alt-name" value={altName} onChange={(e) => setAltName(e.target.value)} placeholder="Ex.: João Silva" />
-                </div>
-                <div className="space-y-1">
-                  <Label htmlFor="alt-role" className="text-xs">Cargo / Setor</Label>
-                  <Input id="alt-role" value={altRole} onChange={(e) => setAltRole(e.target.value)} placeholder="Ex.: Gerente Comercial" />
-                </div>
-                <div className="space-y-1">
-                  <Label htmlFor="alt-phone" className="text-xs">Telefone</Label>
-                  <Input id="alt-phone" value={altPhone} onChange={(e) => setAltPhone(e.target.value)} placeholder="(00) 00000-0000" />
-                </div>
-                <div className="space-y-1">
-                  <Label htmlFor="alt-email" className="text-xs">E-mail</Label>
-                  <Input id="alt-email" type="email" value={altEmail} onChange={(e) => setAltEmail(e.target.value)} placeholder="responsavel@empresa.com" />
-                </div>
-                {(defaultContactName || defaultPhone) && (
-                  <p className="sm:col-span-2 text-[10px] text-muted-foreground">
-                    Contato original: <strong>{defaultContactName || "—"}</strong>
-                    {defaultPhone ? ` · ${defaultPhone}` : ""}
-                  </p>
-                )}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+              <div className="space-y-1">
+                <Label htmlFor="alt-name" className="text-xs">Nome do responsável</Label>
+                <Input id="alt-name" value={altName} onChange={(e) => setAltName(e.target.value)} placeholder="Ex.: João Silva" />
               </div>
-            )}
+              <div className="space-y-1">
+                <Label htmlFor="alt-role" className="text-xs">Cargo / Setor</Label>
+                <Input id="alt-role" value={altRole} onChange={(e) => setAltRole(e.target.value)} placeholder="Ex.: Gerente Comercial" />
+              </div>
+              <div className="space-y-1">
+                <Label htmlFor="alt-phone" className="text-xs">Telefone</Label>
+                <Input id="alt-phone" value={altPhone} onChange={(e) => setAltPhone(e.target.value)} placeholder="(00) 00000-0000" />
+              </div>
+              <div className="space-y-1">
+                <Label htmlFor="alt-email" className="text-xs">E-mail</Label>
+                <Input id="alt-email" type="email" value={altEmail} onChange={(e) => setAltEmail(e.target.value)} placeholder="responsavel@empresa.com" />
+              </div>
+              {(defaultContactName || defaultPhone) && (
+                <p className="sm:col-span-2 text-[10px] text-muted-foreground">
+                  Contato original: <strong>{defaultContactName || "—"}</strong>
+                  {defaultPhone ? ` · ${defaultPhone}` : ""}
+                </p>
+              )}
+            </div>
           </div>
 
           <div className="grid grid-cols-1 gap-2">
@@ -172,7 +211,11 @@ export function ScheduleCallbackDialog({
             <Textarea
               id="notes"
               rows={3}
-              placeholder="Detalhes adicionais sobre o agendamento..."
+              placeholder={
+                mode === "responsavel"
+                  ? "Ex.: Recepcionista informou que o responsável atende melhor pela manhã."
+                  : "Detalhes adicionais sobre o agendamento..."
+              }
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
             />
@@ -183,8 +226,12 @@ export function ScheduleCallbackDialog({
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={saving}>
             Cancelar
           </Button>
-          <Button onClick={handleSave} disabled={saving || !callbackLocal} className="bg-purple-600 hover:bg-purple-700">
-            {saving ? "Salvando..." : "Confirmar agendamento"}
+          <Button onClick={handleSave} disabled={saving || !canSave} className="bg-purple-600 hover:bg-purple-700">
+            {saving
+              ? "Salvando..."
+              : mode === "agendamento"
+              ? "Confirmar agendamento"
+              : "Salvar contato"}
           </Button>
         </DialogFooter>
       </DialogContent>
