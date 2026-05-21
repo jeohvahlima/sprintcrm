@@ -50,6 +50,7 @@ export function ChannelProspectPanel({ channel }: Props) {
     channel,
     onlyMarked: filter === "marked",
     search,
+    tagFilter,
     limit: 200,
   });
 
@@ -157,9 +158,8 @@ export function ChannelProspectPanel({ channel }: Props) {
   // Aplicar filtros de tag + (cold call) outcome
   const tagFiltered = useMemo(() => {
     if (!data) return [];
-    if (tagFilter === "all") return data;
-    return data.filter((l: any) => Array.isArray(l.tags) && l.tags.includes(tagFilter));
-  }, [data, tagFilter]);
+    return data;
+  }, [data]);
 
   const filteredData = useMemo(() => {
     let list = tagFiltered;

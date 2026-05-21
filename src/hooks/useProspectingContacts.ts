@@ -23,10 +23,11 @@ interface Options {
   channel: ProspectChannel;
   onlyMarked?: boolean; // só "para prospectar"
   search?: string;
+  tagFilter?: string;
   limit?: number;
 }
 
-export function useProspectingContacts({ channel, onlyMarked = false, search = "", limit = 100 }: Options) {
+export function useProspectingContacts({ channel, onlyMarked = false, search = "", tagFilter = "all", limit = 100 }: Options) {
   const [companyId, setCompanyId] = useState<string | null>(null);
 
   useEffect(() => {
@@ -34,7 +35,7 @@ export function useProspectingContacts({ channel, onlyMarked = false, search = "
   }, []);
 
   return useQuery({
-    queryKey: ["prospecting-contacts", channel, onlyMarked, search, limit, companyId],
+    queryKey: ["prospecting-contacts", channel, onlyMarked, search, tagFilter, limit, companyId],
     enabled: !!companyId,
     queryFn: async () => {
       let q = supabase
@@ -47,6 +48,10 @@ export function useProspectingContacts({ channel, onlyMarked = false, search = "
         .limit(limit);
 
       if (onlyMarked) q = q.eq("to_prospect", true);
+
+      if (tagFilter && tagFilter !== "all") {
+        q = q.contains("tags", [tagFilter]);
+      }
 
       // Filtros por canal: requer telefone p/ coldcall e whatsapp
       if (channel === "coldcall" || channel === "whatsapp") {
