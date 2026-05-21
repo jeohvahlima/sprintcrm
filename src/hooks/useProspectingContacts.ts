@@ -50,6 +50,7 @@ export function useProspectingContacts({ channel, onlyMarked = false, search = "
           .is("lead_origem_id", null)
           .order("last_prospected_at", { ascending: true, nullsFirst: true })
           .order("prospecting_priority", { ascending: false, nullsFirst: false })
+          .order("id", { ascending: true })
           .range(from, from + PAGE - 1);
 
         if (onlyMarked) q = q.eq("to_prospect", true);
