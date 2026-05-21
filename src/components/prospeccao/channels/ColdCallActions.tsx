@@ -183,6 +183,11 @@ export function ColdCallActions({ lead, externalState, externalCompanyId, extern
 
   async function changeOutcome(o: Outcome) {
     if (!companyId) return;
+    // Para agendamento, abrir dialog para capturar dia/horário e contato alternativo
+    if (o === "agendamento") {
+      setScheduleOpen(true);
+      return;
+    }
     await ensureRow();
     setOutcomeState(o);
     const { error } = await supabase
@@ -191,6 +196,35 @@ export function ColdCallActions({ lead, externalState, externalCompanyId, extern
       .eq("company_id", companyId)
       .eq("row_key", rowKey);
     if (error) toast.error("Erro ao salvar status", { description: error.message });
+  }
+
+  async function saveSchedule(info: ScheduleInfo) {
+    if (!companyId) return;
+    await ensureRow();
+    const payload: ScheduleInfo = {
+      ...info,
+      created_at: new Date().toISOString(),
+      created_by: { id: currentUser?.id || null, name: currentUser?.name || null },
+    };
+    setOutcomeState("agendamento");
+    setScheduleInfo(payload);
+    const { error } = await supabase
+      .from("pre_sdr_analyses" as any)
+      .update({
+        outcome: "agendamento",
+        outcome_at: new Date().toISOString(),
+        schedule_info: payload,
+      } as any)
+      .eq("company_id", companyId)
+      .eq("row_key", rowKey);
+    if (error) {
+      toast.error("Erro ao salvar agendamento", { description: error.message });
+    } else {
+      const when = payload.callback_at ? new Date(payload.callback_at).toLocaleString("pt-BR") : "";
+      toast.success("Agendamento de retorno salvo", {
+        description: when ? `Retornar em ${when}` : undefined,
+      });
+    }
   }
 
   async function removeLast() {
