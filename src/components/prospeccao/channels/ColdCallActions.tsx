@@ -142,6 +142,7 @@ export function ColdCallActions({ lead, externalState, externalCompanyId, extern
           if (!n || n.row_key !== rowKey) return;
           setAttempts(Array.isArray(n.attempts) ? n.attempts : []);
           setOutcomeState((n.outcome as Outcome) || "pendente");
+          setScheduleInfo((n.schedule_info as ScheduleInfo) || null);
         }
       )
       .subscribe();
