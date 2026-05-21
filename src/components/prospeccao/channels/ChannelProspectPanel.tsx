@@ -158,14 +158,53 @@ export function ChannelProspectPanel({ channel }: Props) {
   }, [data, tagFilter]);
 
   const filteredData = useMemo(() => {
-    if (channel !== "coldcall" || outcomeFilter === "all") return tagFiltered;
-    return tagFiltered.filter((l: any) => {
-      const s = leadStates[l.id];
-      if (outcomeFilter === "contactados_hoje") return !!s && isToday(s.last_attempt_at);
-      if (outcomeFilter === "abordados") return !!s && s.attempts > 0;
-      const o = s?.outcome || "pendente";
-      return o === outcomeFilter;
+    let list = tagFiltered;
+    if (channel === "coldcall" && outcomeFilter !== "all") {
+      list = tagFiltered.filter((l: any) => {
+        const s = leadStates[l.id];
+        if (outcomeFilter === "contactados_hoje") return !!s && isToday(s.last_attempt_at);
+        if (outcomeFilter === "abordados") return !!s && s.attempts > 0;
+        const o = s?.outcome || "pendente";
+        return o === outcomeFilter;
+      });
+    }
+
+    // 🔽 Ordenação por fila: quem ainda NÃO foi prospectado fica no topo;
+    // quem já foi registrado/contactado vai descendo automaticamente.
+    const sorted = [...list].sort((a: any, b: any) => {
+      const sa = channel === "coldcall" ? leadStates[a.id] : null;
+      const sb = channel === "coldcall" ? leadStates[b.id] : null;
+
+      // "Prospectado" = teve alguma tentativa registrada OU outcome diferente de pendente
+      // OU (para outros canais) já tem last_prospected_at preenchido.
+      const aDone = channel === "coldcall"
+        ? !!(sa && (sa.attempts > 0 || (sa.outcome && sa.outcome !== "pendente")))
+        : !!a.last_prospected_at;
+      const bDone = channel === "coldcall"
+        ? !!(sb && (sb.attempts > 0 || (sb.outcome && sb.outcome !== "pendente")))
+        : !!b.last_prospected_at;
+
+      if (aDone !== bDone) return aDone ? 1 : -1; // pendentes primeiro
+
+      // Entre os pendentes: maior prioridade primeiro
+      if (!aDone) {
+        const pa = a.prospecting_priority ?? 0;
+        const pb = b.prospecting_priority ?? 0;
+        if (pa !== pb) return pb - pa;
+        return 0;
+      }
+
+      // Entre os já prospectados: mais recentes mais embaixo (último prospectado fica no fim)
+      const ta = channel === "coldcall"
+        ? (sa?.last_attempt_at ? new Date(sa.last_attempt_at).getTime() : 0)
+        : (a.last_prospected_at ? new Date(a.last_prospected_at).getTime() : 0);
+      const tb = channel === "coldcall"
+        ? (sb?.last_attempt_at ? new Date(sb.last_attempt_at).getTime() : 0)
+        : (b.last_prospected_at ? new Date(b.last_prospected_at).getTime() : 0);
+      return ta - tb;
     });
+
+    return sorted;
   }, [tagFiltered, outcomeFilter, leadStates, channel]);
 
   // Contagens por outcome — derivadas de leadStates (fonte da verdade global,
