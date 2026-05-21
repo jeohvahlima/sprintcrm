@@ -41,7 +41,7 @@ const OUTCOME_META: Record<Outcome, { label: string; className: string; icon?: a
   prospectado: { label: "Prospectado", className: "text-emerald-600", icon: Check },
   sem_resposta: { label: "Sem resposta", className: "text-slate-500", icon: X },
   oportunidade: { label: "Oportunidade", className: "text-amber-600", icon: Flame },
-  agendamento: { label: "Agendamento", className: "text-purple-600", icon: CalendarClock },
+  agendamento: { label: "Retornar Call / Responsável", className: "text-purple-600", icon: CalendarClock },
   follow_up: { label: "Follow-up", className: "text-cyan-600", icon: PhoneCall },
   ganho: { label: "Ganho", className: "text-emerald-700", icon: Trophy },
   descartado: { label: "Descartado", className: "text-rose-600", icon: X },
@@ -222,7 +222,7 @@ export function ColdCallActions({ lead, externalState, externalCompanyId, extern
     if (error) {
       toast.error("Erro ao salvar", { description: error.message });
     } else if (payload.callback_at) {
-      toast.success("Agendamento de retorno salvo", {
+      toast.success("Retornar Call / Responsável salvo", {
         description: `Retornar em ${new Date(payload.callback_at).toLocaleString("pt-BR")}`,
       });
     } else {

@@ -338,7 +338,7 @@ export function ChannelProspectPanel({ channel }: Props) {
               { v: "prospectado", label: "Prospectado (OK)", cls: "bg-emerald-500/10 text-emerald-600 border-emerald-500/30" },
               { v: "sem_resposta", label: "Sem resposta", cls: "bg-slate-500/10 text-slate-500 border-slate-500/30" },
               { v: "oportunidade", label: "Oportunidade", cls: "bg-amber-500/10 text-amber-600 border-amber-500/30" },
-              { v: "agendamento", label: "Agendamento", cls: "bg-purple-500/10 text-purple-600 border-purple-500/30" },
+              { v: "agendamento", label: "Retornar Call / Responsável", cls: "bg-purple-500/10 text-purple-600 border-purple-500/30" },
               { v: "follow_up", label: "Follow-up", cls: "bg-cyan-500/10 text-cyan-600 border-cyan-500/30" },
               { v: "ganho", label: "Ganho", cls: "bg-emerald-600/10 text-emerald-700 border-emerald-600/30" },
               { v: "descartado", label: "Descartado", cls: "bg-rose-500/10 text-rose-600 border-rose-500/30" },
