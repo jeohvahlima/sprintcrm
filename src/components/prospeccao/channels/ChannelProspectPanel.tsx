@@ -109,11 +109,13 @@ export function ChannelProspectPanel({ channel }: Props) {
         rows.forEach((r: any) => {
           const id = r.lead_id || (typeof r.row_key === "string" && r.row_key.startsWith("lead:") ? r.row_key.slice(5) : null);
           if (!id) return;
+          const attemptsList = Array.isArray(r.attempts) ? r.attempts : [];
+          const attemptsCount = Math.max(Number(r.attempts_count || 0), attemptsList.length);
           map[id] = {
             outcome: r.outcome || "pendente",
-            attempts: r.attempts_count || 0,
+            attempts: attemptsCount,
             last_attempt_at: r.last_attempt_at || null,
-            attemptsList: Array.isArray(r.attempts) ? r.attempts : [],
+            attemptsList,
           };
         });
         if (rows.length < PAGE) break;
@@ -131,13 +133,15 @@ export function ChannelProspectPanel({ channel }: Props) {
         const nn: any = payload.new || {};
         setLeadStates((prev) => {
           const old = prev[id] || { outcome: "pendente", attempts: 0, last_attempt_at: null, attemptsList: [] };
+          const attemptsList = Array.isArray(nn.attempts) ? nn.attempts : old.attemptsList;
+          const attemptsCount = Math.max(Number(nn.attempts_count ?? old.attempts ?? 0), attemptsList.length);
           return {
             ...prev,
             [id]: {
               outcome: nn.outcome ?? old.outcome,
-              attempts: nn.attempts_count ?? old.attempts,
+              attempts: attemptsCount,
               last_attempt_at: nn.last_attempt_at ?? old.last_attempt_at,
-              attemptsList: Array.isArray(nn.attempts) ? nn.attempts : old.attemptsList,
+              attemptsList,
             },
           };
         });
@@ -163,7 +167,9 @@ export function ChannelProspectPanel({ channel }: Props) {
       list = tagFiltered.filter((l: any) => {
         const s = leadStates[l.id];
         if (outcomeFilter === "contactados_hoje") return !!s && isToday(s.last_attempt_at);
-        if (outcomeFilter === "abordados") return !!s && s.attempts > 0;
+        const attemptsCount = Math.max(s?.attempts || 0, Array.isArray(s?.attemptsList) ? s.attemptsList.length : 0);
+        if (outcomeFilter === "abordados") return attemptsCount > 0;
+        if (outcomeFilter === "pendente") return (!s || (attemptsCount === 0 && (s.outcome || "pendente") === "pendente"));
         const o = s?.outcome || "pendente";
         return o === outcomeFilter;
       });
@@ -177,11 +183,13 @@ export function ChannelProspectPanel({ channel }: Props) {
 
       // "Prospectado" = teve alguma tentativa registrada OU outcome diferente de pendente
       // OU (para outros canais) já tem last_prospected_at preenchido.
+      const aAttempts = Math.max(sa?.attempts || 0, Array.isArray(sa?.attemptsList) ? sa.attemptsList.length : 0);
+      const bAttempts = Math.max(sb?.attempts || 0, Array.isArray(sb?.attemptsList) ? sb.attemptsList.length : 0);
       const aDone = channel === "coldcall"
-        ? !!(sa && (sa.attempts > 0 || (sa.outcome && sa.outcome !== "pendente")))
+        ? !!(aAttempts > 0 || (sa?.outcome && sa.outcome !== "pendente") || a.last_prospected_at)
         : !!a.last_prospected_at;
       const bDone = channel === "coldcall"
-        ? !!(sb && (sb.attempts > 0 || (sb.outcome && sb.outcome !== "pendente")))
+        ? !!(bAttempts > 0 || (sb?.outcome && sb.outcome !== "pendente") || b.last_prospected_at)
         : !!b.last_prospected_at;
 
       if (aDone !== bDone) return aDone ? 1 : -1; // pendentes primeiro
@@ -219,9 +227,10 @@ export function ChannelProspectPanel({ channel }: Props) {
       agendamento: 0, follow_up: 0, ganho: 0, descartado: 0,
     };
     Object.values(leadStates).forEach((s) => {
+      const attemptsCount = Math.max(s?.attempts || 0, Array.isArray(s?.attemptsList) ? s.attemptsList.length : 0);
       const o = s?.outcome || "pendente";
       if (c[o] !== undefined) c[o] = (c[o] || 0) + 1;
-      if (s && s.attempts > 0) c.abordados++;
+      if (attemptsCount > 0) c.abordados++;
       if (s && isToday(s.last_attempt_at)) c.contactados_hoje++;
     });
     return c;

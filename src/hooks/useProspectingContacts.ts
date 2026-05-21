@@ -42,8 +42,8 @@ export function useProspectingContacts({ channel, onlyMarked = false, search = "
         .select("id, name, phone, telefone, email, tags, to_prospect, prospecting_priority, last_prospected_at, source, responsavel_id")
         .eq("company_id", companyId!)
         .is("lead_origem_id", null)
-        .order("prospecting_priority", { ascending: false, nullsFirst: false })
         .order("last_prospected_at", { ascending: true, nullsFirst: true })
+        .order("prospecting_priority", { ascending: false, nullsFirst: false })
         .limit(limit);
 
       if (onlyMarked) q = q.eq("to_prospect", true);
