@@ -983,11 +983,17 @@ export default function Configuracoes() {
             <div className="pt-2 border-t">
               <div className="text-sm font-medium mb-1">Empresa Atual:</div>
               {editingCompanyName ? (
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2">
                   <Input
                     value={newCompanyName}
                     onChange={(e) => setNewCompanyName(e.target.value)}
-                    className="h-8 text-sm"
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        handleSaveCompanyName();
+                      }
+                    }}
+                    className="h-8 text-sm max-w-xs flex-1 min-w-[160px]"
                     placeholder="Nome da empresa"
                     autoFocus
                   />
