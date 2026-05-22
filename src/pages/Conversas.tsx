@@ -10346,9 +10346,11 @@ function Conversas() {
                         {/* Quick Messages */}
                         <Dialog>
                           <DialogTrigger asChild>
-                            <Button variant="outline" size="icon" title="Mensagens Rápidas">
+                            <Button variant="outline" className="w-full justify-start gap-2" title="Mensagens Rápidas">
                               <Zap className="h-4 w-4" />
+                              <span>Mensagens Rápidas</span>
                             </Button>
+
                           </DialogTrigger>
                           <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
                             <DialogHeader>
