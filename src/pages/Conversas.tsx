@@ -10324,12 +10324,14 @@ function Conversas() {
                         {/* Roteiros Comerciais */}
                         <Button
                           variant="outline"
-                          size="icon"
+                          className="w-full justify-start gap-2"
                           title="Roteiros Comerciais"
                           onClick={() => setRoteirosDialogOpen(true)}
                         >
                           <Workflow className="h-4 w-4" />
+                          <span>Roteiros Comerciais</span>
                         </Button>
+
                         {selectedConv && (
                           <RoteirosComerciaisDialog
                             open={roteirosDialogOpen}
