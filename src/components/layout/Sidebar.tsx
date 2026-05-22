@@ -68,7 +68,7 @@ const navigation: NavEntry[] = [
       { name: "Grow Machine", href: "/prospeccao", icon: Target, menuKey: "prospeccao" },
       { name: "Call Center", href: "/discador", icon: PhoneCall, menuKey: "discador" },
       { name: "Business Intelligence (BI)", href: "/financeiro", icon: DollarSign, menuKey: "financeiro" },
-      { name: "Treinamento", href: "/treinamento", icon: GraduationCap, menuKey: "treinamento" },
+      { name: "Treinamento Comerciais", href: "/treinamento", icon: GraduationCap, menuKey: "treinamento" },
     ],
   },
   { name: "Configurações", href: "/configuracoes", icon: Settings, menuKey: "configuracoes" },
