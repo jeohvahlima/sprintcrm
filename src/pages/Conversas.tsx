@@ -10318,7 +10318,8 @@ function Conversas() {
                     {/* Quick Actions */}
                     <div>
                       <h4 className="text-foreground font-medium mb-3">Ações Rápidas</h4>
-                      <div className="flex flex-wrap gap-2">
+                      <div className="flex flex-col gap-2">
+
                         {/* Quick Messages */}
                         {/* Roteiros Comerciais */}
                         <Button
