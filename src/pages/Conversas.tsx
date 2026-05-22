@@ -11392,10 +11392,12 @@ function Conversas() {
                         setTarefasDialogOpen(true);
                       }} type="button">
                               <CheckSquare className="h-4 w-4" />
-                              {leadTasks.length > 0 && <Badge variant="secondary" className="absolute -top-1 -right-1 h-4 min-w-4 px-1 text-[10px]">
+                              <span>Tarefas</span>
+                              {leadTasks.length > 0 && <Badge variant="secondary" className="ml-auto h-5 min-w-5 px-1.5 text-[10px]">
                                   {leadTasks.filter(t => t.status !== 'concluida').length}
                                 </Badge>}
                             </Button>
+
                           </DialogTrigger>
                           <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
                             <DialogHeader>
