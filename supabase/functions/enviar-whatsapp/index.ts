@@ -1125,7 +1125,7 @@ async function sendEvolutionMessage(
       };
     }
 
-    console.log("📤 Evolution API - Enviando para:", evolutionUrl);
+    console.log("📤 Evolution API - Enviando para:", evolutionUrl, "| destino:", targetNumber);
 
     const response = await fetch(evolutionUrl, {
       method: "POST",
@@ -1823,7 +1823,7 @@ serve(async (req) => {
           // Fallback para Evolution se Meta falhar
           if (!result.success && hasEvolutionConfig) {
             console.log("🔄 Template Meta falhou, tentando Evolution como fallback...");
-            result = await sendEvolutionMessage(baseUrl, connection.instance_name, apiKey, validatedData.numero, false, validatedData);
+            result = await sendEvolutionMessage(baseUrl, connection.instance_name, apiKey, formattedNumber, false, validatedData);
           }
         } else if (!baseUrl || !apiKey) {
           if (hasMetaCredentials) {
@@ -1837,7 +1837,7 @@ serve(async (req) => {
           }
         } else {
             // ⚡ ENVIO DIRETO - sem pre-check de conexão. sendEvolutionMessage já tem retry interno.
-            result = await sendEvolutionMessage(baseUrl, connection.instance_name, apiKey, validatedData.numero, false, validatedData);
+            result = await sendEvolutionMessage(baseUrl, connection.instance_name, apiKey, formattedNumber, false, validatedData);
             
             // Se Evolution falhou, tentar Meta como fallback
             if (!result.success && hasMetaCredentials) {
@@ -1873,7 +1873,7 @@ serve(async (req) => {
       } else {
         // ⚡ ENVIO DIRETO - sem pre-check. Se falhar, o handler de erro em sendEvolutionMessage
         // já tenta reconectar automaticamente (1 retry). Isso elimina o delay de 6-10s do pre-check.
-        result = await sendEvolutionMessage(baseUrl, connection.instance_name, apiKey, validatedData.numero, false, validatedData);
+        result = await sendEvolutionMessage(baseUrl, connection.instance_name, apiKey, formattedNumber, false, validatedData);
       }
       
       // Se falhou, tentar Meta como fallback (sem marcar disconnected no banco)
