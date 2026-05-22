@@ -69,11 +69,8 @@ const navigation: NavEntry[] = [
       { name: "Call Center", href: "/discador", icon: PhoneCall, menuKey: "discador" },
       { name: "BI", href: "/financeiro", icon: DollarSign, menuKey: "financeiro" },
       { name: "Treinamento", href: "/treinamento", icon: GraduationCap, menuKey: "treinamento" },
-      { name: "Mentoria", href: "/mentoria", icon: Sparkles, menuKey: "mentoria", masterOnly: true },
     ],
   },
-  { name: "Jurídico", href: "/juridico", icon: Scale, menuKey: "juridico", juridicoOnly: true },
-  { name: "Master Billing", href: "/master-billing", icon: DollarSign, menuKey: "master-billing", masterOnly: true },
   { name: "Configurações", href: "/configuracoes", icon: Settings, menuKey: "configuracoes" },
 ];
 
