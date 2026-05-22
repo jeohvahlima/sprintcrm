@@ -69,6 +69,10 @@ export function ChannelProspectPanel({ channel }: Props) {
   const [companyIdGlobal, setCompanyIdGlobal] = useState<string | null>(null);
   const [currentUserGlobal, setCurrentUserGlobal] = useState<{ id: string; name: string } | null>(null);
 
+  // Leads atribuídos ao SDR logado via filas de prospecção (deste canal)
+  const [myQueueLeadIds, setMyQueueLeadIds] = useState<Set<string>>(new Set());
+  const [myQueueDoneIds, setMyQueueDoneIds] = useState<Set<string>>(new Set());
+
   useEffect(() => {
     if (channel !== "coldcall") return;
     (async () => {
@@ -161,6 +165,66 @@ export function ChannelProspectPanel({ channel }: Props) {
   }, [channel]);
 
 
+  // Carrega leads da MINHA fila (prospecting_queue_leads) para este canal
+  useEffect(() => {
+    let cancelled = false;
+    let rt: ReturnType<typeof supabase.channel> | null = null;
+    (async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user || cancelled) return;
+
+      const { data: queues } = await supabase
+        .from("prospecting_queues")
+        .select("id")
+        .eq("channel", channel)
+        .eq("active", true);
+      const queueIds = (queues || []).map((q: any) => q.id);
+      if (queueIds.length === 0) {
+        setMyQueueLeadIds(new Set());
+        setMyQueueDoneIds(new Set());
+        return;
+      }
+
+      const loadAll = async () => {
+        const pending = new Set<string>();
+        const done = new Set<string>();
+        const PAGE = 1000;
+        let from = 0;
+        while (!cancelled) {
+          const { data: rows, error } = await supabase
+            .from("prospecting_queue_leads")
+            .select("lead_id,status")
+            .in("queue_id", queueIds)
+            .eq("assigned_user_id", user.id)
+            .range(from, from + PAGE - 1);
+          if (error || !rows || rows.length === 0) break;
+          rows.forEach((r: any) => {
+            if (!r.lead_id) return;
+            if (["contacted", "qualified", "done"].includes(r.status)) done.add(r.lead_id);
+            else pending.add(r.lead_id);
+          });
+          if (rows.length < PAGE) break;
+          from += PAGE;
+        }
+        if (!cancelled) {
+          setMyQueueLeadIds(pending);
+          setMyQueueDoneIds(done);
+        }
+      };
+
+      await loadAll();
+
+      rt = supabase
+        .channel(`my_queue_${channel}_${user.id}`)
+        .on("postgres_changes", {
+          event: "*", schema: "public", table: "prospecting_queue_leads",
+          filter: `assigned_user_id=eq.${user.id}`,
+        }, () => { loadAll(); })
+        .subscribe();
+    })();
+    return () => { cancelled = true; if (rt) supabase.removeChannel(rt); };
+  }, [channel]);
+
   const isToday = (iso: string | null) =>
     !!iso && new Date(iso).toDateString() === new Date().toDateString();
 
@@ -181,7 +245,9 @@ export function ChannelProspectPanel({ channel }: Props) {
 
   const filteredData = useMemo(() => {
     let list = tagFiltered;
-    if (channel === "coldcall" && outcomeFilter !== "all") {
+    if (outcomeFilter === "minha_fila") {
+      list = list.filter((l: any) => myQueueLeadIds.has(l.id) || myQueueDoneIds.has(l.id));
+    } else if (channel === "coldcall" && outcomeFilter !== "all") {
       list = tagFiltered.filter((l: any) => {
         const metrics = getColdCallMetrics(l);
         if (outcomeFilter === "contactados_hoje") return isToday(metrics.lastActivityAt);
@@ -226,21 +292,18 @@ export function ChannelProspectPanel({ channel }: Props) {
     });
 
     return sorted;
-  }, [tagFiltered, outcomeFilter, leadStates, channel]);
+  }, [tagFiltered, outcomeFilter, leadStates, channel, myQueueLeadIds, myQueueDoneIds]);
 
-  // Contagens por outcome — derivadas apenas dos leads visíveis (tagFiltered),
-  // cruzando com leadStates. Antes contávamos todos os registros de
-  // pre_sdr_analyses da empresa, o que mostrava números maiores do que a lista
-  // realmente exibida (ex.: "Oportunidade (7)" com só 2 visíveis, pois os
-  // outros leads não estavam no recorte atual de filtro/tag/canal/limite).
   const outcomeCounts = useMemo(() => {
     const c: Record<string, number> = {
       all: tagFiltered.length,
+      minha_fila: 0,
       contactados_hoje: 0, abordados: 0,
       pendente: 0, prospectado: 0, sem_resposta: 0, oportunidade: 0,
       agendamento: 0, follow_up: 0, ganho: 0, descartado: 0,
     };
     tagFiltered.forEach((l: any) => {
+      if (myQueueLeadIds.has(l.id) || myQueueDoneIds.has(l.id)) c.minha_fila++;
       const metrics = getColdCallMetrics(l);
       if (metrics.wasAddressed) c.abordados++;
       else c.pendente++;
@@ -250,7 +313,7 @@ export function ChannelProspectPanel({ channel }: Props) {
       }
     });
     return c;
-  }, [tagFiltered, leadStates]);
+  }, [tagFiltered, leadStates, myQueueLeadIds, myQueueDoneIds]);
 
 
 
@@ -306,6 +369,14 @@ export function ChannelProspectPanel({ channel }: Props) {
               <h3 className="font-bold">{meta.label}</h3>
               <p className="text-xs text-muted-foreground">
                 {stats.total} contatos · {stats.contactedToday} prospectados hoje
+                {(myQueueLeadIds.size + myQueueDoneIds.size) > 0 && (() => {
+                  const total = myQueueLeadIds.size + myQueueDoneIds.size;
+                  const done = myQueueDoneIds.size;
+                  const pct = total > 0 ? Math.round((done / total) * 100) : 0;
+                  return (
+                    <> · <span className="text-primary font-medium">Minha fila: {done}/{total} ({pct}%)</span></>
+                  );
+                })()}
               </p>
             </div>
           </div>
@@ -348,6 +419,7 @@ export function ChannelProspectPanel({ channel }: Props) {
             <span className="text-[11px] text-muted-foreground mr-1">Filtrar:</span>
             {([
               { v: "all", label: "Todos", cls: "bg-emerald-500/15 text-emerald-600 border-emerald-500/30" },
+              { v: "minha_fila", label: "Minha Fila", cls: "bg-primary/15 text-primary border-primary/40" },
               { v: "contactados_hoje", label: "Contactados hoje", cls: "bg-cyan-500/15 text-cyan-600 border-cyan-500/40" },
               { v: "abordados", label: "Já abordados", cls: "bg-indigo-500/10 text-indigo-600 border-indigo-500/30" },
               { v: "pendente", label: "Pendente (sem tentativa)", cls: "bg-muted text-muted-foreground border-border" },
