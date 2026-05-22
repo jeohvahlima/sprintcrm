@@ -255,7 +255,7 @@ export default function Prospeccao() {
             <TabsList className="flex flex-wrap h-auto">
               <TabsTrigger value="cockpit">🎮 {labels.cockpit}</TabsTrigger>
               {/* Visão Geral e Pipeline Pago ocultos — métricas estão em Inteligência */}
-              <TabsTrigger value="followup">{labels.followup}</TabsTrigger>
+              
               <TabsTrigger value="fila">{labels.fila}</TabsTrigger>
               <TabsTrigger value="coldcall">{labels.coldcall}</TabsTrigger>
               <TabsTrigger value="instagram">{labels.instagram}</TabsTrigger>
@@ -473,36 +473,6 @@ export default function Prospeccao() {
                   ) : (
                     <ProspeccaoKanbanView data={data || []} />
                   )}
-                </TabsContent>
-                <TabsContent value="followup" className="space-y-6 mt-0">
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between gap-2 flex-wrap">
-                      <div>
-                        <h3 className="text-base font-semibold">Funil de Vendas — Follow-up</h3>
-                        <p className="text-xs text-muted-foreground">
-                          Espelho do funil "Follow-up" do módulo Funil de Vendas. Arraste leads entre as etapas em tempo real.
-                        </p>
-                      </div>
-                      <Button variant="outline" size="sm" asChild>
-                        <Link to="/kanban?funil_nome=Follow-up" target="_blank" rel="noopener noreferrer">
-                          Abrir em nova aba
-                        </Link>
-                      </Button>
-                    </div>
-                    <div
-                      className="rounded-lg border border-border overflow-hidden bg-background"
-                      style={{ height: "calc(100vh - 360px)", minHeight: 600 }}
-                    >
-                      <iframe
-                        src="/kanban?funil_nome=Follow-up&embed=1"
-                        title="Funil de Follow-up"
-                        className="w-full h-full border-0"
-                      />
-                    </div>
-                  </div>
-
-                  <FollowUpKPIs data={followUpData || []} isLoading={followUpLoading} />
-                  <FollowUpTable data={followUpData || []} isLoading={followUpLoading} onRefresh={followUpRefetch} />
                 </TabsContent>
               </>
             )}
