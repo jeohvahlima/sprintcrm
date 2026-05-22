@@ -411,6 +411,7 @@ export function ChannelProspectPanel({ channel }: Props) {
             <span className="text-[11px] text-muted-foreground mr-1">Filtrar:</span>
             {([
               { v: "all", label: "Todos", cls: "bg-emerald-500/15 text-emerald-600 border-emerald-500/30" },
+              { v: "minha_fila", label: "Minha Fila", cls: "bg-primary/15 text-primary border-primary/40" },
               { v: "contactados_hoje", label: "Contactados hoje", cls: "bg-cyan-500/15 text-cyan-600 border-cyan-500/40" },
               { v: "abordados", label: "Já abordados", cls: "bg-indigo-500/10 text-indigo-600 border-indigo-500/30" },
               { v: "pendente", label: "Pendente (sem tentativa)", cls: "bg-muted text-muted-foreground border-border" },
