@@ -63,7 +63,7 @@ const navigation: NavEntry[] = [
     label: "Estruturação Comercial",
     icon: Rocket,
     items: [
-      { name: "Maturidade", href: "/maturidade", icon: Activity, menuKey: "maturidade" },
+      { name: "Maturidade Comercial", href: "/maturidade", icon: Activity, menuKey: "maturidade" },
       { name: "Processos Comerciais", href: "/processos", icon: Target, menuKey: "processos", showAIBadge: true },
       { name: "Prospecção Outbound", href: "/prospeccao", icon: Target, menuKey: "prospeccao" },
       { name: "Call Center", href: "/discador", icon: PhoneCall, menuKey: "discador" },
