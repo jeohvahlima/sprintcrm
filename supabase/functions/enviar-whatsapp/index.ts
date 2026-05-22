@@ -113,7 +113,7 @@ async function resolveEvolutionTargetNumber(
   rawTarget: string,
 ): Promise<string> {
   const candidates = buildEvolutionNumberCandidates(rawTarget);
-  const fallback = candidates[0] || normalizeRecipientNumber(rawTarget);
+  const fallback = normalizeRecipientNumber(rawTarget);
 
   if (candidates.length <= 1) return fallback;
 
