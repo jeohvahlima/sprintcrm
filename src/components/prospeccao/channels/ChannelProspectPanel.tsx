@@ -165,6 +165,66 @@ export function ChannelProspectPanel({ channel }: Props) {
   }, [channel]);
 
 
+  // Carrega leads da MINHA fila (prospecting_queue_leads) para este canal
+  useEffect(() => {
+    let cancelled = false;
+    let rt: ReturnType<typeof supabase.channel> | null = null;
+    (async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user || cancelled) return;
+
+      const { data: queues } = await supabase
+        .from("prospecting_queues")
+        .select("id")
+        .eq("channel", channel)
+        .eq("active", true);
+      const queueIds = (queues || []).map((q: any) => q.id);
+      if (queueIds.length === 0) {
+        setMyQueueLeadIds(new Set());
+        setMyQueueDoneIds(new Set());
+        return;
+      }
+
+      const loadAll = async () => {
+        const pending = new Set<string>();
+        const done = new Set<string>();
+        const PAGE = 1000;
+        let from = 0;
+        while (!cancelled) {
+          const { data: rows, error } = await supabase
+            .from("prospecting_queue_leads")
+            .select("lead_id,status")
+            .in("queue_id", queueIds)
+            .eq("assigned_user_id", user.id)
+            .range(from, from + PAGE - 1);
+          if (error || !rows || rows.length === 0) break;
+          rows.forEach((r: any) => {
+            if (!r.lead_id) return;
+            if (["contacted", "qualified", "done"].includes(r.status)) done.add(r.lead_id);
+            else pending.add(r.lead_id);
+          });
+          if (rows.length < PAGE) break;
+          from += PAGE;
+        }
+        if (!cancelled) {
+          setMyQueueLeadIds(pending);
+          setMyQueueDoneIds(done);
+        }
+      };
+
+      await loadAll();
+
+      rt = supabase
+        .channel(`my_queue_${channel}_${user.id}`)
+        .on("postgres_changes", {
+          event: "*", schema: "public", table: "prospecting_queue_leads",
+          filter: `assigned_user_id=eq.${user.id}`,
+        }, () => { loadAll(); })
+        .subscribe();
+    })();
+    return () => { cancelled = true; if (rt) supabase.removeChannel(rt); };
+  }, [channel]);
+
   const isToday = (iso: string | null) =>
     !!iso && new Date(iso).toDateString() === new Date().toDateString();
 
