@@ -34,15 +34,14 @@ function startsWithForeignCountryCode(digits: string): boolean {
 
 function ensureBrazilMobileNinth(digits: string): string {
   // Espera-se: 55 + DDD(2) + numero.
-  // ⚠️ IMPORTANTE: Apenas DDDs 11-28 (SP/RJ/MG/ES) exigem o "9" obrigatório no WhatsApp.
-  // Para os demais DDDs (Nordeste, Norte, Centro-Oeste, Sul), o JID do WhatsApp
-  // normalmente NÃO possui o 9 — adicionar o 9 gera um número inexistente e
-  // a mensagem é aceita pela Evolution (200 OK) mas nunca entregue.
+  // Em todo o Brasil os números móveis no WhatsApp hoje exigem o "9" após o DDD.
+  // Se vier com 10 dígitos (55 + DDD + 8 dígitos) e o primeiro dígito local for 6-9 (faixa móvel),
+  // adicionamos o 9. Evolution aceita números sem 9 com 200 OK mas nunca entrega.
   if (!digits.startsWith('55')) return digits;
   const rest = digits.substring(2);
   if (rest.length !== 10) return digits; // 11 já tem 9; outros tamanhos não mexemos
   const dddNum = parseInt(rest.substring(0, 2), 10);
-  if (!(dddNum >= 11 && dddNum <= 28)) return digits; // mantém sem 9 para DDDs ≥ 30
+  if (!(dddNum >= 11 && dddNum <= 99)) return digits;
   const localFirst = rest.charAt(2);
   if (/[6-9]/.test(localFirst)) {
     return `55${rest.substring(0, 2)}9${rest.substring(2)}`;
@@ -1212,7 +1211,7 @@ async function sendEvolutionMessage(
       return { success: false, provider: 'evolution', error: errorMsg };
     }
 
-    console.log("✅ Evolution API - Mensagem enviada");
+    console.log("✅ Evolution API - Mensagem enviada:", JSON.stringify(data).substring(0, 400));
     return { success: true, provider: 'evolution', data };
   } catch (error) {
     const errorStr = String(error);
