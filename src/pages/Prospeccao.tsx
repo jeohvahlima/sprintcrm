@@ -275,10 +275,9 @@ export default function Prospeccao() {
               <div className="mt-4">
                 <HunterCockpit />
               </div>
-            ) : isEstrategiaTab ? (
-              <div className="mt-4">
-                <EstrategiaComercialPanel />
-              </div>
+            ) : false ? (
+              <div className="mt-4" />
+            
             ) : isRotinaTab ? (
               <div className="mt-4">
                 <RotinaInteligente />
