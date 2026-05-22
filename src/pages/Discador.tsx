@@ -198,6 +198,10 @@ const Discador = () => {
             <SDRSpecializationPanel />
           </TabsContent>
 
+          <TabsContent value="meus-numeros">
+            <NvoipNumbersPanel />
+          </TabsContent>
+
           <TabsContent value="conta-nvoip">
             <NvoipAccountPanel />
           </TabsContent>
