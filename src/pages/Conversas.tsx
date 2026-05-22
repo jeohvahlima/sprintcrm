@@ -10687,12 +10687,14 @@ function Conversas() {
                         {/* Schedule Message */}
                         <Dialog>
                           <DialogTrigger asChild>
-                            <Button variant="outline" size="icon" title="Agendar Mensagem" className="relative">
+                            <Button variant="outline" className="w-full justify-start gap-2 relative" title="Agendar Mensagem">
                               <Clock className="h-4 w-4" />
-                              {scheduledMessages.filter(m => m.status === 'pending').length > 0 && <Badge variant="secondary" className="absolute -top-1 -right-1 h-4 min-w-4 px-1 text-[10px]">
+                              <span>Agendar Mensagem</span>
+                              {scheduledMessages.filter(m => m.status === 'pending').length > 0 && <Badge variant="secondary" className="ml-auto h-5 min-w-5 px-1.5 text-[10px]">
                                   {scheduledMessages.filter(m => m.status === 'pending').length}
                                 </Badge>}
                             </Button>
+
                           </DialogTrigger>
                           <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
                             <DialogHeader>
