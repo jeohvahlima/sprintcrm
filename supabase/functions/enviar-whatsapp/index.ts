@@ -1158,7 +1158,9 @@ async function sendEvolutionMessage(
   try {
     let evolutionUrl: string;
     let bodyPayload: any;
-    const targetNumber = isGroup ? target : normalizeRecipientNumber(target);
+    const targetNumber = isGroup
+      ? target
+      : await resolveEvolutionTargetNumber(baseUrl, instanceName, apiKey, target);
     const globalEvolutionKey = Deno.env.get("EVOLUTION_API_KEY") || "";
     const canRetryWithGlobalKey = _retryAttempt === 0 && !!globalEvolutionKey && globalEvolutionKey !== apiKey;
 
