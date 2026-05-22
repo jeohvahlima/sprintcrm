@@ -11368,7 +11368,7 @@ function Conversas() {
                         {/* Tarefas do Lead */}
                         <Dialog open={tarefasDialogOpen} onOpenChange={setTarefasDialogOpen}>
                           <DialogTrigger asChild>
-                            <Button variant="outline" size="icon" title="Tarefas" className="relative" onClick={async () => {
+                            <Button variant="outline" className="w-full justify-start gap-2 relative" title="Tarefas" onClick={async () => {
                         // CORREÇÃO: Criar lead automaticamente ao abrir o modal
                         if (!leadVinculado?.id && selectedConv) {
                           setSyncStatus('syncing');
