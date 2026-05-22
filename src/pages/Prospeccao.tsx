@@ -265,7 +265,7 @@ export default function Prospeccao() {
               {isManagerLike && <TabsTrigger value="comando">{labels.comando}</TabsTrigger>}
               <TabsTrigger value="intel">🎯 {labels.intel}</TabsTrigger>
               <TabsTrigger value="rotina">🧠 {labels.rotina}</TabsTrigger>
-              <TabsTrigger value="estrategia">✨ {labels.estrategia}</TabsTrigger>
+              
               
             </TabsList>
 
@@ -275,10 +275,9 @@ export default function Prospeccao() {
               <div className="mt-4">
                 <HunterCockpit />
               </div>
-            ) : isEstrategiaTab ? (
-              <div className="mt-4">
-                <EstrategiaComercialPanel />
-              </div>
+            ) : false ? (
+              <div className="mt-4" />
+            
             ) : isRotinaTab ? (
               <div className="mt-4">
                 <RotinaInteligente />
