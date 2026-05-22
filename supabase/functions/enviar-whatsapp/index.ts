@@ -65,6 +65,102 @@ function normalizeRecipientNumber(raw: string): string {
   return digits;
 }
 
+function normalizeEvolutionCandidate(raw: string): string {
+  let digits = String(raw || '').replace(/[^0-9]/g, '');
+  if (!digits.startsWith('55') && (digits.length === 10 || digits.length === 11)) {
+    digits = `55${digits}`;
+  }
+  return digits;
+}
+
+function removeBrazilMobileNinth(digits: string): string | null {
+  if (!digits.startsWith('55')) return null;
+  const rest = digits.substring(2);
+  if (rest.length !== 11 || rest.charAt(2) !== '9') return null;
+  const dddNum = parseInt(rest.substring(0, 2), 10);
+  if (!(dddNum >= 11 && dddNum <= 99)) return null;
+  return `55${rest.substring(0, 2)}${rest.substring(3)}`;
+}
+
+function buildEvolutionNumberCandidates(raw: string): string[] {
+  const original = normalizeEvolutionCandidate(raw);
+  const withNinth = normalizeRecipientNumber(raw);
+  const withoutNinth = removeBrazilMobileNinth(withNinth);
+
+  return [original, withNinth, withoutNinth]
+    .filter((value): value is string => !!value && /^[0-9]{8,15}$/.test(value))
+    .filter((value, index, arr) => arr.indexOf(value) === index);
+}
+
+function extractDigitsFromEvolutionEntry(entry: any): string[] {
+  return [entry?.number, entry?.jid, entry?.remoteJid, entry?.id]
+    .map((value) => String(value || '').split('@')[0].replace(/[^0-9]/g, ''))
+    .filter(Boolean);
+}
+
+function evolutionEntryExists(entry: any): boolean {
+  return entry?.exists === true ||
+    entry?.isWhatsapp === true ||
+    entry?.isWhatsApp === true ||
+    entry?.existsWhatsapp === true ||
+    String(entry?.jid || entry?.remoteJid || '').includes('@s.whatsapp.net');
+}
+
+async function resolveEvolutionTargetNumber(
+  baseUrl: string,
+  instanceName: string,
+  apiKey: string,
+  rawTarget: string,
+): Promise<string> {
+  const candidates = buildEvolutionNumberCandidates(rawTarget);
+  const fallback = candidates[0] || normalizeRecipientNumber(rawTarget);
+
+  if (candidates.length <= 1) return fallback;
+
+  try {
+    const cleanBaseUrl = baseUrl.replace(/\/+$/, '');
+    const response = await fetch(`${cleanBaseUrl}/chat/whatsappNumbers/${instanceName}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': apiKey,
+      },
+      body: JSON.stringify({ numbers: candidates }),
+    });
+
+    const data = await response.json().catch(() => null);
+    console.log('🔎 [EVOLUTION] Validação de número:', JSON.stringify({ candidates, status: response.status, data }).substring(0, 600));
+
+    if (!response.ok) return fallback;
+
+    const entries = Array.isArray(data)
+      ? data
+      : Array.isArray(data?.data)
+        ? data.data
+        : Array.isArray(data?.numbers)
+          ? data.numbers
+          : [];
+
+    for (const candidate of candidates) {
+      const match = entries.find((entry: any) => {
+        if (!evolutionEntryExists(entry)) return false;
+        return extractDigitsFromEvolutionEntry(entry).some((digits) => digits === candidate);
+      });
+
+      if (match) {
+        const jidDigits = extractDigitsFromEvolutionEntry(match).find((digits) => /^[0-9]{8,15}$/.test(digits));
+        const resolved = jidDigits || candidate;
+        console.log(`✅ [EVOLUTION] Número confirmado no WhatsApp: ${resolved}`);
+        return resolved;
+      }
+    }
+  } catch (error) {
+    console.warn('⚠️ [EVOLUTION] Não foi possível validar número no WhatsApp, usando fallback:', String(error));
+  }
+
+  return fallback;
+}
+
 // ⚡ Sanitize Evolution API URL - prevent corrupted/malformed URLs
 function sanitizeEvolutionUrl(url: string): string {
   if (!url) return '';
