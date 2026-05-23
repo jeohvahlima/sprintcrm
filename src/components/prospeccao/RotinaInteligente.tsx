@@ -714,9 +714,11 @@ export function RotinaInteligente() {
             </CardContent>
           </Card>
 
-          <RotinaTimeline
+          <RotinaViewSwitcher
             role="sdr"
-            blocks={getBlocks("sdr", sdrScope)}
+            viewMode={sdrViewMode}
+            onViewModeChange={setSdrViewMode}
+            blocksByScope={sdrBlocksByScope}
             scope={sdrScope}
             onScopeChange={setSdrScope}
             onGenerate={() => handleGenerate("sdr")}
@@ -725,13 +727,14 @@ export function RotinaInteligente() {
             onRemove={(id) => removeBlock("sdr", id)}
             onClearScope={() => clearScope("sdr")}
             onCopyFromPadrao={() => copyFromPadrao("sdr")}
-            scopesWithContent={Object.entries(sdrBlocksByScope).filter(([, v]) => (v?.length || 0) > 0).map(([k]) => k as ScopeId)}
+            onJumpToScope={(s) => { setSdrScope(s); setSdrViewMode("detail"); }}
             metricsTop={[
               { label: "Leads/dia", value: metrics.leadsPorSdr },
               { label: "Abordagens/dia", value: metrics.leadsPorSdr },
               { label: "Reuniões/dia (time)", value: metrics.reunioesDia },
             ]}
           />
+
 
         </TabsContent>
 
