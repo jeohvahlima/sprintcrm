@@ -1124,53 +1124,98 @@ function RotinaWeekBoard({
   const padraoBlocks = blocksByScope.padrao || [];
   const hasPadrao = padraoBlocks.length > 0;
 
+  // Day-of-month numbers for header pills (current week, Mon-Sat)
+  const todayIdx = ((new Date().getDay() + 6) % 7); // 0 = Mon ... 6 = Sun
+  const weekdayNumbers = (() => {
+    const out: Record<string, number> = {};
+    const d = new Date();
+    const monday = new Date(d);
+    monday.setDate(d.getDate() - todayIdx);
+    ["segunda", "terca", "quarta", "quinta", "sexta", "sabado"].forEach((sid, i) => {
+      const day = new Date(monday);
+      day.setDate(monday.getDate() + i);
+      out[sid] = day.getDate();
+    });
+    return out;
+  })();
+  const todayScopeId: ScopeId | null = (["segunda", "terca", "quarta", "quinta", "sexta", "sabado"][todayIdx] as ScopeId) || null;
+
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       {/* QUADRO SEMANAL */}
-      <Card className="overflow-hidden">
-        <CardHeader className="pb-3 flex flex-row items-center justify-between flex-wrap gap-2">
-          <CardTitle className="text-base flex items-center gap-2">
-            <LayoutGrid className="h-5 w-5 text-primary" />
-            Rotina semanal {role === "sdr" ? "do SDR" : "do Closer"}
-          </CardTitle>
-          <p className="text-[11px] text-muted-foreground">
-            Clique em <b>Editar</b> em qualquer dia para personalizar. A coluna <b>Padrão</b> é usada quando o dia não tem rotina específica.
-          </p>
+      <Card className="overflow-hidden border-border/60 shadow-sm">
+        <CardHeader className="pb-4 flex flex-row items-center justify-between flex-wrap gap-2 bg-muted/30 border-b border-border/60">
+          <div>
+            <CardTitle className="text-base flex items-center gap-2 text-foreground">
+              <LayoutGrid className="h-5 w-5 text-primary" />
+              Rotina semanal {role === "sdr" ? "do SDR" : "do Closer"}
+            </CardTitle>
+            <p className="text-xs text-muted-foreground mt-1">
+              Clique em editar em qualquer dia para personalizar. <b>Padrão</b> é usado quando o dia não tem rotina específica.
+            </p>
+          </div>
         </CardHeader>
-        <CardContent className="overflow-x-auto">
-          <div className="grid gap-2 min-w-[1100px]"
-               style={{ gridTemplateColumns: `repeat(${visibleWeek.length}, minmax(160px, 1fr))` }}>
+        <CardContent className="overflow-x-auto p-4 md:p-6 bg-background">
+          <div
+            className="grid gap-3 min-w-[1200px]"
+            style={{ gridTemplateColumns: `repeat(${visibleWeek.length}, minmax(170px, 1fr))` }}
+          >
             {visibleWeek.map((sid) => {
               const scope = SCOPES.find((s) => s.id === sid)!;
               const blocks = blocksByScope[sid] || [];
               const isOverride = sid !== "padrao" && blocks.length > 0;
               const usingPadrao = sid !== "padrao" && blocks.length === 0;
+              const isPadrao = sid === "padrao";
+              const isToday = sid === todayScopeId;
+              const dayNum = weekdayNumbers[sid];
+              const dayLabel = scope.label.split(" (")[0];
+
               return (
                 <div
                   key={sid}
-                  className={`rounded-xl border ${sid === "padrao" ? "border-primary/40 bg-primary/5" : "border-border bg-card"} flex flex-col`}
+                  className={`rounded-2xl border bg-card flex flex-col transition-shadow hover:shadow-md ${
+                    isPadrao
+                      ? "border-primary/40 ring-1 ring-primary/20"
+                      : isToday
+                      ? "border-primary shadow-md"
+                      : "border-border/60"
+                  }`}
                 >
-                  {/* Header da coluna */}
-                  <div className={`px-3 py-2 rounded-t-xl ${sid === "padrao" ? "bg-primary/10" : "bg-muted/40"} border-b border-border flex items-center justify-between gap-1`}>
+                  {/* Header limpo estilo agenda */}
+                  <div className="px-4 pt-4 pb-3 border-b border-border/60 flex items-start justify-between gap-2">
                     <div className="min-w-0">
-                      <p className="text-xs font-semibold truncate">
-                        {scope.label.split(" (")[0]}
-                      </p>
-                      {isOverride && (
-                        <Badge variant="outline" className="mt-0.5 text-[9px] px-1 py-0 border-emerald-500/50 text-emerald-600">
-                          Personalizado
-                        </Badge>
-                      )}
-                      {usingPadrao && (
-                        <Badge variant="outline" className="mt-0.5 text-[9px] px-1 py-0 text-muted-foreground">
-                          Usa Padrão
-                        </Badge>
-                      )}
+                      <div className="flex items-baseline gap-2">
+                        <p className={`text-sm font-semibold ${isToday ? "text-primary" : "text-foreground"}`}>
+                          {dayLabel}
+                        </p>
+                        {dayNum && !isPadrao && (
+                          <span className={`text-xl font-bold leading-none ${isToday ? "text-primary" : "text-foreground/80"}`}>
+                            {dayNum}
+                          </span>
+                        )}
+                      </div>
+                      <div className="mt-1.5">
+                        {isPadrao && (
+                          <span className="inline-flex items-center text-[10px] font-medium uppercase tracking-wide text-primary bg-primary/10 px-2 py-0.5 rounded-full">
+                            Padrão
+                          </span>
+                        )}
+                        {isOverride && (
+                          <span className="inline-flex items-center text-[10px] font-medium uppercase tracking-wide text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full">
+                            Personalizado
+                          </span>
+                        )}
+                        {usingPadrao && (
+                          <span className="inline-flex items-center text-[10px] font-medium text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
+                            Usa padrão
+                          </span>
+                        )}
+                      </div>
                     </div>
                     <Button
                       size="icon"
                       variant="ghost"
-                      className="h-6 w-6 shrink-0"
+                      className="h-8 w-8 shrink-0 rounded-full hover:bg-primary/10 hover:text-primary"
                       onClick={() => onJumpToScope(sid)}
                       title="Editar rotina deste dia"
                     >
@@ -1178,8 +1223,8 @@ function RotinaWeekBoard({
                     </Button>
                   </div>
 
-                  {/* Conteúdo da coluna */}
-                  <div className="p-1.5 space-y-1 min-h-[280px]">
+                  {/* Lista de blocos */}
+                  <div className="p-2.5 space-y-2 min-h-[320px]">
                     {(blocks.length > 0 ? blocks : (sid !== "padrao" ? padraoBlocks : [])).map((b) => {
                       const style = BLOCK_STYLES[b.type];
                       const Icon = style.icon;
@@ -1187,34 +1232,43 @@ function RotinaWeekBoard({
                       return (
                         <div
                           key={`${sid}-${b.id}`}
-                          className={`rounded-md border-l-[3px] ${style.border} ${style.bg} px-2 py-1.5 ${isInherited ? "opacity-60" : ""}`}
+                          className={`group relative rounded-xl border border-border/60 bg-card hover:border-primary/40 hover:shadow-sm transition-all overflow-hidden ${
+                            isInherited ? "opacity-55" : ""
+                          }`}
                           title={b.description || b.title}
                         >
-                          <div className="flex items-center gap-1 text-[10px] font-mono text-muted-foreground">
-                            {b.startTime}–{b.endTime}
+                          <div className={`absolute left-0 top-0 bottom-0 w-1 ${style.border.replace("border-l-", "bg-")}`} />
+                          <div className="pl-3 pr-2.5 py-2">
+                            <div className="flex items-center gap-1.5 text-[10px] font-mono font-medium text-muted-foreground tabular-nums">
+                              {b.startTime} – {b.endTime}
+                            </div>
+                            <div className="flex items-start gap-1.5 mt-1">
+                              <Icon className="h-3.5 w-3.5 mt-0.5 text-foreground/60 shrink-0" />
+                              <p className="text-[12px] leading-snug font-medium text-foreground line-clamp-2">
+                                {b.title}
+                              </p>
+                            </div>
+                            {b.goal && (
+                              <p className="text-[10px] text-primary mt-1 pl-5 line-clamp-1 font-medium">
+                                🎯 {b.goal}
+                              </p>
+                            )}
                           </div>
-                          <div className="flex items-start gap-1 mt-0.5">
-                            <Icon className="h-3 w-3 mt-0.5 text-foreground/70 shrink-0" />
-                            <p className="text-[11px] leading-tight font-medium text-foreground line-clamp-2">
-                              {b.title}
-                            </p>
-                          </div>
-                          {b.goal && (
-                            <p className="text-[9px] text-primary mt-0.5 line-clamp-1">🎯 {b.goal}</p>
-                          )}
                         </div>
                       );
                     })}
 
-                    {/* Estado vazio */}
+                    {/* Estados vazios */}
                     {blocks.length === 0 && sid === "padrao" && (
-                      <div className="text-center text-[10px] text-muted-foreground py-6 px-2">
-                        Sem rotina padrão. Clique em <b>Editar</b> e use <b>"Gerar com IA da meta"</b>.
+                      <div className="text-center text-[11px] text-muted-foreground py-10 px-3 border border-dashed border-border rounded-xl">
+                        Sem rotina padrão.<br />
+                        Clique em <b>editar</b> e use<br />
+                        <b>"Gerar com IA"</b>.
                       </div>
                     )}
                     {blocks.length === 0 && sid !== "padrao" && !hasPadrao && (
-                      <div className="text-center text-[10px] text-muted-foreground py-6 px-2">
-                        Vazio. Crie a rotina Padrão primeiro.
+                      <div className="text-center text-[11px] text-muted-foreground py-10 px-3 border border-dashed border-border rounded-xl">
+                        Vazio. Crie a rotina<br />Padrão primeiro.
                       </div>
                     )}
                   </div>
@@ -1226,44 +1280,68 @@ function RotinaWeekBoard({
       </Card>
 
       {/* FASES DO MÊS */}
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-base flex items-center gap-2">
+      <Card className="border-border/60 shadow-sm overflow-hidden">
+        <CardHeader className="pb-4 bg-muted/30 border-b border-border/60">
+          <CardTitle className="text-base flex items-center gap-2 text-foreground">
             <Calendar className="h-5 w-5 text-amber-500" />
             Fases do mês
           </CardTitle>
-          <p className="text-[11px] text-muted-foreground">
+          <p className="text-xs text-muted-foreground mt-1">
             Sobrescrevem a rotina padrão em datas específicas (ex.: fim de mês = corrida de fechamento).
           </p>
         </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+        <CardContent className="p-4 md:p-6 bg-background">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {MONTH_SCOPES.map((sid) => {
               const scope = SCOPES.find((s) => s.id === sid)!;
               const blocks = blocksByScope[sid] || [];
               return (
-                <div key={sid} className="rounded-xl border border-border bg-card">
-                  <div className="px-3 py-2 border-b border-border bg-muted/40 rounded-t-xl flex items-center justify-between">
+                <div
+                  key={sid}
+                  className="rounded-2xl border border-border/60 bg-card transition-shadow hover:shadow-md flex flex-col"
+                >
+                  <div className="px-4 pt-4 pb-3 border-b border-border/60 flex items-start justify-between gap-2">
                     <div className="min-w-0">
-                      <p className="text-xs font-semibold truncate">{scope.label.split(" (")[0]}</p>
-                      {scope.hint && <p className="text-[10px] text-muted-foreground truncate">{scope.hint}</p>}
+                      <p className="text-sm font-semibold text-foreground truncate">{scope.label.split(" (")[0]}</p>
+                      {scope.hint && (
+                        <p className="text-[11px] text-muted-foreground mt-0.5 truncate">{scope.hint}</p>
+                      )}
                     </div>
-                    <Button size="icon" variant="ghost" className="h-6 w-6 shrink-0" onClick={() => onJumpToScope(sid)}>
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      className="h-8 w-8 shrink-0 rounded-full hover:bg-primary/10 hover:text-primary"
+                      onClick={() => onJumpToScope(sid)}
+                    >
                       <Pencil className="h-3.5 w-3.5" />
                     </Button>
                   </div>
-                  <div className="p-2 space-y-1 min-h-[100px]">
+                  <div className="p-2.5 space-y-2 min-h-[140px]">
                     {blocks.length === 0 ? (
-                      <p className="text-[10px] text-muted-foreground text-center py-4">
-                        Sem rotina específica. Clique em editar para definir.
-                      </p>
+                      <div className="text-center text-[11px] text-muted-foreground py-6 px-3 border border-dashed border-border rounded-xl">
+                        Sem rotina específica.<br />Clique em editar para definir.
+                      </div>
                     ) : (
                       blocks.map((b) => {
                         const style = BLOCK_STYLES[b.type];
+                        const Icon = style.icon;
                         return (
-                          <div key={`${sid}-${b.id}`} className={`rounded-md border-l-[3px] ${style.border} ${style.bg} px-2 py-1`}>
-                            <div className="text-[10px] font-mono text-muted-foreground">{b.startTime}–{b.endTime}</div>
-                            <p className="text-[11px] font-medium leading-tight line-clamp-2">{b.title}</p>
+                          <div
+                            key={`${sid}-${b.id}`}
+                            className="relative rounded-xl border border-border/60 bg-card hover:border-primary/40 hover:shadow-sm transition-all overflow-hidden"
+                          >
+                            <div className={`absolute left-0 top-0 bottom-0 w-1 ${style.border.replace("border-l-", "bg-")}`} />
+                            <div className="pl-3 pr-2.5 py-2">
+                              <div className="text-[10px] font-mono font-medium text-muted-foreground tabular-nums">
+                                {b.startTime} – {b.endTime}
+                              </div>
+                              <div className="flex items-start gap-1.5 mt-1">
+                                <Icon className="h-3.5 w-3.5 mt-0.5 text-foreground/60 shrink-0" />
+                                <p className="text-[12px] font-medium leading-snug text-foreground line-clamp-2">
+                                  {b.title}
+                                </p>
+                              </div>
+                            </div>
                           </div>
                         );
                       })
@@ -1278,4 +1356,5 @@ function RotinaWeekBoard({
     </div>
   );
 }
+
 
