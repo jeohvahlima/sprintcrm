@@ -29,11 +29,7 @@ export function HunterLeadDrawer({ open, onClose, lead, fetchEvents, onLogAttemp
 
   const startCall = () => {
     if (!lead.lead_phone) return;
-    callCenter.startCall({
-      phoneNumber: lead.lead_phone,
-      leadName: lead.lead_name || "Lead",
-      leadId: lead.lead_id || undefined,
-    } as any);
+    callCenter.startCall(lead.lead_id ?? null, lead.lead_name || "Lead", lead.lead_phone);
   };
 
   return (
