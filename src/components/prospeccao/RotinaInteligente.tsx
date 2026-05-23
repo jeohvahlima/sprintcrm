@@ -159,8 +159,10 @@ export function RotinaInteligente() {
     catch { return DEFAULT_CONFIG; }
   });
   const [activeRole, setActiveRole] = useState<Role>("sdr");
-  const [sdrBlocks, setSdrBlocks] = useState<RoutineBlock[]>([]);
-  const [closerBlocks, setCloserBlocks] = useState<RoutineBlock[]>([]);
+  const [sdrBlocksByScope, setSdrBlocksByScope] = useState<BlocksByScope>({});
+  const [closerBlocksByScope, setCloserBlocksByScope] = useState<BlocksByScope>({});
+  const [sdrScope, setSdrScope] = useState<ScopeId>("padrao");
+  const [closerScope, setCloserScope] = useState<ScopeId>("padrao");
   const [recordId, setRecordId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [usedTemplate, setUsedTemplate] = useState<{ sdr: boolean; closer: boolean }>({ sdr: false, closer: false });
@@ -174,8 +176,16 @@ export function RotinaInteligente() {
         const s = localStorage.getItem(ROUTINE_KEY);
         if (s) {
           const parsed = JSON.parse(s);
-          setSdrBlocks(parsed.sdr || []);
-          setCloserBlocks(parsed.closer || []);
+          setSdrBlocksByScope(normalizeScopedBlocks(parsed.sdr));
+          setCloserBlocksByScope(normalizeScopedBlocks(parsed.closer));
+        } else {
+          // tentativa de migração da chave v1
+          const old = localStorage.getItem("prospeccao_rotina_blocos_v1");
+          if (old) {
+            const parsed = JSON.parse(old);
+            setSdrBlocksByScope(normalizeScopedBlocks(parsed.sdr));
+            setCloserBlocksByScope(normalizeScopedBlocks(parsed.closer));
+          }
         }
       } catch {}
 
@@ -200,12 +210,14 @@ export function RotinaInteligente() {
         if (personal.config && Object.keys(personal.config as any).length) {
           setConfig({ ...DEFAULT_CONFIG, ...(personal.config as any) });
         }
-        if (Array.isArray(personal.sdr_blocks) && (personal.sdr_blocks as any[]).length) {
-          setSdrBlocks(personal.sdr_blocks as any);
+        const sdrNorm = normalizeScopedBlocks(personal.sdr_blocks);
+        if (Object.keys(sdrNorm).length) {
+          setSdrBlocksByScope(sdrNorm);
           hasPersonalSdr = true;
         }
-        if (Array.isArray(personal.closer_blocks) && (personal.closer_blocks as any[]).length) {
-          setCloserBlocks(personal.closer_blocks as any);
+        const closerNorm = normalizeScopedBlocks(personal.closer_blocks);
+        if (Object.keys(closerNorm).length) {
+          setCloserBlocksByScope(closerNorm);
           hasPersonalCloser = true;
         }
       } else {
@@ -224,15 +236,20 @@ export function RotinaInteligente() {
         if (tpls && tpls.length) {
           const sdrTpl = tpls.find((t: any) => t.template_role === "sdr");
           const closerTpl = tpls.find((t: any) => t.template_role === "closer");
-          if (!hasPersonalSdr && sdrTpl && Array.isArray(sdrTpl.sdr_blocks) && (sdrTpl.sdr_blocks as any[]).length) {
-            setSdrBlocks(sdrTpl.sdr_blocks as any);
-            setUsedTemplate((u) => ({ ...u, sdr: true }));
+          if (!hasPersonalSdr && sdrTpl) {
+            const norm = normalizeScopedBlocks(sdrTpl.sdr_blocks);
+            if (Object.keys(norm).length) {
+              setSdrBlocksByScope(norm);
+              setUsedTemplate((u) => ({ ...u, sdr: true }));
+            }
           }
-          if (!hasPersonalCloser && closerTpl && Array.isArray(closerTpl.closer_blocks) && (closerTpl.closer_blocks as any[]).length) {
-            setCloserBlocks(closerTpl.closer_blocks as any);
-            setUsedTemplate((u) => ({ ...u, closer: true }));
+          if (!hasPersonalCloser && closerTpl) {
+            const norm = normalizeScopedBlocks(closerTpl.closer_blocks);
+            if (Object.keys(norm).length) {
+              setCloserBlocksByScope(norm);
+              setUsedTemplate((u) => ({ ...u, closer: true }));
+            }
           }
-          // Se ainda não tem config pessoal, herda do template SDR (mais completo)
           if (!personal && sdrTpl?.config && Object.keys(sdrTpl.config as any).length) {
             setConfig({ ...DEFAULT_CONFIG, ...(sdrTpl.config as any) });
           }
