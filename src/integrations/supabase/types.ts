@@ -3796,6 +3796,116 @@ export type Database = {
         }
         Relationships: []
       }
+      hunter_pipeline_events: {
+        Row: {
+          company_id: string
+          created_at: string
+          event_type: string
+          from_stage: Database["public"]["Enums"]["hunter_stage"] | null
+          id: string
+          lead_pipeline_id: string
+          payload: Json | null
+          points: number
+          to_stage: Database["public"]["Enums"]["hunter_stage"] | null
+          user_id: string | null
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          event_type: string
+          from_stage?: Database["public"]["Enums"]["hunter_stage"] | null
+          id?: string
+          lead_pipeline_id: string
+          payload?: Json | null
+          points?: number
+          to_stage?: Database["public"]["Enums"]["hunter_stage"] | null
+          user_id?: string | null
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          event_type?: string
+          from_stage?: Database["public"]["Enums"]["hunter_stage"] | null
+          id?: string
+          lead_pipeline_id?: string
+          payload?: Json | null
+          points?: number
+          to_stage?: Database["public"]["Enums"]["hunter_stage"] | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hunter_pipeline_events_lead_pipeline_id_fkey"
+            columns: ["lead_pipeline_id"]
+            isOneToOne: false
+            referencedRelation: "hunter_pipeline_leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      hunter_pipeline_leads: {
+        Row: {
+          assigned_to: string | null
+          attempts: number
+          company_id: string
+          contact_person_name: string | null
+          created_at: string
+          decisor_classificacao: string | null
+          discard_reason: string | null
+          dor_identificada: string | null
+          id: string
+          last_action_at: string | null
+          lead_id: string | null
+          meeting_at: string | null
+          next_action_at: string | null
+          next_action_reason: string | null
+          notes: string | null
+          stage: Database["public"]["Enums"]["hunter_stage"]
+          substatus: string | null
+          updated_at: string
+        }
+        Insert: {
+          assigned_to?: string | null
+          attempts?: number
+          company_id: string
+          contact_person_name?: string | null
+          created_at?: string
+          decisor_classificacao?: string | null
+          discard_reason?: string | null
+          dor_identificada?: string | null
+          id?: string
+          last_action_at?: string | null
+          lead_id?: string | null
+          meeting_at?: string | null
+          next_action_at?: string | null
+          next_action_reason?: string | null
+          notes?: string | null
+          stage?: Database["public"]["Enums"]["hunter_stage"]
+          substatus?: string | null
+          updated_at?: string
+        }
+        Update: {
+          assigned_to?: string | null
+          attempts?: number
+          company_id?: string
+          contact_person_name?: string | null
+          created_at?: string
+          decisor_classificacao?: string | null
+          discard_reason?: string | null
+          dor_identificada?: string | null
+          id?: string
+          last_action_at?: string | null
+          lead_id?: string | null
+          meeting_at?: string | null
+          next_action_at?: string | null
+          next_action_reason?: string | null
+          notes?: string | null
+          stage?: Database["public"]["Enums"]["hunter_stage"]
+          substatus?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       ia_cadence_rules: {
         Row: {
           avoid_hours: Json | null
@@ -10959,6 +11069,15 @@ export type Database = {
         | "gestor"
         | "vendedor"
         | "suporte"
+      hunter_stage:
+        | "novo"
+        | "tentativa_contato"
+        | "follow_up"
+        | "contato_realizado"
+        | "buscando_decisor"
+        | "conversa_decisor"
+        | "oportunidade"
+        | "descartado"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -11092,6 +11211,16 @@ export const Constants = {
         "gestor",
         "vendedor",
         "suporte",
+      ],
+      hunter_stage: [
+        "novo",
+        "tentativa_contato",
+        "follow_up",
+        "contato_realizado",
+        "buscando_decisor",
+        "conversa_decisor",
+        "oportunidade",
+        "descartado",
       ],
     },
   },
