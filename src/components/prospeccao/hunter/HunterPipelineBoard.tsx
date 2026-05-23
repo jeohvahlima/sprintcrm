@@ -8,14 +8,18 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
-import { Plus, Phone, GripVertical, AlertTriangle, Target, Users, TrendingUp, Activity } from "lucide-react";
+import { Plus, Phone, GripVertical, AlertTriangle, Target, Users, TrendingUp, Activity, MoreVertical } from "lucide-react";
+import {
+  DropdownMenu, DropdownMenuTrigger, DropdownMenuContent,
+  DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useHunterPipeline, type HunterLead, type HunterStage } from "@/hooks/useHunterPipeline";
 import { HunterStageForm } from "./HunterStageForm";
-import { HunterLeadDrawer } from "./HunterLeadDrawer";
+import { HunterLeadDrawer, QUICK_REGISTRY, RESULT_OPTIONS } from "./HunterLeadDrawer";
 
 const COLUMNS: { id: HunterStage; label: string; color: string }[] = [
   { id: "novo", label: "Leads Novos", color: "hsl(200, 50%, 60%)" },
