@@ -18,6 +18,8 @@ import { useTagsManager } from "@/hooks/useTagsManager";
 import { ConversaPopup } from "@/components/leads/ConversaPopup";
 import { HandoffDialog } from "@/components/prospeccao/comercial/HandoffDialog";
 import { ColdCallActions } from "./ColdCallActions";
+import { HunterPipelineBoard } from "@/components/prospeccao/hunter/HunterPipelineBoard";
+import { LayoutList, KanbanSquare } from "lucide-react";
 
 interface Props {
   channel: ProspectChannel;
@@ -34,6 +36,7 @@ export function ChannelProspectPanel({ channel }: Props) {
   const Icon = meta.icon;
   const navigate = useNavigate();
   const [filter, setFilter] = useState<"all" | "marked">("marked");
+  const [viewMode, setViewMode] = useState<"list" | "pipeline">("list");
   const [search, setSearch] = useState("");
   const [tagFilter, setTagFilter] = useState<string>("all");
   const [outcomeFilter, setOutcomeFilter] = useState<string>("all");
@@ -381,12 +384,21 @@ export function ChannelProspectPanel({ channel }: Props) {
             </div>
           </div>
           <div className="flex items-center gap-2 flex-wrap">
+            {channel === "coldcall" && (
+              <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as any)}>
+                <TabsList className="h-8">
+                  <TabsTrigger value="list" className="text-xs h-7 gap-1"><LayoutList className="h-3 w-3" /> Lista</TabsTrigger>
+                  <TabsTrigger value="pipeline" className="text-xs h-7 gap-1"><KanbanSquare className="h-3 w-3" /> Pipeline</TabsTrigger>
+                </TabsList>
+              </Tabs>
+            )}
             <Tabs value={filter} onValueChange={(v) => setFilter(v as any)}>
               <TabsList className="h-8">
                 <TabsTrigger value="marked" className="text-xs h-7">Para prospectar</TabsTrigger>
                 <TabsTrigger value="all" className="text-xs h-7">Todos</TabsTrigger>
               </TabsList>
             </Tabs>
+
 
             {/* Filtro por TAG (segmentação) */}
             <Select value={tagFilter} onValueChange={setTagFilter}>
@@ -447,8 +459,11 @@ export function ChannelProspectPanel({ channel }: Props) {
         )}
       </Card>
 
-      {/* List */}
+      {channel === "coldcall" && viewMode === "pipeline" ? (
+        <HunterPipelineBoard />
+      ) : (
       <Card className="border-border">
+
         <ScrollArea className="h-[480px]">
           {isLoading ? (
             <div className="flex items-center justify-center py-12 text-muted-foreground">
@@ -539,6 +554,8 @@ export function ChannelProspectPanel({ channel }: Props) {
           )}
         </ScrollArea>
       </Card>
+      )}
+
 
       {/* Popup de Conversa Inline (Instagram & WhatsApp) */}
       {activeLead && (channel === "instagram" || channel === "whatsapp") && (
