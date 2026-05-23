@@ -42,75 +42,144 @@ function isStale(iso: string | null): boolean {
   return Date.now() - new Date(iso).getTime() > 24 * 60 * 60 * 1000;
 }
 
+function getInitials(name: string): string {
+  if (!name) return "?";
+  const parts = name.trim().split(/\s+/);
+  return ((parts[0]?.[0] ?? "") + (parts[1]?.[0] ?? "")).toUpperCase() || name[0].toUpperCase();
+}
+
 function HunterCard({ lead, isDragging, onClick, onLogAttempt }: { lead: HunterLead; isDragging?: boolean; onClick: () => void; onLogAttempt: (substatus: string) => void }) {
   const { attributes, listeners, setNodeRef, transform } = useDraggable({ id: lead.id, data: { lead } });
   const style = transform ? { transform: `translate(${transform.x}px, ${transform.y}px)`, zIndex: 50 } : undefined;
   const stale = isStale(lead.last_action_at);
+  const displayName = lead.lead_company || lead.lead_name || "Lead";
+  const subtitle = lead.lead_company && lead.lead_name ? lead.lead_name : null;
+  const daysAgo = lead.created_at ? Math.floor((Date.now() - new Date(lead.created_at).getTime()) / 86400000) : null;
+
+  const stop = (e: React.MouseEvent) => e.stopPropagation();
+  const actionBtn = "h-7 w-7 rounded-md flex items-center justify-center text-muted-foreground hover:bg-muted hover:text-foreground transition";
 
   return (
     <div
       ref={setNodeRef}
       style={style}
-      className={`rounded-lg border bg-card p-2.5 text-xs space-y-1.5 shadow-sm hover:border-primary/40 transition ${isDragging ? "opacity-50" : ""}`}
+      className={`relative rounded-lg border bg-card shadow-sm hover:border-primary/40 hover:shadow transition overflow-hidden ${isDragging ? "opacity-50" : ""}`}
     >
-      <div className="flex items-center justify-between gap-1">
-        <button {...listeners} {...attributes} className="flex items-center gap-1 min-w-0 cursor-grab active:cursor-grabbing">
-          <GripVertical className="h-3 w-3 text-muted-foreground flex-shrink-0" />
-          <span className="font-medium truncate">{lead.lead_company || lead.lead_name || "Lead"}</span>
-        </button>
-        <div className="flex items-center gap-1">
-          {lead.decisor_classificacao && (
-            <Badge variant="outline" className="text-[9px] px-1.5 h-4">{lead.decisor_classificacao}</Badge>
+      {/* Header: avatar + name + actions */}
+      <div className="p-2.5 pb-2">
+        <div className="flex items-start gap-2">
+          <button
+            {...listeners}
+            {...attributes}
+            className="flex-shrink-0 cursor-grab active:cursor-grabbing"
+            aria-label="Arrastar"
+          >
+            <Avatar className="h-8 w-8 ring-1 ring-border">
+              <AvatarFallback className="text-[10px] bg-muted">{getInitials(displayName)}</AvatarFallback>
+            </Avatar>
+          </button>
+
+          <button onClick={onClick} className="flex-1 min-w-0 text-left">
+            <p className="text-sm font-semibold truncate leading-tight">{displayName}</p>
+            {subtitle ? (
+              <p className="text-[11px] text-muted-foreground truncate mt-0.5">{subtitle}</p>
+            ) : (
+              <p className="text-[11px] text-muted-foreground/70 italic mt-0.5">+ Adicionar título</p>
+            )}
+          </button>
+
+          <div className="flex items-center gap-0.5 flex-shrink-0">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button onClick={stop} className={actionBtn} aria-label="Registrar ação">
+                  <MoreVertical className="h-3.5 w-3.5" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56 z-[60]">
+                <DropdownMenuLabel className="text-[10px]">Registrar ação</DropdownMenuLabel>
+                {QUICK_REGISTRY.map(({ key, label, icon: Icon, color }) => (
+                  <DropdownMenuItem key={key} onClick={() => onLogAttempt(key)} className="text-xs">
+                    <Icon className={`h-3.5 w-3.5 mr-2 ${color}`} /> {label}
+                  </DropdownMenuItem>
+                ))}
+                <DropdownMenuSeparator />
+                <DropdownMenuLabel className="text-[10px]">Resultado</DropdownMenuLabel>
+                {RESULT_OPTIONS.map((r) => (
+                  <DropdownMenuItem key={r.key} onClick={() => onLogAttempt(r.key)} className="text-xs">
+                    {r.label}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+            <button onClick={onClick} className={actionBtn} aria-label="Expandir">
+              <ChevronDown className="h-3.5 w-3.5" />
+            </button>
+          </div>
+        </div>
+
+        {/* Tags / badges row */}
+        <div className="flex items-center flex-wrap gap-1 mt-2">
+          {daysAgo !== null && (
+            <Badge variant="outline" className="text-[9px] h-5 px-1.5 gap-1 border-amber-500/30 text-amber-700 dark:text-amber-400 bg-amber-500/10">
+              <Activity className="h-2.5 w-2.5" /> {daysAgo}d
+            </Badge>
           )}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <button
-                onClick={(e) => e.stopPropagation()}
-                className="p-0.5 rounded hover:bg-muted text-muted-foreground hover:text-foreground"
-                aria-label="Registrar ação"
-              >
-                <MoreVertical className="h-3.5 w-3.5" />
-              </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56 z-[60]">
-              <DropdownMenuLabel className="text-[10px]">Registrar ação</DropdownMenuLabel>
-              {QUICK_REGISTRY.map(({ key, label, icon: Icon, color }) => (
-                <DropdownMenuItem key={key} onClick={() => onLogAttempt(key)} className="text-xs">
-                  <Icon className={`h-3.5 w-3.5 mr-2 ${color}`} /> {label}
-                </DropdownMenuItem>
-              ))}
-              <DropdownMenuSeparator />
-              <DropdownMenuLabel className="text-[10px]">Resultado</DropdownMenuLabel>
-              {RESULT_OPTIONS.map((r) => (
-                <DropdownMenuItem key={r.key} onClick={() => onLogAttempt(r.key)} className="text-xs">
-                  {r.label}
-                </DropdownMenuItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
+          {lead.decisor_classificacao && (
+            <Badge className="text-[9px] h-5 px-1.5 bg-primary/15 text-primary border-primary/30 hover:bg-primary/15">
+              {lead.decisor_classificacao}
+            </Badge>
+          )}
+          {lead.substatus && (
+            <Badge variant="secondary" className="text-[9px] h-5 px-1.5">{lead.substatus}</Badge>
+          )}
+          {stale && (
+            <Badge variant="outline" className="text-[9px] h-5 px-1.5 gap-1 border-amber-500/40 text-amber-600 bg-amber-500/10">
+              <AlertTriangle className="h-2.5 w-2.5" /> Parado
+            </Badge>
+          )}
         </div>
       </div>
 
-      <button onClick={onClick} className="block text-left w-full space-y-1">
-        {lead.lead_name && lead.lead_company && (
-          <p className="text-muted-foreground truncate">{lead.lead_name}</p>
-        )}
-        <div className="flex items-center justify-between text-[10px] text-muted-foreground">
-          <span className="flex items-center gap-1"><Phone className="h-2.5 w-2.5" />{lead.attempts}</span>
-          {lead.last_action_at && (
-            <span>{formatDistanceToNow(new Date(lead.last_action_at), { locale: ptBR, addSuffix: true })}</span>
-          )}
-        </div>
-        {lead.substatus && <Badge variant="secondary" className="text-[9px] h-4">{lead.substatus}</Badge>}
-        {stale && (
-          <div className="flex items-center gap-1 text-[10px] text-amber-600">
-            <AlertTriangle className="h-2.5 w-2.5" /> Parado &gt;24h
+      {/* Divider + bottom actions */}
+      <div className="px-2.5 pt-1.5 pb-2 border-t bg-muted/20">
+        <div className="flex items-center justify-between">
+          <span className="text-[10px] text-muted-foreground">
+            <Phone className="h-2.5 w-2.5 inline mr-0.5" />{lead.attempts} tentativa{lead.attempts === 1 ? "" : "s"}
+          </span>
+          <div className="flex items-center gap-0.5">
+            <button onClick={(e) => { stop(e); onLogAttempt("primeiro_contato"); }} className={actionBtn} title="Registrar contato">
+              <PhoneCall className="h-3.5 w-3.5 text-emerald-600" />
+            </button>
+            <button onClick={(e) => { stop(e); onClick(); }} className={actionBtn} title="Conversas">
+              <MessageCircle className="h-3.5 w-3.5" />
+            </button>
+            <button onClick={(e) => { stop(e); onClick(); }} className={actionBtn} title="Mover">
+              <MoveHorizontal className="h-3.5 w-3.5" />
+            </button>
+            <button onClick={(e) => { stop(e); onClick(); }} className={actionBtn} title="Agendar">
+              <Calendar className="h-3.5 w-3.5" />
+            </button>
+            <button onClick={(e) => { stop(e); onClick(); }} className={actionBtn} title="Tarefa">
+              <CheckSquare className="h-3.5 w-3.5" />
+            </button>
           </div>
-        )}
-      </button>
+        </div>
+      </div>
+
+      {/* Bottom progress bar (stage color) */}
+      <div className="h-1 w-full bg-muted">
+        <div
+          className="h-full transition-all"
+          style={{
+            width: `${Math.min(100, (lead.attempts || 0) * 20 + (lead.stage === "oportunidade" ? 100 : lead.stage === "conversa_decisor" ? 70 : lead.stage === "contato_realizado" ? 40 : 20))}%`,
+            backgroundColor: COLUMNS.find(c => c.id === lead.stage)?.color ?? "hsl(var(--primary))",
+          }}
+        />
+      </div>
     </div>
   );
 }
+
 
 function HunterColumn({ col, leads, children }: { col: typeof COLUMNS[0]; leads: HunterLead[]; children: React.ReactNode }) {
   const { setNodeRef, isOver } = useDroppable({ id: col.id });
