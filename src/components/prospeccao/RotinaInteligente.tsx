@@ -11,7 +11,7 @@ import { Progress } from "@/components/ui/progress";
 import {
   Brain, Target, Phone, MessageCircle, Instagram, Mail, Coffee,
   TrendingUp, AlertTriangle, RefreshCw, Save, Plus, Trash2, GripVertical,
-  Sun, CloudSun, Sunset, Moon, Zap, BookOpen, Calendar
+  Sun, CloudSun, Sunset, Moon, Zap, BookOpen, Calendar, LayoutGrid, List, Copy, Pencil
 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -163,6 +163,8 @@ export function RotinaInteligente() {
   const [closerBlocksByScope, setCloserBlocksByScope] = useState<BlocksByScope>({});
   const [sdrScope, setSdrScope] = useState<ScopeId>("padrao");
   const [closerScope, setCloserScope] = useState<ScopeId>("padrao");
+  const [sdrViewMode, setSdrViewMode] = useState<"board" | "detail">("board");
+  const [closerViewMode, setCloserViewMode] = useState<"board" | "detail">("board");
   const [recordId, setRecordId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [usedTemplate, setUsedTemplate] = useState<{ sdr: boolean; closer: boolean }>({ sdr: false, closer: false });
@@ -712,9 +714,11 @@ export function RotinaInteligente() {
             </CardContent>
           </Card>
 
-          <RotinaTimeline
+          <RotinaViewSwitcher
             role="sdr"
-            blocks={getBlocks("sdr", sdrScope)}
+            viewMode={sdrViewMode}
+            onViewModeChange={setSdrViewMode}
+            blocksByScope={sdrBlocksByScope}
             scope={sdrScope}
             onScopeChange={setSdrScope}
             onGenerate={() => handleGenerate("sdr")}
@@ -723,13 +727,14 @@ export function RotinaInteligente() {
             onRemove={(id) => removeBlock("sdr", id)}
             onClearScope={() => clearScope("sdr")}
             onCopyFromPadrao={() => copyFromPadrao("sdr")}
-            scopesWithContent={Object.entries(sdrBlocksByScope).filter(([, v]) => (v?.length || 0) > 0).map(([k]) => k as ScopeId)}
+            onJumpToScope={(s) => { setSdrScope(s); setSdrViewMode("detail"); }}
             metricsTop={[
               { label: "Leads/dia", value: metrics.leadsPorSdr },
               { label: "Abordagens/dia", value: metrics.leadsPorSdr },
               { label: "Reuniões/dia (time)", value: metrics.reunioesDia },
             ]}
           />
+
 
         </TabsContent>
 
@@ -769,9 +774,11 @@ export function RotinaInteligente() {
             </CardContent>
           </Card>
 
-          <RotinaTimeline
+          <RotinaViewSwitcher
             role="closer"
-            blocks={getBlocks("closer", closerScope)}
+            viewMode={closerViewMode}
+            onViewModeChange={setCloserViewMode}
+            blocksByScope={closerBlocksByScope}
             scope={closerScope}
             onScopeChange={setCloserScope}
             onGenerate={() => handleGenerate("closer")}
@@ -780,13 +787,14 @@ export function RotinaInteligente() {
             onRemove={(id) => removeBlock("closer", id)}
             onClearScope={() => clearScope("closer")}
             onCopyFromPadrao={() => copyFromPadrao("closer")}
-            scopesWithContent={Object.entries(closerBlocksByScope).filter(([, v]) => (v?.length || 0) > 0).map(([k]) => k as ScopeId)}
+            onJumpToScope={(s) => { setCloserScope(s); setCloserViewMode("detail"); }}
             metricsTop={[
               { label: "Reuniões/dia", value: metrics.reunioesPorCloser },
               { label: "Capacidade real", value: metrics.capacidadeReunioes },
               { label: "Vendas/dia (time)", value: metrics.vendasDia },
             ]}
           />
+
 
         </TabsContent>
       </Tabs>
@@ -990,3 +998,284 @@ function RotinaTimeline({
     </Card>
   );
 }
+
+// ============================================
+// VIEW SWITCHER: Quadro Semanal x Detalhe
+// ============================================
+type ViewSwitcherProps = {
+  role: Role;
+  viewMode: "board" | "detail";
+  onViewModeChange: (v: "board" | "detail") => void;
+  blocksByScope: BlocksByScope;
+  scope: ScopeId;
+  onScopeChange: (s: ScopeId) => void;
+  onGenerate: () => void;
+  onAdd: () => void;
+  onUpdate: (id: string, patch: Partial<RoutineBlock>) => void;
+  onRemove: (id: string) => void;
+  onClearScope: () => void;
+  onCopyFromPadrao: () => void;
+  onJumpToScope: (s: ScopeId) => void;
+  metricsTop: { label: string; value: number }[];
+};
+
+function RotinaViewSwitcher(props: ViewSwitcherProps) {
+  const { role, viewMode, onViewModeChange, blocksByScope, metricsTop } = props;
+  const scopesWithContent = Object.entries(blocksByScope)
+    .filter(([, v]) => (v?.length || 0) > 0)
+    .map(([k]) => k as ScopeId);
+
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center justify-between gap-2 flex-wrap">
+        <div className="flex gap-2 flex-wrap items-center">
+          <Badge variant="outline" className="text-xs gap-1">
+            <Calendar className="h-3 w-3" />
+            {role === "sdr" ? "Quadro do SDR" : "Quadro do Closer"}
+          </Badge>
+          {metricsTop.map((m) => (
+            <Badge key={m.label} variant="secondary" className="text-xs">
+              {m.label}: <span className="font-bold ml-1">{m.value}</span>
+            </Badge>
+          ))}
+        </div>
+        <div className="inline-flex rounded-lg border border-border bg-muted/40 p-0.5">
+          <Button
+            size="sm"
+            variant={viewMode === "board" ? "default" : "ghost"}
+            className="h-7 px-3"
+            onClick={() => onViewModeChange("board")}
+          >
+            <LayoutGrid className="h-3.5 w-3.5 mr-1" /> Quadro Semanal
+          </Button>
+          <Button
+            size="sm"
+            variant={viewMode === "detail" ? "default" : "ghost"}
+            className="h-7 px-3"
+            onClick={() => onViewModeChange("detail")}
+          >
+            <List className="h-3.5 w-3.5 mr-1" /> Editor detalhado
+          </Button>
+        </div>
+      </div>
+
+      {viewMode === "board" ? (
+        <RotinaWeekBoard
+          role={role}
+          blocksByScope={blocksByScope}
+          onJumpToScope={props.onJumpToScope}
+          onCopyScope={(from, to) => {
+            const src = blocksByScope[from] || [];
+            if (!src.length) {
+              toast.error("Escopo de origem está vazio.");
+              return;
+            }
+            // simula um onCopyFromPadrao para um destino arbitrário
+            const cloned = src.map((b) => ({ ...b, id: crypto.randomUUID() }));
+            // delega via onUpdate/add? Mais simples: muda escopo e cola
+            // usamos onJumpToScope + um efeito do destino — porém aqui não temos setter direto
+            // Solução simples: aciona scope change e depois deixa o usuário usar "copiar do padrão"
+            // Para evitar complexidade, escrevemos no localStorage logo após
+            // ⚠️ implementação simplificada: muda escopo e chama copyFromPadrao só funciona para padrão.
+            // Aqui apenas notificamos:
+            toast.info("Abra o editor detalhado do dia destino e use 'Copiar do Padrão' ou edite manualmente.");
+            props.onJumpToScope(to);
+          }}
+        />
+      ) : (
+        <RotinaTimeline
+          role={role}
+          blocks={(blocksByScope[props.scope] || [])}
+          scope={props.scope}
+          onScopeChange={props.onScopeChange}
+          onGenerate={props.onGenerate}
+          onAdd={props.onAdd}
+          onUpdate={props.onUpdate}
+          onRemove={props.onRemove}
+          onClearScope={props.onClearScope}
+          onCopyFromPadrao={props.onCopyFromPadrao}
+          scopesWithContent={scopesWithContent}
+          metricsTop={metricsTop}
+        />
+      )}
+    </div>
+  );
+}
+
+// ============================================
+// QUADRO SEMANAL (kanban estilo planilha)
+// ============================================
+const WEEK_SCOPES: ScopeId[] = ["padrao", "segunda", "terca", "quarta", "quinta", "sexta", "sabado"];
+const MONTH_SCOPES: ScopeId[] = ["inicio_mes", "meio_mes", "fim_mes"];
+
+function RotinaWeekBoard({
+  role,
+  blocksByScope,
+  onJumpToScope,
+  onCopyScope,
+}: {
+  role: Role;
+  blocksByScope: BlocksByScope;
+  onJumpToScope: (s: ScopeId) => void;
+  onCopyScope: (from: ScopeId, to: ScopeId) => void;
+}) {
+  // Escopos que vamos mostrar como colunas (apenas semana). Fases do mês ficam em um bloco separado.
+  const visibleWeek = WEEK_SCOPES;
+  const padraoBlocks = blocksByScope.padrao || [];
+  const hasPadrao = padraoBlocks.length > 0;
+
+  return (
+    <div className="space-y-4">
+      {/* QUADRO SEMANAL */}
+      <Card className="overflow-hidden">
+        <CardHeader className="pb-3 flex flex-row items-center justify-between flex-wrap gap-2">
+          <CardTitle className="text-base flex items-center gap-2">
+            <LayoutGrid className="h-5 w-5 text-primary" />
+            Rotina semanal {role === "sdr" ? "do SDR" : "do Closer"}
+          </CardTitle>
+          <p className="text-[11px] text-muted-foreground">
+            Clique em <b>Editar</b> em qualquer dia para personalizar. A coluna <b>Padrão</b> é usada quando o dia não tem rotina específica.
+          </p>
+        </CardHeader>
+        <CardContent className="overflow-x-auto">
+          <div className="grid gap-2 min-w-[1100px]"
+               style={{ gridTemplateColumns: `repeat(${visibleWeek.length}, minmax(160px, 1fr))` }}>
+            {visibleWeek.map((sid) => {
+              const scope = SCOPES.find((s) => s.id === sid)!;
+              const blocks = blocksByScope[sid] || [];
+              const isOverride = sid !== "padrao" && blocks.length > 0;
+              const usingPadrao = sid !== "padrao" && blocks.length === 0;
+              return (
+                <div
+                  key={sid}
+                  className={`rounded-xl border ${sid === "padrao" ? "border-primary/40 bg-primary/5" : "border-border bg-card"} flex flex-col`}
+                >
+                  {/* Header da coluna */}
+                  <div className={`px-3 py-2 rounded-t-xl ${sid === "padrao" ? "bg-primary/10" : "bg-muted/40"} border-b border-border flex items-center justify-between gap-1`}>
+                    <div className="min-w-0">
+                      <p className="text-xs font-semibold truncate">
+                        {scope.label.split(" (")[0]}
+                      </p>
+                      {isOverride && (
+                        <Badge variant="outline" className="mt-0.5 text-[9px] px-1 py-0 border-emerald-500/50 text-emerald-600">
+                          Personalizado
+                        </Badge>
+                      )}
+                      {usingPadrao && (
+                        <Badge variant="outline" className="mt-0.5 text-[9px] px-1 py-0 text-muted-foreground">
+                          Usa Padrão
+                        </Badge>
+                      )}
+                    </div>
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      className="h-6 w-6 shrink-0"
+                      onClick={() => onJumpToScope(sid)}
+                      title="Editar rotina deste dia"
+                    >
+                      <Pencil className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
+
+                  {/* Conteúdo da coluna */}
+                  <div className="p-1.5 space-y-1 min-h-[280px]">
+                    {(blocks.length > 0 ? blocks : (sid !== "padrao" ? padraoBlocks : [])).map((b) => {
+                      const style = BLOCK_STYLES[b.type];
+                      const Icon = style.icon;
+                      const isInherited = blocks.length === 0;
+                      return (
+                        <div
+                          key={`${sid}-${b.id}`}
+                          className={`rounded-md border-l-[3px] ${style.border} ${style.bg} px-2 py-1.5 ${isInherited ? "opacity-60" : ""}`}
+                          title={b.description || b.title}
+                        >
+                          <div className="flex items-center gap-1 text-[10px] font-mono text-muted-foreground">
+                            {b.startTime}–{b.endTime}
+                          </div>
+                          <div className="flex items-start gap-1 mt-0.5">
+                            <Icon className="h-3 w-3 mt-0.5 text-foreground/70 shrink-0" />
+                            <p className="text-[11px] leading-tight font-medium text-foreground line-clamp-2">
+                              {b.title}
+                            </p>
+                          </div>
+                          {b.goal && (
+                            <p className="text-[9px] text-primary mt-0.5 line-clamp-1">🎯 {b.goal}</p>
+                          )}
+                        </div>
+                      );
+                    })}
+
+                    {/* Estado vazio */}
+                    {blocks.length === 0 && sid === "padrao" && (
+                      <div className="text-center text-[10px] text-muted-foreground py-6 px-2">
+                        Sem rotina padrão. Clique em <b>Editar</b> e use <b>"Gerar com IA da meta"</b>.
+                      </div>
+                    )}
+                    {blocks.length === 0 && sid !== "padrao" && !hasPadrao && (
+                      <div className="text-center text-[10px] text-muted-foreground py-6 px-2">
+                        Vazio. Crie a rotina Padrão primeiro.
+                      </div>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* FASES DO MÊS */}
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base flex items-center gap-2">
+            <Calendar className="h-5 w-5 text-amber-500" />
+            Fases do mês
+          </CardTitle>
+          <p className="text-[11px] text-muted-foreground">
+            Sobrescrevem a rotina padrão em datas específicas (ex.: fim de mês = corrida de fechamento).
+          </p>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            {MONTH_SCOPES.map((sid) => {
+              const scope = SCOPES.find((s) => s.id === sid)!;
+              const blocks = blocksByScope[sid] || [];
+              return (
+                <div key={sid} className="rounded-xl border border-border bg-card">
+                  <div className="px-3 py-2 border-b border-border bg-muted/40 rounded-t-xl flex items-center justify-between">
+                    <div className="min-w-0">
+                      <p className="text-xs font-semibold truncate">{scope.label.split(" (")[0]}</p>
+                      {scope.hint && <p className="text-[10px] text-muted-foreground truncate">{scope.hint}</p>}
+                    </div>
+                    <Button size="icon" variant="ghost" className="h-6 w-6 shrink-0" onClick={() => onJumpToScope(sid)}>
+                      <Pencil className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
+                  <div className="p-2 space-y-1 min-h-[100px]">
+                    {blocks.length === 0 ? (
+                      <p className="text-[10px] text-muted-foreground text-center py-4">
+                        Sem rotina específica. Clique em editar para definir.
+                      </p>
+                    ) : (
+                      blocks.map((b) => {
+                        const style = BLOCK_STYLES[b.type];
+                        return (
+                          <div key={`${sid}-${b.id}`} className={`rounded-md border-l-[3px] ${style.border} ${style.bg} px-2 py-1`}>
+                            <div className="text-[10px] font-mono text-muted-foreground">{b.startTime}–{b.endTime}</div>
+                            <p className="text-[11px] font-medium leading-tight line-clamp-2">{b.title}</p>
+                          </div>
+                        );
+                      })
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
