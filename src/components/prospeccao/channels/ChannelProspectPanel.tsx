@@ -384,12 +384,21 @@ export function ChannelProspectPanel({ channel }: Props) {
             </div>
           </div>
           <div className="flex items-center gap-2 flex-wrap">
+            {channel === "coldcall" && (
+              <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as any)}>
+                <TabsList className="h-8">
+                  <TabsTrigger value="list" className="text-xs h-7 gap-1"><LayoutList className="h-3 w-3" /> Lista</TabsTrigger>
+                  <TabsTrigger value="pipeline" className="text-xs h-7 gap-1"><KanbanSquare className="h-3 w-3" /> Pipeline</TabsTrigger>
+                </TabsList>
+              </Tabs>
+            )}
             <Tabs value={filter} onValueChange={(v) => setFilter(v as any)}>
               <TabsList className="h-8">
                 <TabsTrigger value="marked" className="text-xs h-7">Para prospectar</TabsTrigger>
                 <TabsTrigger value="all" className="text-xs h-7">Todos</TabsTrigger>
               </TabsList>
             </Tabs>
+
 
             {/* Filtro por TAG (segmentação) */}
             <Select value={tagFilter} onValueChange={setTagFilter}>
