@@ -36,6 +36,7 @@ export function ChannelProspectPanel({ channel }: Props) {
   const Icon = meta.icon;
   const navigate = useNavigate();
   const [filter, setFilter] = useState<"all" | "marked">("marked");
+  const [viewMode, setViewMode] = useState<"list" | "pipeline">("list");
   const [search, setSearch] = useState("");
   const [tagFilter, setTagFilter] = useState<string>("all");
   const [outcomeFilter, setOutcomeFilter] = useState<string>("all");
