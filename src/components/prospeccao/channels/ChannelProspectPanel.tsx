@@ -459,8 +459,11 @@ export function ChannelProspectPanel({ channel }: Props) {
         )}
       </Card>
 
-      {/* List */}
+      {channel === "coldcall" && viewMode === "pipeline" ? (
+        <HunterPipelineBoard />
+      ) : (
       <Card className="border-border">
+
         <ScrollArea className="h-[480px]">
           {isLoading ? (
             <div className="flex items-center justify-center py-12 text-muted-foreground">
