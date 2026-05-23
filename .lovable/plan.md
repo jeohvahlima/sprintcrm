@@ -1,70 +1,153 @@
-## Pipeline Hunter (Cold Call Kanban)
+## Visão
 
-Adicionar um modo **Pipeline** ao painel Cold Call atual (`ChannelProspectPanel` / aba Cold Call do módulo Prospecção), mantendo o **Modo Lista** existente intacto. O modo Pipeline é um Kanban de execução de SDR outbound.
+Transformar o CRM em um **cockpit operacional verde Waze** com sensação de missão, progresso e jogo. Foco em SDR/Closer, sem quebrar funcionalidades existentes.
 
-### Escopo — Fase 1 (entrega agora)
+Vou trabalhar em **fases entregáveis**. Cada fase é independente e usável — você aprova ou ajusta antes de seguir.
 
-Foco no núcleo do produto. Gamificação avançada, cadência automática e IA ficam para a Fase 2.
+---
 
-#### 1. Banco (migração)
-- Tabela `hunter_pipeline_leads` (1 linha por lead no pipeline):
-  - `lead_id`, `company_id`, `assigned_to`, `stage` (enum), `substatus`, `attempts`, `last_action_at`, `next_action_at`, `next_action_reason`, `contact_person_name`, `decisor_classificacao` (A/B/C), `dor_identificada`, `meeting_at`, `discard_reason`, `notes`.
-- Tabela `hunter_pipeline_events` (auditoria/timeline):
-  - `lead_pipeline_id`, `user_id`, `event_type` (call_attempt, stage_moved, note, score), `from_stage`, `to_stage`, `payload jsonb`, `points`, `created_at`.
-- Enum `hunter_stage`: `novo`, `tentativa_contato`, `follow_up`, `contato_realizado`, `buscando_decisor`, `conversa_decisor`, `oportunidade`, `descartado`.
-- RLS por `company_id` (security definer `get_user_company_ids()` padrão do projeto).
-- Trigger: após 3 `call_attempt` sem sucesso → move para `follow_up` automaticamente.
+## O que JÁ existe (vou reutilizar, não recriar)
 
-#### 2. UI — toggle Lista | Pipeline
-- Em `ChannelProspectPanel.tsx`, na aba Cold Call adicionar toggle `Lista` / `Pipeline` no topo.
-- Modo Lista = comportamento atual (sem mudar).
-- Modo Pipeline = novo componente `HunterPipelineBoard`.
+- `prospecting_gamification_config` — regras de XP por ação
+- `add_player_xp`, `unlock_achievement`, `recalc_quest_progress` — engine de XP
+- `prospecting_player_profile` — XP/level/coins do jogador
+- `prospecting_daily_logs` + triggers automáticos (`tg_xp_from_daily_log`, `tg_xp_from_interaction`, `tg_xp_from_call`) — já geram XP de ligações, conversas, vendas
+- `useDailyFocus`, `useLeaderboard`, `usePlayerProfile`, `useCommercialGoals`, `useActiveQuests`, `useAchievements`
+- `TopoFoco` (Meta do Dia / Perda / Posição) já implementado em `src/components/prospeccao/foco/`
+- `RotinaInteligente` com quadro semanal recém criado
 
-#### 3. Componente `HunterPipelineBoard`
-- Kanban com 8 colunas fixas (padrão `JuridicoKanban`: `@dnd-kit/core`, `PointerSensor` distance 8).
-- Card mostra: nome empresa, último evento, contador de tentativas, cor por estágio, badge de classificação A/B/C.
-- Drag-and-drop entre colunas → grava evento + atualiza `stage`.
-- Click no card abre `HunterLeadDrawer`:
-  - Histórico de ligações/eventos (de `hunter_pipeline_events`)
-  - Notas, status, próxima ação
-  - Botão **Click-to-Call** integrado ao discador existente (`useCallCenter`)
-  - Form contextual ao estágio (substatus, classificação obrigatória em "Conversa decisor", motivo em "Descartado", data em "Oportunidade" e "Follow-up").
+## O que vou CRIAR (mínimo necessário)
 
-#### 4. Regras automáticas
-- Hook `useHunterPipeline` controla optimistic update + chamada Supabase.
-- Validações:
-  - Mover para `conversa_decisor` exige classificação A/B/C + dor.
-  - Mover para `oportunidade` exige `meeting_at`.
-  - Mover para `descartado` exige motivo.
-  - Mover para `follow_up` exige `next_action_at` + motivo.
-- 3 tentativas sem sucesso → trigger DB já trata.
-- Alerta visual no card se `last_action_at > 24h` (badge âmbar "Parado").
+- `daily_missions` — missões por turno (manhã/tarde/noite), por role
+- `daily_mission_progress` — execução diária por usuário
+- `daily_checklists` — checklist interno por bloco da agenda
+- Vista materializada / função `get_player_dashboard(user_id)` agregando XP do dia, streak, missões e ranking em 1 chamada
 
-#### 5. Dashboard mínimo (topo do board)
-- 4 KPIs: total no pipeline, taxa de conexão, taxa de decisor, taxa de oportunidade (calculadas client-side a partir dos eventos).
+---
 
-#### 6. Pontuação (base para gamificação)
-- Trigger DB grava `points` em `hunter_pipeline_events` conforme `event_type`:
-  - `call_attempt` +1, `contato_realizado` +3, `buscando_decisor`→`conversa_decisor` +5, `oportunidade` +10.
-- Exibição de ranking detalhado fica para Fase 2 (já há ranking SDR no projeto).
+## Fase 1 — Cockpit de Prospecção (esta entrega)
 
-### Fora desta fase (Fase 2)
-- Cadência automática multicanal
-- IA de próxima ação
-- Ranking Hunter Performance completo + integração com gamificação existente
-- Insights automáticos ("você está falando com muitas recepções…")
-- Integrações LinkedIn / e-mail
+**Escopo:** página `/prospeccao` vira o cockpit.
 
-### Arquivos previstos
-- `supabase/migrations/<nova>.sql`
-- `src/hooks/useHunterPipeline.ts`
-- `src/components/prospeccao/hunter/HunterPipelineBoard.tsx`
-- `src/components/prospeccao/hunter/HunterLeadDrawer.tsx`
-- `src/components/prospeccao/hunter/HunterStageForm.tsx`
-- `src/components/prospeccao/hunter/HunterKPIs.tsx`
-- Edição: `src/components/prospeccao/channels/ChannelProspectPanel.tsx` (toggle)
+1. **Header de Missão (HUD)** acima das abas — sticky, sempre visível:
+   - Meta do dia (barra de progresso animada)
+   - XP de hoje + nível + barra para próximo nível
+   - Streak 🔥 (dias seguidos batendo meta)
+   - Energia do SDR (alta/média/baixa — toggle)
+   - Posição no ranking + diff para o #1
+2. **Bloco "Próxima Missão"** com CTA único destacando a ação prioritária agora (próximo bloco da rotina, lead urgente ou follow-up atrasado).
+3. **Agenda Inteligente redesenhada** (timeline viva):
+   - Cards maiores com respiro, cor por categoria (verde prospecção, amarelo follow-up, azul reunião, roxo treino, cinza pausa)
+   - Checklist interno por bloco
+   - Indicador de "agora", tempo restante, % concluído
+   - Cor de borda lateral por prioridade
+4. **Painel "Como foi meu dia?"** ao fim do expediente — captura foco, objeções, dificuldades.
+5. **Feed de performance da equipe** lateral (compactado) — "🔥 João bateu 42 abordagens".
 
-### Confirmações que preciso antes de começar
-1. **OK rodar migração** criando `hunter_pipeline_leads`, `hunter_pipeline_events` e enum `hunter_stage`?
-2. **Fase 1 conforme acima** (sem cadência/IA/insights ainda) — pode seguir? Ou prefere que eu inclua tudo em uma entrega só (vai gerar várias migrações + ~10 arquivos novos)?
-3. Os leads existentes em Cold Call entram no Kanban automaticamente em **"Leads Novos"** na primeira abertura, certo?
+**Mexe em:** `src/pages/RevenueEngine.tsx` (ou onde mora `/prospeccao`), `src/components/prospeccao/RotinaInteligente.tsx`, `src/components/prospeccao/foco/*`, novos componentes em `src/components/prospeccao/cockpit/`.
+
+**Migração:** tabelas `daily_missions`, `daily_mission_progress`, `daily_checklists` + RLS por `company_id`.
+
+---
+
+## Fase 2 — Gamificação completa
+
+- Tela `/gamificacao` com:
+  - Carteira de XP e moedas
+  - Mural de conquistas (locked/unlocked, raridade)
+  - Quests ativas com barra de progresso
+  - Ranking semanal/mensal com pódio
+  - Histórico de eventos de XP
+- Toast de XP ao concluir ação ("+15 XP — CRM atualizado")
+- Animação de level up
+
+## Fase 3 — Funil de Vendas modo cockpit
+
+- Kanban com indicadores visuais de calor por coluna
+- Cards de lead com prioridade, idade, próximo passo
+- "Foco do dia" no funil — leads que exigem ação agora
+
+## Fase 4 — Conversas modo execução
+
+- Header com SLA do contato
+- Sugestão de próxima frase (IA)
+- Score do lead visível
+
+## Fase 5 — Painel do Gestor
+
+- Visão de equipe (performance, gargalos, ranking)
+- Alertas de underperformance
+- Comparativo período x período
+
+---
+
+## Stack visual (Verde Waze — já no projeto)
+
+- Primary `142 71% 45%` (#22C55E)
+- BG dark `160 35% 5%`
+- Tokens semânticos via `index.css` + `tailwind.config.ts` (já existem)
+- Animações: `framer-motion` para barras de progresso, level up, conquistas
+- Ícones: `lucide-react` (já no projeto)
+
+---
+
+## Detalhes técnicos (para referência)
+
+### Nova migração (Fase 1)
+
+```sql
+CREATE TABLE public.daily_missions (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  company_id UUID NOT NULL,
+  title TEXT NOT NULL,
+  description TEXT,
+  role_target TEXT,             -- 'sdr' | 'closer' | NULL (ambos)
+  shift TEXT NOT NULL,          -- 'manha' | 'tarde' | 'noite'
+  weekday SMALLINT,             -- 0-6, NULL = todo dia
+  xp_reward INT DEFAULT 25,
+  active BOOLEAN DEFAULT true,
+  ...
+);
+
+CREATE TABLE public.daily_mission_progress (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  mission_id UUID REFERENCES daily_missions(id) ON DELETE CASCADE,
+  user_id UUID NOT NULL,
+  company_id UUID NOT NULL,
+  log_date DATE NOT NULL DEFAULT CURRENT_DATE,
+  status TEXT DEFAULT 'pending',  -- pending | done | skipped
+  completed_at TIMESTAMPTZ,
+  UNIQUE(mission_id, user_id, log_date)
+);
+
+CREATE TABLE public.daily_checklists (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL,
+  company_id UUID NOT NULL,
+  block_key TEXT NOT NULL,    -- referência ao bloco da rotina
+  log_date DATE NOT NULL DEFAULT CURRENT_DATE,
+  items JSONB NOT NULL DEFAULT '[]'::jsonb,
+  UNIQUE(user_id, block_key, log_date)
+);
+```
+
+RLS: SELECT/INSERT/UPDATE só na própria `company_id`. Conclusão de missão chama `add_player_xp` via trigger.
+
+### Componentes novos (Fase 1)
+
+```
+src/components/prospeccao/cockpit/
+  CockpitHUD.tsx          # Header sticky com XP, meta, streak, energia
+  ProximaMissaoCard.tsx   # CTA único da próxima ação
+  AgendaTimelineViva.tsx  # Timeline redesenhada
+  AgendaBlocoCard.tsx     # Card de bloco com checklist
+  MissoesDoTurno.tsx      # Lista de missões manhã/tarde/noite
+  FimDeDiaDialog.tsx      # "Como foi meu dia?"
+  FeedPerformance.tsx     # Mural lateral da equipe
+```
+
+---
+
+## Próximo passo
+
+Se aprovar, **começo já pela Fase 1** (migração + cockpit + agenda redesenhada). Se quiser ajustar escopo ou ordem das fases, me diga antes do build.

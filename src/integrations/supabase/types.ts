@@ -2917,6 +2917,167 @@ export type Database = {
           },
         ]
       }
+      daily_checklists: {
+        Row: {
+          block_key: string
+          company_id: string
+          created_at: string
+          id: string
+          items: Json
+          log_date: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          block_key: string
+          company_id: string
+          created_at?: string
+          id?: string
+          items?: Json
+          log_date?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          block_key?: string
+          company_id?: string
+          created_at?: string
+          id?: string
+          items?: Json
+          log_date?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      daily_energy_log: {
+        Row: {
+          company_id: string
+          created_at: string
+          energy_level: string
+          id: string
+          log_date: string
+          note: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          energy_level?: string
+          id?: string
+          log_date?: string
+          note?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          energy_level?: string
+          id?: string
+          log_date?: string
+          note?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      daily_mission_progress: {
+        Row: {
+          company_id: string
+          completed_at: string | null
+          created_at: string
+          id: string
+          log_date: string
+          mission_id: string
+          status: string
+          updated_at: string
+          user_id: string
+          xp_awarded: number
+        }
+        Insert: {
+          company_id: string
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          log_date?: string
+          mission_id: string
+          status?: string
+          updated_at?: string
+          user_id: string
+          xp_awarded?: number
+        }
+        Update: {
+          company_id?: string
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          log_date?: string
+          mission_id?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+          xp_awarded?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "daily_mission_progress_mission_id_fkey"
+            columns: ["mission_id"]
+            isOneToOne: false
+            referencedRelation: "daily_missions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      daily_missions: {
+        Row: {
+          active: boolean
+          company_id: string
+          created_at: string
+          created_by: string | null
+          description: string | null
+          icon: string | null
+          id: string
+          role_target: string | null
+          shift: string
+          title: string
+          updated_at: string
+          weekday: number | null
+          xp_reward: number
+        }
+        Insert: {
+          active?: boolean
+          company_id: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          icon?: string | null
+          id?: string
+          role_target?: string | null
+          shift?: string
+          title: string
+          updated_at?: string
+          weekday?: number | null
+          xp_reward?: number
+        }
+        Update: {
+          active?: boolean
+          company_id?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          icon?: string | null
+          id?: string
+          role_target?: string | null
+          shift?: string
+          title?: string
+          updated_at?: string
+          weekday?: number | null
+          xp_reward?: number
+        }
+        Relationships: []
+      }
       diagnostico_alavancas: {
         Row: {
           cor: string | null
@@ -3300,6 +3461,51 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      end_of_day_reviews: {
+        Row: {
+          biggest_difficulty: string | null
+          company_id: string
+          created_at: string
+          focus_score: number | null
+          id: string
+          log_date: string
+          meetings_count: number | null
+          notes: string | null
+          objections_count: number | null
+          updated_at: string
+          user_id: string
+          wins: string | null
+        }
+        Insert: {
+          biggest_difficulty?: string | null
+          company_id: string
+          created_at?: string
+          focus_score?: number | null
+          id?: string
+          log_date?: string
+          meetings_count?: number | null
+          notes?: string | null
+          objections_count?: number | null
+          updated_at?: string
+          user_id: string
+          wins?: string | null
+        }
+        Update: {
+          biggest_difficulty?: string | null
+          company_id?: string
+          created_at?: string
+          focus_score?: number | null
+          id?: string
+          log_date?: string
+          meetings_count?: number | null
+          notes?: string | null
+          objections_count?: number | null
+          updated_at?: string
+          user_id?: string
+          wins?: string | null
+        }
+        Relationships: []
       }
       etapas: {
         Row: {
