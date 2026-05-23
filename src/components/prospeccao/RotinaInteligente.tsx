@@ -774,9 +774,11 @@ export function RotinaInteligente() {
             </CardContent>
           </Card>
 
-          <RotinaTimeline
+          <RotinaViewSwitcher
             role="closer"
-            blocks={getBlocks("closer", closerScope)}
+            viewMode={closerViewMode}
+            onViewModeChange={setCloserViewMode}
+            blocksByScope={closerBlocksByScope}
             scope={closerScope}
             onScopeChange={setCloserScope}
             onGenerate={() => handleGenerate("closer")}
@@ -785,13 +787,14 @@ export function RotinaInteligente() {
             onRemove={(id) => removeBlock("closer", id)}
             onClearScope={() => clearScope("closer")}
             onCopyFromPadrao={() => copyFromPadrao("closer")}
-            scopesWithContent={Object.entries(closerBlocksByScope).filter(([, v]) => (v?.length || 0) > 0).map(([k]) => k as ScopeId)}
+            onJumpToScope={(s) => { setCloserScope(s); setCloserViewMode("detail"); }}
             metricsTop={[
               { label: "Reuniões/dia", value: metrics.reunioesPorCloser },
               { label: "Capacidade real", value: metrics.capacidadeReunioes },
               { label: "Vendas/dia (time)", value: metrics.vendasDia },
             ]}
           />
+
 
         </TabsContent>
       </Tabs>
