@@ -8,7 +8,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
-import { Plus, Phone, GripVertical, AlertTriangle, Target, Users, TrendingUp, Activity, MoreVertical } from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import {
+  Plus, Phone, AlertTriangle, Target, Users, TrendingUp, Activity,
+  MoreVertical, ChevronDown, DollarSign, MessageCircle, MoveHorizontal,
+  Calendar, CheckSquare, Trash2, PhoneCall,
+} from "lucide-react";
 import {
   DropdownMenu, DropdownMenuTrigger, DropdownMenuContent,
   DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator,
