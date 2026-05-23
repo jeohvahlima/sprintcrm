@@ -554,6 +554,8 @@ export function ChannelProspectPanel({ channel }: Props) {
           )}
         </ScrollArea>
       </Card>
+      )}
+
 
       {/* Popup de Conversa Inline (Instagram & WhatsApp) */}
       {activeLead && (channel === "instagram" || channel === "whatsapp") && (
