@@ -33,6 +33,7 @@ import Maturidade from "./pages/Maturidade";
 import Mentoria from "./pages/Mentoria";
 import Juridico from "./pages/Juridico";
 import ConfiguracoesGamificacao from "./pages/ConfiguracoesGamificacao";
+import Gamificacao from "./pages/Gamificacao";
 import ConfiguracoesComercial from "./pages/ConfiguracoesComercial";
 import OAuthCallback from "./pages/OAuthCallback";
 import GmailCallback from "./pages/GmailCallback";
