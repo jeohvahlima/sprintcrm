@@ -109,11 +109,41 @@ export function HunterLeadDrawer({ open, onClose, lead, fetchEvents, onLogAttemp
             </Button>
           </div>
 
-          <div className="grid grid-cols-3 gap-1.5">
-            <Button size="sm" variant="outline" onClick={() => onLogAttempt("nao_atendeu")}>Não atendeu</Button>
-            <Button size="sm" variant="outline" onClick={() => onLogAttempt("ocupado")}>Ocupado</Button>
-            <Button size="sm" variant="outline" onClick={() => onLogAttempt("caixa_postal")}>Caixa postal</Button>
+          <div>
+            <p className="text-xs font-semibold mb-1.5">Registrar ação</p>
+            <div className="grid grid-cols-2 gap-1.5">
+              {QUICK_REGISTRY.map(({ key, label, icon: Icon, color }) => (
+                <Button
+                  key={key}
+                  size="sm"
+                  variant="outline"
+                  className="justify-start h-8 text-xs"
+                  onClick={() => onLogAttempt(key)}
+                >
+                  <Icon className={`h-3.5 w-3.5 mr-1.5 ${color}`} /> {label}
+                </Button>
+              ))}
+            </div>
           </div>
+
+          <div>
+            <p className="text-xs font-semibold mb-1.5">Resultado</p>
+            <Select
+              value={lead.substatus && RESULT_OPTIONS.find(r => r.key === lead.substatus) ? lead.substatus : ""}
+              onValueChange={(v) => onLogAttempt(v)}
+            >
+              <SelectTrigger className="h-8 text-xs">
+                <SelectValue placeholder="Selecione um resultado" />
+              </SelectTrigger>
+              <SelectContent>
+                {RESULT_OPTIONS.map((r) => (
+                  <SelectItem key={r.key} value={r.key}>{r.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+
 
           <div>
             <p className="text-xs font-semibold mb-1.5">Histórico</p>
