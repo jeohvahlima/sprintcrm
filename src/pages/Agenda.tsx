@@ -3068,7 +3068,7 @@ export default function Agenda() {
             </Card>
 
             {/* Vista de Compromissos - Day/Week Toggle */}
-            <Card>
+            <Card className="lg:row-span-2">
               <CardHeader>
                 <div className="flex justify-between items-center">
                   <CardTitle className="flex items-center gap-2">
