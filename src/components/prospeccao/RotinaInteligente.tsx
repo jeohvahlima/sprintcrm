@@ -559,6 +559,7 @@ export function RotinaInteligente() {
 
   return (
     <div className="space-y-6">
+      <CockpitDoDia />
       {/* HERO */}
       <Card className="border-l-4 border-l-primary bg-gradient-to-br from-primary/5 to-transparent">
         <CardHeader>
