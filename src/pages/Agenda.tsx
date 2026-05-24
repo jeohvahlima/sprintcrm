@@ -3007,7 +3007,7 @@ export default function Agenda() {
         </TabsList>
 
         <TabsContent value="visao-geral" className="space-y-4">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:auto-rows-min items-start">
             {/* Calendário */}
             <Card>
               <CardHeader>
