@@ -3007,7 +3007,7 @@ export default function Agenda() {
         </TabsList>
 
         <TabsContent value="visao-geral" className="space-y-4">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:auto-rows-min items-start">
             {/* Calendário */}
             <Card>
               <CardHeader>
@@ -3068,7 +3068,7 @@ export default function Agenda() {
             </Card>
 
             {/* Vista de Compromissos - Day/Week Toggle */}
-            <Card>
+            <Card className="lg:row-span-2">
               <CardHeader>
                 <div className="flex justify-between items-center">
                   <CardTitle className="flex items-center gap-2">
@@ -3120,9 +3120,9 @@ export default function Agenda() {
                 )}
               </CardContent>
             </Card>
-          </div>
 
-          {/* Lista de Compromissos abaixo do calendário */}
+            {/* Lista de Compromissos abaixo do calendário (mesma coluna) */}
+
 
 
           <Card>
@@ -3433,6 +3433,7 @@ export default function Agenda() {
               )}
             </CardContent>
           </Card>
+          </div>
         </TabsContent>
 
 
