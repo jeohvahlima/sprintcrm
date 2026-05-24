@@ -66,7 +66,7 @@ const navigation: NavEntry[] = [
       { name: "Maturidade Comercial", href: "/maturidade", icon: Activity, menuKey: "maturidade" },
       { name: "Processos Comerciais", href: "/processos", icon: Target, menuKey: "processos", showAIBadge: true },
       { name: "Grow Machine", href: "/prospeccao", icon: Target, menuKey: "prospeccao" },
-      { name: "Gamificação", href: "/gamificacao", icon: Sparkles, menuKey: "prospeccao" },
+      
       { name: "Call Center", href: "/discador", icon: PhoneCall, menuKey: "discador" },
       { name: "Business Intelligence (BI)", href: "/financeiro", icon: DollarSign, menuKey: "financeiro" },
       { name: "Treinamento Comerciais", href: "/treinamento", icon: GraduationCap, menuKey: "treinamento" },
