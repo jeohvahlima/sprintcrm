@@ -1105,10 +1105,26 @@ function RotinaViewSwitcher(props: ViewSwitcherProps) {
 }
 
 // ============================================
-// QUADRO SEMANAL (kanban estilo planilha)
+// QUADRO SEMANAL (estilo agenda — Dia / Semana / Mês)
 // ============================================
 const WEEK_SCOPES: ScopeId[] = ["padrao", "segunda", "terca", "quarta", "quinta", "sexta", "sabado"];
 const MONTH_SCOPES: ScopeId[] = ["inicio_mes", "meio_mes", "fim_mes"];
+const WEEKDAY_SCOPE_IDS: ScopeId[] = ["segunda", "terca", "quarta", "quinta", "sexta", "sabado"];
+const WEEKDAY_SHORT = ["seg", "ter", "qua", "qui", "sex", "sáb"];
+const MONTH_NAMES = ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"];
+
+// Converte "HH:mm" em minutos absolutos
+function toMin(t: string): number {
+  const [h, m] = t.split(":").map((x) => parseInt(x, 10));
+  return (h || 0) * 60 + (m || 0);
+}
+
+// Retorna blocos efetivos para um dia da semana (com fallback no padrão)
+function effectiveBlocks(blocksByScope: BlocksByScope, sid: ScopeId): { blocks: RoutineBlock[]; inherited: boolean } {
+  const own = blocksByScope[sid] || [];
+  if (own.length > 0) return { blocks: own, inherited: false };
+  return { blocks: blocksByScope.padrao || [], inherited: true };
+}
 
 function RotinaWeekBoard({
   role,
@@ -1121,169 +1137,417 @@ function RotinaWeekBoard({
   onJumpToScope: (s: ScopeId) => void;
   onCopyScope: (from: ScopeId, to: ScopeId) => void;
 }) {
-  // Escopos que vamos mostrar como colunas (apenas semana). Fases do mês ficam em um bloco separado.
-  const visibleWeek = WEEK_SCOPES;
   const padraoBlocks = blocksByScope.padrao || [];
   const hasPadrao = padraoBlocks.length > 0;
 
-  // Day-of-month numbers for header pills (current week, Mon-Sat)
-  const todayIdx = ((new Date().getDay() + 6) % 7); // 0 = Mon ... 6 = Sun
-  const weekdayNumbers = (() => {
-    const out: Record<string, number> = {};
-    const d = new Date();
-    const monday = new Date(d);
-    monday.setDate(d.getDate() - todayIdx);
-    ["segunda", "terca", "quarta", "quinta", "sexta", "sabado"].forEach((sid, i) => {
-      const day = new Date(monday);
-      day.setDate(monday.getDate() + i);
-      out[sid] = day.getDate();
-    });
-    return out;
-  })();
-  const todayScopeId: ScopeId | null = (["segunda", "terca", "quarta", "quinta", "sexta", "sabado"][todayIdx] as ScopeId) || null;
+  // Datas da semana atual (segunda → sábado)
+  const today = new Date();
+  const todayIdx = ((today.getDay() + 6) % 7); // 0 = Mon ... 6 = Sun
+  const monday = new Date(today);
+  monday.setDate(today.getDate() - todayIdx);
+  monday.setHours(0, 0, 0, 0);
+
+  const weekDates = WEEKDAY_SCOPE_IDS.map((_, i) => {
+    const d = new Date(monday);
+    d.setDate(monday.getDate() + i);
+    return d;
+  });
+
+  const todayScopeId: ScopeId | null = (WEEKDAY_SCOPE_IDS[todayIdx] as ScopeId) || null;
+
+  // View mode: dia | semana | mes
+  const [viewMode, setViewMode] = useState<"dia" | "semana" | "mes">("semana");
+  const [selectedScope, setSelectedScope] = useState<ScopeId>(todayScopeId || "segunda");
+  const [selectedDate, setSelectedDate] = useState<Date>(today);
+
+  // Faixa de horário visível (com base nos blocos)
+  const allBlocks = WEEK_SCOPES.flatMap((s) => blocksByScope[s] || []);
+  const startMin = Math.max(0, Math.min(8 * 60, ...allBlocks.map((b) => toMin(b.startTime))));
+  const endMin = Math.min(24 * 60, Math.max(19 * 60, ...allBlocks.map((b) => toMin(b.endTime))));
+  const startHour = Math.floor(startMin / 60);
+  const endHour = Math.ceil(endMin / 60);
+  const HOUR_HEIGHT = 56; // px por hora
+  const gridHeight = (endHour - startHour) * HOUR_HEIGHT;
+  const hours = Array.from({ length: endHour - startHour }, (_, i) => startHour + i);
+
+  function topFor(b: RoutineBlock): number {
+    return ((toMin(b.startTime) - startHour * 60) / 60) * HOUR_HEIGHT;
+  }
+  function heightFor(b: RoutineBlock): number {
+    return Math.max(28, ((toMin(b.endTime) - toMin(b.startTime)) / 60) * HOUR_HEIGHT - 2);
+  }
+
+  // ===== Conteúdo de UMA coluna de dia (com posicionamento por horário) =====
+  function DayColumn({ sid, date, compact = false }: { sid: ScopeId; date?: Date; compact?: boolean }) {
+    const { blocks, inherited } = effectiveBlocks(blocksByScope, sid);
+    const isTodayCol = date ? date.toDateString() === today.toDateString() : sid === todayScopeId;
+    return (
+      <div className="relative bg-card" style={{ height: gridHeight }}>
+        {/* Linhas de hora (background) */}
+        {hours.map((h, i) => (
+          <div
+            key={h}
+            className={`absolute left-0 right-0 border-t ${i === 0 ? "border-transparent" : "border-border/40"}`}
+            style={{ top: i * HOUR_HEIGHT, height: HOUR_HEIGHT }}
+          />
+        ))}
+        {/* Linha do "agora" */}
+        {isTodayCol && (() => {
+          const nowMin = today.getHours() * 60 + today.getMinutes();
+          if (nowMin < startHour * 60 || nowMin > endHour * 60) return null;
+          const top = ((nowMin - startHour * 60) / 60) * HOUR_HEIGHT;
+          return (
+            <div className="absolute left-0 right-0 z-20 pointer-events-none" style={{ top }}>
+              <div className="h-0.5 bg-rose-500" />
+              <div className="absolute -left-1 -top-1 w-2 h-2 rounded-full bg-rose-500" />
+            </div>
+          );
+        })()}
+        {/* Blocos posicionados */}
+        {blocks.map((b) => {
+          const style = BLOCK_STYLES[b.type];
+          const Icon = style.icon;
+          return (
+            <button
+              key={`${sid}-${b.id}`}
+              onClick={() => onJumpToScope(sid)}
+              className={`absolute left-1 right-1 rounded-lg border ${style.border} bg-card hover:shadow-md hover:border-primary/40 transition-all overflow-hidden text-left z-10 ${
+                inherited ? "opacity-60" : ""
+              }`}
+              style={{ top: topFor(b), height: heightFor(b), borderLeftWidth: 3 }}
+              title={`${b.startTime} – ${b.endTime} · ${b.title}`}
+            >
+              <div className="px-2 py-1">
+                <div className="flex items-center gap-1 text-[9px] font-mono text-muted-foreground tabular-nums leading-tight">
+                  {b.startTime} – {b.endTime}
+                </div>
+                <div className="flex items-start gap-1 mt-0.5">
+                  <Icon className="h-3 w-3 mt-0.5 text-foreground/60 shrink-0" />
+                  <p className={`${compact ? "text-[10px]" : "text-[11px]"} font-medium text-foreground leading-tight line-clamp-2`}>
+                    {b.title}
+                  </p>
+                </div>
+                {!compact && b.goal && heightFor(b) > 50 && (
+                  <p className="text-[9px] text-primary mt-0.5 pl-4 line-clamp-1 font-medium">🎯 {b.goal}</p>
+                )}
+              </div>
+            </button>
+          );
+        })}
+        {blocks.length === 0 && (
+          <div className="absolute inset-2 flex items-center justify-center text-[10px] text-muted-foreground text-center border border-dashed border-border rounded-lg">
+            Vazio
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // ===== Coluna de horas (gutter) =====
+  function HourGutter() {
+    return (
+      <div className="relative bg-muted/20 border-r border-border/60" style={{ height: gridHeight, width: 56 }}>
+        {hours.map((h, i) => (
+          <div
+            key={h}
+            className="absolute left-0 right-0 px-2 text-[10px] font-mono text-muted-foreground tabular-nums"
+            style={{ top: i * HOUR_HEIGHT - 6 }}
+          >
+            {String(h).padStart(2, "0")}:00
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  // ===== Header do dia =====
+  function DayHeader({ sid, date, onClick }: { sid: ScopeId; date?: Date; onClick?: () => void }) {
+    const own = blocksByScope[sid] || [];
+    const isOverride = own.length > 0;
+    const isTodayCol = date ? date.toDateString() === today.toDateString() : sid === todayScopeId;
+    const scope = SCOPES.find((s) => s.id === sid)!;
+    const dayLabel = scope.label.split(" (")[0];
+    return (
+      <div
+        className={`px-3 py-2 border-b border-border/60 flex items-center justify-between gap-1 ${
+          isTodayCol ? "bg-primary/10" : "bg-muted/30"
+        }`}
+      >
+        <button onClick={onClick} className="flex items-center gap-2 min-w-0 hover:text-primary transition-colors">
+          <div className="text-left min-w-0">
+            <div className={`text-[10px] uppercase tracking-wide font-medium ${isTodayCol ? "text-primary" : "text-muted-foreground"}`}>
+              {dayLabel}
+            </div>
+            {date && (
+              <div className={`text-base font-bold leading-tight ${isTodayCol ? "text-primary" : "text-foreground"}`}>
+                {date.getDate()}
+              </div>
+            )}
+          </div>
+          {isOverride && (
+            <span className="text-[9px] font-medium uppercase tracking-wide text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded-full">
+              custom
+            </span>
+          )}
+        </button>
+        <Button
+          size="icon"
+          variant="ghost"
+          className="h-6 w-6 shrink-0 rounded-full hover:bg-primary/10 hover:text-primary"
+          onClick={() => onJumpToScope(sid)}
+          title="Editar rotina deste dia"
+        >
+          <Pencil className="h-3 w-3" />
+        </Button>
+      </div>
+    );
+  }
+
+  // ===== MÊS: grade de 6 semanas =====
+  function MonthGrid() {
+    const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
+    const monthEnd = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+    // Começa na segunda anterior ao primeiro dia
+    const gridStart = new Date(monthStart);
+    gridStart.setDate(monthStart.getDate() - ((monthStart.getDay() + 6) % 7));
+    const days: Date[] = [];
+    for (let i = 0; i < 42; i++) {
+      const d = new Date(gridStart);
+      d.setDate(gridStart.getDate() + i);
+      days.push(d);
+    }
+    return (
+      <div>
+        <div className="grid grid-cols-7 border border-border/60 rounded-t-xl overflow-hidden bg-muted/30">
+          {["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"].map((d) => (
+            <div key={d} className="px-2 py-2 text-[10px] uppercase tracking-wide font-medium text-muted-foreground text-center border-r border-border/40 last:border-r-0">
+              {d}
+            </div>
+          ))}
+        </div>
+        <div className="grid grid-cols-7 border-x border-b border-border/60 rounded-b-xl overflow-hidden">
+          {days.map((d, i) => {
+            const dayIdx = (d.getDay() + 6) % 7; // 0..6 (seg..dom)
+            const isCurrentMonth = d.getMonth() === today.getMonth();
+            const isTodayCell = d.toDateString() === today.toDateString();
+            const sid: ScopeId | null = dayIdx < 6 ? (WEEKDAY_SCOPE_IDS[dayIdx] as ScopeId) : null;
+            const dayNum = d.getDate();
+            // Fase do mês
+            let phase: ScopeId | null = null;
+            if (isCurrentMonth) {
+              if (dayNum <= 5) phase = "inicio_mes";
+              else if (dayNum >= monthEnd.getDate() - 4) phase = "fim_mes";
+              else phase = "meio_mes";
+            }
+            const own = sid ? (blocksByScope[sid] || []) : [];
+            const phaseBlocks = phase ? (blocksByScope[phase] || []) : [];
+            const effective = phaseBlocks.length > 0 ? phaseBlocks : (own.length > 0 ? own : padraoBlocks);
+
+            return (
+              <button
+                key={i}
+                onClick={() => {
+                  if (sid) {
+                    setSelectedScope(sid);
+                    setSelectedDate(d);
+                    setViewMode("dia");
+                  }
+                }}
+                className={`min-h-[92px] p-1.5 text-left border-r border-b border-border/40 last:border-r-0 transition-colors ${
+                  !isCurrentMonth ? "bg-muted/10 text-muted-foreground/50" : "bg-card hover:bg-primary/5"
+                } ${isTodayCell ? "ring-2 ring-primary ring-inset" : ""}`}
+              >
+                <div className="flex items-center justify-between mb-1">
+                  <span className={`text-xs font-bold ${isTodayCell ? "text-primary" : ""}`}>{dayNum}</span>
+                  {phase === "fim_mes" && isCurrentMonth && (
+                    <span className="text-[8px] uppercase font-bold text-rose-500">Fech.</span>
+                  )}
+                  {phase === "inicio_mes" && isCurrentMonth && (
+                    <span className="text-[8px] uppercase font-bold text-emerald-500">Abre</span>
+                  )}
+                </div>
+                <div className="space-y-0.5">
+                  {effective.slice(0, 3).map((b) => {
+                    const st = BLOCK_STYLES[b.type];
+                    return (
+                      <div key={b.id} className={`text-[9px] leading-tight px-1 py-0.5 rounded ${st.bg} text-foreground/80 truncate`}>
+                        <span className="font-mono mr-1">{b.startTime}</span>
+                        {b.title}
+                      </div>
+                    );
+                  })}
+                  {effective.length > 3 && (
+                    <div className="text-[9px] text-muted-foreground px-1">+{effective.length - 3}</div>
+                  )}
+                </div>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
-      {/* QUADRO SEMANAL */}
+      {/* QUADRO PRINCIPAL — estilo agenda */}
       <Card className="overflow-hidden border-border/60 shadow-sm">
-        <CardHeader className="pb-4 flex flex-row items-center justify-between flex-wrap gap-2 bg-muted/30 border-b border-border/60">
-          <div>
-            <CardTitle className="text-base flex items-center gap-2 text-foreground">
-              <LayoutGrid className="h-5 w-5 text-primary" />
-              Rotina semanal {role === "sdr" ? "do SDR" : "do Closer"}
-            </CardTitle>
-            <p className="text-xs text-muted-foreground mt-1">
-              Clique em editar em qualquer dia para personalizar. <b>Padrão</b> é usado quando o dia não tem rotina específica.
-            </p>
+        <CardHeader className="pb-3 flex flex-row items-center justify-between flex-wrap gap-3 bg-gradient-to-br from-primary/5 to-transparent border-b border-border/60">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="p-2 rounded-lg bg-primary/10">
+              <Calendar className="h-5 w-5 text-primary" />
+            </div>
+            <div className="min-w-0">
+              <CardTitle className="text-base text-foreground">
+                Rotina {role === "sdr" ? "do SDR" : "do Closer"}
+              </CardTitle>
+              <p className="text-[11px] text-muted-foreground mt-0.5">
+                {viewMode === "dia" && `${selectedDate.getDate()} de ${MONTH_NAMES[selectedDate.getMonth()]}`}
+                {viewMode === "semana" && `Semana de ${monday.getDate()} de ${MONTH_NAMES[monday.getMonth()]}`}
+                {viewMode === "mes" && `${MONTH_NAMES[today.getMonth()]} de ${today.getFullYear()}`}
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 flex-wrap">
+            {/* Atalho para padrão */}
+            <Button
+              size="sm"
+              variant="outline"
+              className="h-8 text-xs gap-1"
+              onClick={() => onJumpToScope("padrao")}
+              title="Editar rotina padrão"
+            >
+              <Pencil className="h-3 w-3" /> Padrão
+            </Button>
+            {/* View switcher */}
+            <div className="inline-flex rounded-lg border border-border bg-card p-0.5">
+              <Button
+                size="sm"
+                variant={viewMode === "dia" ? "default" : "ghost"}
+                className="h-7 px-3 text-xs"
+                onClick={() => setViewMode("dia")}
+              >
+                Dia
+              </Button>
+              <Button
+                size="sm"
+                variant={viewMode === "semana" ? "default" : "ghost"}
+                className="h-7 px-3 text-xs"
+                onClick={() => setViewMode("semana")}
+              >
+                Semana
+              </Button>
+              <Button
+                size="sm"
+                variant={viewMode === "mes" ? "default" : "ghost"}
+                className="h-7 px-3 text-xs"
+                onClick={() => setViewMode("mes")}
+              >
+                Mês
+              </Button>
+            </div>
           </div>
         </CardHeader>
-        <CardContent className="overflow-x-auto p-4 md:p-6 bg-background">
-          <div
-            className="grid gap-3 min-w-[1200px]"
-            style={{ gridTemplateColumns: `repeat(${visibleWeek.length}, minmax(170px, 1fr))` }}
-          >
-            {visibleWeek.map((sid) => {
-              const scope = SCOPES.find((s) => s.id === sid)!;
-              const blocks = blocksByScope[sid] || [];
-              const isOverride = sid !== "padrao" && blocks.length > 0;
-              const usingPadrao = sid !== "padrao" && blocks.length === 0;
-              const isPadrao = sid === "padrao";
-              const isToday = sid === todayScopeId;
-              const dayNum = weekdayNumbers[sid];
-              const dayLabel = scope.label.split(" (")[0];
 
-              return (
-                <div
-                  key={sid}
-                  className={`rounded-2xl border bg-card flex flex-col transition-shadow hover:shadow-md ${
-                    isPadrao
-                      ? "border-primary/40 ring-1 ring-primary/20"
-                      : isToday
-                      ? "border-primary shadow-md"
-                      : "border-border/60"
-                  }`}
-                >
-                  {/* Header limpo estilo agenda */}
-                  <div className="px-4 pt-4 pb-3 border-b border-border/60 flex items-start justify-between gap-2">
-                    <div className="min-w-0">
-                      <div className="flex items-baseline gap-2">
-                        <p className={`text-sm font-semibold ${isToday ? "text-primary" : "text-foreground"}`}>
-                          {dayLabel}
-                        </p>
-                        {dayNum && !isPadrao && (
-                          <span className={`text-xl font-bold leading-none ${isToday ? "text-primary" : "text-foreground/80"}`}>
-                            {dayNum}
-                          </span>
-                        )}
-                      </div>
-                      <div className="mt-1.5">
-                        {isPadrao && (
-                          <span className="inline-flex items-center text-[10px] font-medium uppercase tracking-wide text-primary bg-primary/10 px-2 py-0.5 rounded-full">
-                            Padrão
-                          </span>
-                        )}
-                        {isOverride && (
-                          <span className="inline-flex items-center text-[10px] font-medium uppercase tracking-wide text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full">
-                            Personalizado
-                          </span>
-                        )}
-                        {usingPadrao && (
-                          <span className="inline-flex items-center text-[10px] font-medium text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
-                            Usa padrão
-                          </span>
-                        )}
-                      </div>
+        <CardContent className="p-0 bg-background">
+          {!hasPadrao && (
+            <div className="px-4 py-2 bg-amber-500/10 border-b border-amber-500/30 text-[11px] text-amber-700 dark:text-amber-400 flex items-center gap-2">
+              <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
+              <span>
+                Defina primeiro a <b>rotina Padrão</b> — ela é o esqueleto que cada dia herda.
+              </span>
+              <Button size="sm" variant="ghost" className="h-6 ml-auto text-amber-700 dark:text-amber-400" onClick={() => onJumpToScope("padrao")}>
+                Criar padrão →
+              </Button>
+            </div>
+          )}
+
+          {/* ===== SEMANA ===== */}
+          {viewMode === "semana" && (
+            <div className="overflow-x-auto">
+              <div className="min-w-[900px]">
+                {/* Cabeçalho com dias */}
+                <div className="grid sticky top-0 z-30 bg-card" style={{ gridTemplateColumns: `56px repeat(6, minmax(0,1fr))` }}>
+                  <div className="bg-muted/30 border-b border-r border-border/60" />
+                  {WEEKDAY_SCOPE_IDS.map((sid, i) => (
+                    <div key={sid} className="border-b border-r border-border/60 last:border-r-0">
+                      <DayHeader sid={sid} date={weekDates[i]} onClick={() => { setSelectedScope(sid); setSelectedDate(weekDates[i]); setViewMode("dia"); }} />
                     </div>
-                    <Button
-                      size="icon"
-                      variant="ghost"
-                      className="h-8 w-8 shrink-0 rounded-full hover:bg-primary/10 hover:text-primary"
-                      onClick={() => onJumpToScope(sid)}
-                      title="Editar rotina deste dia"
-                    >
-                      <Pencil className="h-3.5 w-3.5" />
-                    </Button>
-                  </div>
-
-                  {/* Lista de blocos */}
-                  <div className="p-2.5 space-y-2 min-h-[320px]">
-                    {(blocks.length > 0 ? blocks : (sid !== "padrao" ? padraoBlocks : [])).map((b) => {
-                      const style = BLOCK_STYLES[b.type];
-                      const Icon = style.icon;
-                      const isInherited = blocks.length === 0;
-                      return (
-                        <div
-                          key={`${sid}-${b.id}`}
-                          className={`group relative rounded-xl border border-border/60 bg-card hover:border-primary/40 hover:shadow-sm transition-all overflow-hidden ${
-                            isInherited ? "opacity-55" : ""
-                          }`}
-                          title={b.description || b.title}
-                        >
-                          <div className={`absolute left-0 top-0 bottom-0 w-1 ${style.border.replace("border-l-", "bg-")}`} />
-                          <div className="pl-3 pr-2.5 py-2">
-                            <div className="flex items-center gap-1.5 text-[10px] font-mono font-medium text-muted-foreground tabular-nums">
-                              {b.startTime} – {b.endTime}
-                            </div>
-                            <div className="flex items-start gap-1.5 mt-1">
-                              <Icon className="h-3.5 w-3.5 mt-0.5 text-foreground/60 shrink-0" />
-                              <p className="text-[12px] leading-snug font-medium text-foreground line-clamp-2">
-                                {b.title}
-                              </p>
-                            </div>
-                            {b.goal && (
-                              <p className="text-[10px] text-primary mt-1 pl-5 line-clamp-1 font-medium">
-                                🎯 {b.goal}
-                              </p>
-                            )}
-                          </div>
-                        </div>
-                      );
-                    })}
-
-                    {/* Estados vazios */}
-                    {blocks.length === 0 && sid === "padrao" && (
-                      <div className="text-center text-[11px] text-muted-foreground py-10 px-3 border border-dashed border-border rounded-xl">
-                        Sem rotina padrão.<br />
-                        Clique em <b>editar</b> e use<br />
-                        <b>"Gerar com IA"</b>.
-                      </div>
-                    )}
-                    {blocks.length === 0 && sid !== "padrao" && !hasPadrao && (
-                      <div className="text-center text-[11px] text-muted-foreground py-10 px-3 border border-dashed border-border rounded-xl">
-                        Vazio. Crie a rotina<br />Padrão primeiro.
-                      </div>
-                    )}
-                  </div>
+                  ))}
                 </div>
-              );
-            })}
-          </div>
+                {/* Grid de horas */}
+                <div className="grid" style={{ gridTemplateColumns: `56px repeat(6, minmax(0,1fr))` }}>
+                  <HourGutter />
+                  {WEEKDAY_SCOPE_IDS.map((sid, i) => (
+                    <div key={sid} className="border-r border-border/60 last:border-r-0">
+                      <DayColumn sid={sid} date={weekDates[i]} compact />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* ===== DIA ===== */}
+          {viewMode === "dia" && (
+            <div>
+              {/* Tabs rápidos para escolher o dia */}
+              <div className="flex items-center gap-1 px-3 py-2 border-b border-border/60 bg-muted/20 overflow-x-auto">
+                {WEEKDAY_SCOPE_IDS.map((sid, i) => {
+                  const isSel = sid === selectedScope;
+                  const isTodayPill = sid === todayScopeId;
+                  return (
+                    <button
+                      key={sid}
+                      onClick={() => { setSelectedScope(sid); setSelectedDate(weekDates[i]); }}
+                      className={`flex flex-col items-center px-3 py-1.5 rounded-lg text-xs transition-all shrink-0 ${
+                        isSel
+                          ? "bg-primary text-primary-foreground font-semibold shadow-sm"
+                          : isTodayPill
+                          ? "bg-primary/10 text-primary hover:bg-primary/20"
+                          : "text-muted-foreground hover:bg-card hover:text-foreground"
+                      }`}
+                    >
+                      <span className="text-[9px] uppercase tracking-wide leading-none">{WEEKDAY_SHORT[i]}</span>
+                      <span className="text-sm font-bold leading-tight">{weekDates[i].getDate()}</span>
+                    </button>
+                  );
+                })}
+              </div>
+              <div className="grid" style={{ gridTemplateColumns: `56px 1fr` }}>
+                <HourGutter />
+                <div>
+                  <DayHeader sid={selectedScope} date={selectedDate} />
+                  <DayColumn sid={selectedScope} date={selectedDate} />
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* ===== MÊS ===== */}
+          {viewMode === "mes" && (
+            <div className="p-3 md:p-4">
+              <MonthGrid />
+              <p className="text-[11px] text-muted-foreground mt-2 flex items-center gap-3 flex-wrap">
+                <span className="inline-flex items-center gap-1">
+                  <span className="w-2 h-2 rounded-full bg-emerald-500" /> Início (abertura)
+                </span>
+                <span className="inline-flex items-center gap-1">
+                  <span className="w-2 h-2 rounded-full bg-rose-500" /> Fim (fechamento)
+                </span>
+                <span className="inline-flex items-center gap-1">
+                  <span className="w-2 h-2 rounded-full bg-primary ring-2 ring-primary/30" /> Hoje
+                </span>
+                <span className="ml-auto">Clique em um dia para abrir a rotina</span>
+              </p>
+            </div>
+          )}
         </CardContent>
       </Card>
 
       {/* FASES DO MÊS */}
       <Card className="border-border/60 shadow-sm overflow-hidden">
-        <CardHeader className="pb-4 bg-muted/30 border-b border-border/60">
+        <CardHeader className="pb-3 bg-muted/30 border-b border-border/60">
           <CardTitle className="text-base flex items-center gap-2 text-foreground">
             <Calendar className="h-5 w-5 text-amber-500" />
             Fases do mês
@@ -1358,5 +1622,6 @@ function RotinaWeekBoard({
     </div>
   );
 }
+
 
 
