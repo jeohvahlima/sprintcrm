@@ -2998,10 +2998,8 @@ export default function Agenda() {
 
       {/* Tabs principais */}
       <Tabs value={activeMainTab} onValueChange={setActiveMainTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-4 h-11 p-1 bg-muted/60 rounded-xl">
+        <TabsList className="grid w-full grid-cols-2 h-11 p-1 bg-muted/60 rounded-xl">
           <TabsTrigger value="visao-geral">Visão Geral</TabsTrigger>
-          <TabsTrigger value="lista">Lista de Compromissos</TabsTrigger>
-          <TabsTrigger value="lembretes">Lembretes</TabsTrigger>
           <TabsTrigger value="minhas-agendas">
             Minhas Agendas
           </TabsTrigger>
@@ -3122,9 +3120,10 @@ export default function Agenda() {
               </CardContent>
             </Card>
           </div>
-        </TabsContent>
 
-        <TabsContent value="lista">
+          {/* Lista de Compromissos abaixo do calendário */}
+
+
           <Card>
             <CardHeader>
               <div className="flex flex-col gap-4">
@@ -3328,158 +3327,6 @@ export default function Agenda() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="lembretes">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Bell className="h-5 w-5" />
-                Histórico de Lembretes
-              </CardTitle>
-              <div className="flex gap-4">
-                <div className="space-y-2">
-                  <Label>Status</Label>
-                  <Select value={filtroStatusLembrete} onValueChange={setFiltroStatusLembrete}>
-                    <SelectTrigger className="w-32">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">Todos</SelectItem>
-                      <SelectItem value="pendente">Pendente</SelectItem>
-                      <SelectItem value="enviado">Enviado</SelectItem>
-                      <SelectItem value="erro">Erro</SelectItem>
-                      <SelectItem value="retry">Retry</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label>Canal</Label>
-                  <Select value={filtroCanalLembrete} onValueChange={setFiltroCanalLembrete}>
-                    <SelectTrigger className="w-32">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">Todos</SelectItem>
-                      <SelectItem value="whatsapp">WhatsApp</SelectItem>
-                      <SelectItem value="email">E-mail</SelectItem>
-                      <SelectItem value="push">Push</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label>Tipo</Label>
-                  <Select value={filtroRecorrencia} onValueChange={setFiltroRecorrencia}>
-                    <SelectTrigger className="w-32">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">Todos</SelectItem>
-                      <SelectItem value="unico">Único</SelectItem>
-                      <SelectItem value="recorrente">Recorrente</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <ScrollArea className="h-[600px]">
-                {lembretesFiltrados.length === 0 ? <div className="text-center py-12 text-muted-foreground">
-                    <Bell className="h-12 w-12 mx-auto mb-2 opacity-50" />
-                    <p>{lembretes.length === 0 ? "Nenhum lembrete criado" : "Nenhum lembrete encontrado com os filtros aplicados"}</p>
-                  </div> : <div className="space-y-3">
-                    {lembretesFiltrados.map(lembrete => <Card key={lembrete.id} className={`border-l-4 ${lembrete.status_envio === 'enviado' ? 'border-l-green-500' : lembrete.status_envio === 'pendente' ? 'border-l-yellow-500' : 'border-l-red-500'}`}>
-                        <CardContent className="pt-4">
-                          <div className="space-y-2">
-                                <div className="flex justify-between items-start">
-                              <div className="space-y-1 flex-1">
-                                <div className="flex items-center gap-2">
-                                  <span className="font-medium">
-                                    {lembrete.compromisso?.titulo || lembrete.compromisso?.tipo_servico || 'Compromisso'}
-                                  </span>
-                                  <Badge variant={lembrete.status_envio === 'enviado' ? 'default' : lembrete.status_envio === 'pendente' ? 'secondary' : lembrete.status_envio === 'retry' ? 'outline' : 'destructive'}>
-                                    {lembrete.status_envio === 'enviado' ? '✓ Enviado' : lembrete.status_envio === 'pendente' ? '⏳ Pendente' : lembrete.status_envio === 'retry' ? '🔄 Retry' : '✗ Erro'}
-                                  </Badge>
-                                  {lembrete.recorrencia && <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-300">
-                                      🔄 {lembrete.recorrencia === 'semanal' ? 'Semanal' : lembrete.recorrencia === 'quinzenal' ? 'Quinzenal' : lembrete.recorrencia === 'mensal' ? 'Mensal' : 'Recorrente'}
-                                    </Badge>}
-                                  {(lembrete.status_envio === 'erro' || lembrete.status_envio === 'retry') && <Button size="sm" variant="outline" onClick={() => reenviarLembrete(lembrete.id)} className="h-6 px-2 text-xs">
-                                      Reenviar
-                                    </Button>}
-                                </div>
-                                {lembrete.compromisso?.lead && <div className="flex items-center gap-2">
-                                    <Avatar className="h-6 w-6">
-                                      <AvatarImage src={lembrete.compromisso.lead_id ? leadAvatars[lembrete.compromisso.lead_id] : undefined} alt={lembrete.compromisso.lead.name} onError={e => {
-                                if (lembrete.compromisso?.lead_id && lembrete.compromisso.lead) {
-                                  buscarAvatarLead({
-                                    id: lembrete.compromisso.lead_id,
-                                    name: lembrete.compromisso.lead.name,
-                                    phone: lembrete.compromisso.lead.phone,
-                                    telefone: lembrete.compromisso.lead.phone
-                                  });
-                                }
-                              }} />
-                                      <AvatarFallback className="h-6 w-6 text-xs bg-primary/10">
-                                        {lembrete.compromisso.lead.name.charAt(0).toUpperCase()}
-                                      </AvatarFallback>
-                                    </Avatar>
-                                    <span className="text-sm text-muted-foreground">{lembrete.compromisso.lead.name}</span>
-                                  </div>}
-                                <p className="text-sm text-muted-foreground flex items-center gap-1">
-                                  <Clock className="h-3 w-3" />
-                                  {lembrete.compromisso?.data_hora_inicio && format(parseISO(lembrete.compromisso.data_hora_inicio), "dd/MM/yyyy 'às' HH:mm", {
-                              locale: ptBR
-                            })}
-                                </p>
-                                <p className="text-sm text-muted-foreground">
-                                  <strong>Destinatário:</strong> {
-                            // Se o destinatario contém nome e telefone (formato "Nome (telefone)")
-                            lembrete.destinatario && lembrete.destinatario !== 'lead' && lembrete.destinatario !== 'responsavel' && lembrete.destinatario !== 'ambos' ? lembrete.destinatario : lembrete.destinatario === 'lead' ?
-                            // Tentar pegar do lead vinculado ou do telefone_responsavel
-                            lembrete.compromisso?.lead ? `${lembrete.compromisso.lead.name}${lembrete.compromisso.lead.phone ? ` (${lembrete.compromisso.lead.phone})` : lembrete.telefone_responsavel ? ` (${lembrete.telefone_responsavel})` : ''}` : lembrete.telefone_responsavel ? `Lead (${lembrete.telefone_responsavel})` : 'Lead' : lembrete.destinatario === 'responsavel' ? lembrete.telefone_responsavel ? `Responsável (${lembrete.telefone_responsavel})` : 'Responsável' : lembrete.destinatario === 'ambos' ? <>
-                                        {lembrete.compromisso?.lead ? `${lembrete.compromisso.lead.name}${lembrete.compromisso.lead.phone ? ` (${lembrete.compromisso.lead.phone})` : ''}` : 'Lead'}
-                                        {lembrete.telefone_responsavel && ` e Responsável (${lembrete.telefone_responsavel})`}
-                                      </> : lembrete.telefone_responsavel ? `(${lembrete.telefone_responsavel})` : 'Lead'}
-                                </p>
-                                <p className="text-sm text-muted-foreground">
-                                  <strong>Canal:</strong> {lembrete.canal.toUpperCase()}
-                                </p>
-                                <p className="text-sm text-muted-foreground">
-                                  <strong>Antecedência:</strong> {lembrete.horas_antecedencia}h
-                                </p>
-                                {lembrete.recorrencia && <p className="text-sm text-blue-600">
-                                    <strong>🔄 Recorrência:</strong> {lembrete.recorrencia === 'semanal' ? 'Semanal (toda semana)' : lembrete.recorrencia === 'quinzenal' ? 'Quinzenal (a cada 15 dias)' : lembrete.recorrencia === 'mensal' ? 'Mensal (todo mês)' : lembrete.recorrencia}
-                                  </p>}
-                                {lembrete.recorrencia && lembrete.proxima_data_envio && lembrete.status_envio === 'pendente' && <p className="text-sm text-green-600">
-                                    <strong>Próximo envio:</strong> {format(parseISO(lembrete.proxima_data_envio), "dd/MM/yyyy 'às' HH:mm", {
-                              locale: ptBR
-                            })}
-                                  </p>}
-                                {lembrete.tentativas && lembrete.tentativas > 0 && <p className="text-sm text-muted-foreground">
-                                    <strong>Tentativas:</strong> {lembrete.tentativas}/3
-                                  </p>}
-                                {lembrete.proxima_tentativa && lembrete.status_envio === 'retry' && <p className="text-sm text-orange-600">
-                                    <strong>Próxima tentativa:</strong> {format(parseISO(lembrete.proxima_tentativa), "dd/MM/yyyy 'às' HH:mm", {
-                              locale: ptBR
-                            })}
-                                  </p>}
-                                {lembrete.data_envio && <p className="text-xs text-muted-foreground">
-                                    {lembrete.status_envio === 'enviado' ? 'Enviado em: ' : 'Última tentativa: '}
-                                    {format(parseISO(lembrete.data_envio), "dd/MM/yyyy 'às' HH:mm", {
-                              locale: ptBR
-                            })}
-                                  </p>}
-                                {lembrete.mensagem && <p className="text-xs text-muted-foreground mt-2 p-2 bg-muted rounded">
-                                    {lembrete.mensagem}
-                                  </p>}
-                              </div>
-                            </div>
-                          </div>
-                        </CardContent>
-                      </Card>)}
-                  </div>}
-              </ScrollArea>
-            </CardContent>
-          </Card>
-        </TabsContent>
 
         <TabsContent value="minhas-agendas">
           {(() => {
