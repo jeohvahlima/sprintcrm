@@ -3120,9 +3120,9 @@ export default function Agenda() {
                 )}
               </CardContent>
             </Card>
-          </div>
 
-          {/* Lista de Compromissos abaixo do calendário */}
+            {/* Lista de Compromissos abaixo do calendário (mesma coluna) */}
+
 
 
           <Card>
