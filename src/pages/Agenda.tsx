@@ -146,6 +146,7 @@ export default function Agenda() {
   const [filtroStatusLembrete, setFiltroStatusLembrete] = useState<string>("all");
   const [filtroCanalLembrete, setFiltroCanalLembrete] = useState<string>("all");
   const [filtroRecorrencia, setFiltroRecorrencia] = useState<string>("all");
+  const [internalListTab, setInternalListTab] = useState<"compromissos" | "lembretes">("compromissos");
   const [buscaCompromissos, setBuscaCompromissos] = useState<string>("");
   const [filtroAgenda, setFiltroAgenda] = useState<string>("all");
   const [filtroTipoServico, setFiltroTipoServico] = useState<string>("all");
