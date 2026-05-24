@@ -3127,8 +3127,17 @@ export default function Agenda() {
 
           <Card>
             <CardHeader>
+              <Tabs value={internalListTab} onValueChange={(v) => setInternalListTab(v as "compromissos" | "lembretes")} className="w-full">
+                <TabsList className="grid w-full grid-cols-2 mb-4">
+                  <TabsTrigger value="compromissos">Todos os Compromissos</TabsTrigger>
+                  <TabsTrigger value="lembretes">
+                    <Bell className="h-4 w-4 mr-2" />
+                    Lembretes
+                  </TabsTrigger>
+                </TabsList>
+              </Tabs>
+              {internalListTab === "compromissos" ? (
               <div className="flex flex-col gap-4">
-                <CardTitle>Todos os Compromissos</CardTitle>
                 <div className="flex flex-col sm:flex-row gap-3">
                   <div className="relative flex-1">
                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
