@@ -3250,6 +3250,7 @@ export default function Agenda() {
               )}
             </CardHeader>
             <CardContent>
+              {internalListTab === "compromissos" ? (
               <ScrollArea className="h-[600px]">
                 <div className="space-y-2">
                   {compromissosFiltrados.length === 0 ? <div className="text-center py-12 text-muted-foreground">
