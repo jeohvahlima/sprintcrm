@@ -826,39 +826,6 @@ export function RotinaInteligente() {
 
         {/* CLOSER CONFIG */}
         <TabsContent value="closer" className="space-y-4 mt-4">
-          <Card>
-            <CardHeader><CardTitle className="text-base">Parâmetros do Closer</CardTitle></CardHeader>
-            <CardContent className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="space-y-1">
-                <Label className="text-xs">Nº de Closers</Label>
-                <Input type="number" value={config.closerCount} onChange={(e) => update("closerCount", Number(e.target.value))} />
-              </div>
-              <div className="space-y-1">
-                <Label className="text-xs">Horas disponíveis/dia</Label>
-                <Input type="number" value={config.closerHoras} onChange={(e) => update("closerHoras", Number(e.target.value))} />
-              </div>
-              <div className="space-y-1">
-                <Label className="text-xs">Tempo médio de reunião (min)</Label>
-                <Input type="number" value={config.tempoReuniaoMin} onChange={(e) => update("tempoReuniaoMin", Number(e.target.value))} />
-              </div>
-              <div className="space-y-1">
-                <Label className="text-xs">Taxa de fechamento (%)</Label>
-                <Input type="number" value={config.taxaFechamento} onChange={(e) => update("taxaFechamento", Number(e.target.value))} />
-              </div>
-              <div className="space-y-1">
-                <Label className="text-xs">Início do expediente</Label>
-                <Input type="time" value={config.closerInicio} onChange={(e) => update("closerInicio", e.target.value)} />
-              </div>
-              <div className="space-y-1">
-                <Label className="text-xs">Almoço — início</Label>
-                <Input type="time" value={config.closerAlmocoInicio} onChange={(e) => update("closerAlmocoInicio", e.target.value)} />
-              </div>
-              <div className="space-y-1">
-                <Label className="text-xs">Almoço — fim</Label>
-                <Input type="time" value={config.closerAlmocoFim} onChange={(e) => update("closerAlmocoFim", e.target.value)} />
-              </div>
-            </CardContent>
-          </Card>
 
           <RotinaViewSwitcher
             role="closer"
