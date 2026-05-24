@@ -1166,7 +1166,7 @@ function RotinaWeekBoard({
   const endMin = Math.min(24 * 60, Math.max(19 * 60, ...allBlocks.map((b) => toMin(b.endTime))));
   const startHour = Math.floor(startMin / 60);
   const endHour = Math.ceil(endMin / 60);
-  const HOUR_HEIGHT = view === "day" ? 140 : 110; // px por hora — bem mais espaçado para leitura
+  const HOUR_HEIGHT = viewMode === "dia" ? 140 : 110; // px por hora — bem mais espaçado para leitura
   const gridHeight = (endHour - startHour) * HOUR_HEIGHT;
   const hours = Array.from({ length: endHour - startHour }, (_, i) => startHour + i);
 
