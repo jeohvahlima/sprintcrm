@@ -146,6 +146,7 @@ export default function Agenda() {
   const [filtroStatusLembrete, setFiltroStatusLembrete] = useState<string>("all");
   const [filtroCanalLembrete, setFiltroCanalLembrete] = useState<string>("all");
   const [filtroRecorrencia, setFiltroRecorrencia] = useState<string>("all");
+  const [internalListTab, setInternalListTab] = useState<"compromissos" | "lembretes">("compromissos");
   const [buscaCompromissos, setBuscaCompromissos] = useState<string>("");
   const [filtroAgenda, setFiltroAgenda] = useState<string>("all");
   const [filtroTipoServico, setFiltroTipoServico] = useState<string>("all");
@@ -3126,8 +3127,17 @@ export default function Agenda() {
 
           <Card>
             <CardHeader>
+              <Tabs value={internalListTab} onValueChange={(v) => setInternalListTab(v as "compromissos" | "lembretes")} className="w-full">
+                <TabsList className="grid w-full grid-cols-2 mb-4">
+                  <TabsTrigger value="compromissos">Todos os Compromissos</TabsTrigger>
+                  <TabsTrigger value="lembretes">
+                    <Bell className="h-4 w-4 mr-2" />
+                    Lembretes
+                  </TabsTrigger>
+                </TabsList>
+              </Tabs>
+              {internalListTab === "compromissos" ? (
               <div className="flex flex-col gap-4">
-                <CardTitle>Todos os Compromissos</CardTitle>
                 <div className="flex flex-col sm:flex-row gap-3">
                   <div className="relative flex-1">
                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -3198,8 +3208,49 @@ export default function Agenda() {
                       </Button>}
                   </div>}
               </div>
+              ) : (
+              <div className="flex gap-4 flex-wrap">
+                <div className="space-y-2">
+                  <Label>Status</Label>
+                  <Select value={filtroStatusLembrete} onValueChange={setFiltroStatusLembrete}>
+                    <SelectTrigger className="w-32"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Todos</SelectItem>
+                      <SelectItem value="pendente">Pendente</SelectItem>
+                      <SelectItem value="enviado">Enviado</SelectItem>
+                      <SelectItem value="erro">Erro</SelectItem>
+                      <SelectItem value="retry">Retry</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label>Canal</Label>
+                  <Select value={filtroCanalLembrete} onValueChange={setFiltroCanalLembrete}>
+                    <SelectTrigger className="w-32"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Todos</SelectItem>
+                      <SelectItem value="whatsapp">WhatsApp</SelectItem>
+                      <SelectItem value="email">E-mail</SelectItem>
+                      <SelectItem value="push">Push</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label>Tipo</Label>
+                  <Select value={filtroRecorrencia} onValueChange={setFiltroRecorrencia}>
+                    <SelectTrigger className="w-32"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Todos</SelectItem>
+                      <SelectItem value="unico">Único</SelectItem>
+                      <SelectItem value="recorrente">Recorrente</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              )}
             </CardHeader>
             <CardContent>
+              {internalListTab === "compromissos" ? (
               <ScrollArea className="h-[600px]">
                 <div className="space-y-2">
                   {compromissosFiltrados.length === 0 ? <div className="text-center py-12 text-muted-foreground">
@@ -3323,6 +3374,63 @@ export default function Agenda() {
                       </Card>)}
                 </div>
               </ScrollArea>
+              ) : (
+              <ScrollArea className="h-[600px]">
+                {lembretesFiltrados.length === 0 ? (
+                  <div className="text-center py-12 text-muted-foreground">
+                    <Bell className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                    <p>{lembretes.length === 0 ? "Nenhum lembrete criado" : "Nenhum lembrete encontrado com os filtros aplicados"}</p>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {lembretesFiltrados.map(lembrete => (
+                      <Card key={lembrete.id} className={`border-l-4 ${lembrete.status_envio === 'enviado' ? 'border-l-green-500' : lembrete.status_envio === 'pendente' ? 'border-l-yellow-500' : 'border-l-red-500'}`}>
+                        <CardContent className="pt-4">
+                          <div className="space-y-2">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <span className="font-medium">
+                                {lembrete.compromisso?.titulo || lembrete.compromisso?.tipo_servico || 'Compromisso'}
+                              </span>
+                              <Badge variant={lembrete.status_envio === 'enviado' ? 'default' : lembrete.status_envio === 'pendente' ? 'secondary' : lembrete.status_envio === 'retry' ? 'outline' : 'destructive'}>
+                                {lembrete.status_envio === 'enviado' ? '✓ Enviado' : lembrete.status_envio === 'pendente' ? '⏳ Pendente' : lembrete.status_envio === 'retry' ? '🔄 Retry' : '✗ Erro'}
+                              </Badge>
+                              {lembrete.recorrencia && (
+                                <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-300">
+                                  🔄 {lembrete.recorrencia === 'semanal' ? 'Semanal' : lembrete.recorrencia === 'quinzenal' ? 'Quinzenal' : lembrete.recorrencia === 'mensal' ? 'Mensal' : 'Recorrente'}
+                                </Badge>
+                              )}
+                              {(lembrete.status_envio === 'erro' || lembrete.status_envio === 'retry') && (
+                                <Button size="sm" variant="outline" onClick={() => reenviarLembrete(lembrete.id)} className="h-6 px-2 text-xs">
+                                  Reenviar
+                                </Button>
+                              )}
+                            </div>
+                            <p className="text-sm text-muted-foreground flex items-center gap-1">
+                              <Clock className="h-3 w-3" />
+                              {lembrete.compromisso?.data_hora_inicio && format(parseISO(lembrete.compromisso.data_hora_inicio), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
+                            </p>
+                            <p className="text-sm text-muted-foreground">
+                              <strong>Canal:</strong> {lembrete.canal.toUpperCase()} • <strong>Antecedência:</strong> {lembrete.horas_antecedencia}h
+                            </p>
+                            {lembrete.data_envio && (
+                              <p className="text-xs text-muted-foreground">
+                                {lembrete.status_envio === 'enviado' ? 'Enviado em: ' : 'Última tentativa: '}
+                                {format(parseISO(lembrete.data_envio), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
+                              </p>
+                            )}
+                            {lembrete.mensagem && (
+                              <p className="text-xs text-muted-foreground mt-2 p-2 bg-muted rounded">
+                                {lembrete.mensagem}
+                              </p>
+                            )}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                )}
+              </ScrollArea>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
