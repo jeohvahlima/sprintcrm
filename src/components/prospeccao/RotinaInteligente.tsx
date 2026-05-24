@@ -1166,7 +1166,7 @@ function RotinaWeekBoard({
   const endMin = Math.min(24 * 60, Math.max(19 * 60, ...allBlocks.map((b) => toMin(b.endTime))));
   const startHour = Math.floor(startMin / 60);
   const endHour = Math.ceil(endMin / 60);
-  const HOUR_HEIGHT = 56; // px por hora
+  const HOUR_HEIGHT = view === "day" ? 140 : 110; // px por hora — bem mais espaçado para leitura
   const gridHeight = (endHour - startHour) * HOUR_HEIGHT;
   const hours = Array.from({ length: endHour - startHour }, (_, i) => startHour + i);
 
@@ -1174,7 +1174,7 @@ function RotinaWeekBoard({
     return ((toMin(b.startTime) - startHour * 60) / 60) * HOUR_HEIGHT;
   }
   function heightFor(b: RoutineBlock): number {
-    return Math.max(28, ((toMin(b.endTime) - toMin(b.startTime)) / 60) * HOUR_HEIGHT - 2);
+    return Math.max(44, ((toMin(b.endTime) - toMin(b.startTime)) / 60) * HOUR_HEIGHT - 4);
   }
 
   // ===== Conteúdo de UMA coluna de dia (com posicionamento por horário) =====
