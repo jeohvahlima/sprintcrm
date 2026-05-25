@@ -25,6 +25,8 @@ import { toast } from "sonner";
 import { useHunterPipeline, type HunterLead, type HunterStage } from "@/hooks/useHunterPipeline";
 import { HunterStageForm } from "./HunterStageForm";
 import { HunterLeadDrawer, QUICK_REGISTRY, RESULT_OPTIONS } from "./HunterLeadDrawer";
+import { ConversaPopup } from "@/components/leads/ConversaPopup";
+import { AgendaModal } from "@/components/agenda/AgendaModal";
 
 const COLUMNS: { id: HunterStage; label: string; color: string }[] = [
   { id: "novo", label: "Leads Novos", color: "hsl(200, 50%, 60%)" },
@@ -48,7 +50,7 @@ function getInitials(name: string): string {
   return ((parts[0]?.[0] ?? "") + (parts[1]?.[0] ?? "")).toUpperCase() || name[0].toUpperCase();
 }
 
-function HunterCard({ lead, isDragging, onClick, onLogAttempt }: { lead: HunterLead; isDragging?: boolean; onClick: () => void; onLogAttempt: (substatus: string) => void }) {
+function HunterCard({ lead, isDragging, onClick, onLogAttempt, onOpenConversa, onOpenAgenda }: { lead: HunterLead; isDragging?: boolean; onClick: () => void; onLogAttempt: (substatus: string) => void; onOpenConversa: () => void; onOpenAgenda: () => void }) {
   const { attributes, listeners, setNodeRef, transform } = useDraggable({ id: lead.id, data: { lead } });
   const style = transform ? { transform: `translate(${transform.x}px, ${transform.y}px)`, zIndex: 50 } : undefined;
   const stale = isStale(lead.last_action_at);
@@ -150,13 +152,13 @@ function HunterCard({ lead, isDragging, onClick, onLogAttempt }: { lead: HunterL
             <button onClick={(e) => { stop(e); onLogAttempt("primeiro_contato"); }} className={actionBtn} title="Registrar contato">
               <PhoneCall className="h-3.5 w-3.5 text-emerald-600" />
             </button>
-            <button onClick={(e) => { stop(e); onClick(); }} className={actionBtn} title="Conversas">
+            <button onClick={(e) => { stop(e); onOpenConversa(); }} className={actionBtn} title="Conversas">
               <MessageCircle className="h-3.5 w-3.5" />
             </button>
             <button onClick={(e) => { stop(e); onClick(); }} className={actionBtn} title="Mover">
               <MoveHorizontal className="h-3.5 w-3.5" />
             </button>
-            <button onClick={(e) => { stop(e); onClick(); }} className={actionBtn} title="Agendar">
+            <button onClick={(e) => { stop(e); onOpenAgenda(); }} className={actionBtn} title="Agendar">
               <Calendar className="h-3.5 w-3.5" />
             </button>
             <button onClick={(e) => { stop(e); onClick(); }} className={actionBtn} title="Tarefa">
@@ -207,6 +209,8 @@ export function HunterPipelineBoard() {
   const [active, setActive] = useState<HunterLead | null>(null);
   const [pendingMove, setPendingMove] = useState<{ lead: HunterLead; to: HunterStage } | null>(null);
   const [drawer, setDrawer] = useState<HunterLead | null>(null);
+  const [conversaLead, setConversaLead] = useState<HunterLead | null>(null);
+  const [agendaLead, setAgendaLead] = useState<HunterLead | null>(null);
   const [importing, setImporting] = useState(false);
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 8 } }));
@@ -336,6 +340,8 @@ export function HunterPipelineBoard() {
                         isDragging={active?.id === l.id}
                         onClick={() => setDrawer(l)}
                         onLogAttempt={(s) => logCallAttempt(l.id, s)}
+                        onOpenConversa={() => setConversaLead(l)}
+                        onOpenAgenda={() => setAgendaLead(l)}
                       />
                     ))}
                   </HunterColumn>
@@ -378,6 +384,28 @@ export function HunterPipelineBoard() {
         fetchEvents={fetchEvents}
         onLogAttempt={(s) => drawer && logCallAttempt(drawer.id, s)}
       />
+
+      {conversaLead && conversaLead.lead_id && (
+        <ConversaPopup
+          open={!!conversaLead}
+          onOpenChange={(o) => { if (!o) setConversaLead(null); }}
+          leadId={conversaLead.lead_id}
+          leadName={conversaLead.lead_company || conversaLead.lead_name || "Lead"}
+          leadPhone={conversaLead.lead_phone || undefined}
+        />
+      )}
+
+      {agendaLead && agendaLead.lead_id && (
+        <AgendaModal
+          open={!!agendaLead}
+          onOpenChange={(o) => { if (!o) setAgendaLead(null); }}
+          lead={{
+            id: agendaLead.lead_id,
+            nome: agendaLead.lead_company || agendaLead.lead_name || "Lead",
+            telefone: agendaLead.lead_phone || undefined,
+          }}
+        />
+      )}
     </Card>
   );
 }
