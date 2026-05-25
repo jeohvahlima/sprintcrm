@@ -216,7 +216,18 @@ export const useCallCenter = () => {
       }
 
       // Clean phone number
-      const cleanPhone = phoneNumber.replace(/\D/g, '');
+      let cleanPhone = phoneNumber.replace(/\D/g, '');
+      if ((cleanPhone.length === 12 || cleanPhone.length === 13) && cleanPhone.startsWith('55')) {
+        cleanPhone = cleanPhone.slice(2);
+      }
+      if ((cleanPhone.length === 11 || cleanPhone.length === 12) && cleanPhone.startsWith('0')) {
+        cleanPhone = cleanPhone.slice(1);
+      }
+
+      if (cleanPhone.length < 10 || cleanPhone.length > 11) {
+        toast.error('Número inválido para ligação. Use DDD + número do contato.');
+        return false;
+      }
 
       // Create call record
       const { data: callRecord, error } = await supabase
