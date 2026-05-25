@@ -152,13 +152,13 @@ function HunterCard({ lead, isDragging, onClick, onLogAttempt, onOpenConversa, o
             <button onClick={(e) => { stop(e); onLogAttempt("primeiro_contato"); }} className={actionBtn} title="Registrar contato">
               <PhoneCall className="h-3.5 w-3.5 text-emerald-600" />
             </button>
-            <button onClick={(e) => { stop(e); onClick(); }} className={actionBtn} title="Conversas">
+            <button onClick={(e) => { stop(e); onOpenConversa(); }} className={actionBtn} title="Conversas">
               <MessageCircle className="h-3.5 w-3.5" />
             </button>
             <button onClick={(e) => { stop(e); onClick(); }} className={actionBtn} title="Mover">
               <MoveHorizontal className="h-3.5 w-3.5" />
             </button>
-            <button onClick={(e) => { stop(e); onClick(); }} className={actionBtn} title="Agendar">
+            <button onClick={(e) => { stop(e); onOpenAgenda(); }} className={actionBtn} title="Agendar">
               <Calendar className="h-3.5 w-3.5" />
             </button>
             <button onClick={(e) => { stop(e); onClick(); }} className={actionBtn} title="Tarefa">
