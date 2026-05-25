@@ -150,9 +150,25 @@ Deno.serve(async (req) => {
 
     switch (action) {
       case "make-call": {
-        const { caller, called } = body;
-        if (!caller || !called) throw new Error("caller and called are required");
+        const { called } = body;
+        let { caller } = body;
+        if (!called) throw new Error("called is required");
+        // Always prefer the configured DID/ramal as caller (number that rings first).
+        // Fallback to whatever the client sent, then to numberSip.
+        const creds = await resolveCreds(supabase, companyId);
+        caller = creds.callerNumber || caller || creds.numberSip;
+        if (!caller) throw new Error("Número do ramal/DID não configurado");
         result = await makeCall(caller, called, supabase, companyId);
+        break;
+      }
+      case "get-config": {
+        const { data: config } = await supabase
+          .from("nvoip_config")
+          .select("id, number_sip, napikey, login_email, is_active, user_token, caller_number")
+          .eq("company_id", companyId)
+          .maybeSingle();
+        const safe = config ? { ...config, user_token: config.user_token ? "••••••••" : null, has_token: !!config.user_token } : null;
+        result = { config: safe, company_id: companyId };
         break;
       }
       case "check-call": {
