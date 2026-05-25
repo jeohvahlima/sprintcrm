@@ -475,32 +475,37 @@ export function AgendaModal({ open, onOpenChange, lead, onAgendamentoCriado }: A
             const confirmToken = (compromisso as any)?.confirmation_token;
             const linkConfirmacao = confirmToken ? `https://app.growos.online/c/${confirmToken}` : '';
             const blocoConfirmacao = linkConfirmacao
-              ? `\\\\n👉 *Confirme seu agendamento clicando no link abaixo:*\\\\n${linkConfirmacao}\\\\n`
+              ? `\n👉 *Confirme seu agendamento clicando no link abaixo:*\n${linkConfirmacao}\n`
               : '';
-            const mensagemConfirmacao = `✅ *Compromisso Agendado!*\\\\n\\\\n` +
-              `Olá ${lead.nome}! Seu compromisso foi agendado com sucesso.\\\\n\\\\n` +
-              `📅 *Data:* ${format(dataHoraInicio, "dd/MM/yyyy", { locale: ptBR })}\\\\n` +
-              `🕐 *Horário:* ${format(dataHoraInicio, "HH:mm", { locale: ptBR })} às ${format(dataHoraFim, "HH:mm", { locale: ptBR })}\\\\n` +
-              (tipoServicoFormatado ? `📋 *Tipo:* ${tipoServicoFormatado}\\\\n` : '') +
-              (formData.descricao || formData.observacoes ? `\\\\n💬 *Observações:*\\\\n${formData.descricao || ''}${formData.descricao && formData.observacoes ? '\\\\n' : ''}${formData.observacoes || ''}\\\\n` : '') +
-              `\\\\n⏳ *Status:* Aguardando sua confirmação\\\\n` +
+            const mensagemConfirmacao = `✅ *Compromisso Agendado!*\n\n` +
+              `Olá ${lead.nome}! Seu compromisso foi agendado com sucesso.\n\n` +
+              `📅 *Data:* ${format(dataHoraInicio, "dd/MM/yyyy", { locale: ptBR })}\n` +
+              `🕐 *Horário:* ${format(dataHoraInicio, "HH:mm", { locale: ptBR })} às ${format(dataHoraFim, "HH:mm", { locale: ptBR })}\n` +
+              (tipoServicoFormatado ? `📋 *Tipo:* ${tipoServicoFormatado}\n` : '') +
+              (formData.descricao || formData.observacoes ? `\n💬 *Observações:*\n${formData.descricao || ''}${formData.descricao && formData.observacoes ? '\n' : ''}${formData.observacoes || ''}\n` : '') +
+              `\n⏳ *Status:* Aguardando sua confirmação\n` +
               blocoConfirmacao +
-              `\\\\n_Esta é uma mensagem automática do seu agendamento._`;
+              `\n_Esta é uma mensagem automática do seu agendamento._`;
 
-            // Enviar confirmação via WhatsApp
+            // Enviar confirmação via WhatsApp (edge function espera `numero` + `company_id`)
             const { data: whatsappResponse, error: whatsappError } = await supabase.functions.invoke('enviar-whatsapp', {
               body: {
-                telefone: telefone,
+                numero: telefone,
                 mensagem: mensagemConfirmacao,
+                company_id: companyId,
+                lead_id: lead.id,
               },
             });
 
-            if (whatsappError) {
-              console.error('❌ [WHATSAPP] Erro ao enviar WhatsApp:', whatsappError);
+            if (whatsappError || !(whatsappResponse as any)?.success) {
+              console.error('❌ [WHATSAPP] Erro ao enviar WhatsApp:', whatsappError || whatsappResponse);
               toast.warning("Compromisso criado, mas houve um erro ao enviar o WhatsApp.");
             } else {
               console.log('✅ [WHATSAPP] WhatsApp enviado com sucesso:', whatsappResponse);
             }
+          } else {
+            console.warn('⚠️ [CONFIRMAÇÃO] Telefone do lead inválido, não foi possível enviar.');
+            toast.warning("Compromisso criado, mas o telefone do lead é inválido.");
           }
         } catch (error) {
           console.error('❌ [CONFIRMAÇÃO] Erro ao enviar confirmação:', error);
