@@ -72,6 +72,7 @@ export const NvoipAccountPanel: React.FC = () => {
           user_token: cfg.has_token ? '••••••••' : '',
           napikey: cfg.napikey || '',
           login_email: cfg.login_email || '',
+          caller_number: cfg.caller_number || '',
         }));
         setHasToken(!!cfg.has_token);
         if (cfg.has_token) {
