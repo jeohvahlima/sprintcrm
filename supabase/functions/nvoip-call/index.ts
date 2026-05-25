@@ -151,13 +151,12 @@ Deno.serve(async (req) => {
     switch (action) {
       case "make-call": {
         const { called } = body;
-        let { caller } = body;
         if (!called) throw new Error("called is required");
-        // Always prefer the configured DID/ramal as caller (number that rings first).
-        // Fallback to whatever the client sent, then to numberSip.
+        // Nvoip API v2: caller MUST be the NumberSIP (SIP user that originates the call).
+        // The DID/caller_number is just the outbound caller ID configured at account level.
         const creds = await resolveCreds(supabase, companyId);
-        caller = creds.callerNumber || caller || creds.numberSip;
-        if (!caller) throw new Error("Número do ramal/DID não configurado");
+        const caller = creds.numberSip;
+        if (!caller) throw new Error("NumberSIP não configurado");
         result = await makeCall(caller, called, supabase, companyId);
         break;
       }
