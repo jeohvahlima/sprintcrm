@@ -72,12 +72,29 @@ async function getAccessToken(supabase?: any, companyId?: string): Promise<{ tok
   return { token: await getAccessTokenFor(numberSip, userToken), napikey: Deno.env.get("NVOIP_NAPIKEY") };
 }
 
+function normalizeNvoipDestination(phone: string): string {
+  let digits = String(phone || "").replace(/\D/g, "");
+
+  // A API v2 da Nvoip espera destino nacional no formato DDD + número.
+  // Leads vindos do WhatsApp normalmente chegam com DDI 55, então removemos antes de discar.
+  if ((digits.length === 12 || digits.length === 13) && digits.startsWith("55")) {
+    digits = digits.slice(2);
+  }
+
+  // Remove prefixo nacional de longa distância quando vier salvo como 0 + DDD + número.
+  if ((digits.length === 11 || digits.length === 12) && digits.startsWith("0")) {
+    digits = digits.slice(1);
+  }
+
+  return digits;
+}
+
 async function makeCall(caller: string, called: string, supabase: any, companyId: string): Promise<any> {
-  const { token, napikey } = await getAccessToken(supabase, companyId);
+  const { token } = await getAccessToken(supabase, companyId);
   const res = await fetch(`${NVOIP_BASE}/calls/`, {
     method: "POST",
     headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-    body: JSON.stringify({ caller, called, napikey }),
+    body: JSON.stringify({ caller, called }),
   });
   if (!res.ok) throw new Error(`make-call failed (${res.status}): ${await res.text()}`);
   return await res.json();
@@ -152,12 +169,17 @@ Deno.serve(async (req) => {
       case "make-call": {
         const { called } = body;
         if (!called) throw new Error("called is required");
+        const normalizedCalled = normalizeNvoipDestination(called);
+        if (normalizedCalled.length < 10 || normalizedCalled.length > 11) {
+          throw new Error("Número do contato inválido para ligação Nvoip. Use DDD + número, sem código do país.");
+        }
         // Nvoip API v2: caller MUST be the NumberSIP (SIP user that originates the call).
         // The DID/caller_number is just the outbound caller ID configured at account level.
         const creds = await resolveCreds(supabase, companyId);
         const caller = creds.numberSip;
         if (!caller) throw new Error("NumberSIP não configurado");
-        result = await makeCall(caller, called, supabase, companyId);
+        console.log("Nvoip make-call", { caller, called: normalizedCalled, originalLength: String(called).replace(/\D/g, "").length });
+        result = await makeCall(caller, normalizedCalled, supabase, companyId);
         break;
       }
       case "get-config": {
