@@ -1,0 +1,1 @@
+ALTER TABLE public.nvoip_config ADD COLUMN IF NOT EXISTS caller_number text;

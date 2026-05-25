@@ -29,6 +29,7 @@ export const NvoipAccountPanel: React.FC = () => {
     user_token: '',
     napikey: '',
     login_email: '',
+    caller_number: '',
   });
 
   const loadAccount = useCallback(async () => {
@@ -71,6 +72,7 @@ export const NvoipAccountPanel: React.FC = () => {
           user_token: cfg.has_token ? '••••••••' : '',
           napikey: cfg.napikey || '',
           login_email: cfg.login_email || '',
+          caller_number: cfg.caller_number || '',
         }));
         setHasToken(!!cfg.has_token);
         if (cfg.has_token) {
@@ -115,6 +117,7 @@ export const NvoipAccountPanel: React.FC = () => {
           user_token: passwordToSave || undefined,
           napikey: form.napikey,
           login_email: form.login_email,
+          caller_number: form.caller_number,
         },
       });
       if (error) throw error;
@@ -264,13 +267,26 @@ export const NvoipAccountPanel: React.FC = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="napikey">Chave de API (opcional)</Label>
+                  <Label htmlFor="napikey">Chave de API (Napikey)</Label>
                   <Input
                     id="napikey"
-                    placeholder="Usada para iniciar chamadas"
+                    placeholder="Necessária para iniciar chamadas reais"
                     value={form.napikey}
                     onChange={(e) => setForm({ ...form, napikey: e.target.value })}
                   />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="caller_number">Número do ramal/DID (originador) *</Label>
+                  <Input
+                    id="caller_number"
+                    placeholder="Ex: 558132998470 (número que toca primeiro para conectar a ligação)"
+                    value={form.caller_number}
+                    onChange={(e) => setForm({ ...form, caller_number: e.target.value })}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Esse é o número (chip/celular ou DID) cadastrado na Nvoip que vai tocar primeiro. Ao atender, a Nvoip disca para o cliente e conecta as duas pontas.
+                  </p>
                 </div>
 
                 <Alert>

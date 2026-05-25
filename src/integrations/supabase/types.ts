@@ -6652,6 +6652,7 @@ export type Database = {
       }
       nvoip_config: {
         Row: {
+          caller_number: string | null
           company_id: string
           created_at: string | null
           id: string
@@ -6663,6 +6664,7 @@ export type Database = {
           user_token: string | null
         }
         Insert: {
+          caller_number?: string | null
           company_id: string
           created_at?: string | null
           id?: string
@@ -6674,6 +6676,7 @@ export type Database = {
           user_token?: string | null
         }
         Update: {
+          caller_number?: string | null
           company_id?: string
           created_at?: string | null
           id?: string
