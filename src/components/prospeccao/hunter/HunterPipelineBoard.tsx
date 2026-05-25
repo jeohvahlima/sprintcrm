@@ -340,6 +340,8 @@ export function HunterPipelineBoard() {
                         isDragging={active?.id === l.id}
                         onClick={() => setDrawer(l)}
                         onLogAttempt={(s) => logCallAttempt(l.id, s)}
+                        onOpenConversa={() => setConversaLead(l)}
+                        onOpenAgenda={() => setAgendaLead(l)}
                       />
                     ))}
                   </HunterColumn>
