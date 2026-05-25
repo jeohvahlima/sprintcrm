@@ -50,7 +50,7 @@ function getInitials(name: string): string {
   return ((parts[0]?.[0] ?? "") + (parts[1]?.[0] ?? "")).toUpperCase() || name[0].toUpperCase();
 }
 
-function HunterCard({ lead, isDragging, onClick, onLogAttempt }: { lead: HunterLead; isDragging?: boolean; onClick: () => void; onLogAttempt: (substatus: string) => void }) {
+function HunterCard({ lead, isDragging, onClick, onLogAttempt, onOpenConversa, onOpenAgenda }: { lead: HunterLead; isDragging?: boolean; onClick: () => void; onLogAttempt: (substatus: string) => void; onOpenConversa: () => void; onOpenAgenda: () => void }) {
   const { attributes, listeners, setNodeRef, transform } = useDraggable({ id: lead.id, data: { lead } });
   const style = transform ? { transform: `translate(${transform.x}px, ${transform.y}px)`, zIndex: 50 } : undefined;
   const stale = isStale(lead.last_action_at);
