@@ -29,6 +29,7 @@ export const NvoipAccountPanel: React.FC = () => {
     user_token: '',
     napikey: '',
     login_email: '',
+    caller_number: '',
   });
 
   const loadAccount = useCallback(async () => {
