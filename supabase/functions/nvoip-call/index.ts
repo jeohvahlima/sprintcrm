@@ -45,7 +45,7 @@ async function getAccessTokenFor(username: string, password: string): Promise<st
 async function resolveCreds(supabase: any, companyId: string) {
   const { data: cfg } = await supabase
     .from("nvoip_config")
-    .select("number_sip, user_token, napikey, login_email")
+    .select("number_sip, user_token, napikey, login_email, caller_number")
     .eq("company_id", companyId)
     .eq("is_active", true)
     .maybeSingle();
@@ -54,10 +54,11 @@ async function resolveCreds(supabase: any, companyId: string) {
   const userToken = cfg?.user_token || Deno.env.get("NVOIP_USER_TOKEN");
   const napikey = cfg?.napikey || Deno.env.get("NVOIP_NAPIKEY");
   const loginEmail = cfg?.login_email || Deno.env.get("NVOIP_LOGIN_EMAIL");
+  const callerNumber = cfg?.caller_number || Deno.env.get("NVOIP_CALLER_NUMBER");
   if (!numberSip || !userToken) {
     throw new Error("Conta Nvoip não conectada. Configure NumberSIP e User Token em Call Center → Conta Telefônica.");
   }
-  return { numberSip, userToken, napikey, loginEmail };
+  return { numberSip, userToken, napikey, loginEmail, callerNumber };
 }
 
 async function getAccessToken(supabase?: any, companyId?: string): Promise<{ token: string; napikey?: string }> {
