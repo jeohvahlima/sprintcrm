@@ -20,6 +20,8 @@ export interface Message {
   timestamp: Date;
   delivered: boolean;
   read?: boolean;
+  status?: string;
+  errorReason?: string;
   mediaUrl?: string;
   fileName?: string;
   sentBy?: string; // ⚡ Nome do usuário que enviou a mensagem
@@ -353,6 +355,8 @@ export const useConversationsCache = (companyId: string | null) => {
               timestamp: new Date(m.created_at || Date.now()),
               delivered: m.delivered === true || m.status === 'Enviada',
               read: m.read === true, // ⚡ CORREÇÃO: Usar campo read do banco (true = contato visualizou)
+              status: m.status,
+              errorReason: (m as any).error_reason || undefined,
               sentBy: sentBy, // ⚡ CORREÇÃO: Incluir assinatura do banco com fallback
               participantName: (m as any).group_participant_name || undefined, // 👥 Remetente em grupos
               participantPhone: (m as any).group_participant_phone || undefined,

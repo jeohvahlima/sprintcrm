@@ -38,6 +38,7 @@ interface Message {
   delivered: boolean;
   read?: boolean;
   status?: string;
+  errorReason?: string;
   mediaUrl?: string;
   fileName?: string;
   mimeType?: string;
@@ -1006,7 +1007,7 @@ END:VCARD`;
                 }`} 
                 title={
                   isFailedMessage
-                    ? 'Falhou'
+                    ? (message.errorReason || 'Falhou ao enviar')
                     : isProcessingMessage
                       ? 'Processando'
                       : message.read
@@ -1045,6 +1046,14 @@ END:VCARD`;
               </div>
             )}
           </div>
+
+          {/* Motivo da falha (API oficial) */}
+          {isFailedMessage && message.errorReason && message.sender === "user" && (
+            <div className="mt-1 px-2 py-1 rounded-md bg-destructive/10 border border-destructive/30 text-[10px] text-destructive leading-snug">
+              {message.errorReason}
+            </div>
+          )}
+
           
           {/* Reaction */}
           {message.reaction && (

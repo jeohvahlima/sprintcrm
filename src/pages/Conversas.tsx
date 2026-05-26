@@ -154,6 +154,7 @@ interface Message {
   delivered: boolean;
   read?: boolean;
   status?: string;
+  errorReason?: string;
   mediaUrl?: string;
   fileName?: string;
   mimeType?: string;
@@ -1815,6 +1816,7 @@ function Conversas() {
                 ...novasMensagens[mensagemIndex],
                 content: novaMensagem.mensagem || novasMensagens[mensagemIndex].content,
                 status: deliveryState.status || novasMensagens[mensagemIndex].status,
+                errorReason: (novaMensagem as any).error_reason || novasMensagens[mensagemIndex].errorReason,
                 read: deliveryState.read,
                 delivered: deliveryState.delivered
               };
@@ -1835,6 +1837,7 @@ function Conversas() {
                 ...novasMensagens[mensagemIndex],
                 content: novaMensagem.mensagem || novasMensagens[mensagemIndex].content,
                 status: deliveryState.status || novasMensagens[mensagemIndex].status,
+                errorReason: (novaMensagem as any).error_reason || novasMensagens[mensagemIndex].errorReason,
                 read: deliveryState.read,
                 delivered: deliveryState.delivered
               };

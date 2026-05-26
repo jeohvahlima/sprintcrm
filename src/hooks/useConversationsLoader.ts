@@ -334,6 +334,8 @@ export const useConversationsLoader = () => {
                 timestamp: new Date(m.created_at || Date.now()),
                 delivered: m.delivered === true || m.status === 'Enviada',
                 read: m.read === true, // ⚡ CORREÇÃO: Usar campo read do banco (true = contato visualizou)
+                status: m.status,
+                errorReason: (m as any).error_reason || undefined,
                 mediaUrl: m.midia_url,
                 sentBy: sentBy, // ✅ CORREÇÃO: Incluir assinatura com fallback correto
                 participantName: (m as any).group_participant_name || undefined, // 👥 Nome do remetente em grupos

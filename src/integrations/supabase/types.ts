@@ -2279,6 +2279,8 @@ export type Database = {
           created_at: string | null
           ctwa_clid: string | null
           delivered: boolean | null
+          error_code: string | null
+          error_reason: string | null
           fila_id: string | null
           fromme: boolean | null
           group_participant_avatar_url: string | null
@@ -2317,6 +2319,8 @@ export type Database = {
           created_at?: string | null
           ctwa_clid?: string | null
           delivered?: boolean | null
+          error_code?: string | null
+          error_reason?: string | null
           fila_id?: string | null
           fromme?: boolean | null
           group_participant_avatar_url?: string | null
@@ -2355,6 +2359,8 @@ export type Database = {
           created_at?: string | null
           ctwa_clid?: string | null
           delivered?: boolean | null
+          error_code?: string | null
+          error_reason?: string | null
           fila_id?: string | null
           fromme?: boolean | null
           group_participant_avatar_url?: string | null

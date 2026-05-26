@@ -962,8 +962,36 @@ serve(async (req) => {
             }
 
             for (const deliveryStatus of value.statuses) {
-              const conversationUpdate = mapMetaDeliveryStatusToConversationUpdate(deliveryStatus);
+              const conversationUpdate: Record<string, any> = mapMetaDeliveryStatusToConversationUpdate(deliveryStatus);
               const errorInfo = deliveryStatus?.errors?.[0];
+
+              // Anexar motivo da falha legível na conversa (para exibição na UI)
+              if (String(deliveryStatus?.status || '').toLowerCase() === 'failed') {
+                const code = errorInfo?.code ? String(errorInfo.code) : null;
+                const rawMsg = errorInfo?.error_data?.details || errorInfo?.message || errorInfo?.title || '';
+                const friendlyByCode: Record<string, string> = {
+                  '131026': 'Mensagem não entregue: o número não está no WhatsApp ou o destinatário não aceitou os novos Termos.',
+                  '131047': 'Janela de 24h expirada — envie um template aprovado para reabrir a conversa.',
+                  '131049': 'Meta limitou a entrega para preservar a experiência do usuário (qualidade/frequência).',
+                  '131042': 'Falha de cobrança/conta no WhatsApp Business. Verifique o método de pagamento na Meta.',
+                  '131051': 'Tipo de mensagem não suportado pelo destinatário.',
+                  '131053': 'Mídia não suportada ou inválida.',
+                  '131056': 'Limite de mensagens por par (remetente/destinatário) atingido. Tente novamente mais tarde.',
+                  '132000': 'Template inválido: número de parâmetros não corresponde ao aprovado.',
+                  '132001': 'Template não existe nesse idioma. Verifique o idioma aprovado.',
+                  '132005': 'Texto do template excedeu o limite de caracteres.',
+                  '132007': 'Template foi pausado por baixa qualidade. Edite e reenvie para aprovação.',
+                  '132012': 'Parâmetro do template em formato inválido.',
+                  '132015': 'Template foi rejeitado/desativado.',
+                  '368': 'Conta temporariamente bloqueada pela Meta por violação de políticas.',
+                  '470': 'Janela de 24h expirada — envie um template para reabrir a conversa.',
+                };
+                const friendly = (code && friendlyByCode[code]) || rawMsg || 'Falha desconhecida no envio.';
+                conversationUpdate.error_code = code;
+                conversationUpdate.error_reason = friendly;
+              }
+
+
 
               // Retry logic to handle race condition: webhook may arrive before DB insert completes
               let updatedRows: any[] | null = null;
