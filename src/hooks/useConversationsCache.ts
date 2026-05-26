@@ -468,6 +468,7 @@ export const useConversationsCache = (companyId: string | null) => {
         const normalizedPhone = telefone.replace(/^ig_/, '').replace(/[^0-9]/g, '');
         const lead = leadsMap.get(normalizedPhone) || leadsMap.get(telefone);
         const responsaveis = responsaveisMap.get(normalizedPhone) || responsaveisMap.get(telefone) || [];
+        const responsavelIds = responsaveisIdsMap.get(normalizedPhone) || responsaveisIdsMap.get(telefone) || [];
         
         // Formatar valor
         let valorFormatado = '';
@@ -495,8 +496,9 @@ export const useConversationsCache = (companyId: string | null) => {
           funnelStage,
           valor: valorFormatado || undefined,
           responsavel: responsaveis.join(', ') || undefined,
+          responsavelIds: responsavelIds.length > 0 ? responsavelIds : undefined,
           assignedUser: responsaveis.length > 0 ? {
-            id: lead?.responsavel_id || '',
+            id: responsavelIds[0] || lead?.responsavel_id || '',
             name: responsaveis[0],
           } : undefined,
         };
