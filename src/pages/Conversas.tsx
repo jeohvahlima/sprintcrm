@@ -1815,6 +1815,7 @@ function Conversas() {
                 ...novasMensagens[mensagemIndex],
                 content: novaMensagem.mensagem || novasMensagens[mensagemIndex].content,
                 status: deliveryState.status || novasMensagens[mensagemIndex].status,
+                errorReason: (novaMensagem as any).error_reason || novasMensagens[mensagemIndex].errorReason,
                 read: deliveryState.read,
                 delivered: deliveryState.delivered
               };
@@ -1835,6 +1836,7 @@ function Conversas() {
                 ...novasMensagens[mensagemIndex],
                 content: novaMensagem.mensagem || novasMensagens[mensagemIndex].content,
                 status: deliveryState.status || novasMensagens[mensagemIndex].status,
+                errorReason: (novaMensagem as any).error_reason || novasMensagens[mensagemIndex].errorReason,
                 read: deliveryState.read,
                 delivered: deliveryState.delivered
               };

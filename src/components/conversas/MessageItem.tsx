@@ -1007,7 +1007,7 @@ END:VCARD`;
                 }`} 
                 title={
                   isFailedMessage
-                    ? 'Falhou'
+                    ? (message.errorReason || 'Falhou ao enviar')
                     : isProcessingMessage
                       ? 'Processando'
                       : message.read
