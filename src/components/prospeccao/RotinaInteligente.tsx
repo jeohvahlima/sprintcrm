@@ -708,6 +708,18 @@ export function RotinaInteligente() {
                     </Select>
                   </div>
                   <div className="space-y-1">
+                    <Label className="text-xs">Início</Label>
+                    <Input type="time" value={config.sdrInicio} onChange={(e) => update("sdrInicio", e.target.value)} />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs">Taxa Lead → Resposta (%)</Label>
+                    <Input type="number" value={config.taxaLeadResposta} onChange={(e) => update("taxaLeadResposta", Number(e.target.value))} />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs">Taxa Resposta → Reunião (%)</Label>
+                    <Input type="number" value={config.taxaRespostaReuniao} onChange={(e) => update("taxaRespostaReuniao", Number(e.target.value))} />
+                  </div>
+                  <div className="space-y-1">
                     <Label className="text-xs">Nível</Label>
                     <Select value={config.sdrNivel} onValueChange={(v) => update("sdrNivel", v)}>
                       <SelectTrigger><SelectValue /></SelectTrigger>
@@ -717,14 +729,6 @@ export function RotinaInteligente() {
                         <SelectItem value="avancado">Avançado</SelectItem>
                       </SelectContent>
                     </Select>
-                  </div>
-                  <div className="space-y-1">
-                    <Label className="text-xs">Início</Label>
-                    <Input type="time" value={config.sdrInicio} onChange={(e) => update("sdrInicio", e.target.value)} />
-                  </div>
-                  <div className="space-y-1">
-                    <Label className="text-xs">Taxa Lead → Resposta (%)</Label>
-                    <Input type="number" value={config.taxaLeadResposta} onChange={(e) => update("taxaLeadResposta", Number(e.target.value))} />
                   </div>
                   <div className="space-y-1">
                     <Label className="text-xs">Almoço início</Label>
