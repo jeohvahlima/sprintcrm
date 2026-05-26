@@ -10091,14 +10091,31 @@ function Conversas() {
                     </div>
 
                     {/* Responsáveis */}
-                    <ResponsaveisManager leadId={leadsVinculados[selectedConv.id] || leadsVinculados[safeFormatPhoneNumber(selectedConv.id)] || null} responsaveisAtuais={selectedConv.assignedUser?.name ? [selectedConv.assignedUser.name] : []} onResponsaveisUpdated={responsaveis => {
+                    <ResponsaveisManager leadId={leadsVinculados[selectedConv.id] || leadsVinculados[safeFormatPhoneNumber(selectedConv.id)] || null} responsaveisAtuais={selectedConv.assignedUser?.name ? [selectedConv.assignedUser.name] : []} onResponsaveisUpdated={async (responsaveis) => {
                 console.log('👥 Responsáveis atualizados:', responsaveis);
                 const nomeResponsavel = responsaveis.join(', ');
+                const leadId = leadsVinculados[selectedConv.id] || leadsVinculados[safeFormatPhoneNumber(selectedConv.id)];
+                // 🆕 Buscar IDs reais dos responsáveis do banco para o filtro "Responsável" funcionar
+                let responsavelIds: string[] = [];
+                if (leadId) {
+                  try {
+                    const { data: leadData } = await supabase
+                      .from('leads')
+                      .select('responsaveis, responsavel_id')
+                      .eq('id', leadId)
+                      .maybeSingle();
+                    const arr = (leadData?.responsaveis as string[] | null) || [];
+                    responsavelIds = arr.length > 0 ? arr : (leadData?.responsavel_id ? [leadData.responsavel_id] : []);
+                  } catch (e) {
+                    console.error('Erro ao buscar IDs de responsáveis:', e);
+                  }
+                }
                 setConversations(prev => prev.map(conv => conv.id === selectedConv.id ? {
                   ...conv,
                   responsavel: nomeResponsavel,
+                  responsavelIds,
                   assignedUser: responsaveis.length > 0 ? {
-                    id: conv.assignedUser?.id || '',
+                    id: responsavelIds[0] || conv.assignedUser?.id || '',
                     name: responsaveis[0],
                     avatar: conv.assignedUser?.avatar
                   } : undefined
@@ -10106,8 +10123,9 @@ function Conversas() {
                 setSelectedConv(prev => prev ? {
                   ...prev,
                   responsavel: nomeResponsavel,
+                  responsavelIds,
                   assignedUser: responsaveis.length > 0 ? {
-                    id: prev.assignedUser?.id || '',
+                    id: responsavelIds[0] || prev.assignedUser?.id || '',
                     name: responsaveis[0],
                     avatar: prev.assignedUser?.avatar
                   } : undefined
