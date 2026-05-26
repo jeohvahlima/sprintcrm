@@ -340,14 +340,14 @@ export const loadAllUniqueConversations = async (companyId: string): Promise<Con
     const telefonesParaBuscar = Array.from(conversasMap.keys()).map(tel => tel.replace(/[^0-9]/g, '')).filter(tel => tel.length >= 10);
     
     // Buscar leads para obter nomes corretos
-    const leadsNamesMap = new Map<string, { name: string; leadId: string; profilePictureUrl?: string; tags?: string[]; stage?: string; value?: number }>();
+    const leadsNamesMap = new Map<string, { name: string; leadId: string; profilePictureUrl?: string; tags?: string[]; stage?: string; value?: number; responsavelIds?: string[] }>();
     if (telefonesParaBuscar.length > 0) {
       const BATCH_SIZE = 50;
       for (let i = 0; i < telefonesParaBuscar.length; i += BATCH_SIZE) {
         const batch = telefonesParaBuscar.slice(i, i + BATCH_SIZE);
         const { data: leadsData } = await supabase
           .from('leads')
-          .select('id, phone, name, telefone, profile_picture_url, tags, stage, value')
+          .select('id, phone, name, telefone, profile_picture_url, tags, stage, value, responsaveis, responsavel_id')
           .eq('company_id', companyId)
           .or(batch.map(tel => `phone.ilike.%${tel}%,telefone.ilike.%${tel}%`).join(','))
           .limit(BATCH_SIZE);
@@ -357,6 +357,9 @@ export const loadAllUniqueConversations = async (companyId: string): Promise<Con
             const phoneKey = (lead.phone || lead.telefone || '').replace(/[^0-9]/g, '');
             if (phoneKey) {
               const validName = lead.name && !isInstagramPlaceholderName(lead.name) && !/^\d{10,}$/.test(String(lead.name).trim());
+              const responsavelIds = Array.isArray(lead.responsaveis)
+                ? lead.responsaveis.filter(Boolean)
+                : (lead.responsavel_id ? [lead.responsavel_id] : []);
               leadsNamesMap.set(phoneKey, {
                 name: validName ? lead.name : (leadsNamesMap.get(phoneKey)?.name || ''),
                 leadId: lead.id,
@@ -364,6 +367,7 @@ export const loadAllUniqueConversations = async (companyId: string): Promise<Con
                 tags: Array.isArray(lead.tags) ? lead.tags : [],
                 stage: lead.stage || undefined,
                 value: lead.value != null ? Number(lead.value) : undefined,
+                responsavelIds,
               });
             }
           });
@@ -383,6 +387,21 @@ export const loadAllUniqueConversations = async (companyId: string): Promise<Con
         }
       }
     });
+
+    const manualResponsibleIds = new Set<string>();
+    leadsNamesMap.forEach((leadInfo) => {
+      leadInfo.responsavelIds?.forEach((id) => manualResponsibleIds.add(id));
+    });
+
+    const manualResponsibleNamesMap = new Map<string, string>();
+    if (manualResponsibleIds.size > 0) {
+      const { data: profiles } = await supabase
+        .from('profiles')
+        .select('id, full_name, email')
+        .in('id', Array.from(manualResponsibleIds));
+
+      profiles?.forEach((p) => manualResponsibleNamesMap.set(p.id, p.full_name || p.email || 'Usuário'));
+    }
 
     // Buscar assignments (assignedUser) para manter filtro "Transferidos"
     const assignmentsMap = new Map<string, { id: string; name: string }>();
@@ -482,6 +501,14 @@ export const loadAllUniqueConversations = async (companyId: string): Promise<Con
       }
 
       // Avatar: usar foto do lead se disponível
+      const manualResponsavelIds = leadInfo?.responsavelIds || [];
+      const manualResponsavelNames = manualResponsavelIds
+        .map((id) => manualResponsibleNamesMap.get(id))
+        .filter(Boolean) as string[];
+      const displayedResponsible = assignedUserData || (manualResponsavelIds[0]
+        ? { id: manualResponsavelIds[0], name: manualResponsavelNames[0] || 'Usuário' }
+        : undefined);
+
       const avatarUrl = leadInfo?.profilePictureUrl
         ? leadInfo.profilePictureUrl
         : isInstagramConversation
@@ -504,9 +531,10 @@ export const loadAllUniqueConversations = async (companyId: string): Promise<Con
         isGroup,
         avatarUrl,
         origemApi: origemApi as "evolution" | "meta",
-        // ⚡ CORREÇÃO: Incluir assignedUser para filtro "Transferidos" funcionar
-        responsavel: assignedUserData?.id,
-        assignedUser: assignedUserData ? { id: assignedUserData.id, name: assignedUserData.name } : undefined,
+        // ⚡ CORREÇÃO: Incluir responsável manual do lead e atendimento transferido
+        responsavel: manualResponsavelNames.join(', ') || displayedResponsible?.id,
+        responsavelIds: manualResponsavelIds.length > 0 ? manualResponsavelIds : (assignedUserData ? [assignedUserData.id] : undefined),
+        assignedUser: displayedResponsible,
       };
     });
 
