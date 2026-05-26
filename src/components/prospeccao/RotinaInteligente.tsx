@@ -267,15 +267,32 @@ export function RotinaInteligente() {
   const update = (k: keyof Config, v: any) => setConfig((c) => ({ ...c, [k]: v }));
 
   // ===== CÁLCULOS =====
+  // Derivar tudo a partir do MÊS (mais preciso). Semana e dia são derivações.
   const metrics = useMemo(() => {
-    const vendasMes = Math.ceil(config.metaFaturamento / Math.max(1, config.ticketMedio));
-    const vendasDia = Math.ceil(vendasMes / Math.max(1, config.diasUteis));
-    const reunioesMes = Math.ceil(vendasMes / Math.max(0.01, config.taxaConversao / 100));
-    const reunioesDia = Math.ceil(reunioesMes / Math.max(1, config.diasUteis));
-    const respostasDia = Math.ceil(reunioesDia / Math.max(0.01, config.taxaRespostaReuniao / 100));
-    const leadsDia = Math.ceil(respostasDia / Math.max(0.01, config.taxaLeadResposta / 100));
+    const dias = Math.max(1, config.diasUteis);
+    const conv = Math.max(0.01, config.taxaConversao / 100);
+    const respReun = Math.max(0.01, config.taxaRespostaReuniao / 100);
+    const leadResp = Math.max(0.01, config.taxaLeadResposta / 100);
 
-    // Por SDR
+    // Funil mensal (base de verdade)
+    const vendasMes = Math.ceil(config.metaFaturamento / Math.max(1, config.ticketMedio));
+    const reunioesMes = Math.ceil(vendasMes / conv);
+    const respostasMes = Math.ceil(reunioesMes / respReun);
+    const leadsMes = Math.ceil(respostasMes / leadResp);
+
+    // Diário = mensal / dias úteis (arredondado pra cima 1x só)
+    const vendasDia = Math.ceil(vendasMes / dias);
+    const reunioesDia = Math.ceil(reunioesMes / dias);
+    const respostasDia = Math.ceil(respostasMes / dias);
+    const leadsDia = Math.ceil(leadsMes / dias);
+
+    // Semanal = mensal / 4.33 semanas (não dia*5, que infla por arredondamento)
+    const SEMANAS_MES = 4.33;
+    const vendasSemana = Math.ceil(vendasMes / SEMANAS_MES);
+    const reunioesSemana = Math.ceil(reunioesMes / SEMANAS_MES);
+    const leadsSemana = Math.ceil(leadsMes / SEMANAS_MES);
+
+    // Por pessoa
     const leadsPorSdr = Math.ceil(leadsDia / Math.max(1, config.sdrCount));
     const reunioesPorCloser = Math.ceil(reunioesDia / Math.max(1, config.closerCount));
 
@@ -284,7 +301,12 @@ export function RotinaInteligente() {
     const capacidadeReunioes = Math.floor(minDisponiveis / Math.max(15, config.tempoReuniaoMin));
     const sobrecarga = reunioesPorCloser > capacidadeReunioes;
 
-    return { vendasMes, vendasDia, reunioesMes, reunioesDia, respostasDia, leadsDia, leadsPorSdr, reunioesPorCloser, capacidadeReunioes, sobrecarga };
+    return {
+      vendasMes, vendasDia, vendasSemana,
+      reunioesMes, reunioesDia, reunioesSemana,
+      respostasDia, leadsDia, leadsMes, leadsSemana,
+      leadsPorSdr, reunioesPorCloser, capacidadeReunioes, sobrecarga,
+    };
   }, [config]);
 
   // ===== GERADOR DE ROTINA =====
