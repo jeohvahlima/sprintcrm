@@ -3713,6 +3713,8 @@ function Conversas() {
         profilePictureUrl?: string;
         stage?: string;
         value?: number;
+        responsaveis?: string[];
+        responsavel_id?: string | null;
       }>();
       leadsData.forEach(lead => {
         const phoneRaw = lead.phone || lead.telefone;
@@ -3726,6 +3728,8 @@ function Conversas() {
             profilePictureUrl: lead.profile_picture_url || undefined,
             stage: lead.stage || undefined,
             value: lead.value != null ? Number(lead.value) : undefined,
+            responsaveis: Array.isArray(lead.responsaveis) ? lead.responsaveis : [],
+            responsavel_id: lead.responsavel_id || null,
           };
           // Armazenar com chave original
           leadsMap.set(phoneKey, leadEntry);
