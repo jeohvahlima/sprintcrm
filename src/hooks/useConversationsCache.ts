@@ -250,7 +250,8 @@ export const useConversationsCache = (companyId: string | null) => {
       // 🆕 FASE 2.4: Buscar leads vinculados para todas as conversas
       const allPhones = Array.from(conversasMap.keys());
       const leadsMap = new Map<string, any>();
-      const responsaveisMap = new Map<string, any[]>();
+      const responsaveisMap = new Map<string, string[]>();
+      const responsaveisIdsMap = new Map<string, string[]>();
       
       if (allPhones.length > 0) {
         try {
