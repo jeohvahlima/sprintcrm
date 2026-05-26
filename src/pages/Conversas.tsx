@@ -1281,7 +1281,11 @@ function Conversas() {
         }
         
         // Manter lógica legada: responsável ou transferido para mim
-        const isLegacyResponsible = conv.responsavel === currentUserId || conv.assignedUser?.id === currentUserId;
+        const isLegacyResponsible =
+          conv.assignedUser?.id === currentUserId ||
+          (Array.isArray(conv.responsavelIds) && currentUserId
+            ? conv.responsavelIds.includes(currentUserId)
+            : false);
         if (isLegacyResponsible) {
           console.log(`✅ [RESPONSIBLE] ${conv.contactName} é responsável legado`);
         }
