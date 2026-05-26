@@ -20,6 +20,8 @@ export interface Message {
   timestamp: Date;
   delivered: boolean;
   read?: boolean;
+  status?: string;
+  errorReason?: string;
   mediaUrl?: string;
   fileName?: string;
   sentBy?: string; // ⚡ Nome do usuário que enviou a mensagem
