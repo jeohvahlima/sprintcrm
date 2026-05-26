@@ -1186,6 +1186,7 @@ function Conversas() {
       if (isCurrentUserAttending(telefone)) return true;
       if (!currentUserId) return false;
       if (conv.assignedUser?.id === currentUserId) return true;
+      if (conv.responsavel === currentUserId) return true;
       if (Array.isArray(conv.responsavelIds) && conv.responsavelIds.includes(currentUserId)) return true;
       return false;
     }).length;
@@ -1287,6 +1288,7 @@ function Conversas() {
         // Manter lógica legada: responsável ou transferido para mim
         const isLegacyResponsible =
           conv.assignedUser?.id === currentUserId ||
+          conv.responsavel === currentUserId ||
           (Array.isArray(conv.responsavelIds) && currentUserId
             ? conv.responsavelIds.includes(currentUserId)
             : false);
@@ -1322,7 +1324,7 @@ function Conversas() {
     // Filtrar por responsáveis
     if (advancedFilters.responsaveis.length > 0) {
       filtered = filtered.filter(conv => {
-        const ids = conv.responsavelIds || (conv.assignedUser?.id ? [conv.assignedUser.id] : []);
+        const ids = conv.responsavelIds || [conv.assignedUser?.id, conv.responsavel].filter(Boolean) as string[];
         return ids.some(id => advancedFilters.responsaveis.includes(id));
       });
     }
