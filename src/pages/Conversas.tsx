@@ -1488,6 +1488,9 @@ function Conversas() {
             if (c.responsavel) {
               responsavelMap.set(phoneKey, c.responsavel);
             }
+            if (c.responsavelIds && c.responsavelIds.length > 0) {
+              responsavelIdsMap.set(phoneKey, c.responsavelIds);
+            }
           });
 
           // Mesclar novas conversas preservando avatares E assignedUser
