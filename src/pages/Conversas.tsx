@@ -1544,6 +1544,7 @@ function Conversas() {
               avatarUrl: existingAvatar || conv.avatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(conv.contactName)}&background=0ea5e9&color=fff`,
               assignedUser: conv.assignedUser || existingAssignedUser,
               responsavel: conv.responsavel || existingResponsavel,
+              responsavelIds: (conv.responsavelIds && conv.responsavelIds.length > 0) ? conv.responsavelIds : existingResponsavelIds,
               // ✅ FIX: Preservar enriquecimento de lead (tags/funil/valor) — evita pisca-pisca
               tags: (conv.tags && conv.tags.length > 0) ? conv.tags : (existingConv?.tags ?? []),
               funnelStage: conv.funnelStage ?? existingConv?.funnelStage,
