@@ -154,6 +154,7 @@ interface Message {
   delivered: boolean;
   read?: boolean;
   status?: string;
+  errorReason?: string;
   mediaUrl?: string;
   fileName?: string;
   mimeType?: string;
