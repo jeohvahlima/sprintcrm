@@ -63,9 +63,11 @@ const navigation: NavEntry[] = [
     label: "Estruturação Comercial",
     icon: Rocket,
     items: [
+      { name: "Metas & Vendas", href: "/metas-vendas", icon: DollarSign, menuKey: "prospeccao" },
+      { name: "Rotina Inteligente", href: "/rotina", icon: Brain, menuKey: "prospeccao" },
+      { name: "Grow Machine", href: "/prospeccao", icon: Target, menuKey: "prospeccao" },
       { name: "Maturidade Comercial", href: "/maturidade", icon: Activity, menuKey: "maturidade" },
       { name: "Processos Comerciais", href: "/processos", icon: Target, menuKey: "processos", showAIBadge: true },
-      { name: "Grow Machine", href: "/prospeccao", icon: Target, menuKey: "prospeccao" },
       
       { name: "Call Center", href: "/discador", icon: PhoneCall, menuKey: "discador" },
       { name: "Business Intelligence (BI)", href: "/financeiro", icon: DollarSign, menuKey: "financeiro" },
