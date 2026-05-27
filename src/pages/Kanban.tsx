@@ -1217,6 +1217,10 @@ export default function KanbanPage() {
               funilNome={funilSelecionado.nome}
               onFunilUpdated={async () => { await refreshFunis(); await refreshEtapas(); }}
             />
+            <FollowInteligentePanel
+              funilId={funilSelecionado.id}
+              etapas={etapasFiltradas.map((e: any) => ({ id: e.id, nome: e.nome, cor: e.cor, posicao: e.posicao, funil_id: e.funil_id }))}
+            />
           </div>
         )}
         {/* 🎯 Botões de navegação horizontal */}
