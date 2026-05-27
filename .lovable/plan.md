@@ -1,128 +1,135 @@
+# Webphone NVOIP — Ligação Direta no CRM
 
-# Versão Clínica do Grow OS
+Implementar um novo modo de telefonia que faz e recebe chamadas **dentro do navegador**, usando SIP sobre WebSocket (WSS) direto no PBX da NVOIP, sem MicroSIP e sem o callback `/v2/calls`.
 
-Ativação **apenas para empresas com segmento Clínica Médica / Odontológica / Estética**. Nenhum impacto nos demais segmentos (jurídico, financeiro, varejo, etc.).
+## 1. Dependência
 
-## Como detectar o segmento
-Já existe a infraestrutura:
-- `src/lib/segmentos.ts` lista os segmentos
-- `src/hooks/useCompanySegmento.ts` resolve o segmento da empresa logada
+- Adicionar `jssip` (`bun add jssip`) — biblioteca SIP madura, compatível com NVOIP WSS.
 
-**Vou adicionar:**
-- `SEGMENTOS_CLINICA = ["clinica_medica","clinica_odontologica","clinica_estetica"]`
-- `isSegmentoClinica(segmento)`
-- Campo `isClinica` no retorno de `useCompanySegmento`
+## 2. Armazenamento da senha SIP
 
-Daí toda a versão clínica fica gated por `isClinica`.
+A `nvoip_config` hoje guarda `number_sip` e `user_token` (token REST). A senha SIP do ramal é diferente. Criar migração:
 
----
-
-## Fase 1 — Funil padrão Clínica + automações
-
-**O que entrega:** quando o admin abrir o Kanban pela primeira vez, ou clicar em "Criar funil Clínica", o sistema cria o funil completo com etapas e Follow Inteligente pré-configurado.
-
-**Funil padrão (etapas + cor):**
-```
-Novo Contato → Contato Realizado → Agendamento Feito →
-Consulta Confirmada → Compareceu → Procedimento Realizado →
-Pós-Consulta → Retorno/Recorrência → Não Compareceu (no-show) → Perdido
+```sql
+ALTER TABLE public.nvoip_config
+  ADD COLUMN IF NOT EXISTS sip_password text,
+  ADD COLUMN IF NOT EXISTS sip_ws_uri text DEFAULT 'wss://app.nvoip.com.br:7443',
+  ADD COLUMN IF NOT EXISTS sip_domain  text DEFAULT 'app.nvoip.com.br',
+  ADD COLUMN IF NOT EXISTS telephony_mode text DEFAULT 'webphone'
+    CHECK (telephony_mode IN ('webphone','callback','microsip'));
 ```
 
-**Follow Inteligente por etapa (reaproveita `follow_etapa_config` que já existe):**
-- **Agendamento Feito** → WhatsApp imediato: "Sua consulta foi agendada para {{data}}. Confirma?"
-- **Consulta Confirmada** → lembrete 1 dia antes + lembrete 30 min antes
-- **Não Compareceu** → sequência D+1 (remarcação), D+3 (reforço), D+7 (última)
-- **Pós-Consulta** → D+1 "como foi?", D+30 "hora do retorno"
-- **Retorno/Recorrência** → reativação 90d
+`sip_password` continua protegida pelas RLS atuais (somente admins da company).
 
-**Arquivos:**
-- `src/lib/clinicaFunnelTemplate.ts` (novo) — define etapas + templates de mensagem
-- `src/components/funil/CriarFunilClinicaButton.tsx` (novo) — botão no Kanban header (só aparece se `isClinica`)
-- Edge function `follow-inteligente-engine` já roda — não precisa mudar
+## 3. UI — Conta Telefônica (`NvoipAccountPanel.tsx`)
 
----
+Adicionar:
 
-## Fase 2 — Adaptação de linguagem
+- Campo **Senha SIP do ramal** (input password, mascarado igual ao user_token).
+- Select **Modo de telefonia**:
+  - `Webphone NVOIP — Ligação Direta no CRM` (padrão, recomendado)
+  - `NVOIP API Callback` (fallback antigo)
+  - `MicroSIP Local` (fallback antigo)
+- Salvar via `nvoip-call` action `save-config` (estender para aceitar os novos campos).
 
-**Escopo cirúrgico:** só nas telas onde a label é exibida ao usuário. Sem refatorar nomes de tabelas/colunas.
+## 4. Hook `useWebphoneSIP`
 
-**Mecanismo:** helper `src/lib/clinicaLabels.ts`:
+Novo `src/hooks/useWebphoneSIP.ts`. Responsável por todo o ciclo JsSIP.
+
+Configuração:
+
 ```ts
-export function leadLabel(isClinica: boolean) { return isClinica ? "Paciente" : "Lead"; }
-export function dealLabel(isClinica: boolean) { return isClinica ? "Atendimento" : "Negócio"; }
-// pluralLeadLabel, vendaLabel, etc.
+const socket = new JsSIP.WebSocketInterface(cfg.sip_ws_uri);
+const ua = new JsSIP.UA({
+  sockets: [socket],
+  uri: `sip:${cfg.number_sip}@${cfg.sip_domain}`,
+  authorization_user: cfg.number_sip,
+  password: cfg.sip_password,
+  display_name: company.name,
+  session_timers: false,
+  register: true,
+});
 ```
 
-**Telas que recebem o swap (lista priorizada):**
-- Sidebar (item "Leads" → "Pacientes")
-- Kanban header e tooltips
-- LeadCard (badges)
-- Página de Leads (`/leads`) — título, botões "Novo Lead" → "Novo Paciente"
-- Conversas (botão "Criar lead" → "Criar paciente")
+Estados expostos:
 
-Outras telas continuam genéricas nesta entrega.
+- `registrationStatus`: `idle | connecting | registered | unregistered | error`
+- `callState`: `idle | outgoing | incoming | ringing | active | ended`
+- `currentSession`, `remoteNumber`, `remoteName`, `duration`, `muted`
 
----
+Eventos JsSIP tratados:
 
-## Fase 3 — Rotina Inteligente Clínica
+- `connecting`, `connected`, `disconnected`, `registered`, `unregistered`, `registrationFailed`
+- `newRTCSession` → distingue `originator === 'remote'` (entrada) de `'local'` (saída)
+- Em sessão: `progress`, `accepted`, `confirmed`, `ended`, `failed`
+- Anexar `<audio>` remoto via `session.connection.getRemoteStreams()` (ou `peerconnection.ontrack`) num elemento `<audio autoplay>` global.
 
-**Página `/rotina` ganha modo clínico** quando `isClinica = true`.
+API do hook:
 
-Em vez das missões genéricas de prospecção, gera 4 blocos a partir do banco:
-- **Confirmar consultas de hoje** — leads na etapa "Agendamento Feito" com data = hoje
-- **Resgatar no-show** — leads na etapa "Não Compareceu" últimos 7 dias
-- **Reativar pacientes** — leads na etapa "Pós-Consulta" com `last_interaction_at > 30 dias`
-- **Novos contatos** — leads novos do dia
+- `register()` / `unregister()`
+- `call(number: string)` — sanitiza, envia INVITE: `ua.call(\`sip:${digits}@${cfg.sip_domain}, { mediaConstraints: { audio: true, video: false } })`. **Nunca** chama` /v2/calls`.
+- `answer()`, `reject()`, `hangup()`
+- `toggleMute()` (manipula `RTCRtpSender.track.enabled`)
 
-**Arquivos:**
-- `src/components/prospeccao/RotinaClinica.tsx` (novo) — substitui `RotinaInteligente` quando `isClinica`
-- `src/hooks/useRotinaClinica.ts` (novo) — busca os 4 buckets via Supabase
-- Edita `src/pages/RotinaInteligente.tsx` para escolher entre os dois componentes
+Sanitização do número: remover não-dígitos, garantir DDI 55 quando faltar, manter compatível com o que o trunk NVOIP espera (10–13 dígitos).
 
----
+## 5. Componente `WebphoneProvider` + UI
 
-## Fase 4 — BI Clínico
+- `src/components/discador/WebphoneProvider.tsx` no topo do app autenticado: instancia o hook 1 vez, expõe via Context, registra automaticamente quando `telephony_mode === 'webphone'` e há `sip_password`.
+- `IncomingCallPopup.tsx`: popup global quando `callState === 'incoming'`, com botões Atender / Recusar e identificação do lead (busca lead pelo número via `leads.telefone` da company).
+- `WebphoneDialer.tsx`: substitui o card "Iniciar Ligação" em `Discador.tsx` quando o modo é `webphone`. Mostra status SIP, dialpad, botão Ligar, e durante a chamada usa o `CallModal` existente (atender/mudo/encerrar/timer).
 
-Nova página `/bi-clinico` (sidebar item visível só se `isClinica`).
+## 6. Integração na página `Discador.tsx`
 
-**KPIs (calculados a partir do funil clínico):**
-- Taxa de Agendamento = (leads em ≥ "Agendamento Feito") / (total leads)
-- Show Rate = (leads em ≥ "Compareceu") / (leads em ≥ "Agendamento Feito")
-- Taxa de Procedimento = (≥ "Procedimento Realizado") / (≥ "Compareceu")
-- Ticket Médio = média `valor` de leads em "Procedimento Realizado"
-- Taxa de Retorno = (em "Retorno/Recorrência") / (em "Procedimento Realizado")
-- Recuperação de No-show = (que voltaram para "Agendamento Feito" depois de "Não Compareceu") / (total que entrou em "Não Compareceu")
+- Ler `telephony_mode` da `nvoip_config`.
+- `webphone` → renderiza `WebphoneDialer` + usa `useWebphoneSIP` (sem `useCallCenter.startCall` REST).
+- `callback` / `microsip` → mantém o fluxo atual (`useCallCenter`).
+- `StartCallFromLeadDialog`: quando modo webphone, chama `webphone.call(phone)` em vez do edge function.
+- Após `ended`, abre `PostCallNotesDialog` e grava em `call_history` (inserir registro com `direction`, `phone_number`, `duration`, `call_result`). Inbound também grava.
 
-**Alertas:** cards vermelhos quando Show Rate < 70%, No-show > 20%, Retorno < 30%.
+## 7. Histórico
 
-**Funil visual:** componente de barras horizontais Pacientes → Agendados → Compareceram → Procedimentos.
+Inserir em `call_history` ao final de cada sessão (out e in). Reutiliza tabela atual; campo `notes_required = true` quando atendida.
 
-**Arquivos:**
-- `src/pages/BIClinico.tsx` (novo)
-- `src/hooks/useBIClinico.ts` (novo) — todas as métricas em uma query agregada
-- `src/components/bi-clinico/KPICard.tsx`, `FunilVisual.tsx`, `AlertasClinicos.tsx`
-- `src/App.tsx` — rota `/bi-clinico`
-- `src/components/layout/Sidebar.tsx` — item "BI Clínico" (ícone Stethoscope), gated por `isClinica`
+## 8. Preparação para gravação / IA / transcrição
 
----
+- Expor a `MediaStream` remota e local no contexto para futuro `MediaRecorder`.
+- Deixar hook `onAudioStream(localStream, remoteStream)` documentado mas sem gravar agora (escopo futuro).
 
-## Banco de dados
-**Não precisa de migração.** Tudo reaproveita o que já existe:
-- `funis`, `etapas`, `leads` (já tem `last_interaction_at`, `last_movement_at`, `valor`, `etapa_id`)
-- `follow_etapa_config` (já existe da fase Follow Inteligente)
-- `enviar-whatsapp` (já existe)
+## 9. Edge function
 
-## Fora de escopo (próxima fase, se quiser)
-- Scripts SDR específicos por especialidade médica
-- IA sugerindo ação por paciente
-- Integração com agenda médica existente (`/agenda`) para gerar consultas direto do Kanban
-- Maturidade clínica automática (A/B/C)
+Estender `supabase/functions/nvoip-call/index.ts` apenas no `save-config` para persistir `sip_password`, `sip_ws_uri`, `sip_domain`, `telephony_mode`. Nenhuma chamada REST nova; o modo webphone não usa esse edge para discar.
 
----
+## 10. Fallback
 
-## Ordem de entrega
-1. Helpers (`segmentos.ts` + `useCompanySegmento` + `clinicaLabels.ts`)
-2. Fase 1 (funil + automações) — entrega valor sozinha
-3. Fase 2 (linguagem) — visual rápido
-4. Fase 3 (rotina) — depende do funil existir
-5. Fase 4 (BI) — depende do funil existir
+Manter `callback` e `microsip` totalmente funcionais como hoje — só não são mais o padrão.
+
+## Arquivos
+
+Novos:
+
+- `src/hooks/useWebphoneSIP.ts`
+- `src/components/discador/WebphoneProvider.tsx`
+- `src/components/discador/WebphoneDialer.tsx`
+- `src/components/discador/IncomingCallPopup.tsx`
+- migração `nvoip_config` (colunas SIP + telephony_mode)
+
+Editados:
+
+- `src/pages/Discador.tsx` (branch por modo)
+- `src/components/discador/NvoipAccountPanel.tsx` (senha SIP + select modo)
+- `src/components/discador/StartCallFromLeadDialog.tsx` (rota para webphone)
+- `src/App.tsx` (montar `WebphoneProvider` dentro do layout autenticado)
+- `supabase/functions/nvoip-call/index.ts` (`save-config` aceita campos novos)
+- `package.json` (`jssip`)
+
+## Riscos / Observações
+
+- O servidor SIP da NVOIP precisa aceitar WebRTC no ramal — confirmado pelos dados fornecidos (`wss://app.nvoip.com.br:7443`).
+- Browser exige HTTPS para `getUserMedia` (já temos no preview/published).
+- Senha SIP fica em `nvoip_config` (RLS por company); o browser a recebe somente para o usuário autenticado da própria company.  
+  
+  
+  
+atenção ja temos o modulo de call center iremos fializado e deixalo apto a fazer ligações
+- telefonicas

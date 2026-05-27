@@ -24,12 +24,17 @@ export const NvoipAccountPanel: React.FC = () => {
   const [account, setAccount] = useState<AccountInfo | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [connectionError, setConnectionError] = useState<string | null>(null);
+  const [hasSipPassword, setHasSipPassword] = useState(false);
   const [form, setForm] = useState({
     number_sip: '',
     user_token: '',
     napikey: '',
     login_email: '',
     caller_number: '',
+    sip_password: '',
+    sip_ws_uri: 'wss://app.nvoip.com.br:7443',
+    sip_domain: 'app.nvoip.com.br',
+    telephony_mode: 'webphone' as 'webphone' | 'callback' | 'microsip',
   });
 
   const loadAccount = useCallback(async () => {
@@ -73,8 +78,13 @@ export const NvoipAccountPanel: React.FC = () => {
           napikey: cfg.napikey || '',
           login_email: cfg.login_email || '',
           caller_number: cfg.caller_number || '',
+          sip_password: cfg.has_sip_password ? '••••••••' : '',
+          sip_ws_uri: cfg.sip_ws_uri || 'wss://app.nvoip.com.br:7443',
+          sip_domain: cfg.sip_domain || 'app.nvoip.com.br',
+          telephony_mode: cfg.telephony_mode || 'webphone',
         }));
         setHasToken(!!cfg.has_token);
+        setHasSipPassword(!!cfg.has_sip_password);
         if (cfg.has_token) {
           const ok = await loadAccount();
           if (!ok) setShowForm(true);
@@ -110,6 +120,7 @@ export const NvoipAccountPanel: React.FC = () => {
     }
     setSaving(true);
     try {
+      const sipPwdToSend = form.sip_password && form.sip_password !== '••••••••' ? form.sip_password : undefined;
       const { data, error } = await supabase.functions.invoke('nvoip-call', {
         body: {
           action: 'save-config',
@@ -118,6 +129,10 @@ export const NvoipAccountPanel: React.FC = () => {
           napikey: form.napikey,
           login_email: form.login_email,
           caller_number: form.caller_number,
+          sip_password: sipPwdToSend,
+          sip_ws_uri: form.sip_ws_uri,
+          sip_domain: form.sip_domain,
+          telephony_mode: form.telephony_mode,
         },
       });
       if (error) throw error;
@@ -288,6 +303,55 @@ export const NvoipAccountPanel: React.FC = () => {
                     Esse é o número (chip/celular ou DID) cadastrado na Nvoip que vai tocar primeiro. Ao atender, a Nvoip disca para o cliente e conecta as duas pontas.
                   </p>
                 </div>
+
+                <div className="space-y-3 pt-3 border-t">
+                  <div className="text-sm font-semibold">Webphone (ligação direta no CRM)</div>
+                  <div className="space-y-2">
+                    <Label htmlFor="telephony_mode">Modo de telefonia</Label>
+                    <select
+                      id="telephony_mode"
+                      className="w-full border rounded-md p-2 bg-background"
+                      value={form.telephony_mode}
+                      onChange={(e) => setForm({ ...form, telephony_mode: e.target.value as any })}
+                    >
+                      <option value="webphone">Webphone NVOIP — Ligação Direta no CRM (recomendado)</option>
+                      <option value="callback">NVOIP API Callback (fallback)</option>
+                      <option value="microsip">MicroSIP Local (fallback)</option>
+                    </select>
+                  </div>
+                  <div className="grid gap-4 md:grid-cols-2">
+                    <div className="space-y-2">
+                      <Label htmlFor="sip_password">Senha SIP do ramal *</Label>
+                      <Input
+                        id="sip_password"
+                        type="password"
+                        placeholder={hasSipPassword ? 'Mantenha em branco para preservar' : 'Senha SIP do ramal'}
+                        value={form.sip_password}
+                        onChange={(e) => setForm({ ...form, sip_password: e.target.value })}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="sip_domain">Domínio SIP</Label>
+                      <Input
+                        id="sip_domain"
+                        value={form.sip_domain}
+                        onChange={(e) => setForm({ ...form, sip_domain: e.target.value })}
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="sip_ws_uri">WebSocket SIP (WSS)</Label>
+                    <Input
+                      id="sip_ws_uri"
+                      value={form.sip_ws_uri}
+                      onChange={(e) => setForm({ ...form, sip_ws_uri: e.target.value })}
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Necessário para o modo Webphone. Ex.: wss://app.nvoip.com.br:7443
+                    </p>
+                  </div>
+                </div>
+
 
                 <Alert>
                   <ShieldCheck className="h-4 w-4" />

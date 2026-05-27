@@ -18,6 +18,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { useFloatingButtonsVisibility } from '@/hooks/useFloatingButtonsVisibility';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
+import { useWebphone } from '@/components/discador/WebphoneProvider';
+import { WebphoneDialer } from '@/components/discador/WebphoneDialer';
 const Discador = () => {
   const [activeTab, setActiveTab] = useState('fazer-ligacao');
   const [showCallDialog, setShowCallDialog] = useState(false);

@@ -185,10 +185,16 @@ Deno.serve(async (req) => {
       case "get-config": {
         const { data: config } = await supabase
           .from("nvoip_config")
-          .select("id, number_sip, napikey, login_email, is_active, user_token, caller_number")
+          .select("id, number_sip, napikey, login_email, is_active, user_token, caller_number, sip_password, sip_ws_uri, sip_domain, telephony_mode")
           .eq("company_id", companyId)
           .maybeSingle();
-        const safe = config ? { ...config, user_token: config.user_token ? "••••••••" : null, has_token: !!config.user_token } : null;
+        const safe = config ? {
+          ...config,
+          user_token: config.user_token ? "••••••••" : null,
+          has_token: !!config.user_token,
+          sip_password: config.sip_password ? "••••••••" : null,
+          has_sip_password: !!config.sip_password,
+        } : null;
         result = { config: safe, company_id: companyId };
         break;
       }
@@ -205,7 +211,8 @@ Deno.serve(async (req) => {
         break;
       }
       case "save-config": {
-        const { number_sip, user_token, napikey, login_email, caller_number } = body;
+        const { number_sip, user_token, napikey, login_email, caller_number,
+                sip_password, sip_ws_uri, sip_domain, telephony_mode } = body;
         if (!number_sip) throw new Error("number_sip é obrigatório");
         if (!user_token || user_token === "••••••••") {
           const { userToken } = await resolveCreds(supabase, companyId);
@@ -224,6 +231,12 @@ Deno.serve(async (req) => {
           updated_at: new Date().toISOString(),
         };
         if (user_token && user_token !== "••••••••") payload.user_token = user_token;
+        if (sip_password && sip_password !== "••••••••") payload.sip_password = sip_password;
+        if (sip_ws_uri) payload.sip_ws_uri = sip_ws_uri;
+        if (sip_domain) payload.sip_domain = sip_domain;
+        if (telephony_mode && ["webphone","callback","microsip"].includes(telephony_mode)) {
+          payload.telephony_mode = telephony_mode;
+        }
 
         const { error: upErr } = await admin
           .from("nvoip_config")

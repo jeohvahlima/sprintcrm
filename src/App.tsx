@@ -43,6 +43,7 @@ import GmailCallback from "./pages/GmailCallback";
 import GoogleCalendarCallback from "./pages/GoogleCalendarCallback";
 import InstallApp from "./pages/InstallApp";
 import { MainLayout } from "./components/layout/MainLayout";
+import { WebphoneProvider } from "./components/discador/WebphoneProvider";
 import NotFound from "./pages/NotFound";
 import AutomacaoDiagnostico from "./pages/AutomacaoDiagnostico";
 import ConfirmarCompromisso from "./pages/ConfirmarCompromisso";
@@ -102,7 +103,7 @@ const App = () => (
             <Route path="/processos/page/:id" element={<ProcessPagePublic />} />
             <Route path="/c/:token" element={<ConfirmarCompromisso />} />
             <Route path="/confirmar/:token" element={<ConfirmarCompromisso />} />
-            <Route path="/" element={<MainLayout />}>
+            <Route path="/" element={<WebphoneProvider><MainLayout /></WebphoneProvider>}>
               <Route index element={<Navigate to="/analytics" replace />} />
               <Route path="dashboard" element={<Navigate to="/analytics" replace />} />
               <Route path="leads" element={<Leads />} />
