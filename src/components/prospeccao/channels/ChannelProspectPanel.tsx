@@ -19,7 +19,8 @@ import { ConversaPopup } from "@/components/leads/ConversaPopup";
 import { HandoffDialog } from "@/components/prospeccao/comercial/HandoffDialog";
 import { ColdCallActions } from "./ColdCallActions";
 import { HunterPipelineBoard } from "@/components/prospeccao/hunter/HunterPipelineBoard";
-import { LayoutList, KanbanSquare } from "lucide-react";
+import { PreSDRListAnalyzer } from "@/components/prospeccao/PreSDRListAnalyzer";
+import { LayoutList, KanbanSquare, Sparkles } from "lucide-react";
 
 interface Props {
   channel: ProspectChannel;
