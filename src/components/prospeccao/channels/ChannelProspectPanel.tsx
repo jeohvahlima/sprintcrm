@@ -390,6 +390,7 @@ export function ChannelProspectPanel({ channel }: Props) {
                 <TabsList className="h-8">
                   <TabsTrigger value="list" className="text-xs h-7 gap-1"><LayoutList className="h-3 w-3" /> Lista</TabsTrigger>
                   <TabsTrigger value="pipeline" className="text-xs h-7 gap-1"><KanbanSquare className="h-3 w-3" /> Pipeline</TabsTrigger>
+                  <TabsTrigger value="presdr" className="text-xs h-7 gap-1"><Sparkles className="h-3 w-3" /> Pré-SDR IA</TabsTrigger>
                 </TabsList>
               </Tabs>
             )}
