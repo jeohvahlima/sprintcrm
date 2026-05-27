@@ -741,6 +741,17 @@ export const LeadCard = memo(function LeadCard({ lead, onDelete, onLeadMoved, is
                   </Badge>
                 )}
               </div>
+
+              {/* 🔥 Badge Follow Inteligente: temperatura + tempo parado */}
+              <div className="mb-1">
+                <FollowTemperatureBadge
+                  lastInteractionAt={lead.last_interaction_at}
+                  lastMovementAt={lead.last_movement_at}
+                  leadScore={lead.lead_score}
+                  followCount={lead.follow_count}
+                  temperature={lead.lead_temperature}
+                />
+              </div>
               
               {/* Título da negociação - editável inline */}
               <div 
