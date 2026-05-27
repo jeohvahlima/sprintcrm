@@ -304,6 +304,55 @@ export const NvoipAccountPanel: React.FC = () => {
                   </p>
                 </div>
 
+                <div className="space-y-3 pt-3 border-t">
+                  <div className="text-sm font-semibold">Webphone (ligação direta no CRM)</div>
+                  <div className="space-y-2">
+                    <Label htmlFor="telephony_mode">Modo de telefonia</Label>
+                    <select
+                      id="telephony_mode"
+                      className="w-full border rounded-md p-2 bg-background"
+                      value={form.telephony_mode}
+                      onChange={(e) => setForm({ ...form, telephony_mode: e.target.value as any })}
+                    >
+                      <option value="webphone">Webphone NVOIP — Ligação Direta no CRM (recomendado)</option>
+                      <option value="callback">NVOIP API Callback (fallback)</option>
+                      <option value="microsip">MicroSIP Local (fallback)</option>
+                    </select>
+                  </div>
+                  <div className="grid gap-4 md:grid-cols-2">
+                    <div className="space-y-2">
+                      <Label htmlFor="sip_password">Senha SIP do ramal *</Label>
+                      <Input
+                        id="sip_password"
+                        type="password"
+                        placeholder={hasSipPassword ? 'Mantenha em branco para preservar' : 'Senha SIP do ramal'}
+                        value={form.sip_password}
+                        onChange={(e) => setForm({ ...form, sip_password: e.target.value })}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="sip_domain">Domínio SIP</Label>
+                      <Input
+                        id="sip_domain"
+                        value={form.sip_domain}
+                        onChange={(e) => setForm({ ...form, sip_domain: e.target.value })}
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="sip_ws_uri">WebSocket SIP (WSS)</Label>
+                    <Input
+                      id="sip_ws_uri"
+                      value={form.sip_ws_uri}
+                      onChange={(e) => setForm({ ...form, sip_ws_uri: e.target.value })}
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Necessário para o modo Webphone. Ex.: wss://app.nvoip.com.br:7443
+                    </p>
+                  </div>
+                </div>
+
+
                 <Alert>
                   <ShieldCheck className="h-4 w-4" />
                   <AlertDescription className="text-xs">
