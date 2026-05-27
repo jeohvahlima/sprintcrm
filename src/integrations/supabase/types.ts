@@ -6857,6 +6857,10 @@ export type Database = {
           login_email: string | null
           napikey: string | null
           number_sip: string
+          sip_domain: string | null
+          sip_password: string | null
+          sip_ws_uri: string | null
+          telephony_mode: string | null
           updated_at: string | null
           user_token: string | null
         }
@@ -6869,6 +6873,10 @@ export type Database = {
           login_email?: string | null
           napikey?: string | null
           number_sip: string
+          sip_domain?: string | null
+          sip_password?: string | null
+          sip_ws_uri?: string | null
+          telephony_mode?: string | null
           updated_at?: string | null
           user_token?: string | null
         }
@@ -6881,6 +6889,10 @@ export type Database = {
           login_email?: string | null
           napikey?: string | null
           number_sip?: string
+          sip_domain?: string | null
+          sip_password?: string | null
+          sip_ws_uri?: string | null
+          telephony_mode?: string | null
           updated_at?: string | null
           user_token?: string | null
         }
