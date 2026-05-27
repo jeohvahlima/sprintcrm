@@ -3594,6 +3594,185 @@ export type Database = {
         }
         Relationships: []
       }
+      follow_etapa_config: {
+        Row: {
+          ativo: boolean
+          avancar_proxima_etapa: boolean
+          canal: string
+          company_id: string
+          created_at: string
+          criar_tarefa: boolean
+          etapa_id: string
+          funil_id: string
+          id: string
+          mensagem_custom: string | null
+          notificar_responsavel: boolean
+          tarefa_titulo: string | null
+          template_id: string | null
+          tempo_unidade: string
+          tempo_valor: number
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean
+          avancar_proxima_etapa?: boolean
+          canal?: string
+          company_id: string
+          created_at?: string
+          criar_tarefa?: boolean
+          etapa_id: string
+          funil_id: string
+          id?: string
+          mensagem_custom?: string | null
+          notificar_responsavel?: boolean
+          tarefa_titulo?: string | null
+          template_id?: string | null
+          tempo_unidade?: string
+          tempo_valor?: number
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean
+          avancar_proxima_etapa?: boolean
+          canal?: string
+          company_id?: string
+          created_at?: string
+          criar_tarefa?: boolean
+          etapa_id?: string
+          funil_id?: string
+          id?: string
+          mensagem_custom?: string | null
+          notificar_responsavel?: boolean
+          tarefa_titulo?: string | null
+          template_id?: string | null
+          tempo_unidade?: string
+          tempo_valor?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "follow_etapa_config_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "follow_etapa_config_etapa_id_fkey"
+            columns: ["etapa_id"]
+            isOneToOne: true
+            referencedRelation: "etapas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "follow_etapa_config_funil_id_fkey"
+            columns: ["funil_id"]
+            isOneToOne: false
+            referencedRelation: "funis"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      follow_execucoes: {
+        Row: {
+          acao: string
+          company_id: string
+          config_id: string | null
+          detalhes: Json | null
+          etapa_id: string
+          executado_em: string
+          id: string
+          lead_id: string
+          status: string
+        }
+        Insert: {
+          acao: string
+          company_id: string
+          config_id?: string | null
+          detalhes?: Json | null
+          etapa_id: string
+          executado_em?: string
+          id?: string
+          lead_id: string
+          status?: string
+        }
+        Update: {
+          acao?: string
+          company_id?: string
+          config_id?: string | null
+          detalhes?: Json | null
+          etapa_id?: string
+          executado_em?: string
+          id?: string
+          lead_id?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "follow_execucoes_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "follow_execucoes_config_id_fkey"
+            columns: ["config_id"]
+            isOneToOne: false
+            referencedRelation: "follow_etapa_config"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "follow_execucoes_etapa_id_fkey"
+            columns: ["etapa_id"]
+            isOneToOne: false
+            referencedRelation: "etapas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "follow_execucoes_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      follow_templates: {
+        Row: {
+          company_id: string
+          conteudo: string
+          created_at: string
+          id: string
+          nome: string
+          updated_at: string
+        }
+        Insert: {
+          company_id: string
+          conteudo: string
+          created_at?: string
+          id?: string
+          nome: string
+          updated_at?: string
+        }
+        Update: {
+          company_id?: string
+          conteudo?: string
+          created_at?: string
+          id?: string
+          nome?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "follow_templates_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       follow_up_cadence: {
         Row: {
           company_id: string
@@ -5481,6 +5660,7 @@ export type Database = {
           engagement_type: string | null
           etapa_id: string | null
           expected_close_date: string | null
+          follow_count: number
           form_id: string | null
           funil_id: string | null
           govbr_login: string | null
@@ -5491,8 +5671,11 @@ export type Database = {
           last_disparo_at: string | null
           last_disparo_campaign: string | null
           last_engagement_at: string | null
+          last_interaction_at: string | null
+          last_movement_at: string | null
           last_prospected_at: string | null
           lead_origem_id: string | null
+          lead_score: number
           lead_source_type: string | null
           lead_temperature: string | null
           loss_reason: string | null
@@ -5552,6 +5735,7 @@ export type Database = {
           engagement_type?: string | null
           etapa_id?: string | null
           expected_close_date?: string | null
+          follow_count?: number
           form_id?: string | null
           funil_id?: string | null
           govbr_login?: string | null
@@ -5562,8 +5746,11 @@ export type Database = {
           last_disparo_at?: string | null
           last_disparo_campaign?: string | null
           last_engagement_at?: string | null
+          last_interaction_at?: string | null
+          last_movement_at?: string | null
           last_prospected_at?: string | null
           lead_origem_id?: string | null
+          lead_score?: number
           lead_source_type?: string | null
           lead_temperature?: string | null
           loss_reason?: string | null
@@ -5623,6 +5810,7 @@ export type Database = {
           engagement_type?: string | null
           etapa_id?: string | null
           expected_close_date?: string | null
+          follow_count?: number
           form_id?: string | null
           funil_id?: string | null
           govbr_login?: string | null
@@ -5633,8 +5821,11 @@ export type Database = {
           last_disparo_at?: string | null
           last_disparo_campaign?: string | null
           last_engagement_at?: string | null
+          last_interaction_at?: string | null
+          last_movement_at?: string | null
           last_prospected_at?: string | null
           lead_origem_id?: string | null
+          lead_score?: number
           lead_source_type?: string | null
           lead_temperature?: string | null
           loss_reason?: string | null

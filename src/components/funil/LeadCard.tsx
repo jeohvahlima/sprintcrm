@@ -26,6 +26,7 @@ import { toast } from "sonner";
 import { LeadAttachments } from "@/components/leads/LeadAttachments";
 import { throttledProfilePicture } from "@/utils/profilePictureThrottle";
 import { safeFormatPhoneNumber } from "@/utils/phoneFormatter";
+import { FollowTemperatureBadge } from "@/components/funil/FollowTemperatureBadge";
 
 /**
  * ✅ BACKUP ATUALIZADO - 2024-11-01
@@ -63,6 +64,11 @@ interface LeadCardProps {
     produto_id?: string | null;
     status?: string;
     title?: string | null; // Título da negociação/oportunidade
+    last_interaction_at?: string | null;
+    last_movement_at?: string | null;
+    lead_score?: number;
+    follow_count?: number;
+    lead_temperature?: string | null;
   };
   onDelete: (leadId: string) => void;
   onLeadMoved?: () => void;
@@ -734,6 +740,17 @@ export const LeadCard = memo(function LeadCard({ lead, onDelete, onLeadMoved, is
                     <span className="truncate">{lead.source}</span>
                   </Badge>
                 )}
+              </div>
+
+              {/* 🔥 Badge Follow Inteligente: temperatura + tempo parado */}
+              <div className="mb-1">
+                <FollowTemperatureBadge
+                  lastInteractionAt={lead.last_interaction_at}
+                  lastMovementAt={lead.last_movement_at}
+                  leadScore={lead.lead_score}
+                  followCount={lead.follow_count}
+                  temperature={lead.lead_temperature}
+                />
               </div>
               
               {/* Título da negociação - editável inline */}

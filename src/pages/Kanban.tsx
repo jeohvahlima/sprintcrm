@@ -13,6 +13,7 @@ import { AdicionarLeadExistenteDialog } from "@/components/funil/AdicionarLeadEx
 import { NovoFunilDialog } from "@/components/funil/NovoFunilDialog";
 import { EditarFunilDialog } from "@/components/funil/EditarFunilDialog";
 import { AdicionarEtapaDialog } from "@/components/funil/AdicionarEtapaDialog";
+import { FollowInteligentePanel } from "@/components/funil/FollowInteligentePanel";
 import { toast } from "sonner";
 import { CriarTarefaAoMoverDialog } from "@/components/funil/CriarTarefaAoMoverDialog";
 import { useGlobalSync } from "@/hooks/useGlobalSync";
@@ -1215,6 +1216,10 @@ export default function KanbanPage() {
               funilId={funilSelecionado.id}
               funilNome={funilSelecionado.nome}
               onFunilUpdated={async () => { await refreshFunis(); await refreshEtapas(); }}
+            />
+            <FollowInteligentePanel
+              funilId={funilSelecionado.id}
+              etapas={etapasFiltradas.map((e: any) => ({ id: e.id, nome: e.nome, cor: e.cor, posicao: e.posicao, funil_id: e.funil_id }))}
             />
           </div>
         )}
