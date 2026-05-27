@@ -189,7 +189,15 @@ export function Sidebar({ collapsed = false, onNavigate }: SidebarProps) {
   };
 
   // Renders a single nav item link
-  const renderItem = (item: NavItem, indented: boolean = false) => {
+  const renderItem = (rawItem: NavItem, indented: boolean = false) => {
+    const item: NavItem = isClinica
+      ? {
+          ...rawItem,
+          name: rawItem.clinicaLabel ?? rawItem.name,
+          href: rawItem.clinicaHref ?? rawItem.href,
+          icon: rawItem.clinicaIcon ?? rawItem.icon,
+        }
+      : rawItem;
     const isPremiumModule = premiumModules.includes(item.menuKey);
     const hasModuleAccess = isMasterAccount || canAccessModule(item.menuKey);
     const isLocked = isPremiumModule && !hasModuleAccess && !moduleLoading;
