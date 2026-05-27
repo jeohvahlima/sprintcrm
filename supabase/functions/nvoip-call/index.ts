@@ -185,10 +185,16 @@ Deno.serve(async (req) => {
       case "get-config": {
         const { data: config } = await supabase
           .from("nvoip_config")
-          .select("id, number_sip, napikey, login_email, is_active, user_token, caller_number")
+          .select("id, number_sip, napikey, login_email, is_active, user_token, caller_number, sip_password, sip_ws_uri, sip_domain, telephony_mode")
           .eq("company_id", companyId)
           .maybeSingle();
-        const safe = config ? { ...config, user_token: config.user_token ? "••••••••" : null, has_token: !!config.user_token } : null;
+        const safe = config ? {
+          ...config,
+          user_token: config.user_token ? "••••••••" : null,
+          has_token: !!config.user_token,
+          sip_password: config.sip_password ? "••••••••" : null,
+          has_sip_password: !!config.sip_password,
+        } : null;
         result = { config: safe, company_id: companyId };
         break;
       }
