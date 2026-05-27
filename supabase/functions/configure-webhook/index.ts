@@ -90,12 +90,41 @@ serve(async (req) => {
       }
     }
 
+    const ALL_EVENTS = [
+      'APPLICATION_STARTUP',
+      'CALL',
+      'CHATS_DELETE',
+      'CHATS_SET',
+      'CHATS_UPDATE',
+      'CHATS_UPSERT',
+      'CONNECTION_UPDATE',
+      'CONTACTS_SET',
+      'CONTACTS_UPDATE',
+      'CONTACTS_UPSERT',
+      'GROUP_PARTICIPANTS_UPDATE',
+      'GROUP_UPDATE',
+      'GROUPS_UPSERT',
+      'LABELS_ASSOCIATION',
+      'LABELS_EDIT',
+      'LOGOUT_INSTANCE',
+      'MESSAGES_DELETE',
+      'MESSAGES_SET',
+      'MESSAGES_UPDATE',
+      'MESSAGES_UPSERT',
+      'PRESENCE_UPDATE',
+      'QRCODE_UPDATED',
+      'REMOVE_INSTANCE',
+      'SEND_MESSAGE',
+      'TYPEBOT_CHANGE_STATUS',
+      'TYPEBOT_START',
+    ];
+
     const webhookPayload = {
       webhook: {
         url: webhookUrl,
         webhookByEvents: false,
         webhookBase64: true,
-        events: ['MESSAGES_UPSERT', 'MESSAGES_UPDATE', 'CONNECTION_UPDATE', 'CONTACTS_UPSERT'],
+        events: ALL_EVENTS,
         enabled: true,
       }
     };
