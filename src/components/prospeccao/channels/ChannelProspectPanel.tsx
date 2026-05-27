@@ -463,6 +463,8 @@ export function ChannelProspectPanel({ channel }: Props) {
 
       {channel === "coldcall" && viewMode === "pipeline" ? (
         <HunterPipelineBoard />
+      ) : channel === "coldcall" && viewMode === "presdr" ? (
+        <PreSDRListAnalyzer />
       ) : (
       <Card className="border-border">
 
