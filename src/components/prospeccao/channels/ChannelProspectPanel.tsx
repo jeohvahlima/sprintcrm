@@ -120,12 +120,35 @@ export function ChannelProspectPanel({ channel }: Props) {
           if (!id) return;
           const attemptsList = Array.isArray(r.attempts) ? r.attempts : [];
           const attemptsCount = Math.max(Number(r.attempts_count || 0), attemptsList.length);
-          map[id] = {
+          const incoming: LeadCallState = {
             outcome: r.outcome || "pendente",
             attempts: attemptsCount,
             last_attempt_at: r.last_attempt_at || null,
             attemptsList,
           };
+          const existing = map[id];
+          if (!existing) {
+            map[id] = incoming;
+          } else {
+            // MERGE: pode haver duas linhas em pre_sdr_analyses p/ o mesmo lead
+            // (uma do Pré-SDR import com row_key=cnpj|... e outra do Cold Call com row_key=lead:{id})
+            // Preserva sempre a linha com mais dados/mais recente p/ não "sumir" registros.
+            const pickLatest =
+              (incoming.last_attempt_at || "") > (existing.last_attempt_at || "");
+            const mergedAttempts =
+              incoming.attemptsList.length >= existing.attemptsList.length
+                ? incoming.attemptsList
+                : existing.attemptsList;
+            map[id] = {
+              outcome:
+                incoming.outcome !== "pendente" && (existing.outcome === "pendente" || pickLatest)
+                  ? incoming.outcome
+                  : existing.outcome,
+              attempts: Math.max(existing.attempts, incoming.attempts, mergedAttempts.length),
+              last_attempt_at: pickLatest ? incoming.last_attempt_at : existing.last_attempt_at,
+              attemptsList: mergedAttempts,
+            };
+          }
         });
         if (rows.length < PAGE) break;
         from += PAGE;
