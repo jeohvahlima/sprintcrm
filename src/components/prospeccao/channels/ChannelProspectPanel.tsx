@@ -19,7 +19,8 @@ import { ConversaPopup } from "@/components/leads/ConversaPopup";
 import { HandoffDialog } from "@/components/prospeccao/comercial/HandoffDialog";
 import { ColdCallActions } from "./ColdCallActions";
 import { HunterPipelineBoard } from "@/components/prospeccao/hunter/HunterPipelineBoard";
-import { LayoutList, KanbanSquare } from "lucide-react";
+import { PreSDRListAnalyzer } from "@/components/prospeccao/PreSDRListAnalyzer";
+import { LayoutList, KanbanSquare, Sparkles } from "lucide-react";
 
 interface Props {
   channel: ProspectChannel;
@@ -36,7 +37,7 @@ export function ChannelProspectPanel({ channel }: Props) {
   const Icon = meta.icon;
   const navigate = useNavigate();
   const [filter, setFilter] = useState<"all" | "marked">("marked");
-  const [viewMode, setViewMode] = useState<"list" | "pipeline">("list");
+  const [viewMode, setViewMode] = useState<"list" | "pipeline" | "presdr">("list");
   const [search, setSearch] = useState("");
   const [tagFilter, setTagFilter] = useState<string>("all");
   const [outcomeFilter, setOutcomeFilter] = useState<string>("all");
@@ -389,6 +390,7 @@ export function ChannelProspectPanel({ channel }: Props) {
                 <TabsList className="h-8">
                   <TabsTrigger value="list" className="text-xs h-7 gap-1"><LayoutList className="h-3 w-3" /> Lista</TabsTrigger>
                   <TabsTrigger value="pipeline" className="text-xs h-7 gap-1"><KanbanSquare className="h-3 w-3" /> Pipeline</TabsTrigger>
+                  <TabsTrigger value="presdr" className="text-xs h-7 gap-1"><Sparkles className="h-3 w-3" /> Pré-SDR IA</TabsTrigger>
                 </TabsList>
               </Tabs>
             )}
@@ -461,6 +463,8 @@ export function ChannelProspectPanel({ channel }: Props) {
 
       {channel === "coldcall" && viewMode === "pipeline" ? (
         <HunterPipelineBoard />
+      ) : channel === "coldcall" && viewMode === "presdr" ? (
+        <PreSDRListAnalyzer />
       ) : (
       <Card className="border-border">
 
