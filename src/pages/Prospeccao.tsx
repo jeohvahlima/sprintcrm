@@ -233,8 +233,7 @@ export default function Prospeccao() {
       </div>
 
 
-      {/* Topo de Foco — meta do dia, perda estimada, posição */}
-      <TopoFoco onRecuperar={() => setActiveTab("followup")} />
+      {/* TopoFoco movido para /rotina */}
 
       {/* Arena ao vivo (topo) */}
       {gamificationOn && <ArenaTopBar companyId={companyId} currentUserId={userId} />}
@@ -265,8 +264,7 @@ export default function Prospeccao() {
               <TabsTrigger value="email">✉️ {labels.email}</TabsTrigger>
               {/* Funil de Vendas e Leads Qualificados ocultos */}
               {isManagerLike && <TabsTrigger value="comando">{labels.comando}</TabsTrigger>}
-              <TabsTrigger value="intel">🎯 {labels.intel}</TabsTrigger>
-              <TabsTrigger value="rotina">🧠 {labels.rotina}</TabsTrigger>
+              {/* Metas & Vendas e Rotina Inteligente movidos para módulos próprios na sidebar */}
               
               
             </TabsList>

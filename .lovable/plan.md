@@ -1,75 +1,86 @@
-# Follow-up Inteligente — Motor de Recuperação de Leads
+# Reestruturação dos Módulos — Grow OS
 
-Vamos transformar o funil "Follow-UP Inteligente" já existente em um motor automático, sem criar funil novo. Tudo se conecta às etapas que você já tem (F1 D+1, F2 D+3, F3 D+7, F4 D+14, F5 D+30).
+Vou separar **estratégia (metas)** de **execução diária (rotina)** de **prospecção (Grow Machine)**, com motor de cálculo automático ligando os três.
 
-## O que será entregue
+## 1. Novo módulo: Metas & Vendas (`/metas-vendas`)
 
-### 1. Configuração por etapa (UI)
-- Engrenagem ⚙️ ao lado de "Nova Etapa" abre o painel **"Follow Inteligente"**
-- Por etapa: tempo parado (dias/horas), canal (WhatsApp/Tarefa/Notificação), template de mensagem, ações (criar tarefa, notificar responsável)
-- Botão global **"Ativar Follow Inteligente"** no topo do funil
+Página estratégica que centraliza configuração de metas e projeções.
 
-### 2. Detecção de "tempo parado"
-- Novos campos no lead: `last_interaction_at`, `last_movement_at`, `follow_count`, `lead_score`, `lead_temperature` (quente/morno/frio)
-- Atualização automática via trigger sempre que chega mensagem, ligação ou movimentação
+**Conteúdo:**
+- Meta de faturamento mensal
+- Ticket médio
+- Taxa de conversão (lead→reunião, reunião→venda)
+- Dias úteis no mês
+- **Projeção automática** (calculada): nº de vendas, reuniões, conversas, leads necessários
+- Cards de progresso atual vs meta
 
-### 3. Motor automático (cron 5 min)
-- Edge function `follow-inteligente-engine` roda a cada 5 minutos
-- Para cada lead em etapa configurada: se `tempo_parado >= tempo_configurado` → dispara ações (WhatsApp template, tarefa, notificação)
-- Registra execução em `follow_execucoes` para evitar duplicidade
-- Avança lead para próxima etapa após disparo (configurável)
+**Fonte de dados:** reutiliza `useCommercialGoals`, `useTeamPerformance`, e a tabela `commercial_goals` já existente. Cria/edita metas via UI.
 
-### 4. Reset automático
-- Lead respondeu (mensagem recebida) → zera timer, pausa automações da etapa atual, soma score
-- Atendeu ligação → mesmo comportamento
+## 2. Novo módulo: Rotina Inteligente (`/rotina`)
 
-### 5. Score + Temperatura
-- +10 respondeu, +5 atendeu ligação, +3 visualizou, -5 ignorou, -10 após 7 dias
-- 🔥 Quente (respondeu <24h) / ⚠️ Morno (2-5d) / ❄️ Frio (>7d)
-- Ordenação automática do card no funil pela temperatura + score
+Página de execução diária do SDR. **Não é agenda fixa** — gerada dinamicamente.
 
-### 6. Card inteligente
-- Badge de temperatura (🔥/⚠️/❄️)
-- "Há 3 dias sem resposta"
-- Score numérico
-- Contador de follow-ups disparados
+**Conteúdo:**
+- **Missões do dia** (reutiliza `MissoesDoTurno` já existente)
+- **HUD do dia** (reutiliza `CockpitHUD`)
+- Distribuição por canal: ligações, WhatsApp, e-mail, Instagram (cards com nº alvo + nº realizado)
+- Alertas: leads parados, follow-up atrasado (reutiliza `useFollowUpData`)
+- Mini-ranking SDR (reutiliza `useLeaderboard`)
 
-### 7. Dashboard de Follow
-- Nova aba/seção: leads sem resposta, esquecidos (>7d), quentes, taxa de recuperação
+**Motor de cálculo (`useRotinaCalculator`):**
+- Lê: meta ativa + taxas de conversão + pipeline atual
+- Calcula: ligações/dia, follow-ups/dia, novos contatos/dia
+- Recalcula: ao abrir a página + 1x/dia (cache local com timestamp)
+- Sem novas tabelas — tudo derivado em runtime
 
-## Estrutura técnica
+## 3. Ajustar Grow Machine (`/prospeccao`)
 
-**Tabelas novas:**
-- `follow_etapa_config` (etapa_id, tempo_valor, tempo_unidade, canal, template_id, criar_tarefa, notificar, avancar_etapa, ativo)
-- `follow_execucoes` (lead_id, etapa_id, executado_em, acao, status)
-- `follow_templates` (nome, conteudo, variaveis)
+Reduzir para **execução pura de prospecção**.
 
-**Colunas em `leads`:**
-- `last_interaction_at`, `last_movement_at`, `follow_count`, `lead_score`, `lead_temperature`
+**Manter:** Cold Call, WhatsApp, Instagram, E-mail, Minha Fila, Painel do Gestor, ICP/Máquina/OTE (Sales Intelligence)
 
-**Edge functions:**
-- `follow-inteligente-engine` (cron a cada 5 min)
-- `follow-inteligente-test` (testar etapa manualmente)
+**Remover dali (movidos para os novos módulos):**
+- `CockpitDoDia` / `TopoFoco` / Missões do turno → vão para Rotina Inteligente
+- Configuração de metas / OTE estratégico → permanece em Metas & Vendas (link rápido)
 
-**Triggers:**
-- Atualiza `last_interaction_at` quando mensagem/ligação criada
-- Atualiza `last_movement_at` quando etapa muda
-- Reset de timer + score ao receber resposta
+Vou inspecionar `src/pages/Prospeccao.tsx` para identificar exatamente quais abas/blocos remover, preservando o resto.
 
-**Frontend:**
-- `FollowInteligenteConfigDialog.tsx` — config por etapa
-- `FollowInteligentePanel.tsx` — painel global do funil
-- `FollowTemperatureBadge.tsx` — badge no card
-- `FollowDashboard.tsx` — métricas
+## 4. Sidebar — nova ordem
 
-**Reutiliza:**
-- Sistema de templates do WhatsApp já existente
-- Edge function de envio Meta/Evolution já existente
-- Sistema de tarefas existente
+```
+📊 Metas & Vendas       (novo)
+🧠 Rotina Inteligente   (novo)
+🎯 Grow Machine         (existente, enxuto)
+📞 Call Center
+📈 BI / Relatórios
+🎓 Treinamento
+... demais itens preservados abaixo
+```
 
-## Fora de escopo (futuras evoluções nível 2)
-- Cadência multicanal (email)
-- IA sugestão de mensagem
-- Metas SDR e gamificação ligadas ao follow
+Editar `src/components/layout/Sidebar.tsx` para adicionar os 2 itens novos no topo e manter o resto.
 
-Posso começar pela migração do banco + motor + UI de configuração?
+## 5. Rotas
+
+Adicionar em `src/App.tsx`:
+- `/metas-vendas` → `MetasVendas.tsx`
+- `/rotina` → `RotinaInteligente.tsx`
+
+## Arquivos a criar
+
+- `src/pages/MetasVendas.tsx`
+- `src/pages/RotinaInteligente.tsx`
+- `src/hooks/useRotinaCalculator.ts` (motor: meta + conversão → metas diárias por canal)
+- `src/components/rotina/CanaisDistribuicao.tsx` (cards por canal)
+- `src/components/metas/ProjecaoAutomatica.tsx` (cálculo reverso da meta)
+
+## Arquivos a editar
+
+- `src/App.tsx` — 2 rotas novas
+- `src/components/layout/Sidebar.tsx` — 2 itens novos
+- `src/pages/Prospeccao.tsx` — remover Cockpit/TopoFoco/Missões (vão para Rotina)
+
+## Fora de escopo (próximo nível, conforme você listou)
+
+- Gamificação avançada / IA ajustando rotina / score automático de leads — deixo para depois.
+
+Posso executar?
