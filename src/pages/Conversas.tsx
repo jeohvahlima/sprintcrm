@@ -7472,10 +7472,16 @@ function Conversas() {
     try {
       setSyncStatus('syncing');
 
-      // Buscar lead existente
-      let leadData = await findLead(selectedConv);
-      
-      // ✅ CORREÇÃO: Se não encontrou lead, criar automaticamente
+      // ⚡ CORREÇÃO: priorizar o lead vinculado já exibido no painel para evitar
+      // atualizar um lead duplicado diferente do que está na tela
+      let leadData: any = leadVinculado?.id ? leadVinculado : null;
+
+      // Se não há lead vinculado, tenta buscar
+      if (!leadData) {
+        leadData = await findLead(selectedConv);
+      }
+
+      // ✅ Se não encontrou lead, criar automaticamente
       if (!leadData) {
         console.log('📝 [addToFunnel] Lead não encontrado - criando automaticamente...');
         leadData = await createLeadManually(selectedConv);
@@ -7487,19 +7493,19 @@ function Conversas() {
         }
         console.log('✅ [addToFunnel] Lead criado automaticamente:', leadData.id);
       }
-      
+
       // Atualizar funil e etapa no Supabase
       console.log('[addToFunnel] Atualizando lead:', {
         leadId: leadData.id,
         funilId: selectedFunilId,
         etapaId: selectedFunnel
       });
-      
+
       const { error } = await supabase.from('leads').update({
         funil_id: selectedFunilId,
         etapa_id: selectedFunnel
       }).eq('id', leadData.id);
-      
+
       if (error) {
         console.error('Erro ao atualizar funil no Supabase:', error);
         setSyncStatus('error');
@@ -7507,7 +7513,7 @@ function Conversas() {
         setTimeout(() => setSyncStatus('idle'), 2000);
         return;
       }
-      
+
       console.log('✅ Lead adicionado ao funil no Supabase');
       setSyncStatus('synced');
       setTimeout(() => setSyncStatus('idle'), 1000);
