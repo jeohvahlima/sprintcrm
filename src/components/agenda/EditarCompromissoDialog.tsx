@@ -69,12 +69,15 @@ interface Lead {
 interface EditarCompromissoDialogProps {
   compromisso: Compromisso;
   onCompromissoUpdated: () => void;
+  trigger?: React.ReactNode;
 }
 
 export function EditarCompromissoDialog({
   compromisso,
   onCompromissoUpdated,
+  trigger,
 }: EditarCompromissoDialogProps) {
+
   const [open, setOpen] = useState(false);
   const [leads, setLeads] = useState<Lead[]>([]);
   const [agendas, setAgendas] = useState<Agenda[]>([]);
