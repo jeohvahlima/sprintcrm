@@ -149,7 +149,7 @@ export const FloatingDialerButton = () => {
         )}
         {isCallActive && (
           <Badge className="absolute -top-1 -right-1 h-5 min-w-5 flex items-center justify-center p-0 text-[10px] bg-green-500 text-white border-0">
-            {formatDuration(callState.duration)}
+            {formatDuration(webphone.duration)}
           </Badge>
         )}
       </button>
@@ -181,24 +181,25 @@ export const FloatingDialerButton = () => {
               <div className="flex items-center gap-2">
                 <PhoneCall className="h-4 w-4 text-green-500 animate-pulse" />
                 <div>
-                  <p className="text-xs font-medium">{callState.leadName || 'Chamada'}</p>
-                  <p className="text-xs text-muted-foreground">{formatDuration(callState.duration)}</p>
+                  <p className="text-xs font-medium">{webphone.remoteName || webphone.remoteNumber || 'Chamada'}</p>
+                  <p className="text-xs text-muted-foreground">{formatDuration(webphone.duration)}</p>
                 </div>
               </div>
               <div className="flex items-center gap-1">
                 <Button
-                  variant={callState.isMuted ? 'destructive' : 'outline'}
+                  variant={webphone.muted ? 'destructive' : 'outline'}
                   size="icon"
                   className="h-7 w-7 rounded-full"
-                  onClick={toggleMute}
+                  onClick={webphone.toggleMute}
+                  disabled={webphone.callState !== 'active'}
                 >
-                  {callState.isMuted ? <MicOff className="h-3 w-3" /> : <Mic className="h-3 w-3" />}
+                  {webphone.muted ? <MicOff className="h-3 w-3" /> : <Mic className="h-3 w-3" />}
                 </Button>
                 <Button
                   variant="destructive"
                   size="icon"
                   className="h-7 w-7 rounded-full"
-                  onClick={handleEndCall}
+                  onClick={webphone.hangup}
                 >
                   <PhoneOff className="h-3 w-3" />
                 </Button>
@@ -312,14 +313,6 @@ export const FloatingDialerButton = () => {
         </div>
       )}
 
-      {/* Post-Call Notes Dialog */}
-      <PostCallNotesDialog
-        open={showNotesDialog}
-        leadName={callState.leadName}
-        phoneNumber={callState.phoneNumber}
-        duration={callState.duration}
-        onSave={handleSaveNotes}
-      />
     </>
   );
 };
