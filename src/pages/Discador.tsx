@@ -175,8 +175,6 @@ const Discador = () => {
       {/* Start Call Dialog */}
       <StartCallFromLeadDialog open={showCallDialog} onClose={() => setShowCallDialog(false)} onStartCall={handleStartCall} />
 
-      {/* Post-Call Notes Dialog */}
-      <PostCallNotesDialog open={showNotesDialog} leadName={callState.leadName} phoneNumber={callState.phoneNumber} duration={callState.duration} onSave={handleSaveNotes} />
     </>;
 };
 export default Discador;
