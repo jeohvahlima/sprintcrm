@@ -686,16 +686,19 @@ export function EditarCompromissoDialog({
       }
     }
   };
-
-  return (
-    <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={(e) => e.stopPropagation()}
-          className="h-8 w-8 p-0"
-        >
+        {trigger ?? (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={(e) => e.stopPropagation()}
+            className="h-8 w-8 p-0"
+          >
+            <Pencil className="h-4 w-4" />
+          </Button>
+        )}
+      </DialogTrigger>
+
           <Pencil className="h-4 w-4" />
         </Button>
       </DialogTrigger>
