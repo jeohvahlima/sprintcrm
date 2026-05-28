@@ -7973,7 +7973,7 @@ function Conversas() {
       const {
         data: existingLeads,
         error: searchError
-      } = await supabase.from('leads').select('*').eq('company_id', userRole.company_id).or(phoneConditions).order('updated_at', { ascending: false, nullsFirst: false }).order('created_at', { ascending: false }).limit(1);
+      } = await supabase.from('leads').select('*').eq('company_id', userRole.company_id).or(phoneConditions).order('updated_at', { ascending: false, nullsFirst: false }).order('created_at', { ascending: false }).limit(10);
       if (searchError && searchError.code !== 'PGRST116') {
         console.error('❌ [LEAD] Erro ao buscar lead:', {
           error: searchError,
@@ -7983,7 +7983,7 @@ function Conversas() {
         return null;
       }
 
-      const existingLead = existingLeads?.[0];
+      const existingLead = existingLeads?.find((lead: any) => lead.funil_id && lead.etapa_id) || existingLeads?.[0];
 
       // Se encontrou, vincular conversa ao lead
       if (existingLead) {
@@ -8228,7 +8228,7 @@ function Conversas() {
       const {
         data: existingLeads,
         error
-      } = await supabase.from('leads').select('*').eq('company_id', userRole.company_id).or(phoneConditions).order('updated_at', { ascending: false, nullsFirst: false }).order('created_at', { ascending: false }).limit(1);
+      } = await supabase.from('leads').select('*').eq('company_id', userRole.company_id).or(phoneConditions).order('updated_at', { ascending: false, nullsFirst: false }).order('created_at', { ascending: false }).limit(10);
 
       // MELHORIA 6: Logs detalhados para debug
       if (error && error.code !== 'PGRST116') {
@@ -8239,7 +8239,7 @@ function Conversas() {
           companyId: userRole.company_id
         });
       }
-      const existingLead = existingLeads?.[0];
+      const existingLead = existingLeads?.find((lead: any) => lead.funil_id && lead.etapa_id) || existingLeads?.[0];
       if (existingLead) {
         console.log('✅ [LEAD] Lead vinculado encontrado:', {
           leadId: existingLead.id,
