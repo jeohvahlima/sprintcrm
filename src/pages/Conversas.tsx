@@ -498,6 +498,7 @@ function Conversas() {
   const [pastedImageFile, setPastedImageFile] = useState<File | null>(null);
   const [syncStatus, setSyncStatus] = useState<'synced' | 'syncing' | 'error' | 'idle'>('idle');
   const [leadVinculado, setLeadVinculado] = useState<any>(null);
+  const [showMoverFunilInline, setShowMoverFunilInline] = useState(false);
   const [leadExtraInfo, setLeadExtraInfo] = useState<{ etapaNome?: string; funilNome?: string; responsavelNome?: string }>({});
   const [mostrarBotaoCriarLead, setMostrarBotaoCriarLead] = useState(false);
   const [leadsVinculados, setLeadsVinculados] = useState<Record<string, string>>({}); // conversationId -> leadId
@@ -10280,112 +10281,87 @@ function Conversas() {
                         </div> : <div className="mb-2">
                           <p className="text-sm text-muted-foreground">Não está em nenhum funil</p>
                         </div>}
-                      <Dialog>
-                        <DialogTrigger asChild>
-                          <Button size="sm" variant="outline" className="w-full">
-                            <TrendingUp className="h-3 w-3 mr-2" /> 
-                            {leadVinculado && leadVinculado.funil_id ? "Mover de Funil" : "Adicionar ao Funil"}
-                          </Button>
-                        </DialogTrigger>
-                        <DialogContent>
-                          <DialogHeader>
-                            <DialogTitle>
-                              {leadVinculado && leadVinculado.funil_id ? "Mover Lead de Funil" : "Adicionar ao Funil"}
-                            </DialogTitle>
-                            <p className="text-sm text-muted-foreground mt-1">
-                              Selecione o funil de vendas e a etapa para {leadVinculado && leadVinculado.funil_id ? "mover" : "adicionar"} este lead
-                            </p>
-                          </DialogHeader>
-                          
-                          {/* Informação do funil atual */}
-                          {leadVinculado && leadVinculado.funil_id && <div className="p-3 bg-primary/10 border border-primary/30 rounded-lg space-y-2">
-                              <div className="flex items-center gap-2">
-                                <AlertCircle className="h-4 w-4 text-primary" />
-                                <p className="text-sm font-semibold text-primary">Posição Atual do Lead</p>
-                              </div>
-                              <div className="pl-6 space-y-1.5">
-                                <div>
-                                  <p className="text-xs text-muted-foreground">Funil:</p>
-                                  <p className="text-sm font-medium text-foreground">
-                                    📊 {funis.find(f => f.id === leadVinculado.funil_id)?.nome || "Funil não encontrado"}
-                                  </p>
-                                </div>
-                                <div>
-                                  <p className="text-xs text-muted-foreground">Etapa:</p>
-                                  <div className="flex items-center gap-2">
-                                    <div className="w-2.5 h-2.5 rounded-full" style={{
-                              backgroundColor: etapas.find(e => e.id === leadVinculado.etapa_id)?.cor || '#3b82f6'
-                            }} />
-                                    <p className="text-sm font-medium text-foreground">
-                                      {etapas.find(e => e.id === leadVinculado.etapa_id)?.nome || "Etapa não definida"}
-                                    </p>
-                                  </div>
-                                </div>
-                              </div>
-                              <p className="text-xs text-muted-foreground pl-6 pt-1">
-                                💡 Selecione um novo funil/etapa abaixo para mover o lead
-                              </p>
-                            </div>}
-                          
-                          <div className="space-y-4">
-                            <div>
-                              <Label htmlFor="funil-select">Funil de Vendas *</Label>
-                              <Select value={selectedFunilId} onValueChange={setSelectedFunilId}>
-                                <SelectTrigger id="funil-select">
-                                  <SelectValue placeholder={funis.length === 0 ? "Nenhum funil disponível" : "Escolha um funil"} />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  {funis.length === 0 ? <div className="p-2 text-sm text-muted-foreground text-center">
-                                      <p>Nenhum funil criado</p>
-                                      <p className="text-xs mt-1">Crie um no menu Kanban</p>
-                                    </div> : funis.map(funil => <SelectItem key={funil.id} value={funil.id}>
-                                        📊 {funil.nome}
-                                        {funil.descricao && <span className="text-xs text-muted-foreground ml-2">
-                                            - {funil.descricao}
-                                          </span>}
-                                        {leadVinculado?.funil_id === funil.id && <span className="text-xs text-primary ml-2 font-medium">
-                                            (Atual)
-                                          </span>}
-                                      </SelectItem>)}
-                                </SelectContent>
-                              </Select>
-                              {funis.length === 0 && <p className="text-xs text-destructive mt-1">
-                                  ⚠️ Crie um funil no menu Kanban
-                                </p>}
-                            </div>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="w-full"
+                        onClick={() => setShowMoverFunilInline(v => !v)}
+                      >
+                        <TrendingUp className="h-3 w-3 mr-2" />
+                        {showMoverFunilInline
+                          ? "Fechar"
+                          : leadVinculado && leadVinculado.funil_id
+                            ? "Mover de Funil"
+                            : "Adicionar ao Funil"}
+                      </Button>
 
-                            <div>
-                              <Label htmlFor="etapa-select">Etapa *</Label>
-                              <Select value={selectedFunnel} onValueChange={setSelectedFunnel} disabled={!selectedFunilId}>
-                                <SelectTrigger id="etapa-select">
-                                  <SelectValue placeholder={!selectedFunilId ? "Selecione um funil primeiro" : "Escolha a etapa"} />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  {etapasFiltradas.length === 0 ? <div className="p-2 text-sm text-muted-foreground">
-                                      Nenhuma etapa disponível neste funil
-                                    </div> : etapasFiltradas.map(etapa => <SelectItem key={etapa.id} value={etapa.id}>
-                                        <div className="flex items-center gap-2">
-                                          <div className="w-3 h-3 rounded-full" style={{
-                                  backgroundColor: etapa.cor || '#3b82f6'
-                                }} />
-                                          {etapa.nome}
-                                          {leadVinculado?.etapa_id === etapa.id && <span className="text-xs text-primary ml-2 font-medium">
-                                              (Atual)
-                                            </span>}
-                                        </div>
-                                      </SelectItem>)}
-                                </SelectContent>
-                              </Select>
-                              {!selectedFunilId && <p className="text-xs text-muted-foreground mt-1">
-                                  💡 Selecione um funil para ver as etapas
-                                </p>}
-                            </div>
+                      {showMoverFunilInline && (
+                        <div className="mt-3 space-y-3 p-3 border border-border rounded-lg bg-muted/30">
+                          <div>
+                            <Label htmlFor="funil-select-inline" className="text-xs">Funil de Vendas *</Label>
+                            <Select value={selectedFunilId} onValueChange={setSelectedFunilId}>
+                              <SelectTrigger id="funil-select-inline" className="h-9">
+                                <SelectValue placeholder={funis.length === 0 ? "Nenhum funil disponível" : "Escolha um funil"} />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {funis.length === 0 ? (
+                                  <div className="p-2 text-sm text-muted-foreground text-center">
+                                    <p>Nenhum funil criado</p>
+                                    <p className="text-xs mt-1">Crie um no menu Kanban</p>
+                                  </div>
+                                ) : funis.map(funil => (
+                                  <SelectItem key={funil.id} value={funil.id}>
+                                    📊 {funil.nome}
+                                    {leadVinculado?.funil_id === funil.id && (
+                                      <span className="text-xs text-primary ml-2 font-medium">(Atual)</span>
+                                    )}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
                           </div>
-                          <Button onClick={addToFunnel}>
+
+                          <div>
+                            <Label htmlFor="etapa-select-inline" className="text-xs">Etapa *</Label>
+                            <Select value={selectedFunnel} onValueChange={setSelectedFunnel} disabled={!selectedFunilId}>
+                              <SelectTrigger id="etapa-select-inline" className="h-9">
+                                <SelectValue placeholder={!selectedFunilId ? "Selecione um funil primeiro" : "Escolha a etapa"} />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {etapasFiltradas.length === 0 ? (
+                                  <div className="p-2 text-sm text-muted-foreground">
+                                    Nenhuma etapa disponível neste funil
+                                  </div>
+                                ) : etapasFiltradas.map(etapa => (
+                                  <SelectItem key={etapa.id} value={etapa.id}>
+                                    <div className="flex items-center gap-2">
+                                      <div className="w-3 h-3 rounded-full" style={{ backgroundColor: etapa.cor || '#3b82f6' }} />
+                                      {etapa.nome}
+                                      {leadVinculado?.etapa_id === etapa.id && (
+                                        <span className="text-xs text-primary ml-2 font-medium">(Atual)</span>
+                                      )}
+                                    </div>
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+
+                          <Button
+                            size="sm"
+                            className="w-full"
+                            disabled={!selectedFunilId || !selectedFunnel}
+                            onClick={async () => {
+                              await addToFunnel();
+                              setShowMoverFunilInline(false);
+                            }}
+                          >
                             {leadVinculado && leadVinculado.funil_id ? "Mover Lead" : "Adicionar Lead"}
                           </Button>
-                        </DialogContent>
-                      </Dialog>
+                        </div>
+                      )}
+
+
                     </div>
 
                     {/* Histórico do Lead (timeline) */}
