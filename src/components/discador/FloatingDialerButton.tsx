@@ -5,9 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useCallCenter } from '@/hooks/useCallCenter';
-import { CallModal } from '@/components/discador/CallModal';
-import { PostCallNotesDialog } from '@/components/discador/PostCallNotesDialog';
-import { supabase } from '@/integrations/supabase/client';
+import { useWebphone } from '@/components/discador/WebphoneProvider';
 import { toast } from 'sonner';
 
 const dialPadKeys = [
@@ -31,7 +29,7 @@ export const FloatingDialerButton = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<Tab>('teclado');
   const [phoneNumber, setPhoneNumber] = useState('');
-  const [showNotesDialog, setShowNotesDialog] = useState(false);
+  const webphone = useWebphone();
 
   // Draggable state
   const [position, setPosition] = useState({ x: 24, y: 162 });
@@ -40,12 +38,7 @@ export const FloatingDialerButton = () => {
   const hasMoved = useRef(false);
 
   const {
-    callState,
     callHistory,
-    startCall,
-    endCall,
-    saveCallNotes,
-    toggleMute,
     loadCallHistory,
   } = useCallCenter();
 
