@@ -466,12 +466,6 @@ export default function KanbanPage() {
     let reconnectAttempts = 0;
     const MAX_RECONNECT_ATTEMPTS = 5;
 
-    const formatLead = (lead: any): Lead => ({
-      ...lead,
-      nome: lead.name || '',
-      name: lead.name || ''
-    });
-
     const setupRealtimeChannel = () => {
       console.log('🔄 [REALTIME] Configurando canal consolidado...');
 
@@ -487,14 +481,26 @@ export default function KanbanPage() {
             return;
           }
 
+          const leadFunilId = payload.new?.funil_id || payload.old?.funil_id;
+          const belongsToSelectedFunil = leadFunilId === selectedFunil;
+
           if (payload.eventType === 'INSERT') {
+            if (!belongsToSelectedFunil) return;
             setLeads(prev => {
               // Evitar duplicatas
               if (prev.some(l => l.id === payload.new.id)) return prev;
               return [formatLead(payload.new), ...prev];
             });
           } else if (payload.eventType === 'UPDATE') {
-            setLeads(prev => prev.map(l => l.id === payload.new.id ? formatLead(payload.new) : l));
+            setLeads(prev => {
+              const alreadyLoaded = prev.some(l => l.id === payload.new.id);
+              if (belongsToSelectedFunil) {
+                return alreadyLoaded
+                  ? prev.map(l => l.id === payload.new.id ? formatLead(payload.new) : l)
+                  : [formatLead(payload.new), ...prev];
+              }
+              return prev.filter(l => l.id !== payload.new.id);
+            });
           } else if (payload.eventType === 'DELETE') {
             setLeads(prev => prev.filter(l => l.id !== payload.old.id));
           }
@@ -568,7 +574,7 @@ export default function KanbanPage() {
       if (reconnectTimeout) clearTimeout(reconnectTimeout);
       if (realtimeChannel) supabase.removeChannel(realtimeChannel);
     };
-  }, [selectedFunil]);
+  }, [selectedFunil, formatLead]);
 
   const handleDragStart = (event: DragStartEvent) => {
     const { active } = event;
