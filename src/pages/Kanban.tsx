@@ -315,20 +315,13 @@ export default function KanbanPage() {
 
         setEtapas(etapasData || []);
 
-        // Carregar leads
-        const { data: leadsData, error: leadsError } = await supabase
-          .from("leads")
-          .select("*")
-          .order("created_at", { ascending: false });
-
-        if (leadsError) throw leadsError;
         if (!mounted) return;
 
-        setLeads((leadsData || []).map(lead => ({
-          ...lead,
-          nome: lead.name || "",
-          name: lead.name || ""
-        })));
+        const targetFunil = selectedFunil || loadedFunis[0]?.id || "";
+        const leadsData = await fetchLeadsForFunil(targetFunil);
+        if (!mounted) return;
+
+        setLeads(leadsData);
 
       } catch (err: any) {
         // Ignore AbortError from auth lock contention - just retry silently
@@ -356,21 +349,13 @@ export default function KanbanPage() {
     return () => {
       mounted = false;
     };
-  }, [selectedFunil]);
+  }, [selectedFunil, fetchLeadsForFunil]);
 
   // Atualiza apenas os leads sem recarregar a página
   const refreshLeads = async () => {
     try {
-      const { data: leadsData, error: leadsError } = await supabase
-        .from("leads")
-        .select("*")
-        .order("created_at", { ascending: false });
-      if (leadsError) throw leadsError;
-      setLeads((leadsData || []).map(lead => ({
-        ...lead,
-        nome: lead.name || "",
-        name: lead.name || ""
-      })));
+      const leadsData = await fetchLeadsForFunil(selectedFunil);
+      setLeads(leadsData);
     } catch (err) {
       console.error("Erro ao atualizar leads:", err);
     }
