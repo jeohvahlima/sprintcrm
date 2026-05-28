@@ -18,6 +18,7 @@ import { useFloatingButtonsVisibility } from '@/hooks/useFloatingButtonsVisibili
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { useWebphone } from '@/components/discador/WebphoneProvider';
+import { WebphoneDialer } from '@/components/discador/WebphoneDialer';
 import { toast } from 'sonner';
 const Discador = () => {
   const [activeTab, setActiveTab] = useState('fazer-ligacao');
@@ -120,24 +121,7 @@ const Discador = () => {
           {/* Tab: Fazer Ligação */}
           <TabsContent value="fazer-ligacao" className="space-y-6">
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-              {/* Quick Call Card */}
-              <Card className="hover:border-primary/50 transition-colors cursor-pointer" onClick={() => setShowCallDialog(true)}>
-                <CardHeader className="text-center pb-2">
-                  <div className="mx-auto w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-4">
-                    <Phone className="w-8 h-8 text-primary" />
-                  </div>
-                  <CardTitle>Ligue para Seus Contatos </CardTitle>
-                  <CardDescription>
-                    Selecione um lead cadastrado para iniciar uma ligação
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="pt-0">
-                  <Button className="w-full" size="lg">
-                    <Phone className="w-4 h-4 mr-2" />
-                    Iniciar Ligação
-                  </Button>
-                </CardContent>
-              </Card>
+              <WebphoneDialer onOpenContacts={() => setShowCallDialog(true)} />
 
               {/* Stats Card */}
               <Card>
