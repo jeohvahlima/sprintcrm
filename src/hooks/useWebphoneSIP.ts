@@ -26,10 +26,10 @@ interface UseWebphoneState {
 
 function sanitizeNumber(raw: string): string {
   let digits = String(raw || '').replace(/\D/g, '');
-  // remove leading 0 (national long-distance prefix)
+  // NVOIP SIP/WSS disca para PSTN usando DDD + número. Não prefixar 55,
+  // senão a chamada pode ficar presa no ramal em vez de sair direto ao contato.
+  if ((digits.length === 12 || digits.length === 13) && digits.startsWith('55')) digits = digits.slice(2);
   if ((digits.length === 11 || digits.length === 12) && digits.startsWith('0')) digits = digits.slice(1);
-  // ensure DDI 55 for Brazilian numbers (NVOIP outbound expects E.164-ish without +)
-  if (digits.length === 10 || digits.length === 11) digits = `55${digits}`;
   return digits;
 }
 
