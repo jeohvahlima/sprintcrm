@@ -195,7 +195,7 @@ export default function Prospeccao() {
       {gamificationOn && <KillFeed companyId={companyId} enableSound={soundOn} />}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Grow Machine</h1>
+          <h1 className="text-2xl font-bold text-foreground">Máquina de Vendas</h1>
           <p className="text-sm text-muted-foreground">
             Acompanhe metas, pipeline e performance da equipe de vendas
           </p>
@@ -323,7 +323,7 @@ export default function Prospeccao() {
                         size="sm"
                         onClick={() => setInstagramSub("prospect")}
                       >
-                        🎯 Grow Machine
+                        🎯 Máquina de Vendas
                       </Button>
                       <Button
                         variant={instagramSub === "social" ? "default" : "outline"}
@@ -349,7 +349,7 @@ export default function Prospeccao() {
                         size="sm"
                         onClick={() => setChannelView("prospect")}
                       >
-                        🎯 Grow Machine
+                        🎯 Máquina de Vendas
                       </Button>
                       <Button
                         variant={channelView === "chat" ? "default" : "outline"}

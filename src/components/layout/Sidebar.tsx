@@ -69,7 +69,7 @@ const navigation: NavEntry[] = [
     items: [
       { name: "Metas & Vendas", href: "/metas-vendas", icon: DollarSign, menuKey: "prospeccao" },
       { name: "Rotina Inteligente", href: "/rotina", icon: Brain, menuKey: "prospeccao" },
-      { name: "Grow Machine", href: "/prospeccao", icon: Target, menuKey: "prospeccao" },
+      { name: "Máquina de Vendas", href: "/prospeccao", icon: Target, menuKey: "prospeccao" },
       { name: "Maturidade Comercial", href: "/maturidade", icon: Activity, menuKey: "maturidade" },
       { name: "Processos Comerciais", href: "/processos", icon: Target, menuKey: "processos", showAIBadge: true },
       
