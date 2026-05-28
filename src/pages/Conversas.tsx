@@ -7944,6 +7944,17 @@ function Conversas() {
         console.warn('⚠️ [LEAD] Usuário sem company_id');
         return null;
       }
+
+      if (conversation.leadId) {
+        const { data: linkedLead } = await supabase
+          .from('leads')
+          .select('*')
+          .eq('company_id', userRole.company_id)
+          .eq('id', conversation.leadId)
+          .maybeSingle();
+        if (linkedLead) return linkedLead;
+      }
+
       console.log('📞 [LEAD] Buscando lead com variações de telefone:', {
         variations,
         companyId: userRole.company_id
@@ -7952,9 +7963,9 @@ function Conversas() {
       // Buscar lead por telefone exato e variações
       const phoneConditions = variations.map(v => `phone.eq.${v},telefone.eq.${v}`).join(',');
       const {
-        data: existingLead,
+        data: existingLeads,
         error: searchError
-      } = await supabase.from('leads').select('*').eq('company_id', userRole.company_id).or(phoneConditions).maybeSingle();
+      } = await supabase.from('leads').select('*').eq('company_id', userRole.company_id).or(phoneConditions).order('updated_at', { ascending: false, nullsFirst: false }).order('created_at', { ascending: false }).limit(1);
       if (searchError && searchError.code !== 'PGRST116') {
         console.error('❌ [LEAD] Erro ao buscar lead:', {
           error: searchError,
@@ -7963,6 +7974,8 @@ function Conversas() {
         });
         return null;
       }
+
+      const existingLead = existingLeads?.[0];
 
       // Se encontrou, vincular conversa ao lead
       if (existingLead) {
