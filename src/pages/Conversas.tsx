@@ -8182,6 +8182,21 @@ function Conversas() {
         return;
       }
 
+      if (conversation.leadId) {
+        const { data: linkedLead } = await supabase
+          .from('leads')
+          .select('*')
+          .eq('company_id', userRole.company_id)
+          .eq('id', conversation.leadId)
+          .maybeSingle();
+
+        if (linkedLead) {
+          setLeadVinculado(linkedLead);
+          setMostrarBotaoCriarLead(false);
+          return;
+        }
+      }
+
       // MELHORIA 1 e 2: Validar e normalizar número de telefone
       const phoneRaw = conversation.phoneNumber || conversation.id;
       const {
@@ -8203,9 +8218,9 @@ function Conversas() {
       // MELHORIA 3: Buscar lead por telefone exato e variações
       const phoneConditions = variations.map(v => `phone.eq.${v},telefone.eq.${v}`).join(',');
       const {
-        data: existingLead,
+        data: existingLeads,
         error
-      } = await supabase.from('leads').select('*').eq('company_id', userRole.company_id).or(phoneConditions).maybeSingle();
+      } = await supabase.from('leads').select('*').eq('company_id', userRole.company_id).or(phoneConditions).order('updated_at', { ascending: false, nullsFirst: false }).order('created_at', { ascending: false }).limit(1);
 
       // MELHORIA 6: Logs detalhados para debug
       if (error && error.code !== 'PGRST116') {
@@ -8216,6 +8231,7 @@ function Conversas() {
           companyId: userRole.company_id
         });
       }
+      const existingLead = existingLeads?.[0];
       if (existingLead) {
         console.log('✅ [LEAD] Lead vinculado encontrado:', {
           leadId: existingLead.id,
