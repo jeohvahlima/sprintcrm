@@ -10361,7 +10361,7 @@ function Conversas() {
                         </div>
                       )}
 
-                      </Dialog>
+
                     </div>
 
                     {/* Histórico do Lead (timeline) */}
