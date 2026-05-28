@@ -214,9 +214,6 @@ const Discador = () => {
       {/* Start Call Dialog */}
       <StartCallFromLeadDialog open={showCallDialog} onClose={() => setShowCallDialog(false)} onStartCall={handleStartCall} />
 
-      {/* Active Call Modal */}
-      {callState.isActive && callState.status !== 'finalizado' && <CallModal open={true} onClose={() => {}} leadName={callState.leadName} phoneNumber={callState.phoneNumber} status={callState.status} duration={callState.duration} isMuted={callState.isMuted} onEndCall={handleEndCall} onToggleMute={toggleMute} />}
-
       {/* Post-Call Notes Dialog */}
       <PostCallNotesDialog open={showNotesDialog} leadName={callState.leadName} phoneNumber={callState.phoneNumber} duration={callState.duration} onSave={handleSaveNotes} />
     </>;
