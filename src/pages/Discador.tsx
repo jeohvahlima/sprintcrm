@@ -1,10 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Phone, History, BarChart3, PhoneCall } from 'lucide-react';
 import { useCallCenter } from '@/hooks/useCallCenter';
-import { PostCallNotesDialog } from '@/components/discador/PostCallNotesDialog';
 import { CallHistory } from '@/components/discador/CallHistory';
 import { SDRDashboard } from '@/components/discador/SDRDashboard';
 import { SDRSpecializationPanel } from '@/components/discador/SDRSpecializationPanel';
@@ -13,7 +11,6 @@ import { NvoipAccountPanel } from '@/components/discador/NvoipAccountPanel';
 import { NvoipNumbersPanel } from '@/components/discador/NvoipNumbersPanel';
 import { Hash } from 'lucide-react';
 import { KeyRound } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
 import { useFloatingButtonsVisibility } from '@/hooks/useFloatingButtonsVisibility';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
@@ -23,12 +20,9 @@ import { toast } from 'sonner';
 const Discador = () => {
   const [activeTab, setActiveTab] = useState('fazer-ligacao');
   const [showCallDialog, setShowCallDialog] = useState(false);
-  const [showNotesDialog, setShowNotesDialog] = useState(false);
   const {
-    callState,
     callHistory,
     isLoading,
-    saveCallNotes,
     loadCallHistory,
     getSDRMetrics
   } = useCallCenter();
@@ -38,12 +32,6 @@ const Discador = () => {
     loadCallHistory();
   }, [loadCallHistory]);
 
-  // Handle call state changes
-  useEffect(() => {
-    if (callState.status === 'finalizado' && callState.isActive) {
-      setShowNotesDialog(true);
-    }
-  }, [callState.status, callState.isActive]);
   const handleStartCall = async (_leadId: string, leadName: string, phoneNumber: string) => {
     if (webphone.mode !== 'webphone' || !webphone.configured) {
       await webphone.reload();
@@ -58,19 +46,6 @@ const Discador = () => {
     }
     webphone.call(phoneNumber, leadName);
     setShowCallDialog(false);
-  };
-  const handleSaveNotes = async (notes: string, result: string) => {
-    // Update call result first
-    if (callState.callRecordId) {
-      await supabase.from('call_history').update({
-        call_result: result
-      }).eq('id', callState.callRecordId);
-    }
-    const success = await saveCallNotes(notes);
-    if (success) {
-      setShowNotesDialog(false);
-      loadCallHistory();
-    }
   };
   return <>
       <div className="container mx-auto p-6 space-y-6">
