@@ -5,9 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useCallCenter } from '@/hooks/useCallCenter';
-import { CallModal } from '@/components/discador/CallModal';
-import { PostCallNotesDialog } from '@/components/discador/PostCallNotesDialog';
-import { supabase } from '@/integrations/supabase/client';
+import { useWebphone } from '@/components/discador/WebphoneProvider';
 import { toast } from 'sonner';
 
 const dialPadKeys = [
@@ -31,7 +29,7 @@ export const FloatingDialerButton = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<Tab>('teclado');
   const [phoneNumber, setPhoneNumber] = useState('');
-  const [showNotesDialog, setShowNotesDialog] = useState(false);
+  const webphone = useWebphone();
 
   // Draggable state
   const [position, setPosition] = useState({ x: 24, y: 162 });
@@ -40,12 +38,7 @@ export const FloatingDialerButton = () => {
   const hasMoved = useRef(false);
 
   const {
-    callState,
     callHistory,
-    startCall,
-    endCall,
-    saveCallNotes,
-    toggleMute,
     loadCallHistory,
   } = useCallCenter();
 
@@ -102,29 +95,23 @@ export const FloatingDialerButton = () => {
       toast.error('Número inválido');
       return;
     }
-    const success = await startCall('', 'Ligação Manual', cleanNumber);
-    if (success) {
-      setPhoneNumber('');
+    if (webphone.mode !== 'webphone' || !webphone.configured) {
+      await webphone.reload();
     }
-  };
-
-  const handleEndCall = () => {
-    endCall();
-  };
-
-  const handleSaveNotes = async (notes: string, result: string) => {
-    if (callState.callRecordId) {
-      await supabase.from('call_history').update({ call_result: result }).eq('id', callState.callRecordId);
+    if (webphone.mode !== 'webphone' || !webphone.configured) {
+      toast.error('Configure a Conta Telefônica no modo Webphone NVOIP para ligar direto pelo CRM.');
+      return;
     }
-    const success = await saveCallNotes(notes);
-    if (success) {
-      setShowNotesDialog(false);
-      loadCallHistory();
+    if (webphone.regStatus !== 'registered') {
+      toast.error('Aguarde o Webphone SIP conectar antes de ligar.');
+      return;
     }
+    webphone.call(cleanNumber, 'Ligação Manual');
+    setPhoneNumber('');
   };
 
   // Show notes dialog when call finishes
-  const isCallActive = callState.isActive && callState.status !== 'finalizado';
+  const isCallActive = ['outgoing', 'ringing', 'active'].includes(webphone.callState);
 
   const formatDuration = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -162,7 +149,7 @@ export const FloatingDialerButton = () => {
         )}
         {isCallActive && (
           <Badge className="absolute -top-1 -right-1 h-5 min-w-5 flex items-center justify-center p-0 text-[10px] bg-green-500 text-white border-0">
-            {formatDuration(callState.duration)}
+            {formatDuration(webphone.duration)}
           </Badge>
         )}
       </button>
@@ -194,24 +181,25 @@ export const FloatingDialerButton = () => {
               <div className="flex items-center gap-2">
                 <PhoneCall className="h-4 w-4 text-green-500 animate-pulse" />
                 <div>
-                  <p className="text-xs font-medium">{callState.leadName || 'Chamada'}</p>
-                  <p className="text-xs text-muted-foreground">{formatDuration(callState.duration)}</p>
+                  <p className="text-xs font-medium">{webphone.remoteName || webphone.remoteNumber || 'Chamada'}</p>
+                  <p className="text-xs text-muted-foreground">{formatDuration(webphone.duration)}</p>
                 </div>
               </div>
               <div className="flex items-center gap-1">
                 <Button
-                  variant={callState.isMuted ? 'destructive' : 'outline'}
+                  variant={webphone.muted ? 'destructive' : 'outline'}
                   size="icon"
                   className="h-7 w-7 rounded-full"
-                  onClick={toggleMute}
+                  onClick={webphone.toggleMute}
+                  disabled={webphone.callState !== 'active'}
                 >
-                  {callState.isMuted ? <MicOff className="h-3 w-3" /> : <Mic className="h-3 w-3" />}
+                  {webphone.muted ? <MicOff className="h-3 w-3" /> : <Mic className="h-3 w-3" />}
                 </Button>
                 <Button
                   variant="destructive"
                   size="icon"
                   className="h-7 w-7 rounded-full"
-                  onClick={handleEndCall}
+                  onClick={webphone.hangup}
                 >
                   <PhoneOff className="h-3 w-3" />
                 </Button>
@@ -325,14 +313,6 @@ export const FloatingDialerButton = () => {
         </div>
       )}
 
-      {/* Post-Call Notes Dialog */}
-      <PostCallNotesDialog
-        open={showNotesDialog}
-        leadName={callState.leadName}
-        phoneNumber={callState.phoneNumber}
-        duration={callState.duration}
-        onSave={handleSaveNotes}
-      />
     </>
   );
 };

@@ -47,15 +47,15 @@ export const WebphoneProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         .eq('company_id', ur.company_id)
         .maybeSingle();
 
-      const m = (cfg as any)?.telephony_mode || 'webphone';
-      setMode(m);
-
       const sipPassword = (cfg as any)?.sip_password;
       const numberSip = (cfg as any)?.number_sip;
       const wsUri = (cfg as any)?.sip_ws_uri || 'wss://app.nvoip.com.br:7443';
       const domain = (cfg as any)?.sip_domain || 'app.nvoip.com.br';
+      const hasWebphoneCredentials = Boolean(sipPassword && numberSip);
+      const m = hasWebphoneCredentials ? 'webphone' : ((cfg as any)?.telephony_mode || 'webphone');
+      setMode(m);
 
-      if (m === 'webphone' && sipPassword && numberSip) {
+      if (m === 'webphone' && hasWebphoneCredentials) {
         setConfigured(true);
         const key = `${numberSip}|${wsUri}|${domain}|${sipPassword.length}`;
         if (key !== lastRegisterKey.current) {

@@ -1,11 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Phone, History, BarChart3, PhoneCall } from 'lucide-react';
 import { useCallCenter } from '@/hooks/useCallCenter';
-import { CallModal } from '@/components/discador/CallModal';
-import { PostCallNotesDialog } from '@/components/discador/PostCallNotesDialog';
 import { CallHistory } from '@/components/discador/CallHistory';
 import { SDRDashboard } from '@/components/discador/SDRDashboard';
 import { SDRSpecializationPanel } from '@/components/discador/SDRSpecializationPanel';
@@ -14,59 +11,41 @@ import { NvoipAccountPanel } from '@/components/discador/NvoipAccountPanel';
 import { NvoipNumbersPanel } from '@/components/discador/NvoipNumbersPanel';
 import { Hash } from 'lucide-react';
 import { KeyRound } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
 import { useFloatingButtonsVisibility } from '@/hooks/useFloatingButtonsVisibility';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { useWebphone } from '@/components/discador/WebphoneProvider';
 import { WebphoneDialer } from '@/components/discador/WebphoneDialer';
+import { toast } from 'sonner';
 const Discador = () => {
   const [activeTab, setActiveTab] = useState('fazer-ligacao');
   const [showCallDialog, setShowCallDialog] = useState(false);
-  const [showNotesDialog, setShowNotesDialog] = useState(false);
   const {
-    callState,
     callHistory,
     isLoading,
-    startCall,
-    endCall,
-    saveCallNotes,
-    toggleMute,
     loadCallHistory,
     getSDRMetrics
   } = useCallCenter();
+  const webphone = useWebphone();
   const { dialerVisible, toggleDialer } = useFloatingButtonsVisibility();
   useEffect(() => {
     loadCallHistory();
   }, [loadCallHistory]);
 
-  // Handle call state changes
-  useEffect(() => {
-    if (callState.status === 'finalizado' && callState.isActive) {
-      setShowNotesDialog(true);
+  const handleStartCall = async (_leadId: string, leadName: string, phoneNumber: string) => {
+    if (webphone.mode !== 'webphone' || !webphone.configured) {
+      await webphone.reload();
     }
-  }, [callState.status, callState.isActive]);
-  const handleStartCall = async (leadId: string, leadName: string, phoneNumber: string) => {
-    const success = await startCall(leadId, leadName, phoneNumber);
-    if (success) {
-      setShowCallDialog(false);
+    if (webphone.mode !== 'webphone' || !webphone.configured) {
+      toast.error('Configure a Conta Telefônica no modo Webphone NVOIP para ligar direto pelo CRM.');
+      return;
     }
-  };
-  const handleEndCall = () => {
-    endCall();
-  };
-  const handleSaveNotes = async (notes: string, result: string) => {
-    // Update call result first
-    if (callState.callRecordId) {
-      await supabase.from('call_history').update({
-        call_result: result
-      }).eq('id', callState.callRecordId);
+    if (webphone.regStatus !== 'registered') {
+      toast.error('Aguarde o Webphone SIP conectar antes de ligar.');
+      return;
     }
-    const success = await saveCallNotes(notes);
-    if (success) {
-      setShowNotesDialog(false);
-      loadCallHistory();
-    }
+    webphone.call(phoneNumber, leadName);
+    setShowCallDialog(false);
   };
   return <>
       <div className="container mx-auto p-6 space-y-6">
@@ -117,24 +96,7 @@ const Discador = () => {
           {/* Tab: Fazer Ligação */}
           <TabsContent value="fazer-ligacao" className="space-y-6">
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-              {/* Quick Call Card */}
-              <Card className="hover:border-primary/50 transition-colors cursor-pointer" onClick={() => setShowCallDialog(true)}>
-                <CardHeader className="text-center pb-2">
-                  <div className="mx-auto w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-4">
-                    <Phone className="w-8 h-8 text-primary" />
-                  </div>
-                  <CardTitle>Ligue para Seus Contatos </CardTitle>
-                  <CardDescription>
-                    Selecione um lead cadastrado para iniciar uma ligação
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="pt-0">
-                  <Button className="w-full" size="lg">
-                    <Phone className="w-4 h-4 mr-2" />
-                    Iniciar Ligação
-                  </Button>
-                </CardContent>
-              </Card>
+              <WebphoneDialer onOpenContacts={() => setShowCallDialog(true)} />
 
               {/* Stats Card */}
               <Card>
@@ -213,11 +175,6 @@ const Discador = () => {
       {/* Start Call Dialog */}
       <StartCallFromLeadDialog open={showCallDialog} onClose={() => setShowCallDialog(false)} onStartCall={handleStartCall} />
 
-      {/* Active Call Modal */}
-      {callState.isActive && callState.status !== 'finalizado' && <CallModal open={true} onClose={() => {}} leadName={callState.leadName} phoneNumber={callState.phoneNumber} status={callState.status} duration={callState.duration} isMuted={callState.isMuted} onEndCall={handleEndCall} onToggleMute={toggleMute} />}
-
-      {/* Post-Call Notes Dialog */}
-      <PostCallNotesDialog open={showNotesDialog} leadName={callState.leadName} phoneNumber={callState.phoneNumber} duration={callState.duration} onSave={handleSaveNotes} />
     </>;
 };
 export default Discador;
