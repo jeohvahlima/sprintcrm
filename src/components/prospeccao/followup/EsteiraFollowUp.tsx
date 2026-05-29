@@ -4,6 +4,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Trash2, Zap, Star, Snowflake, MailQuestion, Hand, Phone, Mail, MessageCircle, Instagram } from "lucide-react";
 import { useFollowUpEsteira, FollowUpEntry } from "@/hooks/useFollowUpEsteira";
+import { useCompanySegmento } from "@/hooks/useCompanySegmento";
+import { followUpLabel } from "@/lib/clinicaLabels";
 import { ExecutarFollowDialog } from "./ExecutarFollowDialog";
 import { AddToEsteiraDialog } from "./AddToEsteiraDialog";
 
@@ -83,6 +85,7 @@ function EntryCard({ entry, onExecute, onRemove }: { entry: FollowUpEntry; onExe
 
 export function EsteiraFollowUp() {
   const { entries, cadence, isLoading, executeFollow, removeEntry } = useFollowUpEsteira();
+  const { isClinica } = useCompanySegmento();
   const [executingEntry, setExecutingEntry] = useState<FollowUpEntry | null>(null);
 
   const overdueEntries = useMemo(
@@ -113,7 +116,7 @@ export function EsteiraFollowUp() {
       <CardHeader className="flex flex-row items-center justify-between">
         <div>
           <CardTitle className="flex items-center gap-2">
-            <Zap className="h-5 w-5 text-primary" /> Esteira de Follow-up
+            <Zap className="h-5 w-5 text-primary" /> Esteira de {followUpLabel(isClinica)}
           </CardTitle>
           <p className="text-sm text-muted-foreground mt-1">
             Cadência: {cadence.map((c) => `F${c.step_number} D+${c.days_offset}`).join(" → ")}

@@ -28,6 +28,7 @@ type NavItem = {
   masterOnly?: boolean;
   juridicoOnly?: boolean;
   clinicaOnly?: boolean;
+  hideForClinica?: boolean;
   clinicaLabel?: string;
   clinicaHref?: string;
   clinicaIcon?: any;
@@ -50,16 +51,16 @@ const navigation: NavEntry[] = [
     type: "group",
     key: "crm",
     label: "CRM",
-    icon: LayoutDashboard,
     items: [
-      { name: "Relatórios", href: "/analytics", icon: LayoutDashboard, menuKey: "analytics" },
-      { name: "Contatos", href: "/leads", icon: Users, menuKey: "leads" },
-      { name: "Funil de Vendas", href: "/kanban", icon: LayoutDashboard, menuKey: "funil" },
-      { name: "Bate-Papo", href: "/conversas", icon: MessageSquare, menuKey: "conversas", showConversasBadge: true },
+      { name: "Relatórios", href: "/analytics", icon: LayoutDashboard, menuKey: "analytics", clinicaLabel: "Painel Clínico" },
+      { name: "Contatos", href: "/leads", icon: Users, menuKey: "leads", clinicaLabel: "Pacientes" },
+      { name: "Funil de Vendas", href: "/kanban", icon: LayoutDashboard, menuKey: "funil", clinicaLabel: "Jornada do Paciente" },
+      { name: "Bate-Papo", href: "/conversas", icon: MessageSquare, menuKey: "conversas", showConversasBadge: true, clinicaLabel: "Atendimento" },
       { name: "Agenda", href: "/agenda", icon: Calendar, menuKey: "agenda", showAgendaBadge: true },
       { name: "Tarefas", href: "/tarefas", icon: Calendar, menuKey: "tarefas", showTarefasBadge: true },
       { name: "Fluxos e Automação", href: "/ia", icon: Bot, menuKey: "automacao" },
     ],
+    icon: LayoutDashboard,
   },
   {
     type: "group",
@@ -67,15 +68,15 @@ const navigation: NavEntry[] = [
     label: "Estruturação Comercial",
     icon: Rocket,
     items: [
-      { name: "Metas & Vendas", href: "/metas-vendas", icon: DollarSign, menuKey: "prospeccao" },
-      { name: "Rotina Inteligente", href: "/rotina", icon: Brain, menuKey: "prospeccao" },
-      { name: "Máquina de Vendas", href: "/prospeccao", icon: Target, menuKey: "prospeccao" },
-      { name: "Maturidade Comercial", href: "/maturidade", icon: Activity, menuKey: "maturidade" },
-      { name: "Processos Comerciais", href: "/processos", icon: Target, menuKey: "processos", showAIBadge: true },
-      
+      { name: "Metas & Vendas", href: "/metas-vendas", icon: DollarSign, menuKey: "prospeccao", clinicaLabel: "Metas da Clínica" },
+      { name: "Rotina Inteligente", href: "/rotina", icon: Brain, menuKey: "prospeccao", clinicaLabel: "Rotina Clínica" },
+      // "Máquina de Vendas" e "Processos Comerciais" são exclusivamente comerciais — ocultos para clínicas
+      { name: "Máquina de Vendas", href: "/prospeccao", icon: Target, menuKey: "prospeccao", hideForClinica: true } as any,
+      { name: "Maturidade Comercial", href: "/maturidade", icon: Activity, menuKey: "maturidade", hideForClinica: true } as any,
+      { name: "Processos Comerciais", href: "/processos", icon: Target, menuKey: "processos", showAIBadge: true, hideForClinica: true } as any,
       { name: "Call Center", href: "/discador", icon: PhoneCall, menuKey: "discador" },
       { name: "Business Intelligence (BI)", href: "/financeiro", icon: DollarSign, menuKey: "financeiro", clinicaLabel: "BI Clínico", clinicaHref: "/bi-clinico", clinicaIcon: Stethoscope },
-      { name: "Treinamento Comerciais", href: "/treinamento", icon: GraduationCap, menuKey: "treinamento" },
+      { name: "Treinamento Comerciais", href: "/treinamento", icon: GraduationCap, menuKey: "treinamento", clinicaLabel: "Treinamentos" },
     ],
   },
   { name: "Configurações", href: "/configuracoes", icon: Settings, menuKey: "configuracoes" },
@@ -181,6 +182,7 @@ export function Sidebar({ collapsed = false, onNavigate }: SidebarProps) {
       if (segmentoLoading) return true;
       if (!isClinica && !isMasterAccount) return false;
     }
+    if (item.hideForClinica && isClinica) return false;
     const isPremiumModule = premiumModules.includes(item.menuKey);
     if (isPremiumModule && !isMasterAccount) {
       return canAccessModule(item.menuKey);
