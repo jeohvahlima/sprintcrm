@@ -12,6 +12,7 @@ import { FloatingChatButton } from "@/components/internal-chat";
 import { FloatingDialerButton } from "@/components/discador/FloatingDialerButton";
 import { FloatingSupportButton } from "@/components/support-chat/FloatingSupportButton";
 import { useFloatingButtonsVisibility } from "@/hooks/useFloatingButtonsVisibility";
+import { useClinicaSeeds } from "@/hooks/useClinicaSeeds";
 
 export function MainLayout() {
   const [session, setSession] = useState<Session | null>(null);
