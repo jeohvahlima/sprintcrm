@@ -13,6 +13,7 @@ import { Dialog, DialogContent, DialogHeader as UIDialogHeader, DialogTitle, Dia
 import { Textarea } from "@/components/ui/textarea";
 import { useEffect, useState } from "react";
 import { MarkProspectionButton } from "./MarkProspectionButton";
+import { toast } from "sonner";
 
  type SyncStatus = 'synced' | 'syncing' | 'error' | 'idle';
  type OnlineStatus = 'online' | 'offline' | 'unknown';
@@ -267,68 +268,19 @@ import { MarkProspectionButton } from "./MarkProspectionButton";
                  </Tooltip>
                )}
                {onFinalizeAtendimento && (
-                <Dialog open={finalizeOpen} onOpenChange={setFinalizeOpen}>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <DialogTrigger asChild>
-                        <Button 
-                          variant="outline"
-                          size="icon"
-                          className="h-8 w-8"
-                        >
-                          <CheckCircle2 className="h-4 w-4" />
-                        </Button>
-                      </DialogTrigger>
-                    </TooltipTrigger>
-                    <TooltipContent>Finalizar</TooltipContent>
-                  </Tooltip>
-                  <DialogContent className="sm:max-w-lg">
-                    <UIDialogHeader>
-                      <DialogTitle>Mensagem de finalização</DialogTitle>
-                    </UIDialogHeader>
-                    <div className="space-y-3">
-                      <Textarea
-                        rows={6}
-                        value={finalizeMessage}
-                        onChange={(e) => setFinalizeMessage(e.target.value)}
-                      />
-                      <div className="flex flex-col gap-3">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => {
-                            localStorage.setItem("continuum_finalize_template", finalizeMessage);
-                          }}
-                        >
-                          Salvar como padrão
-                        </Button>
-                        <div className="flex gap-2">
-                          <Button variant="outline" onClick={() => setFinalizeOpen(false)}>Cancelar</Button>
-                          <Button
-                            variant="secondary"
-                            onClick={() => {
-                              if (onFinalizeAtendimentoSilent) {
-                                onFinalizeAtendimentoSilent();
-                              }
-                              setFinalizeOpen(false);
-                            }}
-                          >
-                            Só finalizar
-                          </Button>
-                          <Button
-                            onClick={() => {
-                              onFinalizeAtendimento(finalizeMessage);
-                              localStorage.setItem("continuum_finalize_template", finalizeMessage);
-                              setFinalizeOpen(false);
-                            }}
-                          >
-                            Enviar e finalizar
-                          </Button>
-                        </div>
-                      </div>
-                    </div>
-                  </DialogContent>
-                </Dialog>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      className="h-8 w-8"
+                      onClick={() => setFinalizeOpen(true)}
+                    >
+                      <CheckCircle2 className="h-4 w-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>Finalizar</TooltipContent>
+                </Tooltip>
               )}
               
               <Tooltip>
@@ -379,66 +331,15 @@ import { MarkProspectionButton } from "./MarkProspectionButton";
               )}
               {/* Botão Finalizar */}
               {onFinalizeAtendimento && (
-                <Dialog open={finalizeOpen} onOpenChange={setFinalizeOpen}>
-                  <DialogTrigger asChild>
-                    <Button 
-                      variant="ghost"
-                      size="icon"
-                      className="h-8 w-8"
-                      title="Finalizar atendimento"
-                    >
-                      <CheckCircle2 className="h-4 w-4" />
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent className="w-[95vw] max-w-lg mx-auto">
-                    <UIDialogHeader>
-                      <DialogTitle>Mensagem de finalização</DialogTitle>
-                    </UIDialogHeader>
-                    <div className="space-y-3">
-                      <Textarea
-                        rows={6}
-                        value={finalizeMessage}
-                        onChange={(e) => setFinalizeMessage(e.target.value)}
-                      />
-                      <div className="flex flex-col gap-3">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => {
-                            localStorage.setItem("continuum_finalize_template", finalizeMessage);
-                          }}
-                        >
-                          Salvar como padrão
-                        </Button>
-                        <div className="flex flex-col gap-2">
-                          <Button variant="outline" className="w-full" onClick={() => setFinalizeOpen(false)}>Cancelar</Button>
-                          <Button
-                            variant="secondary"
-                            className="w-full"
-                            onClick={() => {
-                              if (onFinalizeAtendimentoSilent) {
-                                onFinalizeAtendimentoSilent();
-                              }
-                              setFinalizeOpen(false);
-                            }}
-                          >
-                            Só finalizar
-                          </Button>
-                          <Button
-                            className="w-full"
-                            onClick={() => {
-                              onFinalizeAtendimento(finalizeMessage);
-                              localStorage.setItem("continuum_finalize_template", finalizeMessage);
-                              setFinalizeOpen(false);
-                            }}
-                          >
-                            Enviar e finalizar
-                          </Button>
-                        </div>
-                      </div>
-                    </div>
-                  </DialogContent>
-                </Dialog>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8"
+                  title="Finalizar atendimento"
+                  onClick={() => setFinalizeOpen(true)}
+                >
+                  <CheckCircle2 className="h-4 w-4" />
+                </Button>
               )}
               {/* Botão Info */}
               <Button 
@@ -532,6 +433,68 @@ import { MarkProspectionButton } from "./MarkProspectionButton";
                 alt={contactName}
                 className="max-w-full max-h-[60vh] object-contain rounded-lg"
               />
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
+
+      {/* Dialog único de finalização (compartilhado entre desktop/mobile) */}
+      {onFinalizeAtendimento && (
+        <Dialog open={finalizeOpen} onOpenChange={setFinalizeOpen}>
+          <DialogContent className="sm:max-w-lg w-[95vw] mx-auto">
+            <UIDialogHeader>
+              <DialogTitle>Mensagem de finalização</DialogTitle>
+            </UIDialogHeader>
+            <div className="space-y-3">
+              <Textarea
+                rows={6}
+                value={finalizeMessage}
+                onChange={(e) => setFinalizeMessage(e.target.value)}
+              />
+              <div className="flex flex-col gap-3">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    localStorage.setItem("continuum_finalize_template", finalizeMessage);
+                    toast.success("Mensagem padrão salva");
+                  }}
+                >
+                  Salvar como padrão
+                </Button>
+                <div className="flex flex-col sm:flex-row gap-2">
+                  <Button
+                    variant="outline"
+                    className="w-full sm:flex-1"
+                    onClick={() => setFinalizeOpen(false)}
+                  >
+                    Cancelar
+                  </Button>
+                  <Button
+                    variant="secondary"
+                    className="w-full sm:flex-1"
+                    onClick={async () => {
+                      setFinalizeOpen(false);
+                      if (onFinalizeAtendimentoSilent) {
+                        await onFinalizeAtendimentoSilent();
+                      }
+                    }}
+                  >
+                    Só finalizar
+                  </Button>
+                  <Button
+                    className="w-full sm:flex-1"
+                    onClick={async () => {
+                      const msg = finalizeMessage;
+                      localStorage.setItem("continuum_finalize_template", msg);
+                      setFinalizeOpen(false);
+                      await onFinalizeAtendimento(msg);
+                    }}
+                  >
+                    Enviar e finalizar
+                  </Button>
+                </div>
+              </div>
             </div>
           </DialogContent>
         </Dialog>
