@@ -668,7 +668,7 @@ export function AgendaModal({ open, onOpenChange, lead, onAgendamentoCriado }: A
             </div>
 
             <div>
-              <Label htmlFor="custo_estimado" className="text-sm">Custo Estimado (R$)</Label>
+              <Label htmlFor="custo_estimado" className="text-sm">{isClinica ? "Valor (R$)" : "Custo Estimado (R$)"}</Label>
               <Input
                 id="custo_estimado"
                 type="number"
@@ -680,6 +680,16 @@ export function AgendaModal({ open, onOpenChange, lead, onAgendamentoCriado }: A
               />
             </div>
           </div>
+
+          <div>
+            <Label htmlFor="descricao" className="text-sm">Descrição</Label>
+            <Input
+              id="descricao"
+              value={formData.descricao}
+              onChange={(e) => setFormData({ ...formData, descricao: e.target.value })}
+              placeholder={isClinica ? "Ex: Consulta de avaliação inicial" : "Ex: Apresentação do produto para cliente"}
+              className="h-9"
+            />
 
           <div>
             <Label htmlFor="descricao" className="text-sm">Descrição</Label>
