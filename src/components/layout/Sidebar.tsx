@@ -182,6 +182,7 @@ export function Sidebar({ collapsed = false, onNavigate }: SidebarProps) {
       if (segmentoLoading) return true;
       if (!isClinica && !isMasterAccount) return false;
     }
+    if (item.hideForClinica && isClinica) return false;
     const isPremiumModule = premiumModules.includes(item.menuKey);
     if (isPremiumModule && !isMasterAccount) {
       return canAccessModule(item.menuKey);
