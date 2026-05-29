@@ -181,19 +181,39 @@ serve(async (req) => {
       );
     }
 
-    let result = await transcribeWithOpenAI(audioBlob, ext, language).catch(async (error) => {
-      console.warn(`[transcrever-audio] gpt-4o-mini-transcribe falhou, tentando whisper-1: ${error?.message || error}`);
-      return await transcribeWithOpenAI(audioBlob, ext, language, 'whisper-1');
-    });
+    let result: { text?: string } = { text: undefined };
+    let openAiFailed = false;
+
+    try {
+      result = await transcribeWithOpenAI(audioBlob, ext, language).catch(async (error) => {
+        const msg = String(error?.message || error);
+        if (msg.includes('insufficient_quota') || msg.includes('429')) throw error;
+        console.warn(`[transcrever-audio] gpt-4o-mini-transcribe falhou, tentando whisper-1: ${msg}`);
+        return await transcribeWithOpenAI(audioBlob, ext, language, 'whisper-1');
+      });
+    } catch (error) {
+      openAiFailed = true;
+      console.warn(`[transcrever-audio] OpenAI indisponível, usando fallback Lovable AI: ${(error as Error)?.message || error}`);
+    }
     let text: string | undefined = result.text;
 
-    if (isInvalidTranscription(text, durationSeconds)) {
-      console.warn(`[transcrever-audio] resultado inválido recebido (${JSON.stringify(text)}), tentando gpt-4o-transcribe`);
+    if (isInvalidTranscription(text, durationSeconds) && !openAiFailed) {
+      console.warn(`[transcrever-audio] resultado inválido (${JSON.stringify(text)}), tentando gpt-4o-transcribe`);
       result = await transcribeWithOpenAI(audioBlob, ext, language, 'gpt-4o-transcribe').catch((error) => {
         console.warn(`[transcrever-audio] gpt-4o-transcribe falhou: ${error?.message || error}`);
+        openAiFailed = true;
         return { text: undefined };
       });
       text = result.text;
+    }
+
+    if (isInvalidTranscription(text, durationSeconds) || openAiFailed) {
+      try {
+        const fallback = await transcribeWithLovableAI(audioBlob, language);
+        if (fallback.text) text = fallback.text;
+      } catch (fallbackError) {
+        console.error(`[transcrever-audio] Fallback Lovable AI falhou: ${(fallbackError as Error)?.message || fallbackError}`);
+      }
     }
 
     if (isInvalidTranscription(text, durationSeconds)) {
