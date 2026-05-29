@@ -1,6 +1,7 @@
 import { RotinaInteligente as RotinaInteligenteComponent } from "@/components/prospeccao/RotinaInteligente";
 import { RotinaClinica } from "@/components/prospeccao/RotinaClinica";
 import { CockpitDoDia } from "@/components/prospeccao/cockpit/CockpitDoDia";
+import { PainelRotinaDia } from "@/components/prospeccao/PainelRotinaDia";
 import { Badge } from "@/components/ui/badge";
 import { Brain, Sparkles, Stethoscope } from "lucide-react";
 import { useCompanySegmento } from "@/hooks/useCompanySegmento";
@@ -27,6 +28,7 @@ export default function RotinaInteligentePage() {
         </Badge>
       </div>
 
+      <PainelRotinaDia />
       <CockpitDoDia />
       {isClinica ? <RotinaClinica /> : <RotinaInteligenteComponent />}
     </div>
