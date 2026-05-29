@@ -4,6 +4,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Trash2, Zap, Star, Snowflake, MailQuestion, Hand, Phone, Mail, MessageCircle, Instagram } from "lucide-react";
 import { useFollowUpEsteira, FollowUpEntry } from "@/hooks/useFollowUpEsteira";
+import { useCompanySegmento } from "@/hooks/useCompanySegmento";
+import { followUpLabel } from "@/lib/clinicaLabels";
 import { ExecutarFollowDialog } from "./ExecutarFollowDialog";
 import { AddToEsteiraDialog } from "./AddToEsteiraDialog";
 
