@@ -28,6 +28,7 @@ type NavItem = {
   masterOnly?: boolean;
   juridicoOnly?: boolean;
   clinicaOnly?: boolean;
+  hideForClinica?: boolean;
   clinicaLabel?: string;
   clinicaHref?: string;
   clinicaIcon?: any;
