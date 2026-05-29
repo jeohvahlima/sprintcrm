@@ -635,7 +635,7 @@ export function AgendaModal({ open, onOpenChange, lead, onAgendamentoCriado }: A
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <Label htmlFor="tipo_servico" className="text-sm">Tipo de Serviço *</Label>
+              <Label htmlFor="tipo_servico" className="text-sm">{isClinica ? "Tipo de Atendimento *" : "Tipo de Serviço *"}</Label>
               <Select
                 value={formData.tipo_servico}
                 onValueChange={(value) => setFormData({ ...formData, tipo_servico: value })}
@@ -645,10 +645,24 @@ export function AgendaModal({ open, onOpenChange, lead, onAgendamentoCriado }: A
                   <SelectValue placeholder="Selecione" />
                 </SelectTrigger>
                 <SelectContent className="!z-[500]">
-                  <SelectItem value="reuniao">Reunião</SelectItem>
-                  <SelectItem value="apresentacao">Apresentação</SelectItem>
-                  <SelectItem value="visita">Visita</SelectItem>
-                  <SelectItem value="outro">Outro</SelectItem>
+                  {isClinica ? (
+                    <>
+                      <SelectItem value="consulta">Consulta</SelectItem>
+                      <SelectItem value="retorno">Retorno</SelectItem>
+                      <SelectItem value="procedimento">Procedimento</SelectItem>
+                      <SelectItem value="exame">Exame</SelectItem>
+                      <SelectItem value="cirurgia">Cirurgia</SelectItem>
+                      <SelectItem value="avaliacao">Avaliação</SelectItem>
+                      <SelectItem value="outro">Outro</SelectItem>
+                    </>
+                  ) : (
+                    <>
+                      <SelectItem value="reuniao">Reunião</SelectItem>
+                      <SelectItem value="apresentacao">Apresentação</SelectItem>
+                      <SelectItem value="visita">Visita</SelectItem>
+                      <SelectItem value="outro">Outro</SelectItem>
+                    </>
+                  )}
                 </SelectContent>
               </Select>
             </div>
