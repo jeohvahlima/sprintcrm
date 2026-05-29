@@ -85,6 +85,7 @@ function EntryCard({ entry, onExecute, onRemove }: { entry: FollowUpEntry; onExe
 
 export function EsteiraFollowUp() {
   const { entries, cadence, isLoading, executeFollow, removeEntry } = useFollowUpEsteira();
+  const { isClinica } = useCompanySegmento();
   const [executingEntry, setExecutingEntry] = useState<FollowUpEntry | null>(null);
 
   const overdueEntries = useMemo(
