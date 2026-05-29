@@ -28,6 +28,7 @@ interface AgendaModalProps {
 
 export function AgendaModal({ open, onOpenChange, lead, onAgendamentoCriado }: AgendaModalProps) {
   const [loading, setLoading] = useState(false);
+  const { isClinica } = useCompanySegmento();
   const [horarioComercial, setHorarioComercial] = useState<HorarioComercial>(criarHorarioPadrao());
   const [compromissosExistentes, setCompromissosExistentes] = useState<any[]>([]);
   const [agendaSelecionada, setAgendaSelecionada] = useState<any>(null);
