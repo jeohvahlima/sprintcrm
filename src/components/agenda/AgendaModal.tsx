@@ -13,6 +13,7 @@ import { ptBR } from "date-fns/locale";
 import { HorarioSeletor } from "./HorarioSeletor";
 import { HorarioComercial, criarHorarioPadrao } from "./HorarioComercialConfig";
 import { ProfissionalSelector } from "./ProfissionalSelector";
+import { useCompanySegmento } from "@/hooks/useCompanySegmento";
 
 interface AgendaModalProps {
   open: boolean;
