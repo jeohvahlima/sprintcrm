@@ -98,12 +98,14 @@ export function PainelRotinaDia() {
     return tasksHoje.filter(t => classify(t) === filtro);
   }, [tasksHoje, filtro]);
 
-  const grupos: { key: Bucket; titulo: string; itens: TaskRow[] }[] = [
-    { key: "urgent",  titulo: "Obrigações · prazo crítico", itens: filtradas.filter(t => classify(t) === "urgent") },
-    { key: "late",    titulo: "Atrasadas · ação imediata",  itens: filtradas.filter(t => classify(t) === "late") },
-    { key: "pending", titulo: "Pendentes · hoje",            itens: filtradas.filter(t => classify(t) === "pending") },
-    { key: "done",    titulo: "Concluídas hoje",             itens: filtradas.filter(t => classify(t) === "done") },
-  ].filter(g => g.itens.length > 0);
+  const grupos: { key: Bucket; titulo: string; itens: TaskRow[] }[] = (
+    [
+      { key: "urgent",  titulo: "Obrigações · prazo crítico", itens: filtradas.filter(t => classify(t) === "urgent") },
+      { key: "late",    titulo: "Atrasadas · ação imediata",  itens: filtradas.filter(t => classify(t) === "late") },
+      { key: "pending", titulo: "Pendentes · hoje",            itens: filtradas.filter(t => classify(t) === "pending") },
+      { key: "done",    titulo: "Concluídas hoje",             itens: filtradas.filter(t => classify(t) === "done") },
+    ] as { key: Bucket; titulo: string; itens: TaskRow[] }[]
+  ).filter(g => g.itens.length > 0);
 
   const toggleDone = async (t: TaskRow) => {
     const novo: Status = t.status === "concluida" ? "pendente" : "concluida";
