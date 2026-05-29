@@ -13,6 +13,7 @@ import { Dialog, DialogContent, DialogHeader as UIDialogHeader, DialogTitle, Dia
 import { Textarea } from "@/components/ui/textarea";
 import { useEffect, useState } from "react";
 import { MarkProspectionButton } from "./MarkProspectionButton";
+import { toast } from "sonner";
 
  type SyncStatus = 'synced' | 'syncing' | 'error' | 'idle';
  type OnlineStatus = 'online' | 'offline' | 'unknown';
