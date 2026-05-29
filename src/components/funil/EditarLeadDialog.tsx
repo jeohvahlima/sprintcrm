@@ -13,6 +13,8 @@ import { useTagsManager } from "@/hooks/useTagsManager";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { LeadAttachments } from "@/components/leads/LeadAttachments";
+import { PacienteProntuarioSection } from "@/components/leads/PacienteProntuarioSection";
+import { useCompanySegmento } from "@/hooks/useCompanySegmento";
 
 interface EditarLeadDialogProps {
   lead: {

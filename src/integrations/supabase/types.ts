@@ -5684,10 +5684,15 @@ export type Database = {
           next_action: string | null
           next_action_at: string | null
           notes: string | null
+          nps_collected_at: string | null
+          nps_comment: string | null
+          nps_score: number | null
+          observacoes_clinicas: string | null
           owner_id: string | null
           phone: string | null
           priority_score: number | null
           probability: number | null
+          procedimentos: Json
           produto_id: string | null
           profile_picture_url: string | null
           prospecting_priority: number
@@ -5759,10 +5764,15 @@ export type Database = {
           next_action?: string | null
           next_action_at?: string | null
           notes?: string | null
+          nps_collected_at?: string | null
+          nps_comment?: string | null
+          nps_score?: number | null
+          observacoes_clinicas?: string | null
           owner_id?: string | null
           phone?: string | null
           priority_score?: number | null
           probability?: number | null
+          procedimentos?: Json
           produto_id?: string | null
           profile_picture_url?: string | null
           prospecting_priority?: number
@@ -5834,10 +5844,15 @@ export type Database = {
           next_action?: string | null
           next_action_at?: string | null
           notes?: string | null
+          nps_collected_at?: string | null
+          nps_comment?: string | null
+          nps_score?: number | null
+          observacoes_clinicas?: string | null
           owner_id?: string | null
           phone?: string | null
           priority_score?: number | null
           probability?: number | null
+          procedimentos?: Json
           produto_id?: string | null
           profile_picture_url?: string | null
           prospecting_priority?: number
