@@ -116,7 +116,7 @@ export function EsteiraFollowUp() {
       <CardHeader className="flex flex-row items-center justify-between">
         <div>
           <CardTitle className="flex items-center gap-2">
-            <Zap className="h-5 w-5 text-primary" /> Esteira de Follow-up
+            <Zap className="h-5 w-5 text-primary" /> Esteira de {followUpLabel(isClinica)}
           </CardTitle>
           <p className="text-sm text-muted-foreground mt-1">
             Cadência: {cadence.map((c) => `F${c.step_number} D+${c.days_offset}`).join(" → ")}
