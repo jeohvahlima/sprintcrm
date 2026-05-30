@@ -64,7 +64,7 @@ const DATA = {
 const BRL = (v: number) => "R$ " + v.toLocaleString("pt-BR");
 
 /* ─────────────────────────── COMPONENT ─────────────────────────── */
-export default function Analytics() {
+export default function GrowSalesBI() {
   const [range, setRange] = useState<"7d" | "30d" | "90d" | "ytd">("30d");
   const [spin, setSpin] = useState(false);
 
