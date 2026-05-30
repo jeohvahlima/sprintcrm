@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 export type BIRange = "7d" | "30d" | "90d" | "ytd";
 
-const rangeToDate = (r: BIRange): Date => {
+export const rangeToDate = (r: BIRange): Date => {
   const d = new Date();
   if (r === "7d") d.setDate(d.getDate() - 7);
   else if (r === "30d") d.setDate(d.getDate() - 30);
