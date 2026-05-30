@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 
 const brl = (value: number) =>
   `R$ ${value.toLocaleString("pt-BR", { maximumFractionDigits: 0 })}`;
@@ -70,7 +70,7 @@ function SectionHeader({ icon, title, tag, tone }: { icon: string; title: string
   );
 }
 
-function ReportCard({ children, className = "" }: { children: React.ReactNode; className?: string }) {
+function ReportCard({ children, className = "" }: { children: ReactNode; className?: string }) {
   return <div className={`overflow-hidden rounded-2xl border border-slate-800/90 bg-[#0d1117] ${className}`}>{children}</div>;
 }
 
