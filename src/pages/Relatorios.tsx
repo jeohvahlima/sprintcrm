@@ -280,8 +280,8 @@ export default function Relatorios() {
   const rangeLabel = useMemo(() => ({ "7d": "Últimos 7 dias", "30d": "Mai/2026", "90d": "Últimos 90 dias", ytd: "Ano atual" }[range]), [range]);
 
   return (
-    <div className="-m-6 min-h-screen bg-[#0b0f14] font-[Sora,system-ui,sans-serif] text-slate-200">
-      <div className="sticky top-0 z-30 flex flex-wrap items-center justify-between gap-4 border-b border-slate-800/90 bg-[#0d1117] px-7 py-3">
+    <div className="min-h-full rounded-2xl bg-[#0b0f14] font-[Sora,system-ui,sans-serif] text-slate-200 overflow-hidden">
+      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-800/90 bg-[#0d1117] px-7 py-3">
         <div className="flex items-center gap-3">
           <div>
             <h1 className="text-lg font-black tracking-normal text-slate-100">📊 Relatórios <span className="text-emerald-400">Comerciais</span> <span className="rounded-full bg-emerald-500 px-2 py-1 text-[0.55rem] font-black uppercase tracking-widest text-white">Novo</span></h1>
