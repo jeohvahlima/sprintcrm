@@ -1,0 +1,1403 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Call Center — GrowSOS</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@400;500;600;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+<style>
+:root {
+  --bg: #0a0c0f;
+  --surface: #111318;
+  --surface2: #181c23;
+  --surface3: #1e2330;
+  --border: rgba(255,255,255,0.06);
+  --border2: rgba(255,255,255,0.12);
+  --accent: #00e5a0;
+  --accent-dim: rgba(0,229,160,0.12);
+  --accent-glow: rgba(0,229,160,0.25);
+  --red: #ff4757;
+  --red-dim: rgba(255,71,87,0.12);
+  --amber: #ffb830;
+  --amber-dim: rgba(255,184,48,0.12);
+  --blue: #3b82f6;
+  --blue-dim: rgba(59,130,246,0.12);
+  --text: #e8eaf0;
+  --text2: #7e8699;
+  --text3: #4a5168;
+  --radius: 14px;
+  --radius-sm: 8px;
+  --font-display: 'Syne', sans-serif;
+  --font-mono: 'DM Mono', monospace;
+  --font-body: 'DM Sans', sans-serif;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: 14px;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* grid noise texture overlay */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(255,255,255,.015) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,.015) 1px, transparent 1px);
+  background-size: 32px 32px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.app { position: relative; z-index: 1; display: flex; height: 100vh; }
+
+/* ───────── Sidebar ───────── */
+.sidebar {
+  width: 64px;
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px 0;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.logo {
+  width: 36px; height: 36px;
+  background: var(--accent);
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  margin-bottom: 16px;
+}
+.logo svg { width:18px; height:18px; color:#000; }
+
+.nav-btn {
+  width: 40px; height: 40px;
+  border-radius: 10px;
+  border: none;
+  background: transparent;
+  color: var(--text3);
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: all .2s;
+  position: relative;
+}
+.nav-btn:hover { background: var(--surface2); color: var(--text); }
+.nav-btn.active { background: var(--accent-dim); color: var(--accent); }
+.nav-btn svg { width:18px; height:18px; }
+.nav-badge {
+  position: absolute; top:6px; right:6px;
+  width:7px; height:7px; border-radius:50%;
+  background: var(--red); border: 1.5px solid var(--bg);
+}
+
+/* ───────── Main ───────── */
+.main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+
+/* ───────── Top Bar ───────── */
+.topbar {
+  height: 60px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  padding: 0 28px;
+  gap: 16px;
+  flex-shrink: 0;
+}
+.topbar-title {
+  font-family: var(--font-display);
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: -.02em;
+  flex: 1;
+  display: flex; align-items: center; gap: 10px;
+}
+.status-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 8px var(--accent);
+  animation: pulse 2s infinite;
+}
+@keyframes pulse {
+  0%,100% { box-shadow: 0 0 6px var(--accent); }
+  50% { box-shadow: 0 0 14px var(--accent), 0 0 28px var(--accent-glow); }
+}
+.status-dot.idle { background: var(--text3); box-shadow: none; animation: none; }
+.status-dot.calling { background: var(--amber); box-shadow: 0 0 8px var(--amber); animation: pulse-amber 1s infinite; }
+@keyframes pulse-amber { 0%,100%{box-shadow:0 0 6px var(--amber)} 50%{box-shadow:0 0 16px var(--amber)} }
+
+.chip {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  padding: 4px 10px;
+  border-radius: 20px;
+  border: 1px solid var(--border2);
+  color: var(--text2);
+  background: var(--surface2);
+  display: flex; align-items: center; gap: 5px;
+}
+.chip.ok { border-color: rgba(0,229,160,.3); color: var(--accent); background: var(--accent-dim); }
+.chip.err { border-color: rgba(255,71,87,.3); color: var(--red); background: var(--red-dim); }
+.chip.ringing { border-color: rgba(255,184,48,.3); color: var(--amber); background: var(--amber-dim); }
+
+.toggle-wrap { display:flex; align-items:center; gap:8px; }
+.toggle-label { font-size:12px; color: var(--text2); }
+.toggle {
+  width:36px; height:20px; border-radius:10px;
+  background: var(--surface3); border:1px solid var(--border2);
+  cursor:pointer; position:relative; transition: background .2s;
+}
+.toggle.on { background: var(--accent); border-color: var(--accent); }
+.toggle::after {
+  content:''; position:absolute; top:2px; left:2px;
+  width:14px; height:14px; border-radius:50%;
+  background:#fff; transition: left .2s;
+}
+.toggle.on::after { left:18px; }
+
+/* ───────── Tab Bar ───────── */
+.tabbar {
+  display: flex;
+  gap: 2px;
+  padding: 12px 28px 0;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.tab-btn {
+  padding: 8px 16px;
+  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+  border: 1px solid transparent;
+  border-bottom: none;
+  background: transparent;
+  color: var(--text3);
+  font-family: var(--font-body);
+  font-size: 13px;
+  cursor: pointer;
+  display: flex; align-items: center; gap: 6px;
+  transition: all .2s;
+  white-space: nowrap;
+  margin-bottom: -1px;
+}
+.tab-btn:hover { color: var(--text2); background: var(--surface2); }
+.tab-btn.active {
+  color: var(--text);
+  background: var(--surface);
+  border-color: var(--border);
+  border-bottom-color: var(--surface);
+}
+.tab-btn svg { width:14px; height:14px; }
+
+/* ───────── Content Area ───────── */
+.content { flex:1; overflow-y:auto; padding:28px; }
+.tab-panel { display:none; }
+.tab-panel.active { display:block; }
+
+/* ───────── FAZER LIGAÇÃO ───────── */
+.call-grid { display:grid; grid-template-columns: 320px 1fr 1fr; gap:20px; align-items:start; }
+
+/* Dialer */
+.dialer {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+.dialer-header {
+  padding: 20px 20px 16px;
+  border-bottom: 1px solid var(--border);
+}
+.dialer-header h3 {
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text2);
+  text-transform: uppercase;
+  letter-spacing: .08em;
+}
+
+.dialer-display {
+  padding: 20px;
+  text-align: center;
+  min-height: 80px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+}
+.dialer-number {
+  font-family: var(--font-mono);
+  font-size: 26px;
+  font-weight: 500;
+  letter-spacing: .06em;
+  color: var(--text);
+  min-height: 36px;
+  transition: all .1s;
+}
+.dialer-name {
+  font-size: 12px;
+  color: var(--accent);
+  margin-top: 4px;
+  min-height: 16px;
+}
+
+.keypad {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  padding: 0 20px 16px;
+}
+.key {
+  height: 52px;
+  border-radius: 10px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  transition: all .12s;
+  user-select: none;
+}
+.key:hover { background: var(--surface3); border-color: var(--border2); }
+.key:active { transform: scale(.94); }
+.key-num {
+  font-family: var(--font-mono);
+  font-size: 18px;
+  font-weight: 500;
+  line-height: 1;
+}
+.key-sub {
+  font-size: 8px;
+  letter-spacing: .15em;
+  color: var(--text3);
+  margin-top: 2px;
+}
+
+.dialer-actions {
+  padding: 0 20px 20px;
+  display: flex;
+  gap: 8px;
+}
+.btn-call {
+  flex: 1; height: 52px;
+  border-radius: 12px;
+  background: var(--accent);
+  border: none;
+  color: #000;
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+  transition: all .2s;
+  box-shadow: 0 4px 20px var(--accent-glow);
+}
+.btn-call:hover { transform: translateY(-1px); box-shadow: 0 6px 28px var(--accent-glow); }
+.btn-call:active { transform: scale(.97); }
+.btn-call.calling { background: var(--red); box-shadow: 0 4px 20px rgba(255,71,87,.3); }
+.btn-call svg { width:18px; height:18px; }
+
+.btn-del {
+  width: 52px; height: 52px;
+  border-radius: 12px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  color: var(--text2);
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: all .15s;
+}
+.btn-del:hover { background: var(--surface3); color: var(--text); }
+.btn-del svg { width:16px; height:16px; }
+
+.btn-contacts {
+  width: 100%; padding: 12px;
+  background: transparent;
+  border: 1px dashed var(--border2);
+  border-radius: 10px;
+  color: var(--text2);
+  font-size: 13px;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+  transition: all .2s;
+  margin: 0 20px 20px;
+  width: calc(100% - 40px);
+}
+.btn-contacts:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-dim); }
+.btn-contacts svg { width:14px; height:14px; }
+
+/* active call overlay */
+.active-call {
+  display: none;
+  padding: 20px;
+  text-align: center;
+  border-top: 1px solid var(--border);
+}
+.active-call.show { display:block; }
+.call-timer {
+  font-family: var(--font-mono);
+  font-size: 28px;
+  color: var(--accent);
+  margin: 8px 0 4px;
+}
+.call-to { font-size: 13px; color: var(--text2); }
+.call-controls { display: flex; justify-content: center; gap: 10px; margin-top: 14px; }
+.cc-btn {
+  width:44px; height:44px; border-radius:50%;
+  background: var(--surface2); border: 1px solid var(--border);
+  color: var(--text2); cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  transition: all .15s;
+}
+.cc-btn:hover { background:var(--surface3); color:var(--text); }
+.cc-btn.active { background:var(--blue-dim); border-color:rgba(59,130,246,.3); color:var(--blue); }
+.cc-btn svg { width:16px;height:16px; }
+
+/* ───────── Stats Card ───────── */
+.stat-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 24px;
+}
+.stat-card h3 {
+  font-family: var(--font-display);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text3);
+  text-transform: uppercase;
+  letter-spacing: .1em;
+  margin-bottom: 20px;
+}
+.stat-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+}
+.stat-row:last-child { border-bottom: none; }
+.stat-label { color: var(--text2); font-size: 13px; }
+.stat-val {
+  font-family: var(--font-mono);
+  font-size: 22px;
+  font-weight: 500;
+  color: var(--text);
+}
+.stat-val.green { color: var(--accent); }
+.stat-val.amber { color: var(--amber); }
+
+/* ───────── How-it-works Card ───────── */
+.how-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 24px;
+}
+.how-card h3 {
+  font-family: var(--font-display);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text3);
+  text-transform: uppercase;
+  letter-spacing: .1em;
+  margin-bottom: 20px;
+}
+.step { display:flex; gap:12px; margin-bottom:14px; align-items:flex-start; }
+.step:last-child { margin-bottom: 0; }
+.step-num {
+  width:22px; height:22px; border-radius:6px;
+  background: var(--accent-dim); border:1px solid rgba(0,229,160,.2);
+  color: var(--accent); font-family:var(--font-mono); font-size:11px;
+  display:flex;align-items:center;justify-content:center;
+  flex-shrink:0; margin-top:1px;
+}
+.step p { font-size:13px; color:var(--text2); line-height:1.5; }
+
+/* ───────── Connection Banner ───────── */
+.conn-banner {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 20px;
+}
+.conn-icon {
+  width:40px;height:40px;border-radius:10px;
+  background:var(--accent-dim);
+  display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;
+}
+.conn-icon svg { width:18px;height:18px;color:var(--accent); }
+.conn-info { flex:1; }
+.conn-title { font-size:13px; font-weight:500; color:var(--text); }
+.conn-sub { font-size:11px; color:var(--text2); font-family:var(--font-mono); margin-top:2px; }
+.conn-btn {
+  padding:8px 16px; border-radius:8px;
+  background:var(--accent); border:none;
+  color:#000; font-size:12px; font-weight:600;
+  cursor:pointer; transition:all .15s;
+}
+.conn-btn:hover { opacity:.9; }
+.conn-btn.secondary { background:var(--surface2); border:1px solid var(--border2); color:var(--text2); }
+.conn-btn.secondary:hover { color:var(--text); border-color:var(--border); }
+
+/* ───────── History ───────── */
+.history-header {
+  display:flex; align-items:center; justify-content:space-between;
+  margin-bottom:20px;
+}
+.history-header h2 {
+  font-family:var(--font-display); font-size:15px; font-weight:600;
+}
+.btn-refresh {
+  padding:7px 14px; border-radius:8px;
+  background:var(--surface2); border:1px solid var(--border);
+  color:var(--text2); font-size:12px; cursor:pointer;
+  display:flex;align-items:center;gap:5px; transition:all .15s;
+}
+.btn-refresh:hover { border-color:var(--border2); color:var(--text); }
+.btn-refresh svg { width:13px;height:13px; }
+
+.history-table { width:100%; border-collapse:collapse; }
+.history-table th {
+  text-align:left; padding:8px 12px;
+  font-size:11px; font-weight:500; color:var(--text3);
+  letter-spacing:.08em; text-transform:uppercase;
+  border-bottom:1px solid var(--border);
+}
+.history-table td {
+  padding:12px 12px;
+  border-bottom:1px solid var(--border);
+  font-size:13px; color:var(--text2);
+  vertical-align:middle;
+}
+.history-table tr:last-child td { border-bottom:none; }
+.history-table tr:hover td { background:var(--surface2); }
+.result-pill {
+  display:inline-flex;align-items:center;gap:5px;
+  font-size:11px; padding:3px 9px; border-radius:20px;
+  font-family:var(--font-mono);
+}
+.result-pill.atendida { background:var(--accent-dim); color:var(--accent); }
+.result-pill.nao-atendida { background:var(--red-dim); color:var(--red); }
+.result-pill.ocupado { background:var(--amber-dim); color:var(--amber); }
+.call-btn-sm {
+  padding:5px 10px; border-radius:6px;
+  background:transparent; border:1px solid var(--border);
+  color:var(--text3); font-size:11px; cursor:pointer;
+  display:inline-flex;align-items:center;gap:4px;
+  transition:all .15s;
+}
+.call-btn-sm:hover { border-color:var(--accent); color:var(--accent); background:var(--accent-dim); }
+.call-btn-sm svg { width:11px;height:11px; }
+
+/* ───────── SDR Panel ───────── */
+.sdr-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:24px; }
+.sdr-metric {
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  padding:20px;
+}
+.sdr-metric-label { font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px; }
+.sdr-metric-val { font-family:var(--font-mono);font-size:30px;font-weight:500;color:var(--text); }
+.sdr-metric-delta { font-size:11px;margin-top:4px; }
+.sdr-metric-delta.up { color:var(--accent); }
+.sdr-metric-delta.dn { color:var(--red); }
+
+.bar-chart { margin-top:4px; }
+.bar-row { display:flex;align-items:center;gap:10px;margin-bottom:8px; }
+.bar-row-label { font-size:12px;color:var(--text2);width:70px;flex-shrink:0; }
+.bar-track { flex:1;height:6px;background:var(--surface3);border-radius:3px;overflow:hidden; }
+.bar-fill { height:100%;border-radius:3px;background:var(--accent);transition:width .6s cubic-bezier(.4,0,.2,1); }
+.bar-fill.red { background:var(--red); }
+.bar-fill.amber { background:var(--amber); }
+.bar-val { font-family:var(--font-mono);font-size:11px;color:var(--text2);width:24px;text-align:right; }
+
+/* ───────── Config Panel ───────── */
+.config-grid { display:grid; grid-template-columns:1fr 1fr; gap:20px; }
+.config-card {
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  padding:24px;
+}
+.config-card h3 {
+  font-family:var(--font-display);
+  font-size:13px;font-weight:600;color:var(--text);
+  margin-bottom:20px;
+  display:flex;align-items:center;gap:8px;
+}
+.config-card h3 svg { width:16px;height:16px;color:var(--accent); }
+.field { margin-bottom:16px; }
+.field label { font-size:11px;color:var(--text3);display:block;margin-bottom:6px;letter-spacing:.04em; }
+.field input {
+  width:100%;padding:10px 12px;
+  background:var(--surface2);
+  border:1px solid var(--border);
+  border-radius:8px;
+  color:var(--text);
+  font-family:var(--font-mono);
+  font-size:13px;
+  outline:none; transition: border-color .15s;
+}
+.field input:focus { border-color: rgba(0,229,160,.4); }
+.field input::placeholder { color:var(--text3); }
+.btn-save {
+  padding:10px 20px;border-radius:8px;
+  background:var(--accent);border:none;
+  color:#000;font-size:13px;font-weight:600;
+  cursor:pointer;transition:all .15s;width:100%;
+  font-family:var(--font-display);
+}
+.btn-save:hover { opacity:.9; }
+
+/* ───────── Incoming call overlay ───────── */
+.incoming-overlay {
+  position: fixed;
+  bottom: 28px; right: 28px;
+  background: var(--surface);
+  border: 1px solid rgba(0,229,160,.3);
+  border-radius: var(--radius);
+  padding: 20px;
+  width: 280px;
+  box-shadow: 0 20px 60px rgba(0,0,0,.6), 0 0 40px var(--accent-glow);
+  z-index: 1000;
+  display: none;
+  animation: slideIn .25s ease;
+}
+.incoming-overlay.show { display:block; }
+@keyframes slideIn { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
+.incoming-ring {
+  display:flex;align-items:center;gap:6px;
+  font-size:11px;color:var(--accent);font-family:var(--font-mono);
+  margin-bottom:12px; text-transform:uppercase; letter-spacing:.08em;
+}
+.ring-dot { width:7px;height:7px;border-radius:50%;background:var(--accent);animation:pulse 1s infinite; }
+.incoming-name { font-family:var(--font-display);font-size:17px;font-weight:600;color:var(--text); }
+.incoming-num { font-family:var(--font-mono);font-size:13px;color:var(--text2);margin-top:2px; }
+.incoming-actions { display:flex;gap:8px;margin-top:16px; }
+.btn-answer {
+  flex:1;padding:11px;border-radius:10px;
+  background:var(--accent);border:none;
+  color:#000;font-weight:700;font-size:13px;
+  cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;
+  transition:all .15s;
+}
+.btn-answer:hover { transform:scale(1.02); }
+.btn-answer svg { width:15px;height:15px; }
+.btn-reject {
+  flex:1;padding:11px;border-radius:10px;
+  background:var(--red-dim);border:1px solid rgba(255,71,87,.2);
+  color:var(--red);font-weight:600;font-size:13px;
+  cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;
+  transition:all .15s;
+}
+.btn-reject:hover { background:rgba(255,71,87,.2); }
+.btn-reject svg { width:15px;height:15px; }
+
+/* scrollbar */
+::-webkit-scrollbar { width:5px; }
+::-webkit-scrollbar-track { background:transparent; }
+::-webkit-scrollbar-thumb { background:var(--surface3); border-radius:3px; }
+
+/* responsive tablet */
+@media(max-width:900px){
+  .call-grid{grid-template-columns:1fr}
+  .sdr-grid{grid-template-columns:1fr 1fr}
+  .config-grid{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<div class="app">
+
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="logo">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 014.36 12 19.79 19.79 0 011.32 3.58 2 2 0 013.28 1.4h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L7.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16.92z"/></svg>
+    </div>
+    <button class="nav-btn active" onclick="switchTab('fazer-ligacao')" title="Fazer Ligação">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 014.36 12 19.79 19.79 0 011.32 3.58 2 2 0 013.28 1.4h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L7.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16.92z"/></svg>
+    </button>
+    <button class="nav-btn" onclick="switchTab('historico')" title="Histórico">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      <span class="nav-badge"></span>
+    </button>
+    <button class="nav-btn" onclick="switchTab('painel-sdr')" title="Painel SDR">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+    </button>
+    <button class="nav-btn" onclick="switchTab('meus-numeros')" title="Meus Números">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12" y2="18"/></svg>
+    </button>
+    <button class="nav-btn" onclick="switchTab('conta-nvoip')" title="Conta Telefônica">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+    </button>
+  </aside>
+
+  <!-- Main -->
+  <div class="main">
+
+    <!-- Top Bar -->
+    <header class="topbar">
+      <div class="topbar-title">
+        <span id="statusDot" class="status-dot idle"></span>
+        Call Center
+      </div>
+      <span id="sipStatus" class="chip err">
+        <svg width="8" height="8" viewBox="0 0 8 8"><circle cx="4" cy="4" r="3" fill="currentColor"/></svg>
+        Desconectado
+      </span>
+      <span class="chip" style="font-size:10px">wss://app.nvoip.com.br:7443</span>
+      <div class="toggle-wrap">
+        <div id="floatToggle" class="toggle" onclick="toggleFloat()" title="Webphone flutuante"></div>
+        <span class="toggle-label">Flutuante</span>
+      </div>
+    </header>
+
+    <!-- Tab Bar -->
+    <nav class="tabbar">
+      <button id="tab-fazer-ligacao" class="tab-btn active" onclick="switchTab('fazer-ligacao')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 014.36 12 19.79 19.79 0 011.32 3.58 2 2 0 013.28 1.4h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L7.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16.92z"/></svg>
+        Fazer Ligação
+      </button>
+      <button id="tab-historico" class="tab-btn" onclick="switchTab('historico')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        Histórico
+      </button>
+      <button id="tab-painel-sdr" class="tab-btn" onclick="switchTab('painel-sdr')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+        Painel SDR
+      </button>
+      <button id="tab-especializacao" class="tab-btn" onclick="switchTab('especializacao')">
+        ✨ Especialização SDR
+      </button>
+      <button id="tab-meus-numeros" class="tab-btn" onclick="switchTab('meus-numeros')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12" y2="18"/></svg>
+        Meus Números
+      </button>
+      <button id="tab-conta-nvoip" class="tab-btn" onclick="switchTab('conta-nvoip')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+        Conta Telefônica
+      </button>
+    </nav>
+
+    <!-- Content -->
+    <main class="content">
+
+      <!-- ── FAZER LIGAÇÃO ── -->
+      <div id="panel-fazer-ligacao" class="tab-panel active">
+
+        <!-- Connection Banner -->
+        <div class="conn-banner" id="connBanner">
+          <div class="conn-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8.56 2.9A7 7 0 0119 9v4"/><path d="M1 1l22 22"/><path d="M16.72 11.06A10.94 10.94 0 0119 12.55"/><path d="M5 12.55a10.94 10.94 0 015.17-2.39"/><path d="M10.71 5.05A16 16 0 0122.56 9"/><path d="M1.42 9a15.91 15.91 0 014.7-2.88"/><path d="M8.53 16.11a6 6 0 016.95 0"/><line x1="12" y1="20" x2="12" y2="20"/></svg>
+          </div>
+          <div class="conn-info">
+            <div class="conn-title">Conectar ao servidor NVOIP</div>
+            <div class="conn-sub" id="connSubtext">Configure suas credenciais SIP para ativar as ligações via navegador</div>
+          </div>
+          <button class="conn-btn" onclick="connectSIP()">Conectar</button>
+          <button class="conn-btn secondary" onclick="switchTab('conta-nvoip')">Configurar</button>
+        </div>
+
+        <div class="call-grid">
+          <!-- Dialer -->
+          <div class="dialer">
+            <div class="dialer-header">
+              <h3>Discador</h3>
+            </div>
+            <div class="dialer-display">
+              <div class="dialer-number" id="dialDisplay">_</div>
+              <div class="dialer-name" id="dialName"></div>
+            </div>
+
+            <!-- Active call view (hidden until call starts) -->
+            <div id="activeCallPanel" class="active-call">
+              <div class="call-to" id="activeCallName">—</div>
+              <div class="call-timer" id="callTimer">00:00</div>
+              <div class="call-controls">
+                <button class="cc-btn" id="btnMute" onclick="toggleMute()" title="Mudo">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="1" y1="1" x2="23" y2="23"/><path d="M9 9v3a3 3 0 005.12 2.12M15 9.34V4a3 3 0 00-5.94-.6"/><path d="M17 16.95A7 7 0 015 12v-2m14 0v2a7 7 0 01-.11 1.23"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+                </button>
+                <button class="cc-btn" id="btnHold" onclick="toggleHold()" title="Aguardar">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+                </button>
+                <button class="cc-btn" id="btnKeypad" onclick="toggleKeypadDial()" title="Teclado DTMF">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="4" height="4" rx="1"/><rect x="10" y="3" width="4" height="4" rx="1"/><rect x="17" y="3" width="4" height="4" rx="1"/><rect x="3" y="10" width="4" height="4" rx="1"/><rect x="10" y="10" width="4" height="4" rx="1"/><rect x="17" y="10" width="4" height="4" rx="1"/><rect x="10" y="17" width="4" height="4" rx="1"/></svg>
+                </button>
+              </div>
+            </div>
+
+            <div class="keypad" id="keypadGrid">
+              <button class="key" onclick="pressKey('1')"><span class="key-num">1</span></button>
+              <button class="key" onclick="pressKey('2')"><span class="key-num">2</span><span class="key-sub">ABC</span></button>
+              <button class="key" onclick="pressKey('3')"><span class="key-num">3</span><span class="key-sub">DEF</span></button>
+              <button class="key" onclick="pressKey('4')"><span class="key-num">4</span><span class="key-sub">GHI</span></button>
+              <button class="key" onclick="pressKey('5')"><span class="key-num">5</span><span class="key-sub">JKL</span></button>
+              <button class="key" onclick="pressKey('6')"><span class="key-num">6</span><span class="key-sub">MNO</span></button>
+              <button class="key" onclick="pressKey('7')"><span class="key-num">7</span><span class="key-sub">PQRS</span></button>
+              <button class="key" onclick="pressKey('8')"><span class="key-num">8</span><span class="key-sub">TUV</span></button>
+              <button class="key" onclick="pressKey('9')"><span class="key-num">9</span><span class="key-sub">WXYZ</span></button>
+              <button class="key" onclick="pressKey('*')"><span class="key-num" style="font-size:22px">*</span></button>
+              <button class="key" onclick="pressKey('0')"><span class="key-num">0</span><span class="key-sub">+</span></button>
+              <button class="key" onclick="pressKey('#')"><span class="key-num">#</span></button>
+            </div>
+
+            <div class="dialer-actions">
+              <button id="callBtn" class="btn-call" onclick="handleCall()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 014.36 12 19.79 19.79 0 011.32 3.58 2 2 0 013.28 1.4h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L7.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16.92z"/></svg>
+                Ligar
+              </button>
+              <button class="btn-del" onclick="deleteLast()" title="Apagar">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 4H8l-7 8 7 8h13a2 2 0 002-2V6a2 2 0 00-2-2z"/><line x1="18" y1="9" x2="12" y2="15"/><line x1="12" y1="9" x2="18" y2="15"/></svg>
+              </button>
+            </div>
+
+            <button class="btn-contacts" onclick="openContacts()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+              Ligar para Lead / Contato
+            </button>
+          </div>
+
+          <!-- Resumo de Hoje -->
+          <div class="stat-card">
+            <h3>Resumo de Hoje</h3>
+            <div class="stat-row">
+              <span class="stat-label">Ligações realizadas</span>
+              <span class="stat-val" id="statTotal">0</span>
+            </div>
+            <div class="stat-row">
+              <span class="stat-label">Atendidas</span>
+              <span class="stat-val green" id="statAnswered">0</span>
+            </div>
+            <div class="stat-row">
+              <span class="stat-label">Não atendidas</span>
+              <span class="stat-val amber" id="statMissed">0</span>
+            </div>
+            <div class="stat-row">
+              <span class="stat-label">Pendentes de anotação</span>
+              <span class="stat-val amber" id="statPending">0</span>
+            </div>
+          </div>
+
+          <!-- Como funciona -->
+          <div class="how-card">
+            <h3>Como funciona</h3>
+            <div class="step">
+              <div class="step-num">1</div>
+              <p>Configure suas credenciais SIP na aba <strong style="color:var(--text)">Conta Telefônica</strong></p>
+            </div>
+            <div class="step">
+              <div class="step-num">2</div>
+              <p>Clique em <strong style="color:var(--text)">Conectar</strong> — o registro SIP ocorre via <span style="font-family:var(--font-mono);font-size:11px">wss://app.nvoip.com.br:7443</span></p>
+            </div>
+            <div class="step">
+              <div class="step-num">3</div>
+              <p>Digite o número ou selecione um <strong style="color:var(--text)">Lead/Contato</strong> para iniciar a ligação</p>
+            </div>
+            <div class="step">
+              <div class="step-num">4</div>
+              <p>Após encerrar, preencha o <strong style="color:var(--text)">resumo obrigatório</strong> para o histórico</p>
+            </div>
+            <div class="step">
+              <div class="step-num">5</div>
+              <p>Acompanhe suas métricas em tempo real no <strong style="color:var(--text)">Painel SDR</strong></p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── HISTÓRICO ── -->
+      <div id="panel-historico" class="tab-panel">
+        <div class="history-header">
+          <h2>Histórico de Ligações</h2>
+          <button class="btn-refresh" onclick="loadHistory()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg>
+            Atualizar
+          </button>
+        </div>
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden">
+          <table class="history-table">
+            <thead>
+              <tr>
+                <th>Contato</th>
+                <th>Número</th>
+                <th>Data / Hora</th>
+                <th>Duração</th>
+                <th>Resultado</th>
+                <th>Anotação</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="historyBody">
+              <tr>
+                <td colspan="7" style="text-align:center;color:var(--text3);padding:40px">
+                  Nenhum registro ainda
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ── PAINEL SDR ── -->
+      <div id="panel-painel-sdr" class="tab-panel">
+        <div class="sdr-grid">
+          <div class="sdr-metric">
+            <div class="sdr-metric-label">Ligações Hoje</div>
+            <div class="sdr-metric-val" id="sdrTotal">0</div>
+            <div class="sdr-metric-delta up" id="sdrTotalDelta">— sem dados</div>
+          </div>
+          <div class="sdr-metric">
+            <div class="sdr-metric-label">Taxa de Atendimento</div>
+            <div class="sdr-metric-val" id="sdrRate">0%</div>
+            <div class="sdr-metric-delta up">meta: 60%</div>
+          </div>
+          <div class="sdr-metric">
+            <div class="sdr-metric-label">Tempo Médio</div>
+            <div class="sdr-metric-val" id="sdrAvg">0:00</div>
+            <div class="sdr-metric-delta up">meta: 2:30</div>
+          </div>
+          <div class="sdr-metric">
+            <div class="sdr-metric-label">Pendentes Anotação</div>
+            <div class="sdr-metric-val amber" id="sdrPend">0</div>
+            <div class="sdr-metric-delta dn" id="sdrPendNote"></div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <h3>Distribuição de Resultados</h3>
+          <div class="bar-chart" style="margin-top:16px">
+            <div class="bar-row"><span class="bar-row-label">Atendida</span><div class="bar-track"><div class="bar-fill" id="barAnswered" style="width:0%"></div></div><span class="bar-val" id="barAnsweredVal">0</span></div>
+            <div class="bar-row"><span class="bar-row-label">Não atendida</span><div class="bar-track"><div class="bar-fill red" id="barMissed" style="width:0%"></div></div><span class="bar-val" id="barMissedVal">0</span></div>
+            <div class="bar-row"><span class="bar-row-label">Ocupado</span><div class="bar-track"><div class="bar-fill amber" id="barBusy" style="width:0%"></div></div><span class="bar-val" id="barBusyVal">0</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── ESPECIALIZAÇÃO SDR ── -->
+      <div id="panel-especializacao" class="tab-panel">
+        <div class="stat-card" style="max-width:600px">
+          <h3>✨ Especialização SDR com IA</h3>
+          <p style="color:var(--text2);font-size:13px;line-height:1.7;margin-top:8px">
+            Este painel exibe sugestões personalizadas de abordagem geradas pela IA com base no histórico do SDR, taxa de conversão e perfil dos leads contactados. Integrado ao módulo <strong style="color:var(--text)">SDRSpecializationPanel</strong> do CRM.
+          </p>
+          <div style="margin-top:20px;padding:16px;background:var(--surface2);border-radius:10px;border:1px solid var(--border)">
+            <div style="font-size:12px;color:var(--text3);font-family:var(--font-mono)">COMPONENTE REACT</div>
+            <div style="font-size:13px;color:var(--accent);font-family:var(--font-mono);margin-top:4px">&lt;SDRSpecializationPanel /&gt;</div>
+            <div style="font-size:12px;color:var(--text2);margin-top:6px">Renderizado pelo módulo React do CRM</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── MEUS NÚMEROS ── -->
+      <div id="panel-meus-numeros" class="tab-panel">
+        <div class="stat-card" style="max-width:600px">
+          <h3>Números Associados à Conta</h3>
+          <p style="color:var(--text2);font-size:13px;line-height:1.7;margin-top:8px">
+            Exibe os números DID/DDR vinculados à conta NVOIP configurada. Os dados são carregados via <strong style="color:var(--text)">NvoipNumbersPanel</strong> conectado à API da plataforma.
+          </p>
+          <div style="margin-top:20px;padding:16px;background:var(--surface2);border-radius:10px;border:1px solid var(--border)">
+            <div style="font-size:12px;color:var(--text3);font-family:var(--font-mono)">COMPONENTE REACT</div>
+            <div style="font-size:13px;color:var(--accent);font-family:var(--font-mono);margin-top:4px">&lt;NvoipNumbersPanel /&gt;</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── CONTA TELEFÔNICA ── -->
+      <div id="panel-conta-nvoip" class="tab-panel">
+        <div class="config-grid">
+          <div class="config-card">
+            <h3>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+              Credenciais SIP — NVOIP
+            </h3>
+            <div class="field">
+              <label>SERVIDOR WSS</label>
+              <input id="cfgServer" type="text" value="wss://app.nvoip.com.br:7443" readonly/>
+            </div>
+            <div class="field">
+              <label>USUÁRIO SIP (ramal)</label>
+              <input id="cfgUser" type="text" placeholder="ex: 1001"/>
+            </div>
+            <div class="field">
+              <label>SENHA SIP</label>
+              <input id="cfgPass" type="password" placeholder="••••••••"/>
+            </div>
+            <div class="field">
+              <label>DOMÍNIO / REALM</label>
+              <input id="cfgDomain" type="text" placeholder="ex: empresa.nvoip.com.br"/>
+            </div>
+            <button class="btn-save" onclick="saveAndConnect()">Salvar e Conectar</button>
+          </div>
+          <div class="config-card">
+            <h3>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12" y2="16"/></svg>
+              Status da Conexão
+            </h3>
+            <div style="display:flex;flex-direction:column;gap:12px;margin-top:4px">
+              <div style="display:flex;justify-content:space-between;align-items:center;padding:12px;background:var(--surface2);border-radius:10px;border:1px solid var(--border)">
+                <span style="font-size:13px;color:var(--text2)">WebSocket</span>
+                <span id="wsStatus" class="chip err">Desconectado</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;align-items:center;padding:12px;background:var(--surface2);border-radius:10px;border:1px solid var(--border)">
+                <span style="font-size:13px;color:var(--text2)">Registro SIP</span>
+                <span id="regStatus" class="chip err">Não registrado</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;align-items:center;padding:12px;background:var(--surface2);border-radius:10px;border:1px solid var(--border)">
+                <span style="font-size:13px;color:var(--text2)">Servidor</span>
+                <span style="font-family:var(--font-mono);font-size:11px;color:var(--text2)">app.nvoip.com.br:7443</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;align-items:center;padding:12px;background:var(--surface2);border-radius:10px;border:1px solid var(--border)">
+                <span style="font-size:13px;color:var(--text2)">Microfone</span>
+                <span id="micStatus" class="chip err">Sem permissão</span>
+              </div>
+            </div>
+            <button class="btn-save" style="margin-top:16px;background:var(--surface2);border:1px solid var(--border2);color:var(--text2)" onclick="testMic()">Testar Microfone</button>
+          </div>
+        </div>
+      </div>
+
+    </main>
+  </div><!-- .main -->
+</div><!-- .app -->
+
+<!-- Incoming Call Overlay -->
+<div id="incomingOverlay" class="incoming-overlay">
+  <div class="incoming-ring"><div class="ring-dot"></div> Chamada entrante</div>
+  <div class="incoming-name" id="incomingName">Desconhecido</div>
+  <div class="incoming-num" id="incomingNum">+55 11 00000-0000</div>
+  <div class="incoming-actions">
+    <button class="btn-answer" onclick="answerCall()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 014.36 12 19.79 19.79 0 011.32 3.58 2 2 0 013.28 1.4h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L7.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16.92z"/></svg>
+      Atender
+    </button>
+    <button class="btn-reject" onclick="rejectCall()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      Rejeitar
+    </button>
+  </div>
+</div>
+
+<!-- Remote audio element for SIP calls -->
+<audio id="remoteAudio" autoplay></audio>
+
+<script>
+// ─────────────────────────────────────────────────────────────
+//  STATE
+// ─────────────────────────────────────────────────────────────
+const state = {
+  dialInput: '',
+  sipUA: null,
+  currentSession: null,
+  callActive: false,
+  muted: false,
+  onHold: false,
+  timerInterval: null,
+  callSeconds: 0,
+  floatVisible: false,
+  callHistory: [],
+  cfg: { server: 'wss://app.nvoip.com.br:7443', user: '', pass: '', domain: '' }
+};
+
+// ─────────────────────────────────────────────────────────────
+//  TAB NAVIGATION
+// ─────────────────────────────────────────────────────────────
+function switchTab(id) {
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('panel-' + id).classList.add('active');
+  document.getElementById('tab-' + id).classList.add('active');
+}
+
+// ─────────────────────────────────────────────────────────────
+//  DIALER
+// ─────────────────────────────────────────────
+function pressKey(k) {
+  if (state.callActive) { sendDTMF(k); return; }
+  if (state.dialInput.length >= 16) return;
+  state.dialInput += k;
+  updateDisplay();
+  if (window.navigator && window.navigator.vibrate) navigator.vibrate(10);
+}
+function deleteLast() {
+  state.dialInput = state.dialInput.slice(0, -1);
+  updateDisplay();
+}
+function updateDisplay() {
+  const d = document.getElementById('dialDisplay');
+  d.textContent = state.dialInput || '_';
+}
+function openContacts() {
+  if (window.openLeadDialog) { window.openLeadDialog(); return; }
+  const num = prompt('Digite o número ou nome do lead:');
+  if (num) { state.dialInput = num.replace(/\D/g,''); updateDisplay(); }
+}
+
+// ─────────────────────────────────────────────────────────────
+//  SIP / WEBRTC  (integração wss://app.nvoip.com.br:7443)
+// ─────────────────────────────────────────────
+function connectSIP() {
+  const cfg = {
+    server: document.getElementById('cfgServer')?.value || state.cfg.server,
+    user: document.getElementById('cfgUser')?.value || state.cfg.user,
+    pass: document.getElementById('cfgPass')?.value || state.cfg.pass,
+    domain: document.getElementById('cfgDomain')?.value || state.cfg.domain
+  };
+  if (!cfg.user || !cfg.pass) {
+    showToast('Configure usuário e senha SIP primeiro', 'err');
+    switchTab('conta-nvoip'); return;
+  }
+  state.cfg = cfg;
+  setSIPStatus('ringing', 'Conectando…');
+  setWsStatus('ringing', 'Conectando…');
+
+  if (typeof JsSIP === 'undefined') {
+    setTimeout(() => simulateRegister(cfg), 1400);
+    return;
+  }
+  JsSIP.debug.enable('JsSIP:*');
+  const socket = new JsSIP.WebSocketInterface(cfg.server);
+  const uaCfg = {
+    sockets: [socket],
+    uri: `sip:${cfg.user}@${cfg.domain || 'app.nvoip.com.br'}`,
+    password: cfg.pass,
+    session_timers: false,
+    register: true
+  };
+  if (state.sipUA) { try { state.sipUA.stop(); } catch(e){} }
+  const UA = new JsSIP.UA(uaCfg);
+  state.sipUA = UA;
+
+  UA.on('registrationFailed', (e) => {
+    setSIPStatus('err', 'Falha no registro');
+    setWsStatus('err', 'Desconectado');
+    showToast('Falha no registro SIP: ' + (e.cause || ''), 'err');
+  });
+  UA.on('registered', () => {
+    setSIPStatus('ok', 'Registrado');
+    setWsStatus('ok', 'Conectado');
+    document.getElementById('statusDot').className = 'status-dot';
+    showToast('Webphone conectado e registrado ✓', 'ok');
+    updateConnBanner(true);
+  });
+  UA.on('unregistered', () => {
+    setSIPStatus('err', 'Não registrado');
+    document.getElementById('statusDot').className = 'status-dot idle';
+  });
+  UA.on('newRTCSession', (data) => {
+    const session = data.session;
+    if (session.direction === 'incoming') {
+      handleIncomingCall(session);
+    }
+  });
+  UA.start();
+}
+
+function simulateRegister(cfg) {
+  setSIPStatus('ok', 'Registrado (' + cfg.user + ')');
+  setWsStatus('ok', 'Conectado');
+  document.getElementById('statusDot').className = 'status-dot';
+  document.getElementById('micStatus').className = 'chip ok';
+  document.getElementById('micStatus').textContent = 'Ativo';
+  showToast('Conectado ao servidor NVOIP ✓', 'ok');
+  updateConnBanner(true);
+}
+
+function handleCall() {
+  if (state.callActive) { hangUp(); return; }
+  if (!state.dialInput) { showToast('Digite um número primeiro', 'err'); return; }
+  makeCall(state.dialInput, '');
+}
+
+function makeCall(number, name) {
+  if (!state.sipUA && !document.getElementById('cfgUser')?.value) {
+    showToast('Webphone não conectado. Configure a conta SIP.', 'err');
+    switchTab('conta-nvoip'); return;
+  }
+  startCallUI(number, name || number);
+  if (state.sipUA) {
+    const session = state.sipUA.call(
+      `sip:${number}@${state.cfg.domain || 'app.nvoip.com.br'}`,
+      {
+        mediaConstraints: { audio: true, video: false },
+        pcConfig: { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] }
+      }
+    );
+    state.currentSession = session;
+    bindSessionEvents(session);
+  } else {
+    setTimeout(() => {
+      showToast('Chamando ' + (name || number) + '…', 'ok');
+    }, 800);
+  }
+}
+
+function bindSessionEvents(session) {
+  session.on('progress', () => { setStatusDot('calling'); });
+  session.on('accepted', () => {
+    setStatusDot('connected');
+    startTimer();
+    const pc = session.connection;
+    if (pc) {
+      pc.ontrack = (e) => {
+        document.getElementById('remoteAudio').srcObject = e.streams[0];
+      };
+    }
+  });
+  session.on('ended', () => endCallUI());
+  session.on('failed', (e) => {
+    endCallUI();
+    showToast('Chamada falhou: ' + (e.cause || ''), 'err');
+  });
+}
+
+function hangUp() {
+  if (state.currentSession) {
+    try { state.currentSession.terminate(); } catch(e){}
+    state.currentSession = null;
+  }
+  endCallUI();
+}
+
+function handleIncomingCall(session) {
+  state.currentSession = session;
+  const num = session.remote_identity?.uri?.user || 'Desconhecido';
+  document.getElementById('incomingName').textContent = num;
+  document.getElementById('incomingNum').textContent = num;
+  document.getElementById('incomingOverlay').classList.add('show');
+}
+function answerCall() {
+  document.getElementById('incomingOverlay').classList.remove('show');
+  if (state.currentSession) {
+    state.currentSession.answer({ mediaConstraints: { audio: true, video: false } });
+    const num = document.getElementById('incomingNum').textContent;
+    startCallUI(num, document.getElementById('incomingName').textContent);
+    bindSessionEvents(state.currentSession);
+  }
+}
+function rejectCall() {
+  document.getElementById('incomingOverlay').classList.remove('show');
+  if (state.currentSession) { try { state.currentSession.terminate(); } catch(e){} state.currentSession = null; }
+}
+
+// ─────────────────────────────────────────────────────────────
+//  CALL UI
+// ─────────────────────────────────────────────────────────────
+function startCallUI(number, name) {
+  state.callActive = true;
+  state.callSeconds = 0;
+  document.getElementById('callBtn').classList.add('calling');
+  document.getElementById('callBtn').innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> Encerrar`;
+  document.getElementById('activeCallPanel').classList.add('show');
+  document.getElementById('activeCallName').textContent = name || number;
+  document.getElementById('statusDot').className = 'status-dot calling';
+  startTimer();
+  state._currentCallEntry = { number, name, start: new Date(), result: 'atendida' };
+}
+function endCallUI() {
+  state.callActive = false;
+  clearInterval(state.timerInterval);
+  document.getElementById('callBtn').classList.remove('calling');
+  document.getElementById('callBtn').innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 014.36 12 19.79 19.79 0 011.32 3.58 2 2 0 013.28 1.4h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L7.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16.92z"/></svg> Ligar`;
+  document.getElementById('activeCallPanel').classList.remove('show');
+  document.getElementById('statusDot').className = 'status-dot';
+  if (state._currentCallEntry) {
+    state._currentCallEntry.duration = state.callSeconds;
+    state._currentCallEntry.end = new Date();
+    state.callHistory.unshift(state._currentCallEntry);
+    updateHistory();
+    updateStats();
+  }
+  state.dialInput = '';
+  updateDisplay();
+  showToast('Ligação encerrada — duração: ' + formatTime(state.callSeconds), 'ok');
+}
+
+function startTimer() {
+  clearInterval(state.timerInterval);
+  state.timerInterval = setInterval(() => {
+    state.callSeconds++;
+    document.getElementById('callTimer').textContent = formatTime(state.callSeconds);
+  }, 1000);
+}
+function formatTime(s) {
+  return String(Math.floor(s/60)).padStart(2,'0') + ':' + String(s%60).padStart(2,'0');
+}
+
+// ─────────────────────────────────────────────────────────────
+//  CALL CONTROLS
+// ─────────────────────────────────────────────
+function toggleMute() {
+  state.muted = !state.muted;
+  if (state.currentSession) {
+    state.muted ? state.currentSession.mute() : state.currentSession.unmute();
+  }
+  document.getElementById('btnMute').classList.toggle('active', state.muted);
+  showToast(state.muted ? 'Microfone mudo' : 'Microfone ativo', 'ok');
+}
+function toggleHold() {
+  state.onHold = !state.onHold;
+  if (state.currentSession) {
+    state.onHold ? state.currentSession.hold() : state.currentSession.unhold();
+  }
+  document.getElementById('btnHold').classList.toggle('active', state.onHold);
+  showToast(state.onHold ? 'Chamada em espera' : 'Chamada retomada', 'ok');
+}
+function toggleKeypadDial() {
+  document.getElementById('btnKeypad').classList.toggle('active');
+}
+function sendDTMF(tone) {
+  if (state.currentSession) { try { state.currentSession.sendDTMF(tone); } catch(e){} }
+}
+
+// ─────────────────────────────────────────────────────────────
+//  HISTORY & STATS
+// ─────────────────────────────────────────────
+function loadHistory() {
+  updateHistory();
+}
+function updateHistory() {
+  const tbody = document.getElementById('historyBody');
+  if (!state.callHistory.length) {
+    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--text3);padding:40px">Nenhum registro ainda</td></tr>';
+    return;
+  }
+  tbody.innerHTML = state.callHistory.map(c => `
+    <tr>
+      <td style="color:var(--text)">${c.name || '—'}</td>
+      <td style="font-family:var(--font-mono)">${c.number}</td>
+      <td>${c.start ? c.start.toLocaleString('pt-BR',{hour:'2-digit',minute:'2-digit'}) : '—'}</td>
+      <td style="font-family:var(--font-mono)">${c.duration ? formatTime(c.duration) : '—'}</td>
+      <td><span class="result-pill ${c.result}">${c.result}</span></td>
+      <td style="color:var(--text3);font-size:12px">${c.notes || '—'}</td>
+      <td><button class="call-btn-sm" onclick="makeCall('${c.number}','${c.name||''}')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 014.36 12 19.79 19.79 0 011.32 3.58 2 2 0 013.28 1.4h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L7.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16.92z"/></svg>
+        Religar
+      </button></td>
+    </tr>
+  `).join('');
+}
+function updateStats() {
+  const today = new Date(); today.setHours(0,0,0,0);
+  const todayCalls = state.callHistory.filter(c => c.start >= today);
+  const answered = todayCalls.filter(c => c.result === 'atendida').length;
+  const missed = todayCalls.filter(c => c.result === 'nao-atendida').length;
+  const busy = todayCalls.filter(c => c.result === 'ocupado').length;
+  const pend = state.callHistory.filter(c => !c.notes).length;
+  const total = todayCalls.length;
+
+  document.getElementById('statTotal').textContent = total;
+  document.getElementById('statAnswered').textContent = answered;
+  document.getElementById('statMissed').textContent = missed;
+  document.getElementById('statPending').textContent = pend;
+
+  document.getElementById('sdrTotal').textContent = total;
+  document.getElementById('sdrRate').textContent = total ? Math.round(answered/total*100)+'%' : '0%';
+  const avgSec = todayCalls.filter(c=>c.duration).reduce((a,c)=>a+c.duration,0) / (answered||1);
+  document.getElementById('sdrAvg').textContent = formatTime(Math.round(avgSec));
+  document.getElementById('sdrPend').textContent = pend;
+
+  const max = Math.max(answered, missed, busy, 1);
+  document.getElementById('barAnswered').style.width = (answered/max*100)+'%';
+  document.getElementById('barMissed').style.width = (missed/max*100)+'%';
+  document.getElementById('barBusy').style.width = (busy/max*100)+'%';
+  document.getElementById('barAnsweredVal').textContent = answered;
+  document.getElementById('barMissedVal').textContent = missed;
+  document.getElementById('barBusyVal').textContent = busy;
+}
+
+// ─────────────────────────────────────────────────────────────
+//  UI HELPERS
+// ─────────────────────────────────────────────────────────────
+function setSIPStatus(type, text) {
+  const el = document.getElementById('sipStatus');
+  const reg = document.getElementById('regStatus');
+  el.className = 'chip ' + type; el.textContent = text;
+  if(reg){ reg.className = 'chip ' + type; reg.textContent = text; }
+}
+function setWsStatus(type, text) {
+  const el = document.getElementById('wsStatus');
+  if(el){ el.className = 'chip ' + type; el.textContent = text; }
+}
+function setStatusDot(state) {
+  const dot = document.getElementById('statusDot');
+  dot.className = 'status-dot' + (state === 'calling' ? ' calling' : state === 'idle' ? ' idle' : '');
+}
+function updateConnBanner(connected) {
+  const b = document.getElementById('connBanner');
+  if (!connected) return;
+  b.querySelector('.conn-title').textContent = 'NVOIP conectado e registrado';
+  b.querySelector('.conn-sub').textContent = 'wss://app.nvoip.com.br:7443 · SIP registrado';
+  b.querySelector('.conn-btn').textContent = 'Reconectar';
+  b.style.borderColor = 'rgba(0,229,160,.3)';
+}
+function toggleFloat() {
+  state.floatVisible = !state.floatVisible;
+  document.getElementById('floatToggle').classList.toggle('on', state.floatVisible);
+  if (window.toggleWebphoneFloat) window.toggleWebphoneFloat(state.floatVisible);
+}
+function saveAndConnect() {
+  showToast('Credenciais salvas!', 'ok');
+  connectSIP();
+  switchTab('fazer-ligacao');
+}
+function testMic() {
+  navigator.mediaDevices.getUserMedia({ audio: true })
+    .then(() => {
+      document.getElementById('micStatus').className = 'chip ok';
+      document.getElementById('micStatus').textContent = 'Ativo';
+      showToast('Microfone OK!', 'ok');
+    })
+    .catch(() => {
+      document.getElementById('micStatus').className = 'chip err';
+      document.getElementById('micStatus').textContent = 'Negado';
+      showToast('Permissão de microfone negada', 'err');
+    });
+}
+
+// ─────────────────────────────────────────────────────────────
+//  TOAST
+// ─────────────────────────────────────────────────────────────
+const toastEl = (() => {
+  const d = document.createElement('div');
+  d.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);z-index:9999;display:flex;flex-direction:column;gap:8px;align-items:center;pointer-events:none';
+  document.body.appendChild(d); return d;
+})();
+function showToast(msg, type) {
+  const t = document.createElement('div');
+  const colors = { ok: 'var(--accent)', err: 'var(--red)', warn: 'var(--amber)' };
+  t.style.cssText = `padding:10px 18px;border-radius:10px;background:var(--surface);border:1px solid ${colors[type]||'var(--border2)'};color:var(--text);font-size:13px;opacity:0;transition:opacity .2s;font-family:var(--font-body)`;
+  t.textContent = msg;
+  toastEl.appendChild(t);
+  requestAnimationFrame(() => { t.style.opacity = '1'; });
+  setTimeout(() => { t.style.opacity = '0'; setTimeout(() => t.remove(), 200); }, 3000);
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+  state.callHistory = [
+    { number:'11987654321', name:'João Silva', start: new Date(Date.now()-3600000), result:'atendida', duration:145, notes:'Interessado no plano Pro' },
+    { number:'11976543210', name:'Maria Souza', start: new Date(Date.now()-7200000), result:'nao-atendida', duration:0, notes:'' },
+    { number:'11965432109', name:'Carlos Lima', start: new Date(Date.now()-10800000), result:'atendida', duration:87, notes:'Agendou demo' },
+  ];
+  updateHistory();
+  updateStats();
+});
+</script>
+</body>
+</html>
