@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import { Phone, Briefcase, MessageSquare, CalendarDays, Trophy, Users, Check, X, Brain } from "lucide-react";
+import { Phone, Briefcase, MessageSquare, CalendarDays, Trophy, Users, Check, X, Brain, Pencil } from "lucide-react";
 import { useTeamMembers } from "@/hooks/useTeamMembers";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -8,6 +8,7 @@ type ProfileKey = "sdr" | "vendedor_close" | "atendente" | "secretaria" | "geren
 interface RotineTask {
   id: string;
   title: string;
+  description?: string;
   time: string;
   done: boolean;
   category: "prospeccao" | "followup" | "reuniao" | "admin" | "meta";
@@ -136,29 +137,42 @@ function ProfileCard({ profile, count, active, onClick }: {
   );
 }
 
-function TaskItem({ task, onToggle, onDelete }: {
-  task: RotineTask; onToggle: (id: string) => void; onDelete: (id: string) => void;
+function TaskItem({ task, onToggle, onDelete, onEdit }: {
+  task: RotineTask; onToggle: (id: string) => void; onDelete: (id: string) => void; onEdit: (task: RotineTask) => void;
 }) {
   const cat = CATEGORY_CONFIG[task.category];
   const pri = PRIORITY_CONFIG[task.priority];
   return (
     <div
-      className={`group flex items-center gap-3 rounded-xl px-4 py-3 border transition-all duration-200 cursor-pointer
+      className={`group flex items-start gap-3 rounded-xl px-4 py-3 border transition-all duration-200
         ${task.done ? "bg-slate-800/30 border-slate-700/30 opacity-60" : `${cat.bg} ${cat.border} hover:brightness-110`}`}
-      onClick={() => onToggle(task.id)}
     >
-      <div className={`w-5 h-5 rounded-full border-2 flex-shrink-0 flex items-center justify-center transition-all
-        ${task.done ? "bg-emerald-500 border-emerald-500" : `border-current ${cat.text}`}`}>
+      <button
+        onClick={() => onToggle(task.id)}
+        className={`mt-0.5 w-5 h-5 rounded-full border-2 flex-shrink-0 flex items-center justify-center transition-all
+          ${task.done ? "bg-emerald-500 border-emerald-500" : `border-current ${cat.text}`}`}
+      >
         {task.done && <Check className="w-3 h-3 text-white" strokeWidth={3} />}
+      </button>
+      <span className="text-xs font-mono text-slate-400 w-12 flex-shrink-0 mt-1">{task.time}</span>
+      <span className={`w-2 h-2 rounded-full flex-shrink-0 mt-2 ${cat.dot}`} />
+      <div className="flex-1 min-w-0 cursor-pointer" onClick={() => onToggle(task.id)}>
+        <div className={`text-sm font-medium ${task.done ? "line-through text-slate-500" : "text-slate-100"}`}>{task.title}</div>
+        {task.description && (
+          <div className={`text-xs mt-1 whitespace-pre-wrap ${task.done ? "text-slate-600" : "text-slate-400"}`}>{task.description}</div>
+        )}
       </div>
-      <span className="text-xs font-mono text-slate-400 w-12 flex-shrink-0">{task.time}</span>
-      <span className={`w-2 h-2 rounded-full flex-shrink-0 ${cat.dot}`} />
-      <span className={`flex-1 text-sm font-medium ${task.done ? "line-through text-slate-500" : "text-slate-100"}`}>{task.title}</span>
-      <span className={`hidden sm:inline text-[10px] font-semibold px-2 py-0.5 rounded-full border ${cat.bg} ${cat.text} ${cat.border}`}>{cat.label}</span>
-      <span className={`hidden sm:inline text-[10px] font-semibold px-2 py-0.5 rounded-full border ${pri.badge}`}>{pri.label}</span>
+      <span className={`hidden sm:inline text-[10px] font-semibold px-2 py-0.5 rounded-full border ${cat.bg} ${cat.text} ${cat.border} mt-1`}>{cat.label}</span>
+      <span className={`hidden sm:inline text-[10px] font-semibold px-2 py-0.5 rounded-full border ${pri.badge} mt-1`}>{pri.label}</span>
+      <button
+        onClick={(e) => { e.stopPropagation(); onEdit(task); }}
+        className="opacity-0 group-hover:opacity-100 transition-opacity text-slate-400 hover:text-emerald-400 p-1 mt-0.5"
+        title="Editar"
+      ><Pencil className="w-3.5 h-3.5" /></button>
       <button
         onClick={(e) => { e.stopPropagation(); onDelete(task.id); }}
-        className="opacity-0 group-hover:opacity-100 transition-opacity text-slate-500 hover:text-rose-400 text-xs p-1"
+        className="opacity-0 group-hover:opacity-100 transition-opacity text-slate-500 hover:text-rose-400 text-xs p-1 mt-0.5"
+        title="Excluir"
       >✕</button>
     </div>
   );
@@ -172,8 +186,9 @@ export default function RotinaInteligente() {
   const [assignments, setAssignments] = useState<Record<string, ProfileKey>>(loadAssignments);
   const [selectedProfile, setSelectedProfile] = useState<ProfileKey>("sdr");
   const [showAddForm, setShowAddForm] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [showAssignDialog, setShowAssignDialog] = useState(false);
-  const [newTask, setNewTask] = useState({ title: "", time: "09:00", category: "prospeccao" as RotineTask["category"], priority: "media" as RotineTask["priority"] });
+  const [newTask, setNewTask] = useState({ title: "", description: "", time: "09:00", category: "prospeccao" as RotineTask["category"], priority: "media" as RotineTask["priority"] });
 
   // Persist
   useEffect(() => { localStorage.setItem(STORAGE_TASKS_KEY, JSON.stringify(tasksByProfile)); }, [tasksByProfile]);
@@ -193,11 +208,33 @@ export default function RotinaInteligente() {
 
   const toggleTask = (id: string) => updateTasks(p => p.map(t => t.id === id ? { ...t, done: !t.done } : t));
   const deleteTask = (id: string) => updateTasks(p => p.filter(t => t.id !== id));
-  const addTask = () => {
-    if (!newTask.title.trim()) return;
-    updateTasks(p => [...p, { id: Date.now().toString(), ...newTask, done: false }]);
-    setNewTask({ title: "", time: "09:00", category: "prospeccao", priority: "media" });
+
+  const resetForm = () => {
+    setNewTask({ title: "", description: "", time: "09:00", category: "prospeccao", priority: "media" });
+    setEditingId(null);
     setShowAddForm(false);
+  };
+
+  const saveTask = () => {
+    if (!newTask.title.trim()) return;
+    if (editingId) {
+      updateTasks(p => p.map(t => t.id === editingId ? { ...t, ...newTask } : t));
+    } else {
+      updateTasks(p => [...p, { id: Date.now().toString(), ...newTask, done: false }]);
+    }
+    resetForm();
+  };
+
+  const startEdit = (task: RotineTask) => {
+    setEditingId(task.id);
+    setNewTask({
+      title: task.title,
+      description: task.description || "",
+      time: task.time,
+      category: task.category,
+      priority: task.priority,
+    });
+    setShowAddForm(true);
   };
 
   const assignUser = (userId: string, profile: ProfileKey | "") => {
@@ -305,24 +342,33 @@ export default function RotinaInteligente() {
       {/* Actions */}
       <div className="mb-4 flex justify-end">
         <button
-          onClick={() => setShowAddForm(v => !v)}
+          onClick={() => { if (showAddForm) { resetForm(); } else { setEditingId(null); setShowAddForm(true); } }}
           className="flex items-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-bold rounded-xl transition-all shadow-lg shadow-emerald-600/20"
         >
           <span className="text-lg leading-none">+</span> Nova Atividade em {current.label}
         </button>
       </div>
 
-      {/* Add Form */}
+      {/* Add/Edit Form */}
       {showAddForm && (
         <div className="mb-6 bg-slate-800/60 rounded-2xl p-4 border border-emerald-500/30">
-          <h3 className="text-sm font-bold text-emerald-300 mb-3 uppercase tracking-widest">+ Nova Atividade — {current.label}</h3>
+          <h3 className="text-sm font-bold text-emerald-300 mb-3 uppercase tracking-widest">
+            {editingId ? "✎ Editar Atividade" : "+ Nova Atividade"} — {current.label}
+          </h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <input
               className="col-span-full bg-slate-900 border border-slate-600 rounded-xl px-4 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500"
               placeholder="Título da atividade..."
               value={newTask.title}
               onChange={e => setNewTask(p => ({ ...p, title: e.target.value }))}
-              onKeyDown={e => e.key === "Enter" && addTask()}
+              onKeyDown={e => e.key === "Enter" && !e.shiftKey && saveTask()}
+            />
+            <textarea
+              className="col-span-full bg-slate-900 border border-slate-600 rounded-xl px-4 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 resize-none min-h-[80px]"
+              placeholder="Descrição da atividade (opcional)... ex.: objetivo, instruções, links, checklist"
+              value={newTask.description}
+              onChange={e => setNewTask(p => ({ ...p, description: e.target.value }))}
+              rows={3}
             />
             <input
               type="time"
@@ -338,7 +384,7 @@ export default function RotinaInteligente() {
               {Object.entries(CATEGORY_CONFIG).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
             </select>
             <select
-              className="bg-slate-900 border border-slate-600 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-emerald-500"
+              className="col-span-full bg-slate-900 border border-slate-600 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-emerald-500"
               value={newTask.priority}
               onChange={e => setNewTask(p => ({ ...p, priority: e.target.value as RotineTask["priority"] }))}
             >
@@ -348,8 +394,10 @@ export default function RotinaInteligente() {
             </select>
           </div>
           <div className="flex gap-2 mt-3">
-            <button onClick={addTask} className="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-bold py-2.5 rounded-xl">Adicionar</button>
-            <button onClick={() => setShowAddForm(false)} className="px-4 bg-slate-700 hover:bg-slate-600 text-slate-300 text-sm font-bold py-2.5 rounded-xl">Cancelar</button>
+            <button onClick={saveTask} className="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-bold py-2.5 rounded-xl">
+              {editingId ? "Salvar Alterações" : "Adicionar"}
+            </button>
+            <button onClick={resetForm} className="px-4 bg-slate-700 hover:bg-slate-600 text-slate-300 text-sm font-bold py-2.5 rounded-xl">Cancelar</button>
           </div>
         </div>
       )}
@@ -365,11 +413,12 @@ export default function RotinaInteligente() {
             </div>
           ) : (
             tasks.slice().sort((a, b) => a.time.localeCompare(b.time)).map(task => (
-              <TaskItem key={task.id} task={task} onToggle={toggleTask} onDelete={deleteTask} />
+              <TaskItem key={task.id} task={task} onToggle={toggleTask} onDelete={deleteTask} onEdit={startEdit} />
             ))
           )}
         </div>
       </div>
+
 
       {/* Assign Dialog */}
       {showAssignDialog && (
