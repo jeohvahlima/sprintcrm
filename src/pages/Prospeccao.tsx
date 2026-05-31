@@ -43,6 +43,7 @@ import { KillFeed } from "@/components/prospeccao/rpg/KillFeed";
 import { ChannelProspectPanel } from "@/components/prospeccao/channels/ChannelProspectPanel";
 import { EmailProspectPanel } from "@/components/prospeccao/channels/EmailProspectPanel";
 import { ColdCallOutboundPanel } from "@/components/prospeccao/ColdCallOutboundPanel";
+import { ColdCallRedesigned } from "@/components/prospeccao/ColdCallRedesigned";
 import { ProspectingIntelligencePanel } from "@/components/prospeccao/ProspectingIntelligencePanel";
 import { GoalProgressHUD } from "@/components/prospeccao/comercial/GoalProgressHUD";
 import { CloserInbox } from "@/components/prospeccao/comercial/CloserInbox";
@@ -287,17 +288,7 @@ export default function Prospeccao() {
                   <HunterCockpit />
                 </div>
               ) : activeTab === "coldcall" ? (
-                <div className="space-y-6">
-                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    <div className="lg:col-span-2 space-y-6">
-                      <DialerCard />
-                      <ColdCallFunnelPanel />
-                    </div>
-                    <div className="space-y-6">
-                      <ScriptPanel />
-                    </div>
-                  </div>
-                </div>
+                <ColdCallRedesigned />
               ) : (activeTab as string) === "cadencia" ? (
                 <div className="space-y-6">
                   <RotinaInteligente />
