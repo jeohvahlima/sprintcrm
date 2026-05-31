@@ -22,6 +22,7 @@ import { useGlobalSync } from "@/hooks/useGlobalSync";
 import { useWorkflowAutomation } from "@/hooks/useWorkflowAutomation";
 import { usePermissions } from "@/hooks/usePermissions";
 import { FunilFiltrosResponsaveis, type ViewMode } from "@/components/funil/FunilFiltrosResponsaveis";
+import { FunilQuickFilters } from "@/components/funil/FunilQuickFilters";
 import { ResultadoComercialDashboard } from "@/components/funil/ResultadoComercialDashboard";
 
 interface Lead {
@@ -242,6 +243,11 @@ export default function KanbanPage() {
   useEffect(() => {
     if (typeof window !== "undefined") localStorage.setItem(RESP_FILTER_KEY, responsavelFiltro);
   }, [responsavelFiltro]);
+
+  // 🎯 Filtros rápidos (busca + pílulas + display mode)
+  const [searchTerm, setSearchTerm] = useState("");
+  const [quickFilter, setQuickFilter] = useState<import("@/components/funil/FunilQuickFilters").QuickFilter>("todos");
+  const [displayMode, setDisplayMode] = useState<import("@/components/funil/FunilQuickFilters").DisplayMode>("kanban");
 
   // Se vendedor (não gestor) acessar um modo restrito, força "meus"
   useEffect(() => {
@@ -922,8 +928,46 @@ export default function KanbanPage() {
     if (responsavelFiltro !== "all") {
       result = result.filter((l) => leadResponsaveis(l).includes(responsavelFiltro));
     }
+
+    // 🔍 Busca por nome / empresa / título
+    const q = searchTerm.trim().toLowerCase();
+    if (q) {
+      result = result.filter((l: any) => {
+        const hay = `${l.nome || ""} ${l.name || ""} ${l.company || ""} ${l.title || ""} ${l.email || ""} ${l.telefone || ""}`.toLowerCase();
+        return hay.includes(q);
+      });
+    }
+
+    // 🎯 Filtros rápidos por pílula
+    const now = Date.now();
+    const ALTO_VALOR = 50000;
+    if (quickFilter === "quentes") {
+      result = result.filter((l: any) => (l.lead_score ?? 0) >= 70 || (l.temperatura === "quente"));
+    } else if (quickFilter === "atrasados") {
+      result = result.filter((l: any) => l.expected_close_date && new Date(l.expected_close_date).getTime() < now && !["ganho", "perdido"].includes((l.status || "").toLowerCase()));
+    } else if (quickFilter === "altovalor") {
+      result = result.filter((l: any) => (Number(l.value) || 0) >= ALTO_VALOR);
+    } else if (quickFilter === "ganhos") {
+      const m0 = new Date(); m0.setDate(1); m0.setHours(0, 0, 0, 0);
+      result = result.filter((l: any) => (l.status || "").toLowerCase() === "ganho" && l.won_at && new Date(l.won_at).getTime() >= m0.getTime());
+    } else if (quickFilter === "perdidos") {
+      result = result.filter((l: any) => (l.status || "").toLowerCase() === "perdido");
+    }
+
     return result;
-  }, [leadsDoFunil, viewMode, responsavelFiltro, currentUserId, leadResponsaveis]);
+  }, [leadsDoFunil, viewMode, responsavelFiltro, currentUserId, leadResponsaveis, searchTerm, quickFilter]);
+
+  // Contadores para badges (Ganhos do mês / Perdidos)
+  const pillCounts = useMemo(() => {
+    const m0 = new Date(); m0.setDate(1); m0.setHours(0, 0, 0, 0);
+    let ganhos = 0, perdidos = 0;
+    leadsDoFunil.forEach((l: any) => {
+      const s = (l.status || "").toLowerCase();
+      if (s === "ganho" && l.won_at && new Date(l.won_at).getTime() >= m0.getTime()) ganhos++;
+      else if (s === "perdido") perdidos++;
+    });
+    return { ganhos, perdidos };
+  }, [leadsDoFunil]);
 
 
   // 🎯 Pré-calcular totais e métricas avançadas de todas as etapas de uma vez (mais eficiente)
@@ -1218,6 +1262,23 @@ export default function KanbanPage() {
         funilNome={funilSelecionado?.nome}
       />
 
+      {/* 🎯 Toolbar de filtros rápidos (busca, pílulas, kanban/lista, navegação) */}
+      <FunilQuickFilters
+        funis={funis}
+        selectedFunil={selectedFunil}
+        onSelectFunil={setSelectedFunil}
+        search={searchTerm}
+        onSearchChange={setSearchTerm}
+        quickFilter={quickFilter}
+        onQuickFilterChange={setQuickFilter}
+        counts={pillCounts}
+        displayMode={displayMode}
+        onDisplayModeChange={setDisplayMode}
+        showScrollControls={etapasFiltradas.length > 3 && displayMode === "kanban"}
+        onScrollLeft={() => scrollHorizontal("left")}
+        onScrollRight={() => scrollHorizontal("right")}
+      />
+
       {/* Barra de filtros por responsável - controle de pipeline */}
       <FunilFiltrosResponsaveis
         viewMode={viewMode}
@@ -1230,59 +1291,73 @@ export default function KanbanPage() {
         responsavelCounts={responsavelCounts}
       />
 
-      <div className="mb-6 flex items-center gap-3">
-        <div className="flex-1 max-w-xs">
-          <Label>Funil</Label>
-          <select
-            value={selectedFunil}
-            onChange={(e) => setSelectedFunil(e.target.value)}
-            className="w-full p-2 border rounded-md mt-2"
-          >
-            {funis.map((funil) => (
-              <option key={funil.id} value={funil.id}>{funil.nome}</option>
-            ))}
-          </select>
+      {funilSelecionado && canCreateFunil && (
+        <div className="mb-4 flex gap-2 flex-wrap">
+          <AdicionarEtapaDialog
+            funilId={funilSelecionado.id}
+            onEtapaAdded={async () => { await refreshEtapas(); }}
+          />
+          <EditarFunilDialog
+            funilId={funilSelecionado.id}
+            funilNome={funilSelecionado.nome}
+            onFunilUpdated={async () => { await refreshFunis(); await refreshEtapas(); }}
+          />
+          <FollowInteligentePanel
+            funilId={funilSelecionado.id}
+            etapas={etapasFiltradas.map((e: any) => ({ id: e.id, nome: e.nome, cor: e.cor, posicao: e.posicao, funil_id: e.funil_id }))}
+          />
         </div>
-        {funilSelecionado && canCreateFunil && (
-          <div className="mt-6 flex gap-2">
-            <AdicionarEtapaDialog
-              funilId={funilSelecionado.id}
-              onEtapaAdded={async () => { await refreshEtapas(); }}
-            />
-            <EditarFunilDialog
-              funilId={funilSelecionado.id}
-              funilNome={funilSelecionado.nome}
-              onFunilUpdated={async () => { await refreshFunis(); await refreshEtapas(); }}
-            />
-            <FollowInteligentePanel
-              funilId={funilSelecionado.id}
-              etapas={etapasFiltradas.map((e: any) => ({ id: e.id, nome: e.nome, cor: e.cor, posicao: e.posicao, funil_id: e.funil_id }))}
-            />
-          </div>
-        )}
-        {/* 🎯 Botões de navegação horizontal */}
-        {etapasFiltradas.length > 3 && (
-          <div className="mt-6 flex gap-2 ml-auto">
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={() => scrollHorizontal('left')}
-              title="Rolar para esquerda"
-            >
-              <ChevronLeft className="h-4 w-4" />
-            </Button>
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={() => scrollHorizontal('right')}
-              title="Rolar para direita"
-            >
-              <ChevronRight className="h-4 w-4" />
-            </Button>
-          </div>
-        )}
-      </div>
+      )}
 
+      {displayMode === "lista" ? (
+        <div className="rounded-2xl border border-border bg-card overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="bg-muted/50 text-xs uppercase tracking-wider text-muted-foreground">
+                <tr>
+                  <th className="text-left px-4 py-3 font-semibold">Lead</th>
+                  <th className="text-left px-4 py-3 font-semibold">Empresa</th>
+                  <th className="text-left px-4 py-3 font-semibold">Etapa</th>
+                  <th className="text-right px-4 py-3 font-semibold">Valor</th>
+                  <th className="text-left px-4 py-3 font-semibold">Previsão</th>
+                  <th className="text-left px-4 py-3 font-semibold">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {leadsFiltrados.length === 0 && (
+                  <tr><td colSpan={6} className="px-4 py-12 text-center text-muted-foreground">Nenhum lead encontrado</td></tr>
+                )}
+                {leadsFiltrados.map((l: any) => {
+                  const etapa = etapasFiltradas.find(e => e.id === l.etapa_id);
+                  return (
+                    <tr key={l.id} className="border-t border-border hover:bg-muted/30 transition">
+                      <td className="px-4 py-3 font-medium">{l.nome || l.name || "—"}</td>
+                      <td className="px-4 py-3 text-muted-foreground">{l.company || "—"}</td>
+                      <td className="px-4 py-3">
+                        {etapa && (
+                          <span className="inline-flex items-center gap-1.5 text-xs">
+                            <span className="h-2 w-2 rounded-full" style={{ background: etapa.cor }} />
+                            {etapa.nome}
+                          </span>
+                        )}
+                      </td>
+                      <td className="px-4 py-3 text-right font-semibold tabular-nums">
+                        {l.value ? `R$ ${Number(l.value).toLocaleString("pt-BR")}` : "—"}
+                      </td>
+                      <td className="px-4 py-3 text-xs text-muted-foreground">
+                        {l.expected_close_date ? new Date(l.expected_close_date).toLocaleDateString("pt-BR") : "—"}
+                      </td>
+                      <td className="px-4 py-3 text-xs">
+                        <span className="capitalize">{l.status || "ativo"}</span>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      ) : (
       <DndContext
         sensors={sensors}
         collisionDetection={customCollisionDetection}
@@ -1384,6 +1459,27 @@ export default function KanbanPage() {
                 </React.Fragment>
             );
           })}
+
+          {/* 🎯 Placeholder coluna "Adicionar Nova Etapa" */}
+          {funilSelecionado && canCreateFunil && (
+            <div className="min-w-[280px] md:min-w-[320px] flex-shrink-0">
+              <AdicionarEtapaDialog
+                funilId={funilSelecionado.id}
+                onEtapaAdded={async () => { await refreshEtapas(); }}
+                customTrigger={
+                  <button
+                    type="button"
+                    className="w-full min-h-[400px] rounded-2xl border-2 border-dashed border-emerald-300/60 bg-emerald-50/30 hover:bg-emerald-50/60 hover:border-emerald-400 transition flex flex-col items-center justify-center gap-3 text-emerald-700 group"
+                  >
+                    <div className="h-10 w-10 rounded-xl bg-emerald-100 group-hover:bg-emerald-200 grid place-items-center transition">
+                      <Plus className="h-5 w-5" />
+                    </div>
+                    <span className="text-sm font-semibold">Adicionar Nova Etapa</span>
+                  </button>
+                }
+              />
+            </div>
+          )}
           </div>
         </SortableContext>
 
@@ -1407,6 +1503,7 @@ export default function KanbanPage() {
           ) : null}
         </DragOverlay>
       </DndContext>
+      )}
 
       <CriarTarefaAoMoverDialog
         open={tarefaDialogData.open}
