@@ -330,6 +330,7 @@ function MessageItemComponent({
         )}
         
         <div
+          data-msg-bubble={message.sender === "user" ? "sent" : "received"}
           className={`max-w-[500px] min-w-[100px] w-fit rounded-lg px-3 py-2 shadow-sm relative group ${
             message.sender === "user"
               ? "bg-[#d9fdd3] dark:bg-primary/20 text-foreground"

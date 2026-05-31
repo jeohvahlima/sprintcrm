@@ -1,31 +1,43 @@
 /* ────────────────────────────────────────────────────────────
-   Bate-Papo Multicanal — Redesign visual (somente CSS, scoped)
-   Aplica visual estilo WhatsApp/GROW OS sem alterar lógica.
+   Bate-Papo Multicanal — Redesign visual scoped
+   Aplica visual estilo WhatsApp/GROW OS (mockup Claude) sem
+   alterar lógica nem componentes funcionais.
    ──────────────────────────────────────────────────────────── */
 @import url('https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&display=swap');
 
+/* Tipografia global do módulo */
 .conversas-redesign,
 .conversas-redesign * {
-  font-family: 'Sora', ui-sans-serif, system-ui, -apple-system, sans-serif;
+  font-family: 'Sora', ui-sans-serif, system-ui, -apple-system, sans-serif !important;
+  letter-spacing: -0.005em;
 }
 
-/* Fundo geral mais suave esverdeado */
+/* Fundo geral mais claro/esverdeado */
 .conversas-redesign {
   background: #f0f2f0 !important;
 }
 
-/* ── Sidebar (lista de conversas) ─────────────────────────── */
-.conversas-redesign aside,
-.conversas-redesign [data-conversas-sidebar],
-.conversas-redesign .conversas-sidebar {
+/* ─── Sidebar esquerda (lista de conversas) ───────────────── */
+/* O primeiro filho direto do flex root é a sidebar */
+.conversas-redesign > div:first-child,
+.conversas-redesign > aside:first-child {
   background: #ffffff !important;
   border-right: 1px solid #e8ede8 !important;
 }
 
-/* Inputs (search etc) — verde sutil ao focar */
-.conversas-redesign input:not([type="checkbox"]):not([type="radio"]),
+/* Título "Bate-Papo Multicanal" mais marcante */
+.conversas-redesign h1,
+.conversas-redesign h2 {
+  letter-spacing: -0.02em !important;
+}
+
+/* Search input mais clean */
+.conversas-redesign input[type="text"],
+.conversas-redesign input[type="search"],
 .conversas-redesign textarea {
-  font-family: 'Sora', sans-serif;
+  font-family: 'Sora', sans-serif !important;
+  border-radius: 0.65rem !important;
+  transition: all 0.15s ease;
 }
 .conversas-redesign input:focus-visible,
 .conversas-redesign textarea:focus-visible {
@@ -34,122 +46,79 @@
   outline: none !important;
 }
 
-/* ── Cabeçalho do chat ────────────────────────────────────── */
-.conversas-redesign .chat-header,
-.conversas-redesign [data-conversas-chat-header] {
-  background: #ffffff !important;
-  border-bottom: 1px solid #e5e7eb !important;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+/* ─── Área de mensagens — fundo estilo WhatsApp suave ──── */
+.conversas-redesign .messages-scroll-area,
+.conversas-redesign #messages-scroll-container {
+  background-color: #efeae2 !important;
+  background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23a8a094' fill-opacity='0.20'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E") !important;
 }
 
-/* ── Área de mensagens — fundo estilo WhatsApp ────────────── */
-.conversas-redesign [data-conversas-messages],
-.conversas-redesign .messages-area {
-  background-color: #e7e0d6 !important;
-  background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23a8a094' fill-opacity='0.18'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E") !important;
-}
-
-/* Bubbles — sent (verde gradiente WhatsApp) e received (branco) */
-.conversas-redesign [data-msg-bubble="sent"],
-.conversas-redesign [data-msg-bubble="me"] {
+/* ─── Balões de mensagem (sent/received) ──────────────────── */
+/* SENT — gradiente verde WhatsApp + canto inferior direito reto */
+.conversas-redesign [data-msg-bubble="sent"] {
   background: linear-gradient(135deg, #dcf8c6, #c8f4b0) !important;
   border-radius: 1rem 1rem 0.2rem 1rem !important;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08) !important;
   color: #111827 !important;
+  animation: conversasBubbleIn 0.18s ease;
 }
-.conversas-redesign [data-msg-bubble="received"],
-.conversas-redesign [data-msg-bubble="contact"] {
+/* RECEIVED — branco puro + canto inferior esquerdo reto */
+.conversas-redesign [data-msg-bubble="received"] {
   background: #ffffff !important;
   border-radius: 1rem 1rem 1rem 0.2rem !important;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08) !important;
   color: #111827 !important;
+  animation: conversasBubbleIn 0.18s ease;
+}
+@keyframes conversasBubbleIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
-/* Separadores de data como pílula flutuante */
-.conversas-redesign [data-msg-datesep] {
-  display: inline-block;
-  background: rgba(255, 255, 255, 0.9);
-  backdrop-filter: blur(4px);
-  font-size: 0.7rem;
-  font-weight: 600;
-  color: #6b7280;
-  padding: 0.25rem 0.75rem;
-  border-radius: 9999px;
-  border: 1px solid rgba(0, 0, 0, 0.06);
+/* Textos dentro dos balões */
+.conversas-redesign [data-msg-bubble] p,
+.conversas-redesign [data-msg-bubble] span {
+  color: #111827;
 }
 
-/* ── Painel direito (informações do lead) ─────────────────── */
-.conversas-redesign [data-conversas-info-panel],
-.conversas-redesign .info-panel {
+/* ─── Painel direito (informações do lead) ────────────────── */
+/* Último filho do root é o painel direito */
+.conversas-redesign > div:last-child {
   background: #ffffff !important;
   border-left: 1px solid #e5e7eb !important;
 }
 
-/* ── Botões/ícones do header e ferramentas ───────────────── */
-.conversas-redesign [data-hdr-btn] {
-  border-radius: 0.55rem !important;
+/* Cards dentro do painel direito mais arredondados/suaves */
+.conversas-redesign > div:last-child [class*="rounded-"] {
+  border-radius: 0.75rem;
+}
+
+/* ─── Botões de cabeçalho/ferramentas (hover verde) ──────── */
+.conversas-redesign button[class*="rounded"]:hover:not([disabled]):not([data-state="open"]) {
   transition: all 0.15s ease;
 }
-.conversas-redesign [data-hdr-btn]:hover {
-  background: #f0fdf4 !important;
-  border-color: #bbf7d0 !important;
-  color: #16a34a !important;
-}
 
-/* Cards e blocos do painel direito mais suaves */
-.conversas-redesign [data-conversas-info-panel] .card,
-.conversas-redesign [data-conversas-info-panel] [data-card] {
-  border-radius: 0.75rem !important;
-  border: 1px solid #e5e7eb !important;
-  background: #ffffff !important;
-}
+/* Scrollbars finas */
+.conversas-redesign *::-webkit-scrollbar { width: 5px; height: 5px; }
+.conversas-redesign *::-webkit-scrollbar-thumb { background: rgba(0, 0, 0, 0.18); border-radius: 4px; }
+.conversas-redesign *::-webkit-scrollbar-thumb:hover { background: rgba(0, 0, 0, 0.30); }
 
-/* Cabeçalhos de seção do painel: caps + cor neutra */
-.conversas-redesign [data-panel-section-title] {
-  font-size: 0.65rem !important;
-  font-weight: 700 !important;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  color: #9ca3af !important;
-}
-
-/* Scrollbars finas e elegantes */
-.conversas-redesign ::-webkit-scrollbar { width: 4px; height: 4px; }
-.conversas-redesign ::-webkit-scrollbar-thumb { background: rgba(0, 0, 0, 0.15); border-radius: 4px; }
-.conversas-redesign ::-webkit-scrollbar-thumb:hover { background: rgba(0, 0, 0, 0.25); }
-
-/* Animação suave ao entrar de mensagens */
-@keyframes conversasMsgIn {
-  from { opacity: 0; transform: translateY(6px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-.conversas-redesign [data-msg-bubble] {
-  animation: conversasMsgIn 0.18s ease;
-}
-
-/* Input de mensagem — visual mais redondo e clean */
-.conversas-redesign [data-conversas-input] textarea,
-.conversas-redesign [data-conversas-input] input[type="text"] {
+/* ─── Input de mensagem mais clean ────────────────────────── */
+.conversas-redesign textarea {
   background: #f9fafb !important;
-  border: 1px solid #e5e7eb !important;
   border-radius: 0.75rem !important;
-  font-family: 'Sora', sans-serif !important;
   line-height: 1.45 !important;
 }
-.conversas-redesign [data-conversas-input] textarea:focus,
-.conversas-redesign [data-conversas-input] input[type="text"]:focus {
+.conversas-redesign textarea:focus {
   background: #ffffff !important;
 }
 
-/* Send button — verde com sombra */
-.conversas-redesign [data-conversas-send] {
-  background: #22c55e !important;
-  border-radius: 0.7rem !important;
-  color: #fff !important;
-  box-shadow: 0 2px 8px rgba(34, 197, 94, 0.3) !important;
-  transition: all 0.15s ease !important;
-}
-.conversas-redesign [data-conversas-send]:hover {
-  background: #16a34a !important;
-  transform: scale(1.05);
+/* Separadores de data como pílula flutuante (caso usem badge) */
+.conversas-redesign .messages-scroll-area [class*="bg-muted"][class*="rounded-full"],
+.conversas-redesign .messages-scroll-area [class*="bg-background"][class*="rounded-full"] {
+  background: rgba(255, 255, 255, 0.92) !important;
+  backdrop-filter: blur(4px);
+  border: 1px solid rgba(0, 0, 0, 0.06) !important;
+  color: #6b7280 !important;
+  font-weight: 600 !important;
 }
