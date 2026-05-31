@@ -530,6 +530,7 @@ export default function Prospeccao() {
           <LevelUpModal open={showLevelUp} onOpenChange={setShowLevelUp} newLevel={newLevel} />
         </>
       )}
+      </div>
     </div>
   );
 }
