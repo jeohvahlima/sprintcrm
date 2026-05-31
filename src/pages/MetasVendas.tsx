@@ -1,4 +1,5 @@
 import { useState } from "react";
+import IndividualGoalsManager from "@/components/metas/IndividualGoalsManager";
 
 const fmt = (v: number) => Number(v).toLocaleString("pt-BR");
 const fmtR = (v: number) => "R$ " + fmt(Math.round(v));
@@ -552,11 +553,12 @@ function OTE() {
 
 /* ─────────────────────────── PAGE ─────────────────────────── */
 export default function MetasVendas() {
-  const [tab, setTab] = useState<"maquina" | "ote">("maquina");
+  const [tab, setTab] = useState<"maquina" | "ote" | "individual">("maquina");
 
-  const tabs: Array<["maquina" | "ote", string, string]> = [
+  const tabs: Array<["maquina" | "ote" | "individual", string, string]> = [
     ["maquina", "🏭", "Máquina"],
     ["ote", "💰", "OTE"],
+    ["individual", "👥", "Individuais"],
   ];
 
   return (
@@ -600,6 +602,7 @@ export default function MetasVendas() {
 
       {tab === "maquina" && <Maquina />}
       {tab === "ote" && <OTE />}
+      {tab === "individual" && <IndividualGoalsManager />}
     </div>
   );
 }

@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { Phone, Briefcase, MessageSquare, CalendarDays, Trophy, Users, Check, X, Brain, Pencil } from "lucide-react";
 import { useTeamMembers } from "@/hooks/useTeamMembers";
+import MyGoalsPanel from "@/components/rotina/MyGoalsPanel";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 type ProfileKey = "sdr" | "vendedor_close" | "atendente" | "secretaria" | "gerente";
@@ -271,6 +272,9 @@ export default function RotinaInteligente() {
           <Users className="w-4 h-4" /> Atribuir Usuários ({Object.keys(assignments).length})
         </button>
       </div>
+
+      {/* My Goals */}
+      <MyGoalsPanel />
 
       {/* Profile Selector */}
       <div className="mb-6">
