@@ -20,6 +20,9 @@ import { BenchmarkPanel } from "@/components/prospeccao/BenchmarkPanel";
 import { InteractionLogDialog } from "@/components/prospeccao/InteractionLogDialog";
 import { InteractionTimeline } from "@/components/prospeccao/InteractionTimeline";
 import { ScriptLibrary } from "@/components/prospeccao/ScriptLibrary";
+import { DialerCard } from "@/components/prospeccao/comercial/DialerCard";
+import { ScriptPanel } from "@/components/prospeccao/comercial/ScriptPanel";
+import { ColdCallFunnelPanel } from "@/components/prospeccao/comercial/ColdCallFunnelPanel";
 import { useProspeccaoData } from "@/hooks/useProspeccaoData";
 import { useFollowUpData } from "@/hooks/useFollowUpData";
 import { useInteractions } from "@/hooks/useInteractions";
@@ -39,6 +42,7 @@ import { TeamLobbyPanel } from "@/components/prospeccao/rpg/TeamLobbyPanel";
 import { KillFeed } from "@/components/prospeccao/rpg/KillFeed";
 import { ChannelProspectPanel } from "@/components/prospeccao/channels/ChannelProspectPanel";
 import { EmailProspectPanel } from "@/components/prospeccao/channels/EmailProspectPanel";
+import { ColdCallOutboundPanel } from "@/components/prospeccao/ColdCallOutboundPanel";
 import { ProspectingIntelligencePanel } from "@/components/prospeccao/ProspectingIntelligencePanel";
 import { GoalProgressHUD } from "@/components/prospeccao/comercial/GoalProgressHUD";
 import { CloserInbox } from "@/components/prospeccao/comercial/CloserInbox";
@@ -180,134 +184,154 @@ export default function Prospeccao() {
     instagram: "Instagram",
     whatsapp: "WhatsApp",
     email: "E-mail",
+    cadencia: "Cadência",
     funil: "Funil de Vendas",
     closer: "Leads Qualificados",
     comando: "Painel do Gestor",
     fila: "Minha Fila",
-    intel: "Metas e Vendas",
+    intel: "IA — Análise ICP",
     social: "Social Selling",
     rotina: "Rotina Inteligente",
     estrategia: "Estratégia Comercial",
   };
 
   return (
-    <div className="space-y-6 p-4 md:p-6">
+    <div className="min-h-screen bg-white dark:bg-slate-950">
       {gamificationOn && <KillFeed companyId={companyId} enableSound={soundOn} />}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">Máquina de Vendas</h1>
-          <p className="text-sm text-muted-foreground">
-            Acompanhe metas, pipeline e performance da equipe de vendas
-          </p>
-        </div>
-        <div className="flex items-center gap-2 flex-wrap">
-          <Select value={period} onValueChange={setPeriod}>
-            <SelectTrigger className="w-[120px]"><SelectValue /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="7">7 dias</SelectItem>
-              <SelectItem value="15">15 dias</SelectItem>
-              <SelectItem value="30">30 dias</SelectItem>
-              <SelectItem value="60">60 dias</SelectItem>
-              <SelectItem value="90">90 dias</SelectItem>
-            </SelectContent>
-          </Select>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setSidebarOpen((s) => !s)}
-            title={sidebarOpen ? "Recolher painel lateral" : "Expandir painel lateral"}
-          >
-            {sidebarOpen ? <PanelRightClose className="h-4 w-4" /> : <PanelRightOpen className="h-4 w-4" />}
-          </Button>
-          {gamificationOn && (
-            <>
-              <Button size="sm" variant="ghost" onClick={() => setSoundOn((s) => !s)} title={soundOn ? "Desligar som" : "Ligar som"}>
-                {soundOn ? <Volume2 className="h-4 w-4" /> : <VolumeX className="h-4 w-4" />}
+      
+      {/* Topbar — Header com Logo, Stats, Controls */}
+      <div className="sticky top-0 z-40 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950/95 backdrop-blur">
+        <div className="p-4 md:p-6 space-y-4">
+          {/* Row 1: Logo + Period Selector */}
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <span className="text-2xl font-black">🚀 Máquina de Vendas</span>
+            </div>
+            <div className="flex items-center gap-2 flex-wrap">
+              <Select value={period} onValueChange={setPeriod}>
+                <SelectTrigger className="w-[120px]"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="7">7 dias</SelectItem>
+                  <SelectItem value="15">15 dias</SelectItem>
+                  <SelectItem value="30">30 dias</SelectItem>
+                  <SelectItem value="60">60 dias</SelectItem>
+                  <SelectItem value="90">90 dias</SelectItem>
+                </SelectContent>
+              </Select>
+              <Button size="sm" variant="outline" onClick={handleExportCSV}>
+                📥 Exportar
               </Button>
-              <Button size="sm" variant="ghost" asChild>
-                <Link to="/configuracoes/gamificacao"><Settings className="h-4 w-4" /></Link>
+              <Button size="sm" onClick={handleRegister}>
+                ➕ Novo Lead
               </Button>
-            </>
-          )}
+            </div>
+          </div>
+
+          {/* Row 2: Stats Summary */}
+          <div className="grid grid-cols-2 md:grid-cols-6 gap-3">
+            {[
+              { label: "Ligações", value: "247", trend: "+12%" },
+              { label: "Contatos", value: "87", trend: "+8%" },
+              { label: "Reuniões", value: "12", trend: "+3" },
+              { label: "Win Rate", value: "18%", trend: "+2pp" },
+              { label: "S/ Follow-up", value: "5", trend: "↓ -2" },
+              { label: "Receita", value: "R$ 145k", trend: "+22%" },
+            ].map((stat) => (
+              <div key={stat.label} className="text-center p-2 rounded-lg bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                <div className="text-xs text-muted-foreground font-semibold uppercase">{stat.label}</div>
+                <div className="text-lg font-bold text-foreground mt-1">{stat.value}</div>
+                <div className={`text-xs mt-0.5 ${stat.trend.startsWith("+") || stat.trend.startsWith("↓") ? "text-emerald-600" : "text-amber-600"}`}>{stat.trend}</div>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
 
+      {/* Main Content */}
+      <div className="p-4 md:p-6 space-y-6">
 
-      {/* TopoFoco movido para /rotina */}
 
-      {/* Arena ao vivo (topo) */}
-      {gamificationOn && <ArenaTopBar companyId={companyId} currentUserId={userId} />}
+        {/* Arena ao vivo (topo) */}
+        {gamificationOn && <ArenaTopBar companyId={companyId} currentUserId={userId} />}
 
-      {/* Player Header (modo RPG) */}
-      {gamificationOn && (
-        <PlayerHeaderCard
-          profile={profile}
-          onShowAchievements={() => setShowAchievements(true)}
-          onShowRanks={() => setShowRanks(true)}
-        />
-      )}
+        {/* Player Header (modo RPG) */}
+        {gamificationOn && (
+          <PlayerHeaderCard
+            profile={profile}
+            onShowAchievements={() => setShowAchievements(true)}
+            onShowRanks={() => setShowRanks(true)}
+          />
+        )}
 
-      {/* HUD de Metas Comerciais — sempre visível */}
-      <GoalProgressHUD period="daily" />
+        {/* HUD de Metas Comerciais — sempre visível */}
+        <GoalProgressHUD period="daily" />
 
-      <div className={`flex gap-6 ${isMobile ? "flex-col" : ""}`}>
-        <div className="flex-1 min-w-0">
-          <Tabs value={activeTab} onValueChange={(v) => { setActiveTab(v as any); setSubTab("registros"); }}>
-            <TabsList className="flex flex-wrap h-auto">
-              <TabsTrigger value="cockpit">🎮 {labels.cockpit}</TabsTrigger>
-              {/* Visão Geral e Pipeline Pago ocultos — métricas estão em Inteligência */}
-              
-              <TabsTrigger value="fila">{labels.fila}</TabsTrigger>
-              <TabsTrigger value="coldcall">{labels.coldcall}</TabsTrigger>
-              <TabsTrigger value="instagram">{labels.instagram}</TabsTrigger>
-              <TabsTrigger value="whatsapp">{labels.whatsapp}</TabsTrigger>
-              <TabsTrigger value="email">✉️ {labels.email}</TabsTrigger>
-              {/* Funil de Vendas e Leads Qualificados ocultos */}
-              {isManagerLike && <TabsTrigger value="comando">{labels.comando}</TabsTrigger>}
-              {/* Metas & Vendas e Rotina Inteligente movidos para módulos próprios na sidebar */}
-              
-              
-            </TabsList>
+        <div className={`flex gap-6 ${isMobile ? "flex-col" : ""}`}>
+          <div className="flex-1 min-w-0">
+            <Tabs value={activeTab} onValueChange={(v) => { setActiveTab(v as any); setSubTab("registros"); }}>
+              <TabsList className="flex flex-wrap h-auto mb-6 border-b border-slate-200 dark:border-slate-800 rounded-none bg-transparent p-0">
+                <TabsTrigger value="cockpit" className="border-b-2 border-transparent data-[state=active]:border-blue-600 rounded-none">🎮 Hunter Cockpit</TabsTrigger>
+                <TabsTrigger value="coldcall" className="border-b-2 border-transparent data-[state=active]:border-blue-600 rounded-none">☎️ Cold Call</TabsTrigger>
+                <TabsTrigger value="intel" className="border-b-2 border-transparent data-[state=active]:border-blue-600 rounded-none">🤖 IA Analysis</TabsTrigger>
+                <TabsTrigger value="cadencia" className="border-b-2 border-transparent data-[state=active]:border-blue-600 rounded-none">📋 Cadência</TabsTrigger>
+                <TabsTrigger value="fila" className="border-b-2 border-transparent data-[state=active]:border-blue-600 rounded-none">📌 Minha Fila</TabsTrigger>
+                <TabsTrigger value="performance" className="border-b-2 border-transparent data-[state=active]:border-blue-600 rounded-none">📊 Performance</TabsTrigger>
+                <TabsTrigger value="instagram" className="border-b-2 border-transparent data-[state=active]:border-blue-600 rounded-none">📱 Instagram</TabsTrigger>
+                <TabsTrigger value="whatsapp" className="border-b-2 border-transparent data-[state=active]:border-blue-600 rounded-none">💬 WhatsApp</TabsTrigger>
+                <TabsTrigger value="email" className="border-b-2 border-transparent data-[state=active]:border-blue-600 rounded-none">✉️ Email</TabsTrigger>
+                {isManagerLike && <TabsTrigger value="comando" className="border-b-2 border-transparent data-[state=active]:border-blue-600 rounded-none">⚙️ Comando</TabsTrigger>}
+              </TabsList>
 
-            {/* Sub-abas Registros/Interações ocultas conforme solicitado */}
-
-            {activeTab === "cockpit" ? (
-              <div className="mt-4">
-                <HunterCockpit />
-              </div>
-            ) : false ? (
-              <div className="mt-4" />
-            
-            ) : isRotinaTab ? (
-              <div className="mt-4">
-                <RotinaInteligente />
-              </div>
-            ) : isSocialTab ? (
-              <div className="mt-4">
-                <SocialSellingPanel />
-              </div>
-            ) : isIntelTab ? (
-              <div className="mt-4">
-                <ProspectingIntelligencePanel />
-              </div>
-            ) : isFilaTab ? (
-              <div className="mt-4">
-                <SDRQueuePanel />
-              </div>
-            ) : isCloserTab ? (
-              <div className="mt-4">
-                <CloserInbox />
-              </div>
-            ) : isComandoTab ? (
-              <div className="mt-4">
-                <ManagerCommandCenter />
-              </div>
-            ) : activeTab === "email" ? (
-              <div className="mt-4">
-                <EmailProspectPanel />
-              </div>
-            ) : isChannelTab ? (
-              <div className="mt-4 space-y-3">
+              {activeTab === "cockpit" ? (
+                <div className="space-y-6">
+                  <HunterCockpit />
+                </div>
+              ) : activeTab === "coldcall" ? (
+                <div className="space-y-6">
+                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <div className="lg:col-span-2 space-y-6">
+                      <DialerCard />
+                      <ColdCallFunnelPanel />
+                    </div>
+                    <div className="space-y-6">
+                      <ScriptPanel />
+                    </div>
+                  </div>
+                </div>
+              ) : activeTab === "cadencia" ? (
+                <div className="space-y-6">
+                  <RotinaInteligente />
+                </div>
+              ) : activeTab === "performance" ? (
+                <div className="space-y-6">
+                  <PerformanceHubPanel meta={50000} />
+                </div>
+              ) : isSocialTab ? (
+                <div className="space-y-6">
+                  <SocialSellingPanel />
+                </div>
+              ) : isIntelTab ? (
+                <div className="space-y-6">
+                  <ProspectingIntelligencePanel />
+                </div>
+              ) : isFilaTab ? (
+                <div className="space-y-6">
+                  <SDRQueuePanel />
+                </div>
+              ) : isCloserTab ? (
+                <div className="space-y-6">
+                  <CloserInbox />
+                </div>
+              ) : isComandoTab ? (
+                <div className="space-y-6">
+                  <ManagerCommandCenter />
+                </div>
+              ) : activeTab === "email" ? (
+                <div className="space-y-6">
+                  <EmailProspectPanel />
+                </div>
+              ) : isChannelTab ? (
+                <div className="space-y-3">
                 {activeTab === "instagram" ? (
                   <div className="flex items-center justify-between gap-2 flex-wrap">
                     <div className="flex gap-1">
