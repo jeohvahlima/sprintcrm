@@ -9825,7 +9825,7 @@ function Conversas() {
                         <User className="h-10 w-10 text-muted-foreground" />
                       </div>
                       <h3 className="text-foreground font-medium text-lg">{selectedConv.contactName}</h3>
-                      <p className="text-muted-foreground text-sm capitalize">{selectedConv.channel}</p>
+                      <p className="text-muted-foreground text-sm">{safeFormatPhoneNumber(selectedConv.phoneNumber || selectedConv.id) || selectedConv.phoneNumber || selectedConv.id}</p>
                     </div>
 
                     {/* Informações do Lead */}
