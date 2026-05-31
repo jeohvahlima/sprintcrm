@@ -1459,6 +1459,27 @@ export default function KanbanPage() {
                 </React.Fragment>
             );
           })}
+
+          {/* 🎯 Placeholder coluna "Adicionar Nova Etapa" */}
+          {funilSelecionado && canCreateFunil && (
+            <div className="min-w-[280px] md:min-w-[320px] flex-shrink-0">
+              <AdicionarEtapaDialog
+                funilId={funilSelecionado.id}
+                onEtapaAdded={async () => { await refreshEtapas(); }}
+                customTrigger={
+                  <button
+                    type="button"
+                    className="w-full min-h-[400px] rounded-2xl border-2 border-dashed border-emerald-300/60 bg-emerald-50/30 hover:bg-emerald-50/60 hover:border-emerald-400 transition flex flex-col items-center justify-center gap-3 text-emerald-700 group"
+                  >
+                    <div className="h-10 w-10 rounded-xl bg-emerald-100 group-hover:bg-emerald-200 grid place-items-center transition">
+                      <Plus className="h-5 w-5" />
+                    </div>
+                    <span className="text-sm font-semibold">Adicionar Nova Etapa</span>
+                  </button>
+                }
+              />
+            </div>
+          )}
           </div>
         </SortableContext>
 
