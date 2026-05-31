@@ -342,24 +342,33 @@ export default function RotinaInteligente() {
       {/* Actions */}
       <div className="mb-4 flex justify-end">
         <button
-          onClick={() => setShowAddForm(v => !v)}
+          onClick={() => { if (showAddForm) { resetForm(); } else { setEditingId(null); setShowAddForm(true); } }}
           className="flex items-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-bold rounded-xl transition-all shadow-lg shadow-emerald-600/20"
         >
           <span className="text-lg leading-none">+</span> Nova Atividade em {current.label}
         </button>
       </div>
 
-      {/* Add Form */}
+      {/* Add/Edit Form */}
       {showAddForm && (
         <div className="mb-6 bg-slate-800/60 rounded-2xl p-4 border border-emerald-500/30">
-          <h3 className="text-sm font-bold text-emerald-300 mb-3 uppercase tracking-widest">+ Nova Atividade — {current.label}</h3>
+          <h3 className="text-sm font-bold text-emerald-300 mb-3 uppercase tracking-widest">
+            {editingId ? "✎ Editar Atividade" : "+ Nova Atividade"} — {current.label}
+          </h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <input
               className="col-span-full bg-slate-900 border border-slate-600 rounded-xl px-4 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500"
               placeholder="Título da atividade..."
               value={newTask.title}
               onChange={e => setNewTask(p => ({ ...p, title: e.target.value }))}
-              onKeyDown={e => e.key === "Enter" && addTask()}
+              onKeyDown={e => e.key === "Enter" && !e.shiftKey && saveTask()}
+            />
+            <textarea
+              className="col-span-full bg-slate-900 border border-slate-600 rounded-xl px-4 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 resize-none min-h-[80px]"
+              placeholder="Descrição da atividade (opcional)... ex.: objetivo, instruções, links, checklist"
+              value={newTask.description}
+              onChange={e => setNewTask(p => ({ ...p, description: e.target.value }))}
+              rows={3}
             />
             <input
               type="time"
@@ -375,7 +384,7 @@ export default function RotinaInteligente() {
               {Object.entries(CATEGORY_CONFIG).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
             </select>
             <select
-              className="bg-slate-900 border border-slate-600 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-emerald-500"
+              className="col-span-full bg-slate-900 border border-slate-600 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-emerald-500"
               value={newTask.priority}
               onChange={e => setNewTask(p => ({ ...p, priority: e.target.value as RotineTask["priority"] }))}
             >
@@ -385,8 +394,10 @@ export default function RotinaInteligente() {
             </select>
           </div>
           <div className="flex gap-2 mt-3">
-            <button onClick={addTask} className="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-bold py-2.5 rounded-xl">Adicionar</button>
-            <button onClick={() => setShowAddForm(false)} className="px-4 bg-slate-700 hover:bg-slate-600 text-slate-300 text-sm font-bold py-2.5 rounded-xl">Cancelar</button>
+            <button onClick={saveTask} className="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-bold py-2.5 rounded-xl">
+              {editingId ? "Salvar Alterações" : "Adicionar"}
+            </button>
+            <button onClick={resetForm} className="px-4 bg-slate-700 hover:bg-slate-600 text-slate-300 text-sm font-bold py-2.5 rounded-xl">Cancelar</button>
           </div>
         </div>
       )}
@@ -402,11 +413,12 @@ export default function RotinaInteligente() {
             </div>
           ) : (
             tasks.slice().sort((a, b) => a.time.localeCompare(b.time)).map(task => (
-              <TaskItem key={task.id} task={task} onToggle={toggleTask} onDelete={deleteTask} />
+              <TaskItem key={task.id} task={task} onToggle={toggleTask} onDelete={deleteTask} onEdit={startEdit} />
             ))
           )}
         </div>
       </div>
+
 
       {/* Assign Dialog */}
       {showAssignDialog && (
