@@ -1211,8 +1211,12 @@ export default function KanbanPage() {
         </div>
       </div>
 
-      {/* Dashboard de Resultado Comercial */}
-      <ResultadoComercialDashboard leads={leads as any} etapas={etapasFiltradas as any} />
+      {/* Dashboard de Resultado Comercial — dados exclusivos do funil selecionado */}
+      <ResultadoComercialDashboard
+        leads={leads as any}
+        etapas={etapasFiltradas as any}
+        funilNome={funilSelecionado?.nome}
+      />
 
       {/* Barra de filtros por responsável - controle de pipeline */}
       <FunilFiltrosResponsaveis
