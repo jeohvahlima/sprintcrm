@@ -22,6 +22,7 @@ import { useGlobalSync } from "@/hooks/useGlobalSync";
 import { useWorkflowAutomation } from "@/hooks/useWorkflowAutomation";
 import { usePermissions } from "@/hooks/usePermissions";
 import { FunilFiltrosResponsaveis, type ViewMode } from "@/components/funil/FunilFiltrosResponsaveis";
+import { ResultadoComercialDashboard } from "@/components/funil/ResultadoComercialDashboard";
 
 interface Lead {
   id: string;
@@ -1209,6 +1210,9 @@ export default function KanbanPage() {
           )}
         </div>
       </div>
+
+      {/* Dashboard de Resultado Comercial */}
+      <ResultadoComercialDashboard leads={leads as any} etapas={etapasFiltradas as any} />
 
       {/* Barra de filtros por responsável - controle de pipeline */}
       <FunilFiltrosResponsaveis

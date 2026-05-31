@@ -107,7 +107,7 @@ export default function GrowSalesBI() {
         ["Sem 1ª resposta", `${summary.perdas.leadSemResposta.qty} leads · ${BRL(summary.perdas.leadSemResposta.valor)}`],
         ["Sem follow-up", `${summary.perdas.semFollowUp.qty} leads · ${BRL(summary.perdas.semFollowUp.valor)}`],
         ["No-shows", `${summary.perdas.noShow.qty} · ${BRL(summary.perdas.noShow.valor)}`],
-        ["Recuperável 30d", BRL(summary.recuperavel30d)],
+        ["Recuperável 30d", BRL((summary as any).recuperavel30d ?? 0)],
         ["Perda total", BRL(summary.perdas.total)],
       ],
       alert: summary.perdas.total > 0 ? "Implemente follow-up e recuperação de no-show para reduzir perdas." : null,
@@ -231,7 +231,7 @@ export default function GrowSalesBI() {
             <PerdaChip val={BRL(summary.perdas.leadSemResposta.valor)} lbl="Sem 1ª resposta" sub={`${summary.perdas.leadSemResposta.qty} leads parados`} />
             <PerdaChip val={BRL(summary.perdas.semFollowUp.valor)} lbl="Sem follow-up" sub={`${summary.perdas.semFollowUp.qty} leads`} />
             <PerdaChip val={BRL(summary.perdas.perdidos.valor)} lbl="Perdidos" sub={`${summary.perdas.perdidos.qty} oportunidades`} />
-            <PerdaChip val={BRL(summary.recuperavel30d)} lbl="Recuperável" sub="em 30 dias ✓" recuperavel />
+            <PerdaChip val={BRL((summary as any).recuperavel30d ?? 0)} lbl="Recuperável" sub="em 30 dias ✓" recuperavel />
           </div>
         </div>
 
