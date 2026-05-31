@@ -186,8 +186,9 @@ export default function RotinaInteligente() {
   const [assignments, setAssignments] = useState<Record<string, ProfileKey>>(loadAssignments);
   const [selectedProfile, setSelectedProfile] = useState<ProfileKey>("sdr");
   const [showAddForm, setShowAddForm] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [showAssignDialog, setShowAssignDialog] = useState(false);
-  const [newTask, setNewTask] = useState({ title: "", time: "09:00", category: "prospeccao" as RotineTask["category"], priority: "media" as RotineTask["priority"] });
+  const [newTask, setNewTask] = useState({ title: "", description: "", time: "09:00", category: "prospeccao" as RotineTask["category"], priority: "media" as RotineTask["priority"] });
 
   // Persist
   useEffect(() => { localStorage.setItem(STORAGE_TASKS_KEY, JSON.stringify(tasksByProfile)); }, [tasksByProfile]);
@@ -207,11 +208,33 @@ export default function RotinaInteligente() {
 
   const toggleTask = (id: string) => updateTasks(p => p.map(t => t.id === id ? { ...t, done: !t.done } : t));
   const deleteTask = (id: string) => updateTasks(p => p.filter(t => t.id !== id));
-  const addTask = () => {
-    if (!newTask.title.trim()) return;
-    updateTasks(p => [...p, { id: Date.now().toString(), ...newTask, done: false }]);
-    setNewTask({ title: "", time: "09:00", category: "prospeccao", priority: "media" });
+
+  const resetForm = () => {
+    setNewTask({ title: "", description: "", time: "09:00", category: "prospeccao", priority: "media" });
+    setEditingId(null);
     setShowAddForm(false);
+  };
+
+  const saveTask = () => {
+    if (!newTask.title.trim()) return;
+    if (editingId) {
+      updateTasks(p => p.map(t => t.id === editingId ? { ...t, ...newTask } : t));
+    } else {
+      updateTasks(p => [...p, { id: Date.now().toString(), ...newTask, done: false }]);
+    }
+    resetForm();
+  };
+
+  const startEdit = (task: RotineTask) => {
+    setEditingId(task.id);
+    setNewTask({
+      title: task.title,
+      description: task.description || "",
+      time: task.time,
+      category: task.category,
+      priority: task.priority,
+    });
+    setShowAddForm(true);
   };
 
   const assignUser = (userId: string, profile: ProfileKey | "") => {
