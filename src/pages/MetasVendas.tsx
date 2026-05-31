@@ -1,368 +1,605 @@
 import { useState } from "react";
-import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import {
-  Gamepad2, Phone, Bot, Repeat, ListOrdered, BarChart3,
-  Zap, Flame, Coins, Trophy, Download, UserPlus, Flag,
-  Mic, MicOff, PhoneOff, StickyNote, Target as TargetIcon,
-  Crosshair, FileText,
-} from "lucide-react";
-import { ColdCallRedesigned } from "@/components/prospeccao/ColdCallRedesigned";
 
-type TabKey = "hunter" | "coldcall" | "ia" | "cadencia" | "fila" | "performance";
+const fmt = (v: number) => Number(v).toLocaleString("pt-BR");
+const fmtR = (v: number) => "R$ " + fmt(Math.round(v));
 
-const tabs: { key: TabKey; label: string; icon: any }[] = [
-  { key: "hunter", label: "Hunter Cockpit", icon: Gamepad2 },
-  { key: "coldcall", label: "Cold Call", icon: Phone },
-  { key: "ia", label: "IA — Análise ICP", icon: Bot },
-  { key: "cadencia", label: "Cadência", icon: Repeat },
-  { key: "fila", label: "Minha Fila", icon: ListOrdered },
-  { key: "performance", label: "Performance", icon: BarChart3 },
-];
-
-export default function MetasVendas() {
-  const [tab, setTab] = useState<TabKey>("hunter");
-
-  return (
-    <div className="min-h-screen bg-background">
-      {/* Topbar */}
-      <div className="flex items-center justify-between gap-4 px-6 py-3 border-b border-border bg-card">
-        <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center text-white">
-            <Crosshair className="h-5 w-5" />
-          </div>
-          <span className="font-semibold text-lg">Máquina de Vendas</span>
-          <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300 flex items-center gap-1">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" /> LIVE
-          </span>
-          <Stat icon={<Zap className="h-3.5 w-3.5 text-amber-500" />} value="1.155" label="XP" />
-          <Stat icon={<Flame className="h-3.5 w-3.5 text-orange-500" />} value="3d" label="Sequência" />
-          <Stat icon={<Coins className="h-3.5 w-3.5 text-yellow-500" />} value="40" label="Moedas" />
-          <Stat icon={<Trophy className="h-3.5 w-3.5 text-amber-500" />} value="#2" label="hoje" />
-        </div>
-        <div className="flex items-center gap-2">
-          <select className="text-xs px-3 py-1.5 rounded-md border border-border bg-card">
-            <option>30 dias</option><option>7 dias</option><option>90 dias</option>
-          </select>
-          <Button size="sm" variant="outline" className="h-8">
-            <Download className="h-3.5 w-3.5 mr-1.5" /> Exportar
-          </Button>
-          <Button size="sm" className="h-8 bg-emerald-600 hover:bg-emerald-700 text-white">
-            <UserPlus className="h-3.5 w-3.5 mr-1.5" /> Adicionar Lead
-          </Button>
-        </div>
-      </div>
-
-      <div className="p-6 space-y-5">
-        {/* Hero — Meta do dia */}
-        <div className="rounded-2xl p-5 bg-gradient-to-r from-blue-700 via-indigo-700 to-indigo-800 text-white shadow-lg">
-          <div className="grid grid-cols-1 md:grid-cols-[2fr_1fr_1fr_auto] gap-6 items-center">
-            <div>
-              <div className="text-[11px] font-bold tracking-wider opacity-80 mb-1">META DO DIA</div>
-              <div className="text-3xl font-bold mb-3">200 prospecções</div>
-              <div className="flex items-center gap-3">
-                <div className="flex-1 h-2 rounded-full bg-white/20 overflow-hidden">
-                  <div className="h-full bg-emerald-400 rounded-full" style={{ width: "18%" }} />
-                </div>
-                <span className="text-xs opacity-90">18% concluído · 36/200</span>
-                <span className="text-xs opacity-70">Faltam 164</span>
-              </div>
-            </div>
-            <div>
-              <div className="text-[11px] font-bold tracking-wider opacity-80 mb-1">REUNIÕES</div>
-              <div className="text-3xl font-bold">4 <span className="text-lg opacity-70">/ 40</span></div>
-            </div>
-            <div>
-              <div className="text-[11px] font-bold tracking-wider opacity-80 mb-1">PERDA ESTIMADA HOJE</div>
-              <div className="text-3xl font-bold text-rose-300">R$ 8.320</div>
-            </div>
-            <Button className="bg-rose-500 hover:bg-rose-600 text-white border-0 h-11 px-4 font-semibold">
-              <Flag className="h-4 w-4 mr-1.5" /> Recuperar agora
-            </Button>
-          </div>
-        </div>
-
-        {/* KPIs */}
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-          <Kpi tone="blue" icon="📞" label="LIGAÇÕES HOJE" value="36" sub="meta 200" delta="+12%" deltaUp />
-          <Kpi tone="cyan" icon="📇" label="CONTATOS" value="18%" sub="taxa de conexão" delta="2%" deltaDown />
-          <Kpi tone="amber" icon="📅" label="REUNIÕES AG." value="4" sub="de 40 no mês" delta="+8%" deltaUp />
-          <Kpi tone="green" icon="✅" label="WIN RATE" value="73%" sub="+193% vs mês ant." />
-          <Kpi tone="red" icon="⚠️" label="SEM FOLLOW-UP" value="12" sub="leads esfriando" />
-          <Kpi tone="emerald" icon="💰" label="RECEITA MÊS" value="R$ 12.600" sub="ticket R$ 1.145" delta="+94%" deltaUp />
-        </div>
-
-        {/* Tabs */}
-        <div className="flex items-center gap-1 border-b border-border overflow-x-auto">
-          {tabs.map((t) => {
-            const Icon = t.icon;
-            const active = tab === t.key;
-            return (
-              <button
-                key={t.key}
-                onClick={() => setTab(t.key)}
-                className={`flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition whitespace-nowrap ${
-                  active
-                    ? "border-emerald-500 text-emerald-600 dark:text-emerald-400"
-                    : "border-transparent text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                <Icon className="h-4 w-4" />
-                {t.label}
-              </button>
-            );
-          })}
-        </div>
-
-        {/* Tab content */}
-        {tab === "hunter" && <HunterCockpitView />}
-        {tab === "coldcall" && <ColdCallRedesigned />}
-        {tab === "ia" && <Placeholder title="IA — Análise ICP" description="Análise de empresas e score de propensão em tempo real." />}
-        {tab === "cadencia" && <Placeholder title="Cadência" description="Sequência multicanal de toques (call, email, WhatsApp, social)." />}
-        {tab === "fila" && <Placeholder title="Minha Fila" description="Próximas empresas a prospectar, priorizadas por score." />}
-        {tab === "performance" && <Placeholder title="Performance" description="Indicadores e ranking semanal do time." />}
-      </div>
-    </div>
-  );
-}
-
-/* ───────── Hunter Cockpit ───────── */
-function HunterCockpitView() {
-  return (
-    <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-5">
-      <div className="space-y-5">
-        {/* Header card */}
-        <div>
-          <h2 className="flex items-center gap-2 text-xl font-bold">
-            <Gamepad2 className="h-5 w-5 text-emerald-600" />
-            Grow Sales Hunter
-            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 dark:bg-amber-950/50 dark:text-amber-300">
-              OUTBOUND FOCUS
-            </span>
-          </h2>
-          <p className="text-sm text-muted-foreground">Seu painel de missões e ranking em tempo real</p>
-        </div>
-
-        {/* Next in queue */}
-        <Card className="p-5 bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 text-white border-0">
-          <div className="flex items-center justify-between text-[11px] uppercase tracking-wider opacity-70 mb-3">
-            <span>Próximo na fila — Cold Call</span>
-            <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 font-bold normal-case tracking-normal">
-              🎯 Score IA: 87/100
-            </span>
-          </div>
-          <div className="flex items-center gap-4 mb-4">
-            <div className="w-14 h-14 rounded-xl bg-white/10 flex items-center justify-center text-2xl">🏥</div>
-            <div className="flex-1">
-              <div className="text-lg font-bold">Clínica Saúde Total</div>
-              <div className="text-sm opacity-80">CEO: Dr. Marcos Lima · São Paulo · 45 func.</div>
-              <div className="flex gap-1.5 mt-1.5">
-                <Tag tone="green">✓ ICP Perfeito</Tag>
-                <Tag tone="amber">🔥 Alta intenção</Tag>
-                <Tag tone="blue">3ª tentativa</Tag>
-              </div>
-            </div>
-            <div className="text-right">
-              <div className="text-4xl font-mono font-bold tabular-nums">00 : 00</div>
-              <div className="text-xs opacity-70 mt-1">Aguardando ligação</div>
-            </div>
-          </div>
-          {/* Call controls */}
-          <div className="flex items-center justify-center gap-3 my-4">
-            <button className="w-12 h-12 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition">
-              <MicOff className="h-5 w-5" />
-            </button>
-            <button className="w-14 h-14 rounded-full bg-emerald-500 hover:bg-emerald-600 flex items-center justify-center shadow-xl transition">
-              <Phone className="h-6 w-6" />
-            </button>
-            <button className="w-12 h-12 rounded-full bg-rose-500 hover:bg-rose-600 flex items-center justify-center transition">
-              <PhoneOff className="h-5 w-5" />
-            </button>
-            <button className="w-12 h-12 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition">
-              <StickyNote className="h-5 w-5" />
-            </button>
-          </div>
-          {/* Outcome */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-            <Outcome>✅ Conectou</Outcome>
-            <Outcome>📬 C. Postal</Outcome>
-            <Outcome>🙁 Não atend.</Outcome>
-            <Outcome>❌ Desqual.</Outcome>
-          </div>
-        </Card>
-
-        {/* Script */}
-        <Card className="p-5">
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-2 font-semibold">
-              <FileText className="h-4 w-4 text-emerald-600" />
-              Script de Abertura — Cold Call
-            </div>
-            <div className="flex gap-1 bg-muted rounded-lg p-1">
-              <button className="px-3 py-1 text-xs rounded-md bg-emerald-600 text-white font-medium">Abertura</button>
-              <button className="px-3 py-1 text-xs rounded-md text-muted-foreground hover:text-foreground">Objeções</button>
-              <button className="px-3 py-1 text-xs rounded-md text-muted-foreground hover:text-foreground">Fechamento</button>
-            </div>
-          </div>
-          <div className="rounded-lg bg-muted/50 p-4 mb-4">
-            <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-2">Abertura padrão</div>
-            <p className="text-sm leading-relaxed">
-              "Oi, aqui é o <Slot>[seu nome]</Slot> da GrowOS. Eu vi que a <Slot>[Empresa]</Slot> atua no segmento de{" "}
-              <Slot>[segmento]</Slot> e empresas similares estão usando nossa plataforma para{" "}
-              <Slot tone="emerald">aumentar a conversão de leads em 3×</Slot>. Você tem 2 minutos para eu te mostrar como?"
-            </p>
-          </div>
-          <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-2">Objeções comuns</div>
-          <div className="space-y-2">
-            <Objection q='😐 "Não tenho tempo agora"' a='"Entendo! Que tal 10 min na sexta às 10h? Prometo ser objetivo."' />
-            <Objection q='💸 "Está caro"' a='"Faz sentido. Mas se te mostrar que o ROI é de 4×, mudaria de opinião?"' />
-            <Objection q='🔄 "Já uso outra ferramenta"' a='"Ótimo! Me conta como está funcionando? Clientes que vieram de lá economizaram 40%."' />
-          </div>
-        </Card>
-      </div>
-
-      {/* Sidebar */}
-      <div className="space-y-4">
-        <Card className="p-4">
-          <div className="flex items-center justify-between mb-3">
-            <div className="text-sm font-bold flex items-center gap-1.5">⚡ Missões de hoje</div>
-            <span className="text-[10px] font-bold text-amber-600">🔥 +200 XP disponíveis</span>
-          </div>
-          <div className="space-y-2.5">
-            <Mission icon="📞" title="Caçar 10 leads" sub="0/10 hoje" xp={50} />
-            <Mission icon="💬" title="Receber 3 respostas" sub="0/3" xp={60} />
-            <Mission icon="📅" title="Agendar 1 reunião" sub="0/1" xp={100} />
-            <Mission icon="🎯" title="Detectar oportunidade" sub="0/1" xp={70} />
-            <Mission icon="🏆" title="Fechar negócio" sub="0/1" xp={200} />
-          </div>
-        </Card>
-
-        <Card className="p-4">
-          <div className="flex items-center justify-between mb-3">
-            <div className="text-sm font-bold flex items-center gap-1.5">🏆 Ranking semanal</div>
-            <span className="text-[10px] text-muted-foreground">Top 5</span>
-          </div>
-          <div className="space-y-1.5">
-            <Rank pos="🥇" name="Jeohvah Lima" xp={2840} pct={100} />
-            <Rank pos="#2" name="Você" xp={1155} pct={41} highlight />
-            <Rank pos="#3" name="Ana Nunes" xp={980} pct={34} />
-            <Rank pos="#4" name="Carlos M." xp={740} pct={26} />
-            <Rank pos="#5" name="Beatriz S." xp={520} pct={18} />
-          </div>
-        </Card>
-      </div>
-    </div>
-  );
-}
-
-/* ───────── sub-components ───────── */
-
-function Stat({ icon, value, label }: { icon: React.ReactNode; value: string; label: string }) {
-  return (
-    <div className="hidden md:flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-muted text-xs">
-      {icon}<span className="font-bold">{value}</span>
-      <span className="text-muted-foreground">{label}</span>
-    </div>
-  );
-}
-
-const kpiTones = {
-  blue: "from-blue-50 to-blue-100/50 dark:from-blue-950/30 dark:to-blue-950/10 border-blue-200/60 dark:border-blue-900/40",
-  cyan: "from-cyan-50 to-cyan-100/50 dark:from-cyan-950/30 dark:to-cyan-950/10 border-cyan-200/60 dark:border-cyan-900/40",
-  amber: "from-amber-50 to-amber-100/50 dark:from-amber-950/30 dark:to-amber-950/10 border-amber-200/60 dark:border-amber-900/40",
-  green: "from-emerald-50 to-emerald-100/50 dark:from-emerald-950/30 dark:to-emerald-950/10 border-emerald-200/60 dark:border-emerald-900/40",
-  red: "from-rose-50 to-rose-100/50 dark:from-rose-950/30 dark:to-rose-950/10 border-rose-200/60 dark:border-rose-900/40",
-  emerald: "from-emerald-100 to-emerald-50 dark:from-emerald-950/40 dark:to-emerald-950/10 border-emerald-300/60 dark:border-emerald-900/40",
+/* ─────────────────────────── COLORS ─────────────────────────── */
+const C = {
+  green: "#22C55E",
+  greenDark: "#16A34A",
+  greenBg: "#F0FDF4",
+  greenBorder: "#BBF7D0",
+  red: "#EF4444",
+  redBg: "#FEF2F2",
+  amber: "#F59E0B",
+  amberBg: "#FFFBEB",
+  amberBorder: "#FDE68A",
+  blue: "#3B82F6",
+  blueBg: "#EFF6FF",
+  purple: "#8B5CF6",
+  purpleBg: "#F5F3FF",
+  gray: "#6B7280",
+  grayBg: "#F9FAFB",
+  border: "#E5E7EB",
+  white: "#FFFFFF",
+  text: "#111827",
+  textSub: "#6B7280",
 };
 
-function Kpi({ tone, icon, label, value, sub, delta, deltaUp, deltaDown }: {
-  tone: keyof typeof kpiTones; icon: string; label: string; value: string; sub?: string; delta?: string; deltaUp?: boolean; deltaDown?: boolean;
-}) {
+/* ─────────────────────────── KPI TOP ─────────────────────────── */
+function KpiTop() {
+  const metas: Array<[string, number, number]> = [
+    ["🎯 200 prospecções", 0, 200],
+    ["📅 40 reuniões", 0, 40],
+  ];
   return (
-    <div className={`rounded-xl border bg-gradient-to-br p-3.5 ${kpiTones[tone]}`}>
-      <div className="text-[10px] font-bold tracking-wider text-muted-foreground mb-1">{icon} {label}</div>
-      <div className="text-2xl font-bold">{value}</div>
-      <div className="flex items-center justify-between text-[11px] text-muted-foreground mt-1">
-        <span>{sub}</span>
-        {delta && (
-          <span className={deltaUp ? "text-emerald-600 font-semibold" : deltaDown ? "text-rose-600 font-semibold" : ""}>
-            {deltaUp ? "↑" : deltaDown ? "↓" : ""}{delta}
-          </span>
+    <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 14, marginBottom: 24 }}>
+      <div style={{ background: C.white, border: `1.5px solid ${C.greenBorder}`, borderRadius: 16, padding: "18px 20px" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+          <span style={{ fontSize: 12, fontWeight: 700, color: C.greenDark, display: "flex", alignItems: "center", gap: 5 }}>🎯 META DO DIA</span>
+          <span style={{ background: C.greenBg, color: C.greenDark, fontSize: 10, padding: "2px 8px", borderRadius: 99, fontWeight: 700 }}>Sugerida</span>
+        </div>
+        {metas.map(([label, val, max]) => (
+          <div key={label} style={{ marginBottom: 10 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, color: C.textSub, marginBottom: 4 }}>
+              <span style={{ fontWeight: 600 }}>{label}</span>
+              <span>{val}/{max} · 0%</span>
+            </div>
+            <div style={{ background: C.border, borderRadius: 99, height: 6 }}>
+              <div style={{ width: "0%", height: "100%", background: C.green, borderRadius: 99 }} />
+            </div>
+          </div>
+        ))}
+        <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, fontWeight: 700, color: C.text, marginTop: 4 }}>
+          <span>PROGRESSO GERAL</span><span>0%</span>
+        </div>
+      </div>
+
+      <div style={{ background: C.redBg, border: `1.5px solid #FECACA`, borderRadius: 16, padding: "18px 20px" }}>
+        <div style={{ fontSize: 12, fontWeight: 700, color: C.red, marginBottom: 8, display: "flex", alignItems: "center", gap: 5 }}>⚠️ PERDA ESTIMADA</div>
+        <div style={{ fontSize: 12, color: C.textSub, marginBottom: 4 }}>Você executou apenas <b>0%</b> da rotina hoje.</div>
+        <div style={{ fontSize: 10, textTransform: "uppercase", letterSpacing: ".5px", color: C.textSub, marginBottom: 4 }}>Receita não gerada hoje</div>
+        <div style={{ fontSize: 28, fontWeight: 800, color: C.red, marginBottom: 12 }}>R$ 159.960</div>
+        <button style={{ background: C.red, color: "#fff", border: "none", borderRadius: 10, padding: "9px 0", width: "100%", fontWeight: 700, fontSize: 13, cursor: "pointer" }}>
+          Recuperar agora →
+        </button>
+      </div>
+
+      <div style={{ background: `linear-gradient(135deg,#FFFBEB,#FEF3C7)`, border: `1.5px solid ${C.amberBorder}`, borderRadius: 16, padding: "18px 20px" }}>
+        <div style={{ fontSize: 12, fontWeight: 700, color: C.amber, marginBottom: 10, display: "flex", alignItems: "center", gap: 5 }}>🏆 SUA POSIÇÃO</div>
+        <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginBottom: 6 }}>
+          <span style={{ fontSize: 42, fontWeight: 900, color: C.text, lineHeight: 1 }}>#2</span>
+          <span style={{ fontSize: 14, color: C.textSub }}>de 3</span>
+        </div>
+        <div style={{ fontSize: 13, color: C.greenDark, fontWeight: 700, display: "flex", alignItems: "center", gap: 4 }}>📈 Faltam 1115 XP</div>
+        <div style={{ fontSize: 12, color: C.textSub, marginTop: 2 }}>
+          para ultrapassar <b>Jeohvah Lima</b> e subir para #1
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ─────────────────────────── MÁQUINA ─────────────────────────── */
+const STEPS = [
+  { id: 1, icon: "🩺", label: "Diagnóstico" },
+  { id: 2, icon: "🎯", label: "Meta & Prazo" },
+  { id: 3, icon: "🚀", label: "Plano de Ação" },
+  { id: 4, icon: "📋", label: "Acompanhamento" },
+  { id: 5, icon: "🏆", label: "Performance" },
+];
+
+const ACTIVITIES = [
+  { icon: "📞", label: "Cold Call" },
+  { icon: "📧", label: "Cold E-mail" },
+  { icon: "💼", label: "Social Selling" },
+  { icon: "🔁", label: "Follow-up" },
+  { icon: "🤝", label: "Indicação" },
+  { icon: "📣", label: "Inbound" },
+  { icon: "🎪", label: "Eventos" },
+  { icon: "💬", label: "WhatsApp" },
+];
+
+type DiagKey = "fat" | "meses" | "sdrs" | "closers" | "ticket" | "lead2reu" | "showup" | "winrate";
+type CheckinKey = "leads" | "ligacoes" | "msgs" | "followups" | "reuAg" | "reuReal" | "vendas" | "fat";
+
+function Maquina() {
+  const [step, setStep] = useState(1);
+  const [acts, setActs] = useState<number[]>([0, 3, 7]);
+  const [diag, setDiag] = useState<Record<DiagKey, number>>({ fat: 3000, meses: 6, sdrs: 2, closers: 1, ticket: 3999, lead2reu: 30, showup: 30, winrate: 38 });
+  const [meta, setMeta] = useState({ metaFat: 60000, prazo: 1, manterEstrutura: true });
+  const [checkin, setCheckin] = useState<Record<CheckinKey, number> & { obs: string }>({ leads: 0, ligacoes: 0, msgs: 0, followups: 0, reuAg: 0, reuReal: 0, vendas: 0, fat: 0, obs: "" });
+
+  const toggleAct = (i: number) => setActs((prev) => prev.includes(i) ? prev.filter((x) => x !== i) : [...prev, i]);
+
+  const gap = meta.metaFat - diag.fat;
+  const cresc = diag.fat > 0 ? Math.round(gap / diag.fat * 100) : 0;
+  const crescMes = meta.prazo > 0 ? Math.round(cresc / meta.prazo) : cresc;
+
+  const labelStyle: React.CSSProperties = { fontSize: 11, fontWeight: 700, color: C.textSub, textTransform: "uppercase", letterSpacing: ".5px", marginBottom: 5, display: "block" };
+  const inputStyle: React.CSSProperties = { width: "100%", border: `1.5px solid ${C.border}`, borderRadius: 10, padding: "9px 12px", fontSize: 13, fontFamily: "inherit", background: C.white, color: C.text, outline: "none" };
+  const sectionTitle = (icon: string, txt: string) => (
+    <div style={{ fontSize: 13, fontWeight: 700, color: C.text, marginBottom: 10, marginTop: 16, display: "flex", alignItems: "center", gap: 6 }}>
+      {icon} {txt}
+    </div>
+  );
+
+  const metricas: Array<[string, DiagKey]> = [
+    ["Ticket médio (R$)", "ticket"],
+    ["Lead → Reunião (%)", "lead2reu"],
+    ["Show-up (%)", "showup"],
+    ["Win rate (%)", "winrate"],
+  ];
+
+  const checkinFields: Array<[string, CheckinKey]> = [
+    ["Leads prospectados", "leads"],
+    ["Ligações feitas", "ligacoes"],
+    ["Mensagens enviadas", "msgs"],
+    ["Follow-ups", "followups"],
+    ["Reuniões agendadas", "reuAg"],
+    ["Reuniões realizadas", "reuReal"],
+    ["Vendas fechadas", "vendas"],
+    ["Faturamento (R$)", "fat"],
+  ];
+
+  const planFields: Array<{ lbl: string; val?: number; opts?: string[] }> = [
+    { lbl: "Modelo de negócio", opts: ["B2B Consultivo (SDR + Closer)", "B2C Direto", "SaaS Self-serve"] },
+    { lbl: "Meta de receita mensal (R$)", val: meta.metaFat },
+    { lbl: "SDRs no time", val: diag.sdrs },
+    { lbl: "Closers / Vendedores", val: diag.closers },
+  ];
+
+  const summaryCards = [
+    { label: "Gap a fechar", value: fmtR(gap), sub: "por mês", color: C.red },
+    { label: "Crescimento total", value: cresc + "%", sub: "sobre o atual", color: C.green },
+    { label: "Crescimento mensal médio", value: crescMes + "%", sub: "ao mês", color: C.purple },
+  ];
+
+  const teamStats: Array<[string, number]> = [["Leads", 100], ["Ligações", 80], ["Reuniões ag.", 4], ["Vendas", 1]];
+
+  return (
+    <div style={{ background: C.white, border: `1.5px solid ${C.border}`, borderRadius: 20, overflow: "hidden" }}>
+      <div style={{ background: "linear-gradient(135deg,#667EEA,#764BA2)", padding: "20px 24px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        <div>
+          <div style={{ fontSize: 16, fontWeight: 800, color: "#fff", display: "flex", alignItems: "center", gap: 8 }}>🏭 Construção da Máquina de Vendas</div>
+          <div style={{ fontSize: 12, color: "rgba(255,255,255,.75)", marginTop: 3 }}>
+            Diagnóstico → Meta & Prazo → Plano de Ação → Acompanhamento → Performance Hub
+          </div>
+        </div>
+        <span style={{ background: "rgba(255,255,255,.2)", color: "#fff", fontSize: 12, fontWeight: 700, padding: "5px 14px", borderRadius: 99 }}>Fase {step} de 5</span>
+      </div>
+
+      <div style={{ height: 5, background: "#E9D8FD" }}>
+        <div style={{ height: "100%", width: `${step * 20}%`, background: "linear-gradient(90deg,#667EEA,#764BA2)", transition: "width .4s" }} />
+      </div>
+
+      <div style={{ display: "flex", borderBottom: `1.5px solid ${C.border}` }}>
+        {STEPS.map((s) => (
+          <button key={s.id} onClick={() => setStep(s.id)} style={{
+            flex: 1, padding: "12px 6px", border: "none", borderBottom: step === s.id ? "3px solid #764BA2" : "3px solid transparent",
+            background: step === s.id ? C.purpleBg : "transparent",
+            color: step === s.id ? "#764BA2" : s.id < step ? C.green : C.textSub,
+            fontWeight: step === s.id ? 700 : 500, fontSize: 12, cursor: "pointer", fontFamily: "inherit",
+            display: "flex", flexDirection: "column", alignItems: "center", gap: 4, transition: "all .15s"
+          }}>
+            <span style={{ fontSize: 18 }}>{s.icon}</span>
+            <span>{s.label}</span>
+            {s.id < step && <span style={{ fontSize: 10, color: C.green }}>✓ Feito</span>}
+          </button>
+        ))}
+      </div>
+
+      <div style={{ padding: "24px" }}>
+        {step === 1 && (
+          <div>
+            <div style={{ fontSize: 16, fontWeight: 800, color: C.text, marginBottom: 4 }}>📍 Onde a empresa está hoje?</div>
+            <div style={{ fontSize: 13, color: C.textSub, marginBottom: 20 }}>Situação financeira, estrutura comercial e métricas da esteira.</div>
+
+            {sectionTitle("💰", "Financeiro atual")}
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 4 }}>
+              <div><label style={labelStyle}>Faturamento mensal (R$)</label><input style={inputStyle} value={diag.fat} onChange={(e) => setDiag({ ...diag, fat: +e.target.value })} /></div>
+              <div><label style={labelStyle}>Meses nesse faturamento</label><input style={inputStyle} value={diag.meses} onChange={(e) => setDiag({ ...diag, meses: +e.target.value })} /></div>
+            </div>
+
+            {sectionTitle("👥", "Estrutura comercial")}
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 4 }}>
+              <div><label style={labelStyle}>SDRs / Atendentes</label><input style={inputStyle} value={diag.sdrs} onChange={(e) => setDiag({ ...diag, sdrs: +e.target.value })} /></div>
+              <div><label style={labelStyle}>Closers / Vendedores</label><input style={inputStyle} value={diag.closers} onChange={(e) => setDiag({ ...diag, closers: +e.target.value })} /></div>
+            </div>
+
+            {sectionTitle("📊", "Métricas da esteira")}
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 4 }}>
+              {metricas.map(([lbl, key]) => (
+                <div key={key}><label style={labelStyle}>{lbl}</label><input style={inputStyle} value={diag[key]} onChange={(e) => setDiag({ ...diag, [key]: +e.target.value })} /></div>
+              ))}
+            </div>
+
+            {sectionTitle("⚡", "Atividades praticadas")}
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 8, marginBottom: 16 }}>
+              {ACTIVITIES.map((a, i) => (
+                <div key={i} onClick={() => toggleAct(i)} style={{
+                  padding: "10px 8px", borderRadius: 12, border: `1.5px solid ${acts.includes(i) ? C.green : C.border}`,
+                  background: acts.includes(i) ? C.greenBg : C.white, cursor: "pointer", textAlign: "center",
+                  fontSize: 12, fontWeight: 600, color: acts.includes(i) ? C.greenDark : C.textSub, transition: "all .15s"
+                }}>
+                  <div style={{ fontSize: 20, marginBottom: 3 }}>{a.icon}</div>
+                  {a.label}
+                </div>
+              ))}
+            </div>
+
+            <div style={{ background: C.amberBg, border: `1.5px solid ${C.amberBorder}`, borderRadius: 12, padding: "14px 16px", marginBottom: 16 }}>
+              <div style={{ fontSize: 12, fontWeight: 700, color: "#92400E", marginBottom: 8 }}>⚠️ Gargalos identificados automaticamente</div>
+              <ul style={{ paddingLeft: 16, color: "#92400E", fontSize: 12 }}>
+                <li style={{ marginBottom: 4 }}>No-show acima de 50% — falta de confirmação/lembretes antes da reunião.</li>
+                <li>Faturamento travado há mais de 6 meses — sinal forte de teto operacional.</li>
+              </ul>
+            </div>
+
+            <div style={{ marginBottom: 16 }}>
+              <label style={labelStyle}>Observações adicionais</label>
+              <textarea style={{ ...inputStyle, minHeight: 80, resize: "vertical" }} placeholder="Dificuldades, contexto, mercado..." />
+            </div>
+
+            <div style={{ display: "flex", justifyContent: "flex-end" }}>
+              <button onClick={() => setStep(2)} style={{ background: "linear-gradient(135deg,#667EEA,#764BA2)", color: "#fff", border: "none", borderRadius: 12, padding: "11px 24px", fontWeight: 700, fontSize: 14, cursor: "pointer", fontFamily: "inherit" }}>
+                Próxima fase: Meta & Prazo →
+              </button>
+            </div>
+          </div>
+        )}
+
+        {step === 2 && (
+          <div>
+            <div style={{ fontSize: 16, fontWeight: 800, color: C.text, marginBottom: 4 }}>🎯 Para onde a empresa quer ir?</div>
+            <div style={{ fontSize: 13, color: C.textSub, marginBottom: 20 }}>Defina a meta de faturamento e o prazo para atingir.</div>
+
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12, marginBottom: 16 }}>
+              <div>
+                <label style={labelStyle}>Faturamento atual (R$)</label>
+                <input style={{ ...inputStyle, opacity: .6 }} value={diag.fat} disabled />
+                <div style={{ fontSize: 10, color: C.textSub, marginTop: 3 }}>Vem da Fase 1</div>
+              </div>
+              <div>
+                <label style={labelStyle}>Meta de faturamento (R$)</label>
+                <input style={inputStyle} value={meta.metaFat} onChange={(e) => setMeta({ ...meta, metaFat: +e.target.value })} />
+              </div>
+              <div>
+                <label style={labelStyle}>Em quantos meses?</label>
+                <input style={inputStyle} value={meta.prazo} onChange={(e) => setMeta({ ...meta, prazo: +e.target.value })} />
+              </div>
+            </div>
+
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12, marginBottom: 20 }}>
+              {summaryCards.map((c) => (
+                <div key={c.label} style={{ background: C.grayBg, borderRadius: 14, padding: "16px 18px", border: `1.5px solid ${C.border}` }}>
+                  <div style={{ fontSize: 11, color: C.textSub, marginBottom: 6, fontWeight: 600, textTransform: "uppercase", letterSpacing: ".4px" }}>{c.label}</div>
+                  <div style={{ fontSize: 24, fontWeight: 800, color: c.color }}>{c.value}</div>
+                  <div style={{ fontSize: 11, color: C.textSub }}>{c.sub}</div>
+                </div>
+              ))}
+            </div>
+
+            <div style={{ display: "flex", alignItems: "center", gap: 14, padding: "14px 16px", background: C.grayBg, border: `1.5px solid ${C.border}`, borderRadius: 12, marginBottom: 20 }}>
+              <input type="checkbox" checked={meta.manterEstrutura} onChange={(e) => setMeta({ ...meta, manterEstrutura: e.target.checked })}
+                style={{ width: 40, height: 22, accentColor: C.green, cursor: "pointer" }} />
+              <div>
+                <div style={{ fontSize: 13, fontWeight: 700, color: C.text }}>Manter a mesma estrutura comercial atual?</div>
+                <div style={{ fontSize: 12, color: C.textSub }}>Operação fica com {diag.sdrs} SDR(s) e {diag.closers} Closer(s).</div>
+              </div>
+            </div>
+
+            <div style={{ display: "flex", justifyContent: "space-between" }}>
+              <button onClick={() => setStep(1)} style={{ background: "none", border: `1.5px solid ${C.border}`, borderRadius: 12, padding: "11px 20px", fontWeight: 600, fontSize: 13, cursor: "pointer", color: C.textSub, fontFamily: "inherit" }}>← Voltar</button>
+              <button onClick={() => setStep(3)} style={{ background: "linear-gradient(135deg,#667EEA,#764BA2)", color: "#fff", border: "none", borderRadius: 12, padding: "11px 24px", fontWeight: 700, fontSize: 14, cursor: "pointer", fontFamily: "inherit" }}>Próxima fase: Plano de Ação →</button>
+            </div>
+          </div>
+        )}
+
+        {step === 3 && (
+          <div>
+            <div style={{ fontSize: 16, fontWeight: 800, color: C.text, marginBottom: 4 }}>🚀 Como vamos chegar lá?</div>
+            <div style={{ fontSize: 13, color: C.textSub, marginBottom: 16 }}>Motor de receita e ações concretas para dimensionar o time.</div>
+
+            <div style={{ background: C.blueBg, border: `1.5px solid #BFDBFE`, borderRadius: 12, padding: "14px 16px", marginBottom: 20 }}>
+              <div style={{ fontSize: 12, fontWeight: 700, color: "#1E40AF", marginBottom: 8 }}>💡 Recomendações com base no diagnóstico</div>
+              <ul style={{ paddingLeft: 16, color: "#1E40AF", fontSize: 12 }}>
+                <li style={{ marginBottom: 4 }}>Crescimento de {cresc}% é muito agressivo — considere expandir o time comercial.</li>
+                <li style={{ marginBottom: 4 }}>Contratar +1 Closer para absorver as reuniões geradas.</li>
+                <li>Prazo curto + meta agressiva: reforce inbound pago para acelerar.</li>
+              </ul>
+            </div>
+
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 16 }}>
+              {planFields.map((f, i) => (
+                <div key={i}>
+                  <label style={labelStyle}>{f.lbl}</label>
+                  {f.opts ? (
+                    <select style={{ ...inputStyle }}>{f.opts.map((o) => <option key={o}>{o}</option>)}</select>
+                  ) : (
+                    <input style={inputStyle} defaultValue={f.val} />
+                  )}
+                </div>
+              ))}
+            </div>
+
+            <div style={{ fontSize: 13, fontWeight: 700, color: C.text, marginBottom: 10 }}>📦 Portfólio de Ofertas</div>
+            <div style={{ border: `2px dashed ${C.border}`, borderRadius: 14, padding: "28px 20px", textAlign: "center", color: C.textSub, fontSize: 13, marginBottom: 20 }}>
+              <div style={{ fontSize: 32, marginBottom: 8 }}>📦</div>
+              Nenhuma oferta cadastrada.
+              <div style={{ marginTop: 10 }}>
+                <button style={{ background: C.green, color: "#fff", border: "none", borderRadius: 10, padding: "8px 20px", fontWeight: 700, fontSize: 13, cursor: "pointer", fontFamily: "inherit" }}>+ Adicionar Oferta</button>
+              </div>
+            </div>
+
+            <div style={{ display: "flex", justifyContent: "space-between" }}>
+              <button onClick={() => setStep(2)} style={{ background: "none", border: `1.5px solid ${C.border}`, borderRadius: 12, padding: "11px 20px", fontWeight: 600, fontSize: 13, cursor: "pointer", color: C.textSub, fontFamily: "inherit" }}>← Voltar</button>
+              <button onClick={() => setStep(4)} style={{ background: "linear-gradient(135deg,#667EEA,#764BA2)", color: "#fff", border: "none", borderRadius: 12, padding: "11px 24px", fontWeight: 700, fontSize: 14, cursor: "pointer", fontFamily: "inherit" }}>Próxima fase: Acompanhamento →</button>
+            </div>
+          </div>
+        )}
+
+        {step === 4 && (
+          <div>
+            <div style={{ fontSize: 16, fontWeight: 800, color: C.text, marginBottom: 4 }}>📋 Check-in de hoje <span style={{ fontSize: 13, fontWeight: 400, color: C.textSub }}>30/05/2026</span></div>
+            <div style={{ fontSize: 13, color: C.textSub, marginBottom: 16 }}>Registre suas atividades do dia. Leva 30 segundos.</div>
+
+            <div style={{ display: "flex", gap: 8, marginBottom: 16 }}>
+              {["SDR", "Closer", "Híbrido"].map((r) => (
+                <button key={r} style={{ padding: "7px 18px", borderRadius: 99, border: `1.5px solid ${r === "Closer" ? C.green : C.border}`, background: r === "Closer" ? C.green : C.white, color: r === "Closer" ? "#fff" : C.textSub, fontWeight: 700, fontSize: 12, cursor: "pointer", fontFamily: "inherit" }}>{r}</button>
+              ))}
+            </div>
+
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 10, marginBottom: 16 }}>
+              {checkinFields.map(([lbl, key]) => (
+                <div key={key} style={{ background: C.grayBg, border: `1.5px solid ${C.border}`, borderRadius: 12, padding: "12px 14px" }}>
+                  <div style={{ fontSize: 11, color: C.textSub, marginBottom: 6, fontWeight: 600 }}>{lbl}</div>
+                  <input type="number" value={checkin[key]} min={0}
+                    onChange={(e) => setCheckin({ ...checkin, [key]: +e.target.value })}
+                    style={{ width: "100%", border: "none", background: "transparent", fontSize: 22, fontWeight: 800, color: C.text, fontFamily: "inherit", outline: "none" }} />
+                </div>
+              ))}
+            </div>
+
+            <div style={{ marginBottom: 14 }}>
+              <label style={labelStyle}>Observações do dia</label>
+              <textarea style={{ ...inputStyle, minHeight: 72, resize: "vertical" }} placeholder="Vitórias, perdas, aprendizados, bloqueios..." value={checkin.obs} onChange={(e) => setCheckin({ ...checkin, obs: e.target.value })} />
+            </div>
+
+            <button style={{ background: C.green, color: "#fff", border: "none", borderRadius: 12, padding: "13px 0", width: "100%", fontWeight: 700, fontSize: 14, cursor: "pointer", marginBottom: 24, fontFamily: "inherit" }}>
+              💾 Salvar check-in de hoje
+            </button>
+
+            <div style={{ background: C.greenBg, border: `1.5px solid ${C.greenBorder}`, borderRadius: 16, padding: "18px 20px" }}>
+              <div style={{ fontSize: 14, fontWeight: 700, color: C.greenDark, marginBottom: 12 }}>🏆 Desempenho do time — semana</div>
+              <div style={{ fontSize: 13, color: C.textSub, marginBottom: 4 }}>Faturamento semana <span style={{ float: "right", fontWeight: 700, color: C.greenDark }}>28.9% da meta</span></div>
+              <div style={{ fontSize: 24, fontWeight: 800, color: C.greenDark, marginBottom: 8 }}>R$ 3.999 <span style={{ fontSize: 14, fontWeight: 400, color: C.textSub }}>/ R$ 13.857</span></div>
+              <div style={{ background: C.greenBorder, borderRadius: 99, height: 8, marginBottom: 16 }}>
+                <div style={{ width: "29%", height: "100%", background: C.green, borderRadius: 99 }} />
+              </div>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 10 }}>
+                {teamStats.map(([lbl, val]) => (
+                  <div key={lbl} style={{ textAlign: "center", background: C.white, borderRadius: 10, padding: "10px 8px" }}>
+                    <div style={{ fontSize: 22, fontWeight: 800, color: C.greenDark }}>{val}</div>
+                    <div style={{ fontSize: 11, color: C.textSub }}>{lbl}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div style={{ display: "flex", justifyContent: "space-between", marginTop: 20 }}>
+              <button onClick={() => setStep(3)} style={{ background: "none", border: `1.5px solid ${C.border}`, borderRadius: 12, padding: "11px 20px", fontWeight: 600, fontSize: 13, cursor: "pointer", color: C.textSub, fontFamily: "inherit" }}>← Voltar</button>
+              <button onClick={() => setStep(5)} style={{ background: "linear-gradient(135deg,#667EEA,#764BA2)", color: "#fff", border: "none", borderRadius: 12, padding: "11px 24px", fontWeight: 700, fontSize: 14, cursor: "pointer", fontFamily: "inherit" }}>Próxima fase: Performance Hub →</button>
+            </div>
+          </div>
+        )}
+
+        {step === 5 && (
+          <div>
+            <div style={{ fontSize: 16, fontWeight: 800, color: C.text, marginBottom: 4 }}>🏆 Performance Hub</div>
+            <div style={{ fontSize: 13, color: C.textSub, marginBottom: 20 }}>Ranking e evolução do time comercial.</div>
+
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14, marginBottom: 20 }}>
+              <div style={{ background: C.amberBg, border: `1.5px solid ${C.amberBorder}`, borderRadius: 14, padding: "16px 18px" }}>
+                <div style={{ fontSize: 12, fontWeight: 700, color: C.amber, marginBottom: 6 }}>🥇 TOP SDR</div>
+                <div style={{ fontSize: 13, color: C.textSub }}>Sem dados de SDR no período.</div>
+              </div>
+              <div style={{ background: C.greenBg, border: `1.5px solid ${C.greenBorder}`, borderRadius: 14, padding: "16px 18px" }}>
+                <div style={{ fontSize: 12, fontWeight: 700, color: C.greenDark, marginBottom: 6 }}>🏆 TOP VENDEDOR (CLOSER)</div>
+                <div style={{ fontSize: 15, fontWeight: 800, color: C.text }}>Jeohvah Lima</div>
+                <div style={{ fontSize: 13, color: C.greenDark, fontWeight: 700 }}>R$ 3.999 · 1 venda</div>
+              </div>
+            </div>
+
+            <div style={{ border: `1.5px solid ${C.border}`, borderRadius: 14, overflow: "hidden" }}>
+              <div style={{ display: "grid", gridTemplateColumns: "40px 1fr 70px 80px 80px 100px", padding: "10px 16px", background: C.grayBg, fontSize: 11, fontWeight: 700, color: C.textSub, textTransform: "uppercase", letterSpacing: ".4px", gap: 8 }}>
+                <span>#</span><span>Vendedor</span><span>Leads</span><span>Reuniões</span><span>Vendas</span><span style={{ textAlign: "right" }}>Faturamento</span>
+              </div>
+              <div style={{ display: "grid", gridTemplateColumns: "40px 1fr 70px 80px 80px 100px", padding: "14px 16px", alignItems: "center", gap: 8, fontSize: 13 }}>
+                <span style={{ fontSize: 20 }}>🥇</span>
+                <div><div style={{ fontWeight: 700, color: C.text }}>Jeohvah Lima</div><div style={{ fontSize: 11, color: C.textSub }}>Closer</div></div>
+                <span>100</span><span>3</span><span>1</span>
+                <span style={{ textAlign: "right", color: C.greenDark, fontWeight: 800 }}>R$ 3.999</span>
+              </div>
+            </div>
+
+            <div style={{ textAlign: "center", padding: "20px", color: C.textSub, fontSize: 13 }}>
+              Adicione mais membros para ver o ranking completo.
+            </div>
+
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <button onClick={() => setStep(4)} style={{ background: "none", border: `1.5px solid ${C.border}`, borderRadius: 12, padding: "11px 20px", fontWeight: 600, fontSize: 13, cursor: "pointer", color: C.textSub, fontFamily: "inherit" }}>← Voltar</button>
+              <span style={{ fontSize: 13, color: C.greenDark, fontWeight: 700, display: "flex", alignItems: "center", gap: 6 }}>✅ Máquina de Vendas configurada!</span>
+            </div>
+          </div>
         )}
       </div>
     </div>
   );
 }
 
-function Tag({ tone, children }: { tone: "green" | "amber" | "blue"; children: React.ReactNode }) {
-  const tones = {
-    green: "bg-emerald-500/20 text-emerald-200",
-    amber: "bg-amber-500/20 text-amber-200",
-    blue: "bg-blue-500/20 text-blue-200",
-  };
-  return <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full ${tones[tone]}`}>{children}</span>;
-}
+/* ─────────────────────────── OTE ─────────────────────────── */
+function OTE() {
+  const [ote, setOte] = useState({ nome: "Plano SDR Padrão", cargo: "SDR", salBase: 1000, oteAnual: 120000, percVar: 30, metaMensal: 300000, percComissao: 0.1, aceleraPct: 100, multiplicador: 1 });
+  const [sim, setSim] = useState({ ating: 100, valorVendido: 300000 });
 
-function Outcome({ children }: { children: React.ReactNode }) {
-  return (
-    <button className="text-xs font-medium py-2.5 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 transition">
-      {children}
-    </button>
+  const comissao = Math.round(sim.valorVendido * ote.percComissao / 100);
+  const acel = sim.ating >= 100 ? Math.round(comissao * (ote.multiplicador - 1 + 0.5)) : 0;
+  const total = ote.salBase + comissao + acel;
+
+  const labelStyle: React.CSSProperties = { fontSize: 11, fontWeight: 700, color: C.textSub, textTransform: "uppercase", letterSpacing: ".5px", marginBottom: 5, display: "block" };
+  const inputStyle: React.CSSProperties = { width: "100%", border: `1.5px solid ${C.border}`, borderRadius: 10, padding: "9px 12px", fontSize: 13, fontFamily: "inherit", background: C.white, color: C.text, outline: "none" };
+
+  const stepBadge = (n: number, txt: string) => (
+    <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12, marginTop: 20 }}>
+      <span style={{ background: "linear-gradient(135deg,#667EEA,#764BA2)", color: "#fff", width: 26, height: 26, borderRadius: 99, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 800, fontSize: 12, flexShrink: 0 }}>{n}</span>
+      <div>
+        <div style={{ fontSize: 13, fontWeight: 700, color: C.text }}>{txt}</div>
+      </div>
+    </div>
   );
-}
 
-function Slot({ children, tone }: { children: React.ReactNode; tone?: "emerald" }) {
-  const cls = tone === "emerald"
-    ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300"
-    : "bg-blue-100 text-blue-800 dark:bg-blue-950/40 dark:text-blue-300";
-  return <span className={`px-1.5 py-0.5 rounded text-[12px] font-medium ${cls}`}>{children}</span>;
-}
+  const breakdown: Array<[string, string, string]> = [
+    ["Salário base", fmtR(ote.salBase), C.text],
+    ["Comissão", fmtR(comissao), C.amber],
+    ["Acelerador", fmtR(acel), C.green],
+  ];
 
-function Objection({ q, a }: { q: string; a: string }) {
   return (
-    <div className="flex flex-col md:flex-row md:items-center gap-1 md:gap-4 py-1.5 border-b border-border last:border-0">
-      <div className="text-xs font-medium md:w-1/3">{q}</div>
-      <div className="text-xs text-muted-foreground flex-1">→ {a}</div>
+    <div style={{ background: C.white, border: `1.5px solid ${C.border}`, borderRadius: 20, overflow: "hidden" }}>
+      <div style={{ background: "linear-gradient(135deg,#F59E0B,#EF4444)", padding: "20px 24px" }}>
+        <div style={{ fontSize: 16, fontWeight: 800, color: "#fff", display: "flex", alignItems: "center", gap: 8 }}>💰 Plano de Comissionamento (OTE)</div>
+        <div style={{ fontSize: 12, color: "rgba(255,255,255,.8)", marginTop: 3 }}>
+          Configure remuneração variável, meta e aceleradores — e simule ganhos no mês.
+        </div>
+      </div>
+
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 300px", gap: 0 }}>
+        <div style={{ padding: 24, borderRight: `1.5px solid ${C.border}` }}>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+            <div><label style={labelStyle}>Nome do plano</label><input style={inputStyle} value={ote.nome} onChange={(e) => setOte({ ...ote, nome: e.target.value })} /></div>
+            <div><label style={labelStyle}>Cargo</label>
+              <select style={{ ...inputStyle }} value={ote.cargo} onChange={(e) => setOte({ ...ote, cargo: e.target.value })}>
+                <option>SDR</option><option>Closer</option><option>Híbrido</option>
+              </select>
+            </div>
+          </div>
+
+          {stepBadge(1, "Remuneração base e OTE")}
+          <div style={{ fontSize: 12, color: C.textSub, marginBottom: 12 }}>Salário fixo e ganho total esperado no ano.</div>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12 }}>
+            <div><label style={labelStyle}>Salário base (mês)</label><input style={inputStyle} value={ote.salBase} onChange={(e) => setOte({ ...ote, salBase: +e.target.value })} /></div>
+            <div><label style={labelStyle}>OTE anual</label><input style={inputStyle} value={ote.oteAnual} onChange={(e) => setOte({ ...ote, oteAnual: +e.target.value })} /></div>
+            <div><label style={labelStyle}>% Variável</label><input style={inputStyle} value={ote.percVar} onChange={(e) => setOte({ ...ote, percVar: +e.target.value })} /></div>
+          </div>
+
+          {stepBadge(2, "Meta e comissão")}
+          <div style={{ fontSize: 12, color: C.textSub, marginBottom: 12 }}>Quanto vender e quanto ganhar por venda.</div>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+            <div><label style={labelStyle}>Meta mensal (R$)</label><input style={inputStyle} value={ote.metaMensal} onChange={(e) => setOte({ ...ote, metaMensal: +e.target.value })} /></div>
+            <div><label style={labelStyle}>% Comissão sobre vendas</label><input style={inputStyle} value={ote.percComissao} onChange={(e) => setOte({ ...ote, percComissao: +e.target.value })} /></div>
+          </div>
+
+          {stepBadge(3, "Acelerador (super meta)")}
+          <div style={{ fontSize: 12, color: C.textSub, marginBottom: 12 }}>Multiplicador para quem ultrapassa a meta.</div>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 20 }}>
+            <div><label style={labelStyle}>Acelera a partir de (%)</label><input style={inputStyle} value={ote.aceleraPct} onChange={(e) => setOte({ ...ote, aceleraPct: +e.target.value })} /></div>
+            <div><label style={labelStyle}>Multiplicador</label><input style={inputStyle} value={ote.multiplicador} onChange={(e) => setOte({ ...ote, multiplicador: +e.target.value })} /></div>
+          </div>
+
+          <button style={{ background: C.text, color: "#fff", border: "none", borderRadius: 12, padding: "13px 0", width: "100%", fontWeight: 700, fontSize: 14, cursor: "pointer", fontFamily: "inherit" }}>
+            💾 Salvar plano
+          </button>
+        </div>
+
+        <div style={{ padding: 24, background: C.grayBg }}>
+          <div style={{ fontSize: 14, fontWeight: 800, color: C.text, marginBottom: 4 }}>🎮 Simulador</div>
+          <div style={{ fontSize: 12, color: C.textSub, marginBottom: 16 }}>Ajuste para simular ganhos no mês.</div>
+
+          <label style={labelStyle}>Atingimento da meta</label>
+          <input type="range" min={0} max={200} step={1} value={sim.ating}
+            onChange={(e) => setSim({ ...sim, ating: +e.target.value })}
+            style={{ width: "100%", accentColor: C.green, marginBottom: 4 }} />
+          <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, color: C.textSub, marginBottom: 12 }}>
+            <span>0%</span>
+            <span style={{ fontWeight: 800, color: sim.ating >= 100 ? C.green : C.amber }}>{sim.ating}%</span>
+            <span>200%</span>
+          </div>
+
+          <div style={{ marginBottom: 16 }}>
+            <label style={labelStyle}>Valor vendido no mês (R$)</label>
+            <input style={inputStyle} value={sim.valorVendido} onChange={(e) => setSim({ ...sim, valorVendido: +e.target.value })} />
+          </div>
+
+          <div style={{ background: C.white, border: `1.5px solid ${C.border}`, borderRadius: 14, overflow: "hidden" }}>
+            {breakdown.map(([lbl, val, color]) => (
+              <div key={lbl} style={{ display: "flex", justifyContent: "space-between", padding: "12px 16px", borderBottom: `1px solid ${C.border}` }}>
+                <span style={{ fontSize: 13, color: C.textSub }}>{lbl}</span>
+                <span style={{ fontSize: 13, fontWeight: 700, color }}>{val}</span>
+              </div>
+            ))}
+            <div style={{ padding: "16px", background: C.greenBg }}>
+              <div style={{ fontSize: 11, color: C.greenDark, fontWeight: 600, textTransform: "uppercase", letterSpacing: ".4px", marginBottom: 4 }}>Ganho total no mês</div>
+              <div style={{ fontSize: 28, fontWeight: 900, color: C.greenDark }}>{fmtR(total)}</div>
+              <div style={{ fontSize: 11, color: C.green, marginTop: 3 }}>Base: {fmtR(ote.salBase)} · Variável: {fmtR(comissao + acel)}</div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
 
-function Mission({ icon, title, sub, xp }: { icon: string; title: string; sub: string; xp: number }) {
-  return (
-    <div className="flex items-center gap-2.5 p-2 rounded-lg bg-muted/50">
-      <div className="w-8 h-8 rounded-md bg-card border border-border flex items-center justify-center text-sm">{icon}</div>
-      <div className="flex-1 min-w-0">
-        <div className="text-xs font-semibold truncate">{title}</div>
-        <div className="text-[10px] text-muted-foreground">{sub}</div>
-      </div>
-      <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 dark:bg-emerald-950/40 px-1.5 py-0.5 rounded">
-        +{xp} XP
-      </span>
-    </div>
-  );
-}
+/* ─────────────────────────── PAGE ─────────────────────────── */
+export default function MetasVendas() {
+  const [tab, setTab] = useState<"maquina" | "ote">("maquina");
 
-function Rank({ pos, name, xp, pct, highlight }: { pos: string; name: string; xp: number; pct: number; highlight?: boolean }) {
-  return (
-    <div className={`flex items-center gap-2 p-1.5 rounded-md ${highlight ? "bg-emerald-50 dark:bg-emerald-950/30" : ""}`}>
-      <span className="text-xs font-bold w-6">{pos}</span>
-      <div className="w-6 h-6 rounded-full bg-gradient-to-br from-violet-500 to-blue-500 flex items-center justify-center text-[10px] text-white font-bold">
-        {name[0]}
-      </div>
-      <span className="text-xs font-medium flex-1 truncate">{name}</span>
-      <span className="text-xs font-bold tabular-nums">{xp.toLocaleString("pt-BR")}</span>
-      <div className="w-12 h-1 rounded-full bg-muted overflow-hidden">
-        <div className="h-full bg-emerald-500" style={{ width: `${pct}%` }} />
-      </div>
-    </div>
-  );
-}
+  const tabs: Array<["maquina" | "ote", string, string]> = [
+    ["maquina", "🏭", "Máquina"],
+    ["ote", "💰", "OTE"],
+  ];
 
-function Placeholder({ title, description }: { title: string; description: string }) {
   return (
-    <Card className="p-10 text-center">
-      <h3 className="text-lg font-bold mb-1">{title}</h3>
-      <p className="text-sm text-muted-foreground">{description}</p>
-    </Card>
+    <div style={{ fontFamily: "'Inter', 'Nunito', system-ui, sans-serif", background: "#F8FAFC", minHeight: "100vh", padding: "28px 32px" }}>
+      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 24 }}>
+        <div>
+          <h1 style={{ fontSize: 24, fontWeight: 900, color: C.text, margin: 0, display: "flex", alignItems: "center", gap: 8 }}>💲 Metas & Vendas</h1>
+          <p style={{ fontSize: 13, color: C.textSub, margin: "4px 0 0" }}>
+            Estratégia: meta, ticket, conversão e projeção automática da operação comercial
+          </p>
+        </div>
+        <div style={{ display: "flex", gap: 8 }}>
+          <button style={{ background: "linear-gradient(135deg,#22C55E,#16A34A)", color: "#fff", border: "none", borderRadius: 12, padding: "10px 18px", fontWeight: 700, fontSize: 13, cursor: "pointer", fontFamily: "inherit", display: "flex", alignItems: "center", gap: 6 }}>
+            ✨ Estratégia
+          </button>
+          <button style={{ background: C.blue, color: "#fff", border: "none", borderRadius: 12, padding: "10px 18px", fontWeight: 700, fontSize: 13, cursor: "pointer", fontFamily: "inherit" }}>👤</button>
+          <button style={{ background: C.red, color: "#fff", border: "none", borderRadius: 12, padding: "10px 18px", fontWeight: 700, fontSize: 13, cursor: "pointer", fontFamily: "inherit" }}>🔴</button>
+        </div>
+      </div>
+
+      <KpiTop />
+
+      <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
+        <span style={{ background: C.green, color: "#fff", fontSize: 11, padding: "4px 12px", borderRadius: 99, fontWeight: 700, display: "flex", alignItems: "center", gap: 5 }}>⚡ Sales Intelligence</span>
+        <span style={{ fontSize: 13, color: C.textSub }}>Camada de inteligência embutida na Prospecção</span>
+      </div>
+
+      <div style={{ display: "flex", gap: 6, marginBottom: 20, background: C.white, border: `1.5px solid ${C.border}`, borderRadius: 14, padding: 5, width: "fit-content" }}>
+        {tabs.map(([key, icon, lbl]) => (
+          <button key={key} onClick={() => setTab(key)} style={{
+            padding: "10px 28px", borderRadius: 10, border: "none",
+            background: tab === key ? "linear-gradient(135deg,#667EEA,#764BA2)" : "transparent",
+            color: tab === key ? "#fff" : C.textSub,
+            fontWeight: tab === key ? 700 : 500, fontSize: 14, cursor: "pointer", fontFamily: "inherit",
+            display: "flex", alignItems: "center", gap: 7, transition: "all .2s"
+          }}>
+            {icon} {lbl}
+          </button>
+        ))}
+      </div>
+
+      {tab === "maquina" && <Maquina />}
+      {tab === "ote" && <OTE />}
+    </div>
   );
 }

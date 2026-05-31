@@ -133,7 +133,7 @@ export function useRelatoriosOperacional(range: BIRange) {
       });
       const topFunilId = Object.entries(funilCountMap).sort((a, b) => b[1] - a[1])[0]?.[0];
       const funilPrincipal =
-        (funisData || []).find((f: any) => f.id === topFunilId)?.nome || null;
+        (funisRes.data || []).find((f) => f.id === topFunilId)?.nome || null;
 
       const iaLeadIds = new Set<string>();
       (iaTrainingRes.data || []).forEach((row) => {

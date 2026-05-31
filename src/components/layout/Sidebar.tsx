@@ -68,9 +68,10 @@ const navigation: NavEntry[] = [
     label: "Estruturação Comercial",
     icon: Rocket,
     items: [
+      { name: "Metas & Vendas", href: "/metas-vendas", icon: DollarSign, menuKey: "prospeccao", clinicaLabel: "Metas da Clínica" },
       { name: "Rotina Inteligente", href: "/rotina", icon: Brain, menuKey: "prospeccao", clinicaLabel: "Rotina Clínica" },
       // "Máquina de Vendas" e "Processos Comerciais" são exclusivamente comerciais — ocultos para clínicas
-      { name: "Máquina de Vendas", href: "/metas-vendas", icon: Target, menuKey: "prospeccao", hideForClinica: true, clinicaLabel: "Metas da Clínica" } as any,
+      { name: "Máquina de Vendas", href: "/prospeccao", icon: Target, menuKey: "prospeccao", hideForClinica: true } as any,
       { name: "Maturidade Comercial", href: "/maturidade", icon: Activity, menuKey: "maturidade", hideForClinica: true } as any,
       { name: "Processos Comerciais", href: "/processos", icon: Target, menuKey: "processos", showAIBadge: true, hideForClinica: true } as any,
       { name: "Call Center", href: "/discador", icon: PhoneCall, menuKey: "discador" },
