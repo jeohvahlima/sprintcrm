@@ -16,11 +16,12 @@ import { toast } from "sonner";
 interface AdicionarEtapaDialogProps {
   funilId: string;
   onEtapaAdded: () => void;
+  customTrigger?: React.ReactNode;
 }
 
 const CORES_PADRAO = ["#3b82f6", "#22c55e", "#eab308", "#f97316", "#ef4444", "#8b5cf6", "#ec4899"];
 
-export function AdicionarEtapaDialog({ funilId, onEtapaAdded }: AdicionarEtapaDialogProps) {
+export function AdicionarEtapaDialog({ funilId, onEtapaAdded, customTrigger }: AdicionarEtapaDialogProps) {
   const [open, setOpen] = useState(false);
   const [nome, setNome] = useState("");
   const [cor, setCor] = useState(CORES_PADRAO[0]);
