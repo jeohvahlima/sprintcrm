@@ -298,7 +298,7 @@ export default function Prospeccao() {
                     </div>
                   </div>
                 </div>
-              ) : activeTab === "cadencia" ? (
+              ) : (activeTab as string) === "cadencia" ? (
                 <div className="space-y-6">
                   <RotinaInteligente />
                 </div>
