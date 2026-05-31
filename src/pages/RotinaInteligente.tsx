@@ -137,29 +137,42 @@ function ProfileCard({ profile, count, active, onClick }: {
   );
 }
 
-function TaskItem({ task, onToggle, onDelete }: {
-  task: RotineTask; onToggle: (id: string) => void; onDelete: (id: string) => void;
+function TaskItem({ task, onToggle, onDelete, onEdit }: {
+  task: RotineTask; onToggle: (id: string) => void; onDelete: (id: string) => void; onEdit: (task: RotineTask) => void;
 }) {
   const cat = CATEGORY_CONFIG[task.category];
   const pri = PRIORITY_CONFIG[task.priority];
   return (
     <div
-      className={`group flex items-center gap-3 rounded-xl px-4 py-3 border transition-all duration-200 cursor-pointer
+      className={`group flex items-start gap-3 rounded-xl px-4 py-3 border transition-all duration-200
         ${task.done ? "bg-slate-800/30 border-slate-700/30 opacity-60" : `${cat.bg} ${cat.border} hover:brightness-110`}`}
-      onClick={() => onToggle(task.id)}
     >
-      <div className={`w-5 h-5 rounded-full border-2 flex-shrink-0 flex items-center justify-center transition-all
-        ${task.done ? "bg-emerald-500 border-emerald-500" : `border-current ${cat.text}`}`}>
+      <button
+        onClick={() => onToggle(task.id)}
+        className={`mt-0.5 w-5 h-5 rounded-full border-2 flex-shrink-0 flex items-center justify-center transition-all
+          ${task.done ? "bg-emerald-500 border-emerald-500" : `border-current ${cat.text}`}`}
+      >
         {task.done && <Check className="w-3 h-3 text-white" strokeWidth={3} />}
+      </button>
+      <span className="text-xs font-mono text-slate-400 w-12 flex-shrink-0 mt-1">{task.time}</span>
+      <span className={`w-2 h-2 rounded-full flex-shrink-0 mt-2 ${cat.dot}`} />
+      <div className="flex-1 min-w-0 cursor-pointer" onClick={() => onToggle(task.id)}>
+        <div className={`text-sm font-medium ${task.done ? "line-through text-slate-500" : "text-slate-100"}`}>{task.title}</div>
+        {task.description && (
+          <div className={`text-xs mt-1 whitespace-pre-wrap ${task.done ? "text-slate-600" : "text-slate-400"}`}>{task.description}</div>
+        )}
       </div>
-      <span className="text-xs font-mono text-slate-400 w-12 flex-shrink-0">{task.time}</span>
-      <span className={`w-2 h-2 rounded-full flex-shrink-0 ${cat.dot}`} />
-      <span className={`flex-1 text-sm font-medium ${task.done ? "line-through text-slate-500" : "text-slate-100"}`}>{task.title}</span>
-      <span className={`hidden sm:inline text-[10px] font-semibold px-2 py-0.5 rounded-full border ${cat.bg} ${cat.text} ${cat.border}`}>{cat.label}</span>
-      <span className={`hidden sm:inline text-[10px] font-semibold px-2 py-0.5 rounded-full border ${pri.badge}`}>{pri.label}</span>
+      <span className={`hidden sm:inline text-[10px] font-semibold px-2 py-0.5 rounded-full border ${cat.bg} ${cat.text} ${cat.border} mt-1`}>{cat.label}</span>
+      <span className={`hidden sm:inline text-[10px] font-semibold px-2 py-0.5 rounded-full border ${pri.badge} mt-1`}>{pri.label}</span>
+      <button
+        onClick={(e) => { e.stopPropagation(); onEdit(task); }}
+        className="opacity-0 group-hover:opacity-100 transition-opacity text-slate-400 hover:text-emerald-400 p-1 mt-0.5"
+        title="Editar"
+      ><Pencil className="w-3.5 h-3.5" /></button>
       <button
         onClick={(e) => { e.stopPropagation(); onDelete(task.id); }}
-        className="opacity-0 group-hover:opacity-100 transition-opacity text-slate-500 hover:text-rose-400 text-xs p-1"
+        className="opacity-0 group-hover:opacity-100 transition-opacity text-slate-500 hover:text-rose-400 text-xs p-1 mt-0.5"
+        title="Excluir"
       >✕</button>
     </div>
   );
