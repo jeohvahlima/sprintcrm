@@ -9143,6 +9143,8 @@ function Conversas() {
               </Button>
               <Button size="icon" variant="outline" onClick={() => {
               console.log('🔄 Botão Recarregar clicado');
+              setFilter("all");
+              setSearchTerm("");
               loadSupabaseConversations();
               toast.success('Recarregando conversas...');
             }} className="gap-0" aria-label="Recarregar">
