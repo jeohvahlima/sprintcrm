@@ -113,10 +113,12 @@ export function AdicionarEtapaDialog({ funilId, onEtapaAdded, customTrigger }: A
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline" size="sm">
-          <Plus className="h-4 w-4 mr-2" />
-          Nova Etapa
-        </Button>
+        {customTrigger ?? (
+          <Button variant="outline" size="sm">
+            <Plus className="h-4 w-4 mr-2" />
+            Nova Etapa
+          </Button>
+        )}
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
