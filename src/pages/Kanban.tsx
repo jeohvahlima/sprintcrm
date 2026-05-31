@@ -1309,6 +1309,55 @@ export default function KanbanPage() {
         </div>
       )}
 
+      {displayMode === "lista" ? (
+        <div className="rounded-2xl border border-border bg-card overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="bg-muted/50 text-xs uppercase tracking-wider text-muted-foreground">
+                <tr>
+                  <th className="text-left px-4 py-3 font-semibold">Lead</th>
+                  <th className="text-left px-4 py-3 font-semibold">Empresa</th>
+                  <th className="text-left px-4 py-3 font-semibold">Etapa</th>
+                  <th className="text-right px-4 py-3 font-semibold">Valor</th>
+                  <th className="text-left px-4 py-3 font-semibold">Previsão</th>
+                  <th className="text-left px-4 py-3 font-semibold">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {leadsFiltrados.length === 0 && (
+                  <tr><td colSpan={6} className="px-4 py-12 text-center text-muted-foreground">Nenhum lead encontrado</td></tr>
+                )}
+                {leadsFiltrados.map((l: any) => {
+                  const etapa = etapasFiltradas.find(e => e.id === l.etapa_id);
+                  return (
+                    <tr key={l.id} className="border-t border-border hover:bg-muted/30 transition">
+                      <td className="px-4 py-3 font-medium">{l.nome || l.name || "—"}</td>
+                      <td className="px-4 py-3 text-muted-foreground">{l.company || "—"}</td>
+                      <td className="px-4 py-3">
+                        {etapa && (
+                          <span className="inline-flex items-center gap-1.5 text-xs">
+                            <span className="h-2 w-2 rounded-full" style={{ background: etapa.cor }} />
+                            {etapa.nome}
+                          </span>
+                        )}
+                      </td>
+                      <td className="px-4 py-3 text-right font-semibold tabular-nums">
+                        {l.value ? `R$ ${Number(l.value).toLocaleString("pt-BR")}` : "—"}
+                      </td>
+                      <td className="px-4 py-3 text-xs text-muted-foreground">
+                        {l.expected_close_date ? new Date(l.expected_close_date).toLocaleDateString("pt-BR") : "—"}
+                      </td>
+                      <td className="px-4 py-3 text-xs">
+                        <span className="capitalize">{l.status || "ativo"}</span>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      ) : (
       <DndContext
         sensors={sensors}
         collisionDetection={customCollisionDetection}
