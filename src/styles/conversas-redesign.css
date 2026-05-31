@@ -82,16 +82,8 @@
 }
 
 /* ─── Painel direito (informações do lead) ────────────────── */
-/* Último filho do root é o painel direito */
-.conversas-redesign > div:last-child {
-  background: #ffffff !important;
-  border-left: 1px solid #e5e7eb !important;
-}
+/* Mantém o visual colorido original — não sobrescrever cores/backgrounds dos cards */
 
-/* Cards dentro do painel direito mais arredondados/suaves */
-.conversas-redesign > div:last-child [class*="rounded-"] {
-  border-radius: 0.75rem;
-}
 
 /* ─── Botões de cabeçalho/ferramentas (hover verde) ──────── */
 .conversas-redesign button[class*="rounded"]:hover:not([disabled]):not([data-state="open"]) {
