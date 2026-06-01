@@ -69,10 +69,11 @@ export function WhatsAppTemplatesManager({ companyId }: TemplatesManagerProps) {
   // Form state
   const [newTemplate, setNewTemplate] = useState({
     name: '',
-    category: 'UTILITY' as 'UTILITY' | 'MARKETING' | 'AUTHENTICATION',
+    category: 'MARKETING' as 'UTILITY' | 'MARKETING' | 'AUTHENTICATION',
     language: 'pt_BR',
-    headerType: 'none' as 'none' | 'text',
+    headerType: 'none' as 'none' | 'text' | 'image' | 'video' | 'document',
     headerText: '',
+    headerMediaUrl: '',
     bodyText: '',
     bodyExamples: [] as string[],
     footerText: '',
