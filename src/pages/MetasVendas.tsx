@@ -188,14 +188,20 @@ function Maquina() {
   ];
 
   const checkinFields: Array<[string, CheckinKey]> = [
-    ["Leads prospectados", "leads"],
-    ["Ligações feitas", "ligacoes"],
-    ["Mensagens enviadas", "msgs"],
-    ["Follow-ups", "followups"],
+    ["Leads prospectados (Ligações/Mensagens)", "leads"],
+    ["Respostas", "respostas"],
+    ["Oportunidades criadas", "oportunidades"],
     ["Reuniões agendadas", "reuAg"],
+    ["Reuniões sem comparecimento", "reuNoShow"],
     ["Reuniões realizadas", "reuReal"],
+    ["Negociações", "negociacoes"],
+    ["Vendas perdidas", "vendasPerdidas"],
     ["Vendas fechadas", "vendas"],
-    ["Faturamento (R$)", "fat"],
+    ["Follow-ups (vendas recuperadas)", "fupRecuperadas"],
+    ["Follow-ups (oportunidade)", "fupOportunidade"],
+    ["Follow-ups", "followups"],
+    ["Ticket médio (R$)", "ticket"],
+    ["Faturamento bruto (R$)", "fat"],
   ];
 
   const planFields: Array<{ lbl: string; val?: number; opts?: string[] }> = [
