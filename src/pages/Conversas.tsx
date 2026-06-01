@@ -5631,6 +5631,7 @@ function Conversas() {
           mimeType: finalAudioBlob.type || audioMimeType,
           caption: '',
           company_id: userRole?.company_id,
+          force_provider: (selectedConv && apiOverrides[selectedConv.id]) || selectedConv?.origemApi,
           ...quotedPayload
         });
         return { data: result.data, error: result.error };
