@@ -2377,6 +2377,28 @@ function Conversas() {
     }
   }, [funis, etapas, leadVinculado?.funil_id, leadVinculado?.etapa_id, selectedConv?.id]);
 
+  // Detectar quais APIs WhatsApp estão conectadas (Meta Oficial e/ou Evolution Não Oficial)
+  useEffect(() => {
+    if (!userCompanyId) return;
+    (async () => {
+      try {
+        const { data } = await supabase
+          .from('whatsapp_connections')
+          .select('api_provider, meta_phone_number_id, evolution_api_url, status')
+          .eq('company_id', userCompanyId);
+        let meta = false;
+        let evolution = false;
+        (data || []).forEach((c: any) => {
+          if (c.meta_phone_number_id) meta = true;
+          if (c.evolution_api_url || c.api_provider === 'evolution') evolution = true;
+        });
+        setAvailableApis({ meta, evolution });
+      } catch (e) {
+        console.warn('Falha ao detectar APIs disponíveis:', e);
+      }
+    })();
+  }, [userCompanyId]);
+
   // ⚡ CORREÇÃO: Carregar usuários da empresa SEMPRE (não apenas quando painel está aberto)
   useEffect(() => {
     if (!userCompanyId) return; // ⚡ Aguardar company_id estar disponível
