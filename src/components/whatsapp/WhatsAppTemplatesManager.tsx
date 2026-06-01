@@ -300,6 +300,7 @@ export function WhatsAppTemplatesManager({ companyId }: TemplatesManagerProps) {
       headerType: 'none',
       headerText: '',
       bodyText: '',
+      bodyExamples: [],
       footerText: '',
       buttons: []
     });
