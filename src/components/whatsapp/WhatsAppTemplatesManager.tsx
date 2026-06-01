@@ -296,10 +296,11 @@ export function WhatsAppTemplatesManager({ companyId }: TemplatesManagerProps) {
   const resetForm = () => {
     setNewTemplate({
       name: '',
-      category: 'UTILITY',
+      category: 'MARKETING',
       language: 'pt_BR',
       headerType: 'none',
       headerText: '',
+      headerMediaUrl: '',
       bodyText: '',
       bodyExamples: [],
       footerText: '',
