@@ -104,7 +104,7 @@ const ACTIVITIES = [
 ];
 
 type DiagKey = "fat" | "meses" | "sdrs" | "closers" | "ticket" | "lead2reu" | "showup" | "winrate";
-type CheckinKey = "leads" | "ligacoes" | "msgs" | "followups" | "reuAg" | "reuReal" | "vendas" | "fat";
+type CheckinKey = "leads" | "respostas" | "oportunidades" | "reuAg" | "reuNoShow" | "reuReal" | "negociacoes" | "vendasPerdidas" | "vendas" | "fupRecuperadas" | "fupOportunidade" | "followups" | "ticket" | "fat";
 
 function Maquina() {
   const [step, setStep] = useState(1);
