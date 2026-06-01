@@ -71,12 +71,26 @@ export function WhatsAppTemplatesManager({ companyId }: TemplatesManagerProps) {
     name: '',
     category: 'UTILITY' as 'UTILITY' | 'MARKETING' | 'AUTHENTICATION',
     language: 'pt_BR',
-    headerType: 'none' as 'none' | 'text' | 'image' | 'video' | 'document',
+    headerType: 'none' as 'none' | 'text',
     headerText: '',
     bodyText: '',
+    bodyExamples: [] as string[],
     footerText: '',
     buttons: [] as Array<{ type: string; text: string; url?: string; phone?: string }>
   });
+
+  // Sincronizar exemplos com variáveis detectadas no corpo
+  useEffect(() => {
+    const vars = newTemplate.bodyText.match(/\{\{(\d+)\}\}/g) || [];
+    const unique = Array.from(new Set(vars));
+    setNewTemplate(prev => {
+      if (prev.bodyExamples.length === unique.length) return prev;
+      return { ...prev, bodyExamples: unique.map((_, i) => prev.bodyExamples[i] || '') };
+    });
+  }, [newTemplate.bodyText]);
+
+  const sanitizeName = (v: string) =>
+    v.toLowerCase().replace(/[^a-z0-9_]/g, '_').slice(0, 60);
 
   const loadTemplates = async (sync = false) => {
     try {
@@ -172,14 +186,14 @@ export function WhatsAppTemplatesManager({ companyId }: TemplatesManagerProps) {
         });
       }
 
-      // Body (obrigatório)
-      const bodyVariables = newTemplate.bodyText.match(/\{\{(\d+)\}\}/g) || [];
+      // Body (obrigatório) — Meta exige valores reais de exemplo para cada variável
+      const bodyVarMatches = newTemplate.bodyText.match(/\{\{(\d+)\}\}/g) || [];
+      const uniqueVars = Array.from(new Set(bodyVarMatches));
+      const examples = uniqueVars.map((_, i) => newTemplate.bodyExamples[i] || `Exemplo ${i + 1}`);
       components.push({
         type: 'BODY',
         text: newTemplate.bodyText,
-        example: bodyVariables.length > 0 ? { 
-          body_text: [bodyVariables.map((_, i) => `Exemplo ${i + 1}`)]
-        } : undefined
+        example: uniqueVars.length > 0 ? { body_text: [examples] } : undefined
       });
 
       // Footer
@@ -286,6 +300,7 @@ export function WhatsAppTemplatesManager({ companyId }: TemplatesManagerProps) {
       headerType: 'none',
       headerText: '',
       bodyText: '',
+      bodyExamples: [],
       footerText: '',
       buttons: []
     });
@@ -421,6 +436,33 @@ export function WhatsAppTemplatesManager({ companyId }: TemplatesManagerProps) {
                 <DialogTitle>Criar Novo Template</DialogTitle>
               </DialogHeader>
               
+              {/* Pré-visualização ao vivo */}
+              {(newTemplate.bodyText || newTemplate.headerText) && (
+                <div className="rounded-lg border bg-[#e5ddd5] dark:bg-muted/30 p-4">
+                  <p className="text-xs text-muted-foreground mb-2">Pré-visualização WhatsApp</p>
+                  <div className="max-w-sm ml-auto bg-[#dcf8c6] dark:bg-primary/10 rounded-lg p-3 text-sm shadow space-y-1">
+                    {newTemplate.headerType === 'text' && newTemplate.headerText && (
+                      <p className="font-semibold">{newTemplate.headerText}</p>
+                    )}
+                    <p className="whitespace-pre-wrap">
+                      {newTemplate.bodyText || <span className="text-muted-foreground italic">Corpo da mensagem...</span>}
+                    </p>
+                    {newTemplate.footerText && (
+                      <p className="text-xs text-muted-foreground pt-1">{newTemplate.footerText}</p>
+                    )}
+                    {newTemplate.buttons.length > 0 && (
+                      <div className="pt-2 border-t mt-2 space-y-1">
+                        {newTemplate.buttons.map((b, i) => (
+                          <div key={i} className="text-center text-primary text-sm py-1 border-t first:border-t-0">
+                            {b.text || `Botão ${i + 1}`}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
               <div className="space-y-4">
                 {/* Nome e Categoria */}
                 <div className="grid grid-cols-2 gap-4">
@@ -429,7 +471,7 @@ export function WhatsAppTemplatesManager({ companyId }: TemplatesManagerProps) {
                     <Input
                       placeholder="meu_template"
                       value={newTemplate.name}
-                      onChange={(e) => setNewTemplate(prev => ({ ...prev, name: e.target.value }))}
+                      onChange={(e) => setNewTemplate(prev => ({ ...prev, name: sanitizeName(e.target.value) }))}
                     />
                     <p className="text-xs text-muted-foreground">Apenas letras minúsculas, números e underscore</p>
                   </div>
@@ -482,18 +524,19 @@ export function WhatsAppTemplatesManager({ companyId }: TemplatesManagerProps) {
                     <SelectContent>
                       <SelectItem value="none">Nenhum</SelectItem>
                       <SelectItem value="text">Texto</SelectItem>
-                      <SelectItem value="image">Imagem</SelectItem>
-                      <SelectItem value="video">Vídeo</SelectItem>
-                      <SelectItem value="document">Documento</SelectItem>
                     </SelectContent>
                   </Select>
                   {newTemplate.headerType === 'text' && (
                     <Input
-                      placeholder="Texto do cabeçalho"
+                      placeholder="Texto do cabeçalho (até 60 caracteres)"
+                      maxLength={60}
                       value={newTemplate.headerText}
                       onChange={(e) => setNewTemplate(prev => ({ ...prev, headerText: e.target.value }))}
                     />
                   )}
+                  <p className="text-xs text-muted-foreground">
+                    Cabeçalhos com mídia (imagem/vídeo/documento) exigem upload prévio na Meta — em breve.
+                  </p>
                 </div>
 
                 {/* Body */}
@@ -508,6 +551,24 @@ export function WhatsAppTemplatesManager({ companyId }: TemplatesManagerProps) {
                   <p className="text-xs text-muted-foreground">
                     Use {"{{1}}"}, {"{{2}}"}, etc. para variáveis dinâmicas
                   </p>
+
+                  {newTemplate.bodyExamples.length > 0 && (
+                    <div className="space-y-2 mt-2 p-3 rounded-md bg-muted/40 border">
+                      <p className="text-xs font-medium">Valores de exemplo (obrigatório pela Meta)</p>
+                      {newTemplate.bodyExamples.map((val, i) => (
+                        <Input
+                          key={i}
+                          placeholder={`Exemplo para {{${i + 1}}}`}
+                          value={val}
+                          onChange={(e) => {
+                            const next = [...newTemplate.bodyExamples];
+                            next[i] = e.target.value;
+                            setNewTemplate(prev => ({ ...prev, bodyExamples: next }));
+                          }}
+                        />
+                      ))}
+                    </div>
+                  )}
                 </div>
 
                 {/* Footer */}
