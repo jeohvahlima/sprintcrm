@@ -3,7 +3,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { Target, TrendingUp, Loader2 } from "lucide-react";
 
 type Metric = "gross_value" | "sales_closed" | "calls" | "meetings_scheduled" | "leads_prospected";
-type Period = "daily" | "monthly";
+type Period = "daily" | "weekly" | "monthly";
+type GoalKey = `${Period}:${Metric}`;
 
 interface Goal {
   id: string;
@@ -11,6 +12,12 @@ interface Goal {
   period: Period;
   target_value: number;
 }
+
+const PERIOD_LABEL: Record<Period, { title: string; caption: string }> = {
+  daily: { title: "Hoje", caption: "meta diária" },
+  weekly: { title: "Semana", caption: "meta semanal" },
+  monthly: { title: "Mês", caption: "meta mensal" },
+};
 
 const META_LABEL: Record<Metric, { icon: string; label: string; isCurrency?: boolean }> = {
   gross_value: { icon: "💰", label: "Faturamento", isCurrency: true },
@@ -25,10 +32,50 @@ const fmt = (v: number, currency?: boolean) =>
     ? "R$ " + Math.round(v).toLocaleString("pt-BR")
     : Math.round(v).toLocaleString("pt-BR");
 
+const goalKey = (period: Period, metric: Metric): GoalKey => `${period}:${metric}`;
+
+const formatDate = (date: Date) => {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, "0");
+  const d = String(date.getDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
+};
+
+const getPeriodRange = (period: Period) => {
+  const now = new Date();
+  const start = new Date(now);
+  start.setHours(0, 0, 0, 0);
+
+  if (period === "weekly") {
+    const day = start.getDay();
+    const diffToMonday = day === 0 ? -6 : 1 - day;
+    start.setDate(start.getDate() + diffToMonday);
+  }
+
+  if (period === "monthly") {
+    start.setDate(1);
+  }
+
+  const end = new Date(start);
+  if (period === "daily") end.setDate(start.getDate() + 1);
+  if (period === "weekly") end.setDate(start.getDate() + 7);
+  if (period === "monthly") end.setMonth(start.getMonth() + 1);
+
+  const logEnd = new Date(end);
+  logEnd.setDate(logEnd.getDate() - 1);
+
+  return {
+    start,
+    end,
+    logStart: formatDate(start),
+    logEnd: formatDate(logEnd),
+  };
+};
+
 export default function MyGoalsPanel() {
   const [loading, setLoading] = useState(true);
   const [goals, setGoals] = useState<Goal[]>([]);
-  const [realizado, setRealizado] = useState<Partial<Record<Metric, number>>>({});
+  const [realizado, setRealizado] = useState<Partial<Record<GoalKey, number>>>({});
 
   useEffect(() => {
     (async () => {
@@ -40,24 +87,56 @@ export default function MyGoalsPanel() {
           .from("commercial_goals")
           .select("id, metric, period, target_value")
           .eq("user_id", user.id)
+          .eq("scope", "user")
           .eq("active", true);
 
         const gs = (gData || []) as Goal[];
         setGoals(gs);
 
-        // Compute realizado for sales metrics from customer_sales (this month, status finalizada)
-        const now = new Date();
-        const startMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
-        const { data: sales } = await supabase
-          .from("customer_sales")
-          .select("valor_final, finalized_at, status, responsavel_id")
-          .eq("responsavel_id", user.id)
-          .gte("finalized_at", startMonth)
-          .eq("status", "finalizada");
+        const progress: Partial<Record<GoalKey, number>> = {};
+        await Promise.all((["daily", "weekly", "monthly"] as Period[]).map(async (period) => {
+          const range = getPeriodRange(period);
+          const [logsResult, callsResult, salesResult] = await Promise.all([
+            supabase
+              .from("prospecting_daily_logs")
+              .select("leads_prospected, meetings_scheduled, sales_closed, gross_value")
+              .eq("user_id", user.id)
+              .gte("log_date", range.logStart)
+              .lte("log_date", range.logEnd)
+              .range(0, 9999),
+            supabase
+              .from("prospecting_interactions")
+              .select("id")
+              .eq("user_id", user.id)
+              .eq("channel", "cold_call")
+              .gte("interaction_date", range.logStart)
+              .lte("interaction_date", range.logEnd)
+              .range(0, 9999),
+            supabase
+              .from("customer_sales")
+              .select("valor_final, status, finalized_at, responsavel_id")
+              .eq("responsavel_id", user.id)
+              .in("status", ["ganho", "finalizada"])
+              .gte("finalized_at", range.start.toISOString())
+              .lt("finalized_at", range.end.toISOString())
+              .range(0, 9999),
+          ]);
 
-        const totalValor = (sales || []).reduce((sum, s: any) => sum + Number(s.valor_final || 0), 0);
-        const totalVendas = (sales || []).length;
-        setRealizado({ gross_value: totalValor, sales_closed: totalVendas });
+          const logs = logsResult.data || [];
+          const sales = salesResult.data || [];
+          const logSalesClosed = logs.reduce((sum, row: any) => sum + Number(row.sales_closed || 0), 0);
+          const logGrossValue = logs.reduce((sum, row: any) => sum + Number(row.gross_value || 0), 0);
+          const salesClosed = sales.length;
+          const grossValue = sales.reduce((sum, row: any) => sum + Number(row.valor_final || 0), 0);
+
+          progress[goalKey(period, "leads_prospected")] = logs.reduce((sum, row: any) => sum + Number(row.leads_prospected || 0), 0);
+          progress[goalKey(period, "meetings_scheduled")] = logs.reduce((sum, row: any) => sum + Number(row.meetings_scheduled || 0), 0);
+          progress[goalKey(period, "calls")] = (callsResult.data || []).length;
+          progress[goalKey(period, "sales_closed")] = Math.max(logSalesClosed, salesClosed);
+          progress[goalKey(period, "gross_value")] = Math.max(logGrossValue, grossValue);
+        }));
+
+        setRealizado(progress);
       } catch (e) {
         console.error("MyGoalsPanel error", e);
       } finally {
@@ -90,8 +169,14 @@ export default function MyGoalsPanel() {
     );
   }
 
-  const monthly = goals.filter((g) => g.period === "monthly");
-  const daily = goals.filter((g) => g.period === "daily");
+  const byPeriod = (["daily", "weekly", "monthly"] as Period[]).map((period) => ({
+    period,
+    goals: goals.filter((g) => g.period === period),
+  })).filter((group) => group.goals.length > 0);
+  const reachedCount = goals.filter((g) => {
+    const real = realizado[goalKey(g.period, g.metric)] ?? 0;
+    return g.target_value > 0 && real >= g.target_value;
+  }).length;
 
   return (
     <div className="mb-6 bg-gradient-to-br from-emerald-950/40 via-slate-900/60 to-slate-900/40 border border-emerald-700/30 rounded-2xl p-5">
@@ -104,59 +189,44 @@ export default function MyGoalsPanel() {
             Minha Meta
             <span className="text-[10px] uppercase tracking-widest text-emerald-400 bg-emerald-500/15 px-2 py-0.5 rounded-full font-bold">individual</span>
           </div>
-          <div className="text-xs text-slate-400">Acompanhe seu progresso em tempo real</div>
+          <div className="text-xs text-slate-400">{reachedCount}/{goals.length} metas batidas no período atual</div>
         </div>
       </div>
 
-      {monthly.length > 0 && (
-        <div className="mb-4">
-          <div className="text-[11px] font-bold uppercase tracking-widest text-slate-400 mb-2">Mensal</div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            {monthly.map((g) => {
-              const info = META_LABEL[g.metric];
-              const real = realizado[g.metric] ?? 0;
-              const pct = g.target_value > 0 ? Math.min(100, Math.round((real / g.target_value) * 100)) : 0;
-              return (
-                <div key={g.id} className="bg-slate-900/60 border border-slate-700/50 rounded-xl p-4">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-xs font-bold text-slate-300">{info.icon} {info.label}</span>
-                    <span className="text-[11px] font-bold text-emerald-400">{pct}%</span>
+      <div className="space-y-4">
+        {byPeriod.map(({ period, goals: periodGoals }) => (
+          <div key={period}>
+            <div className="text-[11px] font-bold uppercase tracking-widest text-slate-400 mb-2 flex items-center gap-1">
+              <TrendingUp className="w-3 h-3" /> {PERIOD_LABEL[period].title}
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
+              {periodGoals.map((g) => {
+                const info = META_LABEL[g.metric];
+                const real = realizado[goalKey(g.period, g.metric)] ?? 0;
+                const pct = g.target_value > 0 ? Math.min(100, Math.round((real / g.target_value) * 100)) : 0;
+                return (
+                  <div key={g.id} className="bg-slate-900/60 border border-slate-700/50 rounded-xl p-4">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-xs font-bold text-slate-300">{info.icon} {info.label}</span>
+                      <span className="text-[11px] font-bold text-emerald-400">{pct}%</span>
+                    </div>
+                    <div className="text-lg font-black text-white">
+                      {fmt(real, info.isCurrency)} <span className="text-xs font-medium text-slate-500">/ {fmt(g.target_value, info.isCurrency)}</span>
+                    </div>
+                    <div className="text-[10px] text-slate-500 mt-0.5">{PERIOD_LABEL[period].caption}</div>
+                    <div className="mt-2 h-2 bg-slate-800 rounded-full overflow-hidden">
+                      <div
+                        className="h-full bg-gradient-to-r from-emerald-500 to-emerald-400 transition-all"
+                        style={{ width: `${pct}%` }}
+                      />
+                    </div>
                   </div>
-                  <div className="text-lg font-black text-white">
-                    {fmt(real, info.isCurrency)} <span className="text-xs font-medium text-slate-500">/ {fmt(g.target_value, info.isCurrency)}</span>
-                  </div>
-                  <div className="mt-2 h-2 bg-slate-800 rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-gradient-to-r from-emerald-500 to-emerald-400 transition-all"
-                      style={{ width: `${pct}%` }}
-                    />
-                  </div>
-                </div>
-              );
-            })}
+                );
+              })}
+            </div>
           </div>
-        </div>
-      )}
-
-      {daily.length > 0 && (
-        <div>
-          <div className="text-[11px] font-bold uppercase tracking-widest text-slate-400 mb-2 flex items-center gap-1">
-            <TrendingUp className="w-3 h-3" /> Diário
-          </div>
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-            {daily.map((g) => {
-              const info = META_LABEL[g.metric];
-              return (
-                <div key={g.id} className="bg-slate-900/60 border border-slate-700/50 rounded-xl p-3">
-                  <div className="text-[11px] text-slate-400 font-semibold">{info.icon} {info.label}</div>
-                  <div className="text-base font-black text-white mt-1">{fmt(g.target_value)}</div>
-                  <div className="text-[10px] text-slate-500">meta por dia</div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      )}
+        ))}
+      </div>
     </div>
   );
 }
