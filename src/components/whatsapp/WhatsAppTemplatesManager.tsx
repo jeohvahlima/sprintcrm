@@ -71,12 +71,26 @@ export function WhatsAppTemplatesManager({ companyId }: TemplatesManagerProps) {
     name: '',
     category: 'UTILITY' as 'UTILITY' | 'MARKETING' | 'AUTHENTICATION',
     language: 'pt_BR',
-    headerType: 'none' as 'none' | 'text' | 'image' | 'video' | 'document',
+    headerType: 'none' as 'none' | 'text',
     headerText: '',
     bodyText: '',
+    bodyExamples: [] as string[],
     footerText: '',
     buttons: [] as Array<{ type: string; text: string; url?: string; phone?: string }>
   });
+
+  // Sincronizar exemplos com variáveis detectadas no corpo
+  useEffect(() => {
+    const vars = newTemplate.bodyText.match(/\{\{(\d+)\}\}/g) || [];
+    const unique = Array.from(new Set(vars));
+    setNewTemplate(prev => {
+      if (prev.bodyExamples.length === unique.length) return prev;
+      return { ...prev, bodyExamples: unique.map((_, i) => prev.bodyExamples[i] || '') };
+    });
+  }, [newTemplate.bodyText]);
+
+  const sanitizeName = (v: string) =>
+    v.toLowerCase().replace(/[^a-z0-9_]/g, '_').slice(0, 60);
 
   const loadTemplates = async (sync = false) => {
     try {
