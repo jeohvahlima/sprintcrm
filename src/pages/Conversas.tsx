@@ -469,6 +469,21 @@ function Conversas() {
     }
   });
   const [selectedConv, setSelectedConv] = useState<Conversation | null>(null);
+  // Seleção da API (Meta Oficial vs Evolution Não Oficial) por conversa
+  const [availableApis, setAvailableApis] = useState<{ meta: boolean; evolution: boolean }>({ meta: false, evolution: false });
+  const [apiOverrides, setApiOverrides] = useState<Record<string, "meta" | "evolution">>(() => {
+    try {
+      const raw = localStorage.getItem("continuum_api_overrides");
+      return raw ? JSON.parse(raw) : {};
+    } catch { return {}; }
+  });
+  const setApiOverride = (convId: string, api: "meta" | "evolution") => {
+    setApiOverrides(prev => {
+      const next = { ...prev, [convId]: api };
+      try { localStorage.setItem("continuum_api_overrides", JSON.stringify(next)); } catch {}
+      return next;
+    });
+  };
   const [filter, setFilter] = useState<"all" | "waiting" | "answered" | "resolved" | "group" | "responsible" | "transferred" | "instagram" | "messenger">("all");
   const [advancedFilters, setAdvancedFilters] = useState<AdvancedFilters>(defaultFilters);
   const [searchTerm, setSearchTerm] = useState("");
