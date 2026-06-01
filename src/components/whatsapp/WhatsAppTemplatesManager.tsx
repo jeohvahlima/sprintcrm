@@ -240,7 +240,9 @@ export function WhatsAppTemplatesManager({ companyId }: TemplatesManagerProps) {
           name: newTemplate.name,
           category: newTemplate.category,
           language: newTemplate.language,
-          components
+          components,
+          header_media_url: ['image','video','document'].includes(newTemplate.headerType) ? newTemplate.headerMediaUrl : undefined,
+          header_format: ['image','video','document'].includes(newTemplate.headerType) ? newTemplate.headerType.toUpperCase() : undefined,
         }
       });
 
