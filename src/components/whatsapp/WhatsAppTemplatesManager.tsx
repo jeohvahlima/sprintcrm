@@ -436,6 +436,33 @@ export function WhatsAppTemplatesManager({ companyId }: TemplatesManagerProps) {
                 <DialogTitle>Criar Novo Template</DialogTitle>
               </DialogHeader>
               
+              {/* Pré-visualização ao vivo */}
+              {(newTemplate.bodyText || newTemplate.headerText) && (
+                <div className="rounded-lg border bg-[#e5ddd5] dark:bg-muted/30 p-4">
+                  <p className="text-xs text-muted-foreground mb-2">Pré-visualização WhatsApp</p>
+                  <div className="max-w-sm ml-auto bg-[#dcf8c6] dark:bg-primary/10 rounded-lg p-3 text-sm shadow space-y-1">
+                    {newTemplate.headerType === 'text' && newTemplate.headerText && (
+                      <p className="font-semibold">{newTemplate.headerText}</p>
+                    )}
+                    <p className="whitespace-pre-wrap">
+                      {newTemplate.bodyText || <span className="text-muted-foreground italic">Corpo da mensagem...</span>}
+                    </p>
+                    {newTemplate.footerText && (
+                      <p className="text-xs text-muted-foreground pt-1">{newTemplate.footerText}</p>
+                    )}
+                    {newTemplate.buttons.length > 0 && (
+                      <div className="pt-2 border-t mt-2 space-y-1">
+                        {newTemplate.buttons.map((b, i) => (
+                          <div key={i} className="text-center text-primary text-sm py-1 border-t first:border-t-0">
+                            {b.text || `Botão ${i + 1}`}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
               <div className="space-y-4">
                 {/* Nome e Categoria */}
                 <div className="grid grid-cols-2 gap-4">
