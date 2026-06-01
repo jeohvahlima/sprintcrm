@@ -46,11 +46,14 @@ import { toast } from "sonner";
    restoreProgress?: { step: number; label: string } | null;
     onBack?: () => void;
     showBackButton?: boolean;
-     protocolNumber?: string | null;
-     protocolStatus?: string;
-     contactPhone?: string;
-     companyId?: string | null;
- }
+      protocolNumber?: string | null;
+      protocolStatus?: string;
+      contactPhone?: string;
+      companyId?: string | null;
+      currentApi?: ApiProvider;
+      availableApis?: { meta: boolean; evolution: boolean };
+      onChangeApi?: (api: ApiProvider) => void;
+  }
 
   export function ConversationHeader({
    contactName,
