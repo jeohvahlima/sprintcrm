@@ -351,11 +351,19 @@ export function SalesMachineWizard() {
                 </div>
               )}
 
-              <div className="flex items-center gap-3 p-3 rounded-lg border bg-muted/30">
-                <Switch checked={diag.manter_estrutura}
-                  onCheckedChange={(v) => updDiag({ manter_estrutura: v })} />
+              <div className="flex items-center gap-3 p-3 rounded-lg border-2 border-emerald-200 bg-emerald-50/40">
+                <Switch
+                  checked={diag.manter_estrutura}
+                  onCheckedChange={(v) => updDiag({ manter_estrutura: v })}
+                  className="data-[state=checked]:bg-emerald-600 data-[state=unchecked]:bg-slate-300 border border-slate-400"
+                />
                 <div className="flex-1">
-                  <p className="text-sm font-medium">Manter a mesma estrutura comercial atual?</p>
+                  <p className="text-sm font-medium">
+                    Manter a mesma estrutura comercial atual?{" "}
+                    <span className={`ml-1 text-xs font-bold ${diag.manter_estrutura ? "text-emerald-600" : "text-slate-500"}`}>
+                      {diag.manter_estrutura ? "SIM" : "NÃO"}
+                    </span>
+                  </p>
                   <p className="text-xs text-muted-foreground">
                     {diag.manter_estrutura
                       ? `Operação fica com ${diag.sdrs_atual} SDR(s) e ${diag.closers_atual} Closer(s).`
@@ -364,13 +372,27 @@ export function SalesMachineWizard() {
                 </div>
               </div>
 
-              <div className="flex items-center justify-between pt-2 border-t">
+              <div className="flex items-center justify-between pt-2 border-t gap-2 flex-wrap">
                 <Button variant="outline" onClick={() => setPhase("1")}>
                   <ArrowLeft className="h-4 w-4 mr-1" /> Voltar
                 </Button>
-                <Button onClick={() => { handleSaveDiag(); setPhase("3"); }}>
-                  Próxima fase: Plano de Ação <ArrowRight className="h-4 w-4 ml-1" />
-                </Button>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    onClick={handleSaveDiag}
+                    disabled={upsert.isPending}
+                    className="border-emerald-500 text-emerald-700 hover:bg-emerald-50"
+                  >
+                    {upsert.isPending ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Save className="h-4 w-4 mr-1" />}
+                    Salvar meta
+                  </Button>
+                  <Button
+                    onClick={async () => { await handleSaveDiag(); setPhase("3"); }}
+                    disabled={upsert.isPending}
+                  >
+                    Próxima fase: Plano de Ação <ArrowRight className="h-4 w-4 ml-1" />
+                  </Button>
+                </div>
               </div>
             </CardContent>
           </Card>
