@@ -250,8 +250,17 @@ import { toast } from "sonner";
                    compact
                  />
                )}
-                {/* Botão Marcar Prospecção */}
-                <MarkProspectionButton
+               {/* Seletor de API (Oficial / Não Oficial) */}
+               {onChangeApi && (
+                 <ApiProviderSelector
+                   current={currentApi}
+                   available={availableApis}
+                   onChange={onChangeApi}
+                   channel={channel}
+                 />
+               )}
+                 {/* Botão Marcar Prospecção */}
+                 <MarkProspectionButton
                   leadId={leadVinculado?.id}
                   contactPhone={contactPhone}
                   channel={channel}
