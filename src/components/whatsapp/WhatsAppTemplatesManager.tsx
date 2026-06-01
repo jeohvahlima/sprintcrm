@@ -18,7 +18,17 @@ import {
   AlertCircle,
   Eye,
   Loader2,
-  Copy
+  Copy,
+  Image as ImageIcon,
+  Video,
+  File as FileIcon,
+  Type as TypeIcon,
+  Ban,
+  Send,
+  Sparkles,
+  Reply,
+  Link as LinkIcon,
+  Phone
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
