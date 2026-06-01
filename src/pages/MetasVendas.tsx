@@ -1,5 +1,7 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import IndividualGoalsManager from "@/components/metas/IndividualGoalsManager";
+import { DEFAULT_DIAGNOSTICO, detectGargalos, type DiagnosticoMaquina, useDiagnostico } from "@/hooks/useSalesMachineWizard";
+import { toast } from "sonner";
 
 const fmt = (v: number) => Number(v).toLocaleString("pt-BR");
 const fmtR = (v: number) => "R$ " + fmt(Math.round(v));
@@ -91,14 +93,14 @@ const STEPS = [
 ];
 
 const ACTIVITIES = [
-  { icon: "📞", label: "Cold Call" },
-  { icon: "📧", label: "Cold E-mail" },
-  { icon: "💼", label: "Social Selling" },
-  { icon: "🔁", label: "Follow-up" },
-  { icon: "🤝", label: "Indicação" },
-  { icon: "📣", label: "Inbound" },
-  { icon: "🎪", label: "Eventos" },
-  { icon: "💬", label: "WhatsApp" },
+  { key: "cold_call", icon: "📞", label: "Cold Call" },
+  { key: "cold_email", icon: "📧", label: "Cold E-mail" },
+  { key: "social_selling", icon: "💼", label: "Social Selling" },
+  { key: "followup", icon: "🔁", label: "Follow-up" },
+  { key: "indicacao", icon: "🤝", label: "Indicação" },
+  { key: "inbound", icon: "📣", label: "Inbound" },
+  { key: "evento", icon: "🎪", label: "Eventos" },
+  { key: "whatsapp", icon: "💬", label: "WhatsApp" },
 ];
 
 type DiagKey = "fat" | "meses" | "sdrs" | "closers" | "ticket" | "lead2reu" | "showup" | "winrate";
@@ -106,12 +108,64 @@ type CheckinKey = "leads" | "ligacoes" | "msgs" | "followups" | "reuAg" | "reuRe
 
 function Maquina() {
   const [step, setStep] = useState(1);
+  const { data: diagDb, upsert } = useDiagnostico();
   const [acts, setActs] = useState<number[]>([0, 3, 7]);
   const [diag, setDiag] = useState<Record<DiagKey, number>>({ fat: 3000, meses: 6, sdrs: 2, closers: 1, ticket: 3999, lead2reu: 30, showup: 30, winrate: 38 });
   const [meta, setMeta] = useState({ metaFat: 60000, prazo: 1, manterEstrutura: true });
   const [checkin, setCheckin] = useState<Record<CheckinKey, number> & { obs: string }>({ leads: 0, ligacoes: 0, msgs: 0, followups: 0, reuAg: 0, reuReal: 0, vendas: 0, fat: 0, obs: "" });
 
+  useEffect(() => {
+    if (!diagDb) return;
+    setDiag({
+      fat: diagDb.faturamento_atual ?? 0,
+      meses: diagDb.meses_travado ?? 0,
+      sdrs: diagDb.sdrs_atual ?? 0,
+      closers: diagDb.closers_atual ?? 0,
+      ticket: diagDb.ticket_medio_atual ?? 0,
+      lead2reu: diagDb.taxa_lead_reuniao_atual ?? 0,
+      showup: diagDb.taxa_show_atual ?? 0,
+      winrate: diagDb.taxa_win_atual ?? 0,
+    });
+    setMeta({
+      metaFat: diagDb.meta_faturamento ?? 0,
+      prazo: diagDb.prazo_meses ?? 1,
+      manterEstrutura: diagDb.manter_estrutura ?? true,
+    });
+    setActs(ACTIVITIES.reduce<number[]>((acc, activity, index) => {
+      if (diagDb.atividades?.[activity.key]) acc.push(index);
+      return acc;
+    }, []));
+  }, [diagDb]);
+
   const toggleAct = (i: number) => setActs((prev) => prev.includes(i) ? prev.filter((x) => x !== i) : [...prev, i]);
+
+  const handleSaveMeta = async () => {
+    try {
+      const atividades = ACTIVITIES.reduce<Record<string, boolean>>((acc, activity, index) => {
+        acc[activity.key] = acts.includes(index);
+        return acc;
+      }, {});
+      const payload: DiagnosticoMaquina = {
+        ...(diagDb || DEFAULT_DIAGNOSTICO),
+        faturamento_atual: diag.fat,
+        meses_travado: diag.meses,
+        sdrs_atual: diag.sdrs,
+        closers_atual: diag.closers,
+        ticket_medio_atual: diag.ticket,
+        taxa_lead_reuniao_atual: diag.lead2reu,
+        taxa_show_atual: diag.showup,
+        taxa_win_atual: diag.winrate,
+        meta_faturamento: meta.metaFat,
+        prazo_meses: meta.prazo,
+        manter_estrutura: meta.manterEstrutura,
+        atividades,
+      };
+      await upsert.mutateAsync({ ...payload, gargalos_auto: detectGargalos(payload) });
+      toast.success("Meta salva com sucesso");
+    } catch (e: any) {
+      toast.error("Erro ao salvar meta", { description: e?.message || "Tente novamente." });
+    }
+  };
 
   const gap = meta.metaFat - diag.fat;
   const cresc = diag.fat > 0 ? Math.round(gap / diag.fat * 100) : 0;
