@@ -98,10 +98,7 @@ export function DisparoEmMassa() {
   // Filtrar leads quando filtros mudarem
   useEffect(() => {
     filterLeads();
-  }, [leads, searchTerm, selectedStatus, selectedTag, selectedSegmentacao, disparoFilter]);
-
-  // Check for active campaigns on mount
-  useEffect(() => {
+  }, [leads, searchTerm, selectedStatus, selectedTag, selectedSegmentacao, disparoFilter, dateFrom, dateTo, tagPresence]);
     if (!companyId) return;
     const checkActive = async () => {
       const { data } = await supabase
