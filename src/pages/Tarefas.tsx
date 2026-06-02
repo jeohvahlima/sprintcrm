@@ -1677,43 +1677,72 @@ export default function Tarefas() {
   }, [tasks, columns, selectedBoard]);
   if (loading) return <div className="flex items-center justify-center h-screen"><p>Carregando...</p></div>;
   return <TarefasProvider>
-    <div className="container mx-auto p-6">
-      <div className="flex justify-between items-center mb-6">
+    <div className="container mx-auto p-4 md:p-6 space-y-5">
+      {/* ── HEADER ── */}
+      <div className="flex flex-col lg:flex-row lg:justify-between lg:items-end gap-4">
         <div>
-          <h1 className="text-3xl font-bold">Tarefas Estilo Trello</h1>
-          <p className="text-muted-foreground">Gerencie suas tarefas em quadros Kanban</p>
-          
+          <h1 className="text-2xl md:text-3xl font-bold tracking-tight flex items-center gap-2">
+            📋 Tarefas — Visão em Quadros
+          </h1>
+          <p className="text-sm text-muted-foreground mt-1">
+            Gerencie suas tarefas com drag & drop em tempo real
+          </p>
         </div>
-        <div className="flex gap-2 items-center">
-          <div className="flex items-center gap-1 rounded-md border p-1">
-            <UIButton variant={viewMode === 'board' ? 'default' : 'ghost'} size="sm" onClick={() => setViewMode('board')}>
+        <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1 rounded-lg border bg-card p-1 shadow-sm">
+            <UIButton variant={viewMode === 'board' ? 'default' : 'ghost'} size="sm" onClick={() => setViewMode('board')} className="h-8 text-xs">
               🗂 Quadro
             </UIButton>
-            <UIButton variant={viewMode === 'calendar' ? 'default' : 'ghost'} size="sm" onClick={() => setViewMode('calendar')}>
+            <UIButton variant={viewMode === 'calendar' ? 'default' : 'ghost'} size="sm" onClick={() => setViewMode('calendar')} className="h-8 text-xs">
               📅 Calendário
             </UIButton>
-            <UIButton variant={viewMode === 'dashboard' ? 'default' : 'ghost'} size="sm" onClick={() => setViewMode('dashboard')}>
+            <UIButton variant={viewMode === 'dashboard' ? 'default' : 'ghost'} size="sm" onClick={() => setViewMode('dashboard')} className="h-8 text-xs">
               📊 Dashboard
             </UIButton>
           </div>
-          <Input value={searchText} onChange={e => setSearchText(e.target.value)} placeholder="Buscar tarefas..." className="w-64" />
-          <select className="border rounded-md p-2" value={filterAssignee} onChange={e => setFilterAssignee(e.target.value)}>
-            <option value="">Responsável</option>
-            {allUsers.map(u => <option key={u.id} value={u.id}>{u.full_name}</option>)}
-          </select>
-          <select className="border rounded-md p-2" value={filterPriority} onChange={e => setFilterPriority(e.target.value)}>
-            <option value="">Prioridade</option>
-            <option value="baixa">Baixa</option>
-            <option value="media">Média</option>
-            <option value="alta">Alta</option>
-            <option value="urgente">Urgente</option>
-          </select>
-          <select className="border rounded-md p-2" value={filterTag} onChange={e => setFilterTag(e.target.value)}>
-            <option value="">Tag</option>
-            {Array.from(new Set(tasks.flatMap((t: any) => Array.isArray(t.tags) ? t.tags : []))).map(tag => <option key={tag} value={tag}>{tag}</option>)}
-          </select>
+        </div>
+      </div>
+
+      {/* ── FILTROS ── */}
+      <div className="flex flex-wrap items-center gap-2 bg-card border rounded-xl p-3 shadow-sm">
+        <Input
+          value={searchText}
+          onChange={e => setSearchText(e.target.value)}
+          placeholder="🔍 Buscar tarefas..."
+          className="w-full sm:w-64 h-9"
+        />
+        <select
+          className="border bg-background rounded-md px-2 h-9 text-sm"
+          value={filterPriority}
+          onChange={e => setFilterPriority(e.target.value)}
+        >
+          <option value="">🎯 Prioridade</option>
+          <option value="baixa">Baixa</option>
+          <option value="media">Média</option>
+          <option value="alta">Alta</option>
+          <option value="urgente">Urgente</option>
+        </select>
+        <select
+          className="border bg-background rounded-md px-2 h-9 text-sm"
+          value={filterAssignee}
+          onChange={e => setFilterAssignee(e.target.value)}
+        >
+          <option value="">👤 Responsável</option>
+          {allUsers.map(u => <option key={u.id} value={u.id}>{u.full_name}</option>)}
+        </select>
+        <select
+          className="border bg-background rounded-md px-2 h-9 text-sm"
+          value={filterTag}
+          onChange={e => setFilterTag(e.target.value)}
+        >
+          <option value="">🏷 Tag</option>
+          {Array.from(new Set(tasks.flatMap((t: any) => Array.isArray(t.tags) ? t.tags : []))).map(tag => <option key={tag} value={tag}>{tag}</option>)}
+        </select>
+        <div className="ml-auto flex items-center gap-2">
           <Button
             variant="outline"
+            size="sm"
+            className="h-9"
             onClick={async () => {
               const t = toast.loading("Sincronizando com Google Tasks...");
               try {
@@ -1736,144 +1765,154 @@ export default function Tarefas() {
             🔄 Sincronizar Google
           </Button>
           {(isAdmin || canManageTaskStructure) && <>
-              <Button variant="outline" onClick={() => setDialogNovoBoard(true)}>
-                <Plus className="mr-2 h-4 w-4" />
-                Novo Quadro
-              </Button>
-              <Dialog open={dialogNovoBoard} onOpenChange={setDialogNovoBoard}>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>Criar Novo Quadro</DialogTitle>
-                  </DialogHeader>
-                  <div className="space-y-4">
-                    <div>
-                      <Label>Nome do Quadro</Label>
-                      <Input value={novoBoardNome} onChange={e => setNovoBoardNome(e.target.value)} placeholder="Ex: Projeto Q1 2024" onKeyDown={e => {
+            <Button variant="default" size="sm" className="h-9" onClick={() => setDialogNovoBoard(true)}>
+              <Plus className="mr-1 h-4 w-4" />
+              Novo Quadro
+            </Button>
+            <Dialog open={dialogNovoBoard} onOpenChange={setDialogNovoBoard}>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Criar Novo Quadro</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4">
+                  <div>
+                    <Label>Nome do Quadro</Label>
+                    <Input value={novoBoardNome} onChange={e => setNovoBoardNome(e.target.value)} placeholder="Ex: Projeto Q1 2024" onKeyDown={e => {
                       if (e.key === 'Enter') {
                         criarNovoBoard();
                       }
                     }} />
-                    </div>
-                    <Button onClick={criarNovoBoard} className="w-full">
-                      Criar
-                    </Button>
                   </div>
-                </DialogContent>
-              </Dialog>
-            </>}
+                  <Button onClick={criarNovoBoard} className="w-full">
+                    Criar
+                  </Button>
+                </div>
+              </DialogContent>
+            </Dialog>
+          </>}
         </div>
       </div>
 
-      {viewMode === 'board' && boards.length > 0 && <div className="mb-6">
-          <Label>Quadro</Label>
-          <div className="flex items-center gap-2 mt-2">
-            <select value={selectedBoard || ""} onChange={e => {
-            console.log('📋 [Tarefas] Board selecionado:', e.target.value);
-            setSelectedBoard(e.target.value);
-          }} className="flex-1 max-w-xs p-2 border rounded-md">
-              {boards.map(board => <option key={board.id} value={board.id}>
-                  {board.nome}
-                </option>)}
-            </select>
-            
+      {/* ── PILL TABS DE QUADROS ── */}
+      {viewMode === 'board' && boards.length > 0 && (
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mr-1">Quadro:</span>
+          {boards.map(b => {
+            const count = tasks.filter(t => t.board_id === b.id).length;
+            const active = selectedBoard === b.id;
+            return (
+              <button
+                key={b.id}
+                onClick={() => setSelectedBoard(b.id)}
+                className={`group flex items-center gap-2 px-3 h-9 rounded-lg border text-sm font-medium transition-all ${
+                  active
+                    ? 'bg-primary text-primary-foreground border-primary shadow-sm'
+                    : 'bg-card hover:bg-accent text-foreground border-border'
+                }`}
+              >
+                <span className="truncate max-w-[160px]">{b.nome}</span>
+                <span className={`text-[11px] font-bold px-1.5 py-0.5 rounded ${active ? 'bg-primary-foreground/20' : 'bg-muted'}`}>
+                  {count}
+                </span>
+              </button>
+            );
+          })}
+          {(isAdmin || canManageTaskStructure) && (
+            <button
+              onClick={() => setDialogNovoBoard(true)}
+              className="flex items-center gap-1 px-3 h-9 rounded-lg border border-dashed text-sm text-muted-foreground hover:bg-accent hover:text-foreground transition"
+            >
+              <Plus className="h-3.5 w-3.5" /> Novo Quadro
+            </button>
+          )}
+          {selectedBoard && (
             <DropdownMenu open={dropdownMenuOpen} onOpenChange={setDropdownMenuOpen}>
               <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="icon" disabled={!selectedBoard} onClick={e => {
-                e.preventDefault();
-                e.stopPropagation();
-                console.log('🔘 [Tarefas] Botão de três pontos clicado');
-                console.log('🔘 [Tarefas] canManageTaskStructure:', canManageTaskStructure);
-                console.log('🔘 [Tarefas] isAdmin:', isAdmin);
-                console.log('🔘 [Tarefas] selectedBoard:', selectedBoard);
-                console.log('🔘 [Tarefas] boards:', boards);
-              }} onMouseDown={e => {
-                e.stopPropagation();
-              }} className="z-10">
+                <Button variant="ghost" size="icon" className="h-9 w-9 ml-1">
                   <MoreVertical className="h-4 w-4" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="z-[99999] bg-background border shadow-lg" style={{
-              zIndex: 99999
-            }} onClick={e => e.stopPropagation()}>
-                {!selectedBoard ? <DropdownMenuItem disabled>
-                    Selecione um quadro primeiro
-                  </DropdownMenuItem> : isAdmin || canManageTaskStructure ? <>
-                    <DropdownMenuItem onClick={e => {
-                  console.log('✏️ [Tarefas] Editar Quadro clicado');
-                  e.preventDefault();
-                  e.stopPropagation();
-                  setDropdownMenuOpen(false);
-                  setEditarQuadroOpen(true);
-                }}>
-                      <Pencil className="mr-2 h-4 w-4" />
-                      Editar Quadro
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={e => {
-                  console.log('⚙️ [Tarefas] Gerenciar Colunas clicado');
-                  e.preventDefault();
-                  e.stopPropagation();
-                  setDropdownMenuOpen(false);
-                  setEditarQuadroOpen(true);
-                }}>
-                      <Settings className="mr-2 h-4 w-4" />
-                      Gerenciar Colunas
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={e => {
-                  console.log('🗑️ [Tarefas] Excluir Quadro clicado');
-                  e.preventDefault();
-                  e.stopPropagation();
-                  setDropdownMenuOpen(false);
-                  setEditarQuadroOpen(true);
-                  // Pequeno delay para garantir que o dialog de edição seja montado primeiro
-                  setTimeout(() => {
-                    setExcluirQuadroOpen(true);
-                  }, 100);
-                }} className="text-destructive focus:text-destructive">
-                      <Trash2 className="mr-2 h-4 w-4" />
-                      Excluir Quadro
-                    </DropdownMenuItem>
-                  </> : <DropdownMenuItem disabled>
-                    Sem permissão para gerenciar quadros
-                  </DropdownMenuItem>}
+              <DropdownMenuContent align="end" className="z-[99999] bg-background border shadow-lg">
+                {isAdmin || canManageTaskStructure ? <>
+                  <DropdownMenuItem onClick={() => { setDropdownMenuOpen(false); setEditarQuadroOpen(true); }}>
+                    <Pencil className="mr-2 h-4 w-4" /> Editar Quadro
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => { setDropdownMenuOpen(false); setEditarQuadroOpen(true); }}>
+                    <Settings className="mr-2 h-4 w-4" /> Gerenciar Colunas
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    onClick={() => {
+                      setDropdownMenuOpen(false);
+                      setEditarQuadroOpen(true);
+                      setTimeout(() => setExcluirQuadroOpen(true), 100);
+                    }}
+                    className="text-destructive focus:text-destructive"
+                  >
+                    <Trash2 className="mr-2 h-4 w-4" /> Excluir Quadro
+                  </DropdownMenuItem>
+                </> : <DropdownMenuItem disabled>Sem permissão</DropdownMenuItem>}
               </DropdownMenuContent>
             </DropdownMenu>
+          )}
+        </div>
+      )}
+
+      {/* ── STATS CARDS ── */}
+      {viewMode === 'board' && selectedBoard && (
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+          {[
+            { label: 'TOTAL', icon: '📋', value: productivityMetrics.totalTasks, sub: 'neste quadro', color: 'text-foreground', bg: 'bg-card', accent: 'border-l-slate-400' },
+            { label: 'CONCLUÍDAS', icon: '✅', value: productivityMetrics.completedTasks, sub: `${productivityMetrics.completionRate.toFixed(0)}% do total`, color: 'text-green-600 dark:text-green-400', bg: 'bg-green-50/60 dark:bg-green-950/20', accent: 'border-l-green-500' },
+            { label: 'ATRASADAS', icon: '⚠️', value: productivityMetrics.overdueTasks, sub: 'requerem atenção', color: 'text-red-600 dark:text-red-400', bg: 'bg-red-50/60 dark:bg-red-950/20', accent: 'border-l-red-500' },
+            { label: 'VENCEM HOJE', icon: '🔔', value: productivityMetrics.dueToday, sub: 'prazo próximo', color: 'text-amber-600 dark:text-amber-400', bg: 'bg-amber-50/60 dark:bg-amber-950/20', accent: 'border-l-amber-500' },
+            { label: 'EM PROGRESSO', icon: '🔵', value: productivityMetrics.inProgress, sub: 'em andamento', color: 'text-blue-600 dark:text-blue-400', bg: 'bg-blue-50/60 dark:bg-blue-950/20', accent: 'border-l-blue-500' },
+            { label: 'TEMPO GASTO', icon: '⏱', value: `${Math.floor(productivityMetrics.totalTimeSpent / 60)}h`, sub: 'esta semana', color: 'text-purple-600 dark:text-purple-400', bg: 'bg-purple-50/60 dark:bg-purple-950/20', accent: 'border-l-purple-500' },
+          ].map((s) => (
+            <div key={s.label} className={`rounded-xl border border-l-4 ${s.accent} ${s.bg} p-3 shadow-sm`}>
+              <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                <span>{s.icon}</span>{s.label}
+              </div>
+              <div className={`text-2xl font-bold mt-1 ${s.color}`}>{s.value}</div>
+              <div className="text-[11px] text-muted-foreground mt-0.5">{s.sub}</div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* ── BANNER DE ATRASADAS ── */}
+      {viewMode === 'board' && selectedBoard && productivityMetrics.overdueTasks > 0 && (
+        <div className="flex items-center justify-between gap-3 rounded-xl border border-red-200 dark:border-red-900/50 bg-red-50/70 dark:bg-red-950/20 px-4 py-2.5">
+          <div className="text-sm text-red-700 dark:text-red-400">
+            <span className="font-semibold">⚠️ {productivityMetrics.overdueTasks} tarefa{productivityMetrics.overdueTasks > 1 ? 's' : ''} atrasada{productivityMetrics.overdueTasks > 1 ? 's' : ''}</span>
+            {productivityMetrics.overdueList.length > 0 && (
+              <span className="text-red-600/80 dark:text-red-400/80"> — {productivityMetrics.overdueList.slice(0, 2).map(t => `"${t.title}"`).join(', ')}{productivityMetrics.overdueList.length > 2 ? `, +${productivityMetrics.overdueList.length - 2}` : ''} passaram do prazo.</span>
+            )}
           </div>
-        </div>}
-      
+        </div>
+      )}
+
       {selectedBoard && <EditarQuadroDialog boardId={selectedBoard} boardNome={boards.find(b => b.id === selectedBoard)?.nome || ""} onUpdated={() => {
-        console.log('🔄 [Tarefas] Recarregando dados após atualização do quadro');
         carregarDados();
       }} onDeleted={() => {
-        console.log('🗑️ [Tarefas] Quadro excluído, selecionando próximo quadro disponível');
-        // ✅ CORRIGIDO: Encontrar próximo quadro disponível e atualizar selectedBoard
         const remainingBoards = boards.filter(b => b.id !== selectedBoard);
         if (remainingBoards.length > 0) {
           setSelectedBoard(remainingBoards[0].id);
         } else {
           setSelectedBoard("");
         }
-        // Limpar colunas e tarefas do quadro excluído imediatamente
         setColumns(prev => prev.filter(c => c.board_id !== selectedBoard));
         setTasks(prev => prev.filter(t => t.board_id !== selectedBoard));
-        // Recarregar dados para garantir sincronização
         setTimeout(() => carregarDados(), 100);
       }} open={editarQuadroOpen} onOpenChange={open => {
-        console.log('📝 [Tarefas] Dialog de edição:', open ? 'aberto' : 'fechado');
         setEditarQuadroOpen(open);
-        if (!open) {
-          // Se fechar o dialog de edição, também fechar o dialog de exclusão
-          setExcluirQuadroOpen(false);
-        }
+        if (!open) setExcluirQuadroOpen(false);
       }} openDeleteDialog={excluirQuadroOpen} onDeleteDialogChange={open => {
-        console.log('🗑️ [Tarefas] Dialog de exclusão:', open ? 'aberto' : 'fechado');
         setExcluirQuadroOpen(open);
-        // Se o dialog de exclusão for fechado sem excluir, manter o dialog de edição aberto
-        // para que o usuário possa fazer outras ações se desejar
       }} />}
 
       {/* 🎯 Botões de navegação horizontal - apenas em modo board e com mais de 3 colunas */}
-      {viewMode === 'board' && columnsFiltradas.length > 3 && <div className="flex gap-2 mb-4 justify-end">
+      {viewMode === 'board' && columnsFiltradas.length > 3 && <div className="flex gap-2 mb-2 justify-end">
           <Button variant="outline" size="icon" onClick={() => scrollHorizontal('left')} title="Rolar para esquerda">
             <ChevronLeft className="h-4 w-4" />
           </Button>
@@ -1881,6 +1920,7 @@ export default function Tarefas() {
             <ChevronRight className="h-4 w-4" />
           </Button>
         </div>}
+
 
       {viewMode === 'calendar' ? <TarefaCalendar tasks={tasks} /> : viewMode === 'dashboard' ? <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {/* Total de Tarefas */}
