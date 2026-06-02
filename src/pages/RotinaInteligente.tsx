@@ -197,8 +197,21 @@ export default function RotinaInteligente() {
   useEffect(() => { localStorage.setItem(STORAGE_ASSIGN_KEY, JSON.stringify(assignments)); }, [assignments]);
 
   const tasks = tasksByProfile[selectedProfile] || [];
+  const nowHHMM = new Date().toTimeString().slice(0, 5);
   const doneTasks = tasks.filter(t => t.done);
+  const overdueTasks = tasks.filter(t => !t.done && t.time < nowHHMM);
+  const pendingTasks = tasks.filter(t => !t.done && t.time >= nowHHMM);
   const progress = tasks.length > 0 ? Math.round((doneTasks.length / tasks.length) * 100) : 0;
+
+  const { goals: myGoals, getStatus: getGoalStatus } = useMyGoals();
+  const goalCounts = useMemo(() => {
+    const count = (period: "daily" | "weekly" | "monthly") => {
+      const list = myGoals.filter(g => g.period === period);
+      const done = list.filter(g => getGoalStatus(g.period, g.metric, g.target_value).status === "concluida").length;
+      return { total: list.length, done };
+    };
+    return { daily: count("daily"), weekly: count("weekly"), monthly: count("monthly") };
+  }, [myGoals, getGoalStatus]);
 
   const usersInProfile = useMemo(
     () => members.filter(m => assignments[m.id] === selectedProfile),
