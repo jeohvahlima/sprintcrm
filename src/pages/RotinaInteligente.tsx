@@ -193,6 +193,8 @@ export default function RotinaInteligente() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [showAssignDialog, setShowAssignDialog] = useState(false);
   const [newTask, setNewTask] = useState({ title: "", description: "", time: "09:00", category: "prospeccao" as RotineTask["category"], priority: "media" as RotineTask["priority"] });
+  const [statusFilter, setStatusFilter] = useState<"todas" | "pendentes" | "atrasadas" | "concluidas">("todas");
+  const [categoryFilter, setCategoryFilter] = useState<"todas" | RotineTask["category"]>("todas");
 
   // Persist
   useEffect(() => { localStorage.setItem(STORAGE_TASKS_KEY, JSON.stringify(tasksByProfile)); }, [tasksByProfile]);
