@@ -57,21 +57,8 @@ export async function excluirTarefa(task_id: string, google_task_id?: string | n
   });
 }
 
-// Upsert em compromissos quando houver due_date
-export async function upsertCompromissoParaTarefa(task: { id: string; title: string; due_date: string | null; assignee_id?: string | null; }) {
-  if (!task.due_date) return;
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return;
-  const inicio = new Date(task.due_date);
-  const fim = new Date(inicio.getTime() + 60 * 60 * 1000);
-  await supabase.from('compromissos').upsert({
-    referencia_id: task.id,
-    tipo_servico: 'tarefa',
-    usuario_responsavel_id: task.assignee_id || user.id,
-    owner_id: user.id,
-    data_hora_inicio: inicio.toISOString(),
-    data_hora_fim: fim.toISOString(),
-    status: 'agendado',
-    observacoes: `Gerado automaticamente da tarefa ${task.title}`,
-  }, { onConflict: 'referencia_id' as any });
+// Sincronização tarefa <-> compromisso agora é feita por triggers no banco.
+// Mantida como no-op para compatibilidade com chamadas existentes.
+export async function upsertCompromissoParaTarefa(_task: { id: string; title: string; due_date: string | null; assignee_id?: string | null; }) {
+  return;
 }
