@@ -144,10 +144,12 @@ function TaskItem({ task, onToggle, onDelete, onEdit }: {
 }) {
   const cat = CATEGORY_CONFIG[task.category];
   const pri = PRIORITY_CONFIG[task.priority];
+  const nowHHMM = new Date().toTimeString().slice(0, 5);
+  const isOverdue = !task.done && task.time < nowHHMM;
   return (
     <div
       className={`group flex items-start gap-3 rounded-xl px-4 py-3 border transition-all duration-200
-        ${task.done ? "bg-slate-800/30 border-slate-700/30 opacity-60" : `${cat.bg} ${cat.border} hover:brightness-110`}`}
+        ${task.done ? "bg-slate-800/30 border-slate-700/30 opacity-60" : isOverdue ? "bg-rose-500/10 border-rose-500/40 ring-1 ring-rose-500/30" : `${cat.bg} ${cat.border} hover:brightness-110`}`}
     >
       <button
         onClick={() => onToggle(task.id)}
