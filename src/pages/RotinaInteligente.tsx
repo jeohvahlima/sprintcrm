@@ -1,7 +1,8 @@
 import { useState, useEffect, useMemo } from "react";
-import { Phone, Briefcase, MessageSquare, CalendarDays, Trophy, Users, Check, X, Brain, Pencil } from "lucide-react";
+import { Phone, Briefcase, MessageSquare, CalendarDays, Trophy, Users, Check, X, Brain, Pencil, Target, CheckCircle2, Clock, AlertTriangle, Percent } from "lucide-react";
 import { useTeamMembers } from "@/hooks/useTeamMembers";
 import MyGoalsPanel from "@/components/rotina/MyGoalsPanel";
+import { useMyGoals } from "@/hooks/useMyGoals";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 type ProfileKey = "sdr" | "vendedor_close" | "atendente" | "secretaria" | "gerente";
@@ -143,10 +144,12 @@ function TaskItem({ task, onToggle, onDelete, onEdit }: {
 }) {
   const cat = CATEGORY_CONFIG[task.category];
   const pri = PRIORITY_CONFIG[task.priority];
+  const nowHHMM = new Date().toTimeString().slice(0, 5);
+  const isOverdue = !task.done && task.time < nowHHMM;
   return (
     <div
       className={`group flex items-start gap-3 rounded-xl px-4 py-3 border transition-all duration-200
-        ${task.done ? "bg-slate-800/30 border-slate-700/30 opacity-60" : `${cat.bg} ${cat.border} hover:brightness-110`}`}
+        ${task.done ? "bg-slate-800/30 border-slate-700/30 opacity-60" : isOverdue ? "bg-rose-500/10 border-rose-500/40 ring-1 ring-rose-500/30" : `${cat.bg} ${cat.border} hover:brightness-110`}`}
     >
       <button
         onClick={() => onToggle(task.id)}
@@ -196,8 +199,21 @@ export default function RotinaInteligente() {
   useEffect(() => { localStorage.setItem(STORAGE_ASSIGN_KEY, JSON.stringify(assignments)); }, [assignments]);
 
   const tasks = tasksByProfile[selectedProfile] || [];
+  const nowHHMM = new Date().toTimeString().slice(0, 5);
   const doneTasks = tasks.filter(t => t.done);
+  const overdueTasks = tasks.filter(t => !t.done && t.time < nowHHMM);
+  const pendingTasks = tasks.filter(t => !t.done && t.time >= nowHHMM);
   const progress = tasks.length > 0 ? Math.round((doneTasks.length / tasks.length) * 100) : 0;
+
+  const { goals: myGoals, getStatus: getGoalStatus } = useMyGoals();
+  const goalCounts = useMemo(() => {
+    const count = (period: "daily" | "weekly" | "monthly") => {
+      const list = myGoals.filter(g => g.period === period);
+      const done = list.filter(g => getGoalStatus(g.period, g.metric, g.target_value).status === "concluida").length;
+      return { total: list.length, done };
+    };
+    return { daily: count("daily"), weekly: count("weekly"), monthly: count("monthly") };
+  }, [myGoals, getGoalStatus]);
 
   const usersInProfile = useMemo(
     () => members.filter(m => assignments[m.id] === selectedProfile),
@@ -273,6 +289,32 @@ export default function RotinaInteligente() {
         </button>
       </div>
 
+      {/* Dashboard Summary */}
+      <div className="mb-6 grid grid-cols-2 md:grid-cols-4 xl:grid-cols-7 gap-3">
+        {[
+          { label: "Metas do Dia",      value: `${goalCounts.daily.done}/${goalCounts.daily.total}`,     Icon: Target,         color: "text-emerald-400", bg: "bg-emerald-500/10", border: "border-emerald-500/30" },
+          { label: "Metas da Semana",   value: `${goalCounts.weekly.done}/${goalCounts.weekly.total}`,   Icon: Target,         color: "text-sky-400",     bg: "bg-sky-500/10",     border: "border-sky-500/30" },
+          { label: "Metas do Mês",      value: `${goalCounts.monthly.done}/${goalCounts.monthly.total}`, Icon: Target,         color: "text-violet-400",  bg: "bg-violet-500/10",  border: "border-violet-500/30" },
+          { label: "Concluídas",        value: String(doneTasks.length),                                  Icon: CheckCircle2,   color: "text-emerald-400", bg: "bg-emerald-500/10", border: "border-emerald-500/30" },
+          { label: "Pendentes",         value: String(pendingTasks.length),                               Icon: Clock,          color: "text-amber-400",   bg: "bg-amber-500/10",   border: "border-amber-500/30" },
+          { label: "Atrasadas",         value: String(overdueTasks.length),                               Icon: AlertTriangle,  color: "text-rose-400",    bg: "bg-rose-500/10",    border: "border-rose-500/30" },
+          { label: "Taxa Cumprimento",  value: `${progress}%`,                                            Icon: Percent,        color: "text-cyan-400",    bg: "bg-cyan-500/10",    border: "border-cyan-500/30" },
+        ].map((c) => {
+          const I = c.Icon;
+          return (
+            <div key={c.label} className={`rounded-2xl border ${c.border} ${c.bg} p-3 flex items-center gap-3`}>
+              <div className={`w-10 h-10 rounded-xl bg-slate-900/60 flex items-center justify-center ${c.color} flex-shrink-0`}>
+                <I className="w-5 h-5" />
+              </div>
+              <div className="min-w-0">
+                <div className="text-[10px] uppercase tracking-wider text-slate-400 font-bold truncate">{c.label}</div>
+                <div className="text-lg font-black text-white truncate">{c.value}</div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
       {/* My Goals */}
       <MyGoalsPanel />
 
@@ -331,9 +373,14 @@ export default function RotinaInteligente() {
 
       {/* Progress */}
       <div className="mb-6 bg-slate-800/50 rounded-2xl p-4 border border-slate-700/50">
-        <div className="flex items-center justify-between mb-2">
+        <div className="flex items-center justify-between mb-2 flex-wrap gap-2">
           <span className="text-sm font-semibold text-slate-300">Progresso de {current.label}</span>
-          <span className="text-sm font-black text-emerald-400">{progress}% · {doneTasks.length}/{tasks.length}</span>
+          <div className="flex items-center gap-3 text-xs">
+            <span className="text-emerald-400 font-bold">✓ {doneTasks.length} concluídas</span>
+            <span className="text-amber-400 font-bold">⏱ {pendingTasks.length} pendentes</span>
+            <span className="text-rose-400 font-bold">⚠ {overdueTasks.length} atrasadas</span>
+            <span className="text-sm font-black text-cyan-300">{progress}%</span>
+          </div>
         </div>
         <div className="w-full bg-slate-700 rounded-full h-3 overflow-hidden">
           <div
