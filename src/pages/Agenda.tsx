@@ -2725,6 +2725,7 @@ export default function Agenda() {
                       <SelectItem value="visita">Visita</SelectItem>
                       <SelectItem value="apresentacao">Apresentação</SelectItem>
                       <SelectItem value="retorno">Retorno</SelectItem>
+                      <SelectItem value="tarefa">Tarefa</SelectItem>
                       <SelectItem value="outro">Outro</SelectItem>
                     </SelectContent>
                   </Select>
