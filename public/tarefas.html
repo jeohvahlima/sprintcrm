@@ -1,0 +1,1577 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GrowOS — Tarefas v2</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.x/dist/tabler-icons.min.css">
+<style>
+:root {
+  --bg:       #0b0e14;
+  --bg2:      #111520;
+  --bg3:      #161c2a;
+  --bg4:      #1c2334;
+  --bg5:      #212840;
+  --border:   rgba(255,255,255,.07);
+  --border2:  rgba(255,255,255,.13);
+  --text:     #e4eaf5;
+  --text2:    #7f8ea8;
+  --text3:    #44526a;
+  --blue:     #4d8ef5;
+  --blue-d:   rgba(77,142,245,.15);
+  --purple:   #8b6cf5;
+  --purple-d: rgba(139,108,245,.15);
+  --green:    #2dce7a;
+  --green-d:  rgba(45,206,122,.13);
+  --amber:    #f5a623;
+  --amber-d:  rgba(245,166,35,.15);
+  --red:      #f05252;
+  --red-d:    rgba(240,82,82,.15);
+  --teal:     #20c9bc;
+  --teal-d:   rgba(32,201,188,.13);
+  --pink:     #f472b6;
+  --pink-d:   rgba(244,114,182,.13);
+  --radius:   10px;
+  --radius-sm:6px;
+  --radius-lg:14px;
+  --font:     'Plus Jakarta Sans', sans-serif;
+  --mono:     'JetBrains Mono', monospace;
+  --shadow:   0 4px 24px rgba(0,0,0,.4);
+  --shadow-lg:0 8px 40px rgba(0,0,0,.5);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden}
+body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13px;display:block}
+
+
+/* ─── MAIN ──────────────────────────────────────────────────────── */
+.main{display:flex;flex-direction:column;height:100vh;overflow:hidden;width:100%}
+
+/* ─── TOPBAR ─────────────────────────────────────────────────────── */
+.topbar{height:56px;background:var(--bg2);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;padding:0 24px;flex-shrink:0}
+.breadcrumb{font-size:12px;color:var(--text3)}
+.sep{color:var(--border2);margin:0 2px}
+.page-title{font-size:15px;font-weight:600}
+.sprint-pill{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:99px;background:var(--teal-d);color:var(--teal);font-size:10.5px;font-weight:600;border:1px solid rgba(32,201,188,.25)}
+.search-wrap{flex:1;max-width:420px;margin-left:8px;position:relative}
+.search-wrap input{width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-sm);padding:7px 12px 7px 32px;color:var(--text);font-size:12px;outline:none;font-family:var(--font);transition:.15s}
+.search-wrap input:focus{border-color:var(--blue);background:var(--bg4)}
+.search-wrap i{position:absolute;left:9px;top:50%;transform:translateY(-50%);color:var(--text3);font-size:14px}
+.topbar-right{margin-left:auto;display:flex;align-items:center;gap:7px}
+.icon-btn{width:32px;height:32px;border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text2);transition:.15s;border:1px solid var(--border);background:transparent;font-size:15px}
+.icon-btn:hover{background:var(--bg3);color:var(--text)}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:var(--radius-sm);font-size:12.5px;font-weight:600;cursor:pointer;border:none;transition:.15s;font-family:var(--font)}
+.btn-primary{background:var(--blue);color:#fff;box-shadow:0 0 12px rgba(77,142,245,.3)}
+.btn-primary:hover{opacity:.88;transform:translateY(-1px)}
+.btn-ghost{background:transparent;color:var(--text2);border:1px solid var(--border)}
+.btn-ghost:hover{background:var(--bg3);color:var(--text)}
+.btn i{font-size:15px}
+
+/* ─── STATS ROW ──────────────────────────────────────────────────── */
+.stats-row{display:flex;gap:10px;padding:12px 24px;border-bottom:1px solid var(--border);flex-shrink:0;background:var(--bg2)}
+.stat-card{flex:1;background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);padding:10px 14px;display:flex;align-items:center;gap:10px;border-left:3px solid transparent;transition:.15s}
+.stat-card:hover{border-color:var(--border2);transform:translateY(-1px)}
+.stat-card.s-blue{border-left-color:var(--blue)}
+.stat-card.s-green{border-left-color:var(--green)}
+.stat-card.s-red{border-left-color:var(--red)}
+.stat-card.s-amber{border-left-color:var(--amber)}
+.stat-card.s-purple{border-left-color:var(--purple)}
+.stat-card.s-teal{border-left-color:var(--teal)}
+.stat-icon{width:34px;height:34px;border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0}
+.si-blue{background:var(--blue-d);color:var(--blue)}
+.si-green{background:var(--green-d);color:var(--green)}
+.si-red{background:var(--red-d);color:var(--red)}
+.si-amber{background:var(--amber-d);color:var(--amber)}
+.si-purple{background:var(--purple-d);color:var(--purple)}
+.si-teal{background:var(--teal-d);color:var(--teal)}
+.stat-num{font-size:20px;font-weight:700;line-height:1}
+.stat-label{font-size:10.5px;color:var(--text2);margin-top:2px}
+.stat-trend{font-size:10px;display:flex;align-items:center;gap:3px;margin-top:3px}
+.trend-up{color:var(--green)}
+.trend-down{color:var(--red)}
+.trend-neu{color:var(--text3)}
+
+/* ─── TOOLBAR ────────────────────────────────────────────────────── */
+.toolbar{padding:10px 24px;display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--border);background:var(--bg2);flex-shrink:0;flex-wrap:nowrap}
+.board-tabs{display:flex;gap:3px;background:var(--bg3);border-radius:var(--radius-sm);padding:3px;overflow:hidden}
+.board-tab{padding:5px 13px;border-radius:5px;font-size:11.5px;font-weight:500;cursor:pointer;color:var(--text2);transition:.15s;white-space:nowrap}
+.board-tab.active{background:var(--bg);color:var(--text);box-shadow:0 1px 4px rgba(0,0,0,.35)}
+.board-tab:hover:not(.active){color:var(--text)}
+.filter-chip{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:99px;border:1px solid var(--border);font-size:11.5px;color:var(--text2);cursor:pointer;transition:.15s;background:var(--bg3);white-space:nowrap}
+.filter-chip:hover{border-color:var(--border2);color:var(--text)}
+.filter-chip.active{border-color:var(--blue);color:var(--blue);background:var(--blue-d)}
+.filter-chip i{font-size:13px}
+.view-tabs{display:flex;gap:2px;background:var(--bg3);border-radius:var(--radius-sm);padding:3px;margin-left:auto}
+.view-tab{padding:5px 10px;border-radius:5px;font-size:11.5px;cursor:pointer;color:var(--text2);transition:.15s;display:flex;align-items:center;gap:5px;white-space:nowrap}
+.view-tab.active{background:var(--bg);color:var(--text)}
+.view-tab:hover:not(.active){color:var(--text)}
+
+/* ─── OVERDUE BANNER ─────────────────────────────────────────────── */
+.overdue-banner{margin:10px 22px 0;background:rgba(240,82,82,.08);border:1px solid rgba(240,82,82,.25);border-radius:var(--radius);padding:9px 14px;display:flex;align-items:center;gap:10px;animation:bannerPulse 3s ease-in-out infinite}
+@keyframes bannerPulse{0%,100%{border-color:rgba(240,82,82,.25)}50%{border-color:rgba(240,82,82,.5)}}
+.overdue-dot{width:8px;height:8px;border-radius:50%;background:var(--red);animation:dotPulse 1.5s ease-in-out infinite;flex-shrink:0}
+@keyframes dotPulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(.8)}}
+.overdue-text{font-size:12px;color:#f9a8a8;flex:1}
+.overdue-text strong{color:var(--red);font-weight:600}
+.overdue-pills{display:flex;gap:5px;flex-wrap:wrap}
+.overdue-pill{font-size:10.5px;padding:2px 8px;border-radius:99px;background:var(--red-d);color:var(--red);border:1px solid rgba(240,82,82,.2)}
+
+/* ─── KANBAN LAYOUT ──────────────────────────────────────────────── */
+.board-area{flex:1;display:flex;overflow:hidden;position:relative}
+.kanban-scroll{flex:1;overflow-x:auto;overflow-y:hidden;padding:14px 24px 20px;display:flex;gap:14px;align-items:flex-start}
+.kanban-scroll::-webkit-scrollbar{height:6px}
+.kanban-scroll::-webkit-scrollbar-track{background:transparent}
+.kanban-scroll::-webkit-scrollbar-thumb{background:var(--border2);border-radius:99px}
+
+/* ─── COLUMN ─────────────────────────────────────────────────────── */
+.col{width:290px;min-width:290px;flex-shrink:0;display:flex;flex-direction:column;max-height:calc(100vh - 310px)}
+.col-header{padding:10px 12px;border-radius:var(--radius) var(--radius) 0 0;display:flex;align-items:center;gap:7px;position:relative;overflow:hidden;flex-shrink:0}
+.col-header::before{content:'';position:absolute;inset:0;opacity:.08;pointer-events:none}
+.col-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
+.col-title{font-size:12.5px;font-weight:700;flex:1;letter-spacing:-.2px}
+.col-count{font-size:10.5px;font-weight:700;background:rgba(255,255,255,.15);padding:2px 7px;border-radius:99px;color:rgba(255,255,255,.9)}
+.col-wip{font-size:9.5px;padding:2px 6px;border-radius:99px;background:rgba(255,255,255,.1);color:rgba(255,255,255,.6)}
+.col-menu-btn{opacity:0;transition:.15s;cursor:pointer;color:rgba(255,255,255,.6);font-size:16px;padding:2px}
+.col-header:hover .col-menu-btn{opacity:1}
+.col-body{background:var(--bg3);border:1px solid var(--border);border-top:none;border-radius:0 0 var(--radius) var(--radius);flex:1;overflow-y:auto;padding:8px;display:flex;flex-direction:column;gap:6px;min-height:80px}
+.col-body::-webkit-scrollbar{width:4px}
+.col-body::-webkit-scrollbar-thumb{background:var(--border2);border-radius:99px}
+.add-btn{display:flex;align-items:center;gap:6px;padding:7px 10px;border-radius:var(--radius-sm);color:var(--text3);cursor:pointer;font-size:11.5px;transition:.15s;border:1px dashed var(--border);background:transparent;width:100%;text-align:left;font-family:var(--font);margin-top:2px}
+.add-btn:hover{border-color:var(--blue);color:var(--blue);background:var(--blue-d)}
+.add-col-btn{width:52px;min-width:52px;height:72px;background:var(--bg3);border:1.5px dashed var(--border);border-radius:var(--radius);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text3);transition:.15s;flex-shrink:0;align-self:flex-start}
+.add-col-btn:hover{border-color:var(--blue);color:var(--blue);background:var(--blue-d)}
+
+/* ─── TASK CARD ──────────────────────────────────────────────────── */
+.task-card{background:var(--bg4);border:1px solid var(--border);border-radius:var(--radius-sm);cursor:pointer;transition:all .18s;position:relative;overflow:hidden}
+.task-card:hover{border-color:var(--border2);transform:translateY(-1px);box-shadow:0 6px 20px rgba(0,0,0,.35)}
+.task-card:hover .card-actions{opacity:1}
+.task-card.overdue{border-left:3px solid var(--red)}
+.task-card.urgent{border-left:3px solid var(--red)}
+.task-card.alta{border-left:3px solid var(--amber)}
+.task-card.media{border-left:3px solid var(--blue)}
+.task-card.baixa{border-left:3px solid var(--text3)}
+.card-top-stripe{height:3px;width:100%}
+.card-body{padding:10px 11px 8px}
+.card-tags{display:flex;flex-wrap:wrap;gap:3px;margin-bottom:6px}
+.tag{font-size:10px;font-weight:600;padding:2px 7px;border-radius:99px;letter-spacing:.02em}
+.tag-blue{background:var(--blue-d);color:var(--blue)}
+.tag-green{background:var(--green-d);color:var(--green)}
+.tag-amber{background:var(--amber-d);color:var(--amber)}
+.tag-purple{background:var(--purple-d);color:var(--purple)}
+.tag-red{background:var(--red-d);color:var(--red)}
+.tag-teal{background:var(--teal-d);color:var(--teal)}
+.tag-pink{background:var(--pink-d);color:var(--pink)}
+.card-lead{display:flex;align-items:center;gap:7px;margin-bottom:6px}
+.lead-avatar{width:24px;height:24px;border-radius:50%;background:var(--green-d);display:flex;align-items:center;justify-content:center;font-size:9.5px;font-weight:700;color:var(--green);border:1.5px solid var(--green);flex-shrink:0}
+.lead-name{font-size:11.5px;font-weight:600;color:var(--green)}
+.card-title{font-size:12.5px;font-weight:500;line-height:1.45;color:var(--text);margin-bottom:7px}
+.card-title.done{text-decoration:line-through;color:var(--text3)}
+.card-meta{display:flex;align-items:center;gap:5px;flex-wrap:wrap;margin-bottom:7px}
+.prio-badge{font-size:10px;font-weight:600;padding:2px 7px;border-radius:99px;display:inline-flex;align-items:center;gap:3px}
+.p-urgente{background:var(--red-d);color:var(--red)}
+.p-alta{background:var(--amber-d);color:var(--amber)}
+.p-media{background:var(--blue-d);color:var(--blue)}
+.p-baixa{background:var(--bg5);color:var(--text3)}
+.date-badge{font-size:10.5px;color:var(--text3);display:flex;align-items:center;gap:3px}
+.date-badge.overdue{color:var(--red)}
+.date-badge i{font-size:11px}
+/* CHECKLIST PROGRESS BAR */
+.checklist-bar{margin-bottom:7px}
+.cl-bar-track{height:3px;background:var(--bg5);border-radius:99px;overflow:hidden}
+.cl-bar-fill{height:100%;border-radius:99px;transition:width .4s}
+.cl-bar-label{font-size:10px;color:var(--text3);display:flex;justify-content:space-between;margin-top:3px}
+/* CARD BOTTOM */
+.card-bottom{display:flex;align-items:center;gap:5px}
+.assignees{display:flex}
+.assignee-av{width:20px;height:20px;border-radius:50%;font-size:8px;font-weight:700;display:flex;align-items:center;justify-content:center;border:1.5px solid var(--bg4);margin-left:-5px;flex-shrink:0}
+.assignee-av:first-child{margin-left:0}
+.card-info{display:flex;align-items:center;gap:8px;margin-left:auto;font-size:10.5px;color:var(--text3)}
+.card-info-item{display:flex;align-items:center;gap:2px}
+.card-info-item.running{color:var(--red)}
+.card-info-item i{font-size:12px}
+/* CARD ACTIONS */
+.card-actions{position:absolute;top:7px;right:7px;display:flex;gap:2px;opacity:0;transition:.15s;background:var(--bg2);border-radius:var(--radius-sm);padding:2px;border:1px solid var(--border)}
+.card-act{width:22px;height:22px;border-radius:4px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text2);font-size:12px;transition:.15s}
+.card-act:hover{background:var(--bg3);color:var(--text)}
+.card-act.del:hover{color:var(--red)}
+/* DRAG PLACEHOLDER */
+.drag-placeholder{background:var(--blue-d);border:1.5px dashed var(--blue);border-radius:var(--radius-sm);height:60px;opacity:.6}
+/* DRAGGING */
+.task-card.dragging{opacity:.5;transform:scale(.96);box-shadow:none}
+
+/* ─── SIDE PANEL ─────────────────────────────────────────────────── */
+.side-panel{width:0;background:var(--bg2);border-left:1px solid var(--border);display:flex;flex-direction:column;transition:width .22s cubic-bezier(.4,0,.2,1);overflow:hidden;flex-shrink:0}
+.side-panel.open{width:360px}
+.panel-header{padding:14px 16px;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;gap:10px;flex-shrink:0}
+.panel-close{width:28px;height:28px;border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text2);transition:.15s;flex-shrink:0;border:1px solid var(--border);background:transparent;font-size:15px}
+.panel-close:hover{background:var(--bg3);color:var(--text)}
+.panel-tabs{display:flex;border-bottom:1px solid var(--border);flex-shrink:0}
+.panel-tab{padding:9px 14px;font-size:11.5px;font-weight:500;color:var(--text2);cursor:pointer;border-bottom:2px solid transparent;transition:.15s;margin-bottom:-1px;white-space:nowrap}
+.panel-tab.active{color:var(--blue);border-bottom-color:var(--blue)}
+.panel-body{flex:1;overflow-y:auto;padding:14px 16px}
+.panel-body::-webkit-scrollbar{width:4px}
+.panel-body::-webkit-scrollbar-thumb{background:var(--border2);border-radius:99px}
+.panel-section{margin-bottom:16px}
+.panel-label{font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px}
+.meta-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.meta-item{}
+.meta-val{font-size:12.5px;color:var(--text);margin-top:3px;display:flex;align-items:center;gap:5px}
+/* CHECKLIST in panel */
+.cl-item{display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid var(--border)}
+.cl-item:last-child{border-bottom:none}
+.cl-check{width:15px;height:15px;border-radius:4px;border:1.5px solid var(--border2);display:flex;align-items:center;justify-content:center;flex-shrink:0;cursor:pointer;transition:.15s}
+.cl-check.done{background:var(--green);border-color:var(--green)}
+.cl-text{font-size:12px;flex:1;color:var(--text)}
+.cl-text.done{text-decoration:line-through;color:var(--text3)}
+/* COMMENTS */
+.comment-item{display:flex;gap:8px;margin-bottom:10px}
+.comment-av{width:26px;height:26px;border-radius:50%;background:var(--purple-d);display:flex;align-items:center;justify-content:center;font-size:9.5px;font-weight:700;color:var(--purple);flex-shrink:0}
+.comment-content{flex:1}
+.comment-author{font-size:11.5px;font-weight:600}
+.comment-time{font-size:10.5px;color:var(--text3);margin-left:5px}
+.comment-text{font-size:12px;color:var(--text2);margin-top:2px;line-height:1.55}
+.comment-input-wrap{display:flex;gap:7px;margin-top:8px}
+.comment-input{flex:1;background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-sm);padding:7px 10px;color:var(--text);font-size:12px;outline:none;font-family:var(--font)}
+.comment-input:focus{border-color:var(--blue)}
+/* ACTIVITY */
+.act-item{display:flex;gap:8px;margin-bottom:10px}
+.act-dot{width:7px;height:7px;border-radius:50%;margin-top:5px;flex-shrink:0}
+.act-text{font-size:12px;color:var(--text2);line-height:1.5}
+.act-text strong{color:var(--text);font-weight:500}
+.act-time{font-size:10.5px;color:var(--text3);margin-top:2px}
+/* TIMER in panel */
+.timer-display{display:flex;align-items:center;gap:8px}
+.timer-num{font-family:var(--mono);font-size:18px;font-weight:500;color:var(--text)}
+.timer-num.running{color:var(--red)}
+.timer-btn{display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border-radius:var(--radius-sm);font-size:11.5px;font-weight:600;cursor:pointer;border:1px solid var(--border);color:var(--text2);background:transparent;font-family:var(--font);transition:.15s}
+.timer-btn:hover{background:var(--bg3)}
+.timer-btn.running{border-color:var(--red);color:var(--red);background:var(--red-d)}
+/* PANEL FOOTER */
+.panel-footer{padding:10px 16px;border-top:1px solid var(--border);display:flex;gap:7px;flex-shrink:0}
+
+/* ─── BADGES / UTIL ───────────────────────────────────────────────── */
+.badge{display:inline-flex;align-items:center;gap:3px;padding:2px 8px;border-radius:99px;font-size:10.5px;font-weight:600}
+.badge-blue{background:var(--blue-d);color:var(--blue)}
+.badge-green{background:var(--green-d);color:var(--green)}
+.badge-amber{background:var(--amber-d);color:var(--amber)}
+.badge-red{background:var(--red-d);color:var(--red)}
+.badge-purple{background:var(--purple-d);color:var(--purple)}
+.badge-gray{background:var(--bg5);color:var(--text2)}
+
+/* ─── PROGRESS BAR ────────────────────────────────────────────────── */
+.progress-bar{height:4px;background:var(--bg5);border-radius:99px;overflow:hidden}
+.progress-fill{height:100%;border-radius:99px;transition:width .4s}
+
+/* ─── WIP INDICATOR ──────────────────────────────────────────────── */
+.wip-exceeded .col-body{border-color:rgba(240,82,82,.35);box-shadow:inset 0 0 0 1px rgba(240,82,82,.2)}
+.wip-exceeded .col-header{animation:wipShake .3s ease}
+@keyframes wipShake{0%,100%{transform:none}25%{transform:translateX(-2px)}75%{transform:translateX(2px)}}
+
+/* ─── LIST VIEW ──────────────────────────────────────────────────── */
+.list-view{flex:1;overflow-y:auto;padding:14px 24px}
+.list-view::-webkit-scrollbar{width:6px}
+.list-view::-webkit-scrollbar-thumb{background:var(--border2);border-radius:99px}
+.list-table{width:100%;border-collapse:collapse}
+.list-table th{text-align:left;font-size:10.5px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.07em;padding:8px 12px;border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--bg);z-index:1}
+.list-table td{padding:9px 12px;border-bottom:1px solid var(--border);vertical-align:middle;font-size:12.5px}
+.list-table tr:hover td{background:var(--bg3);cursor:pointer}
+.list-col-dot{width:10px;height:10px;border-radius:50%;display:inline-block}
+
+/* ─── QUICK ADD ──────────────────────────────────────────────────── */
+.quick-add{background:var(--bg5);border:1px solid var(--blue);border-radius:var(--radius-sm);padding:9px}
+.quick-add input{width:100%;background:transparent;border:none;outline:none;color:var(--text);font-size:12.5px;font-family:var(--font);margin-bottom:7px}
+.quick-add-actions{display:flex;gap:5px}
+
+/* ─── MODAL ──────────────────────────────────────────────────────── */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.65);display:none;align-items:center;justify-content:center;z-index:500;backdrop-filter:blur(4px)}
+.modal-bg.show{display:flex;animation:fadeIn .15s}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.modal{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius-lg);width:540px;max-height:85vh;overflow-y:auto;box-shadow:var(--shadow-lg);animation:slideUp .18s cubic-bezier(.4,0,.2,1)}
+@keyframes slideUp{from{transform:translateY(12px);opacity:0}to{transform:none;opacity:1}}
+.modal-header{padding:18px 22px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px}
+.modal-title{font-size:15px;font-weight:700;flex:1}
+.modal-body{padding:20px 22px}
+.modal-footer{padding:14px 24px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:7px}
+.field-group{margin-bottom:14px}
+.field-label{font-size:11px;font-weight:600;color:var(--text3);margin-bottom:5px;display:block;text-transform:uppercase;letter-spacing:.06em}
+.field-input{width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-sm);padding:8px 11px;color:var(--text);font-size:13px;outline:none;font-family:var(--font);transition:.15s}
+.field-input:focus{border-color:var(--blue)}
+.field-select{width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-sm);padding:8px 11px;color:var(--text);font-size:13px;outline:none;font-family:var(--font);appearance:none}
+.field-textarea{width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-sm);padding:8px 11px;color:var(--text);font-size:13px;outline:none;font-family:var(--font);resize:vertical;min-height:70px}
+.field-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+
+/* ─── GANTT VIEW ─────────────────────────────────────────────────── */
+.gantt-view{flex:1;overflow:auto;padding:14px 24px}
+.gantt-header{display:flex;height:32px;border-bottom:1px solid var(--border);margin-bottom:4px;font-size:10.5px;color:var(--text3)}
+.gantt-label-col{width:200px;flex-shrink:0;padding:8px 10px;font-weight:600;font-size:10.5px;color:var(--text3)}
+.gantt-track-header{flex:1;display:flex}
+.gantt-day{flex:1;text-align:center;padding-top:8px;border-left:1px solid var(--border);min-width:30px}
+.gantt-row{display:flex;align-items:center;height:36px;border-bottom:1px solid var(--border)}
+.gantt-row-label{width:200px;flex-shrink:0;padding:0 10px;font-size:12px;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.gantt-track{flex:1;position:relative;height:100%;overflow:hidden}
+.gantt-bar{height:18px;border-radius:4px;position:absolute;top:9px;display:flex;align-items:center;padding:0 8px;font-size:10px;font-weight:600;color:#fff;white-space:nowrap;overflow:hidden;cursor:pointer;transition:.15s}
+.gantt-bar:hover{opacity:.85;transform:scaleY(1.08)}
+
+/* ─── ANIMATIONS ─────────────────────────────────────────────────── */
+@keyframes cardIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.task-card{animation:cardIn .2s ease}
+.task-card:nth-child(2){animation-delay:.04s}
+.task-card:nth-child(3){animation-delay:.08s}
+.task-card:nth-child(4){animation-delay:.12s}
+.task-card:nth-child(5){animation-delay:.16s}
+
+/* ─── BULK SELECT ────────────────────────────────────────────────── */
+.bulk-bar{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--bg2);border:1px solid var(--border2);border-radius:99px;padding:10px 20px;display:flex;align-items:center;gap:12px;box-shadow:var(--shadow-lg);z-index:200;transition:transform .25s cubic-bezier(.4,0,.2,1);font-size:12.5px}
+.bulk-bar.show{transform:translateX(-50%) translateY(0)}
+.bulk-count{font-weight:700;color:var(--blue)}
+.bulk-divider{width:1px;height:16px;background:var(--border2)}
+.task-card.selected{border-color:var(--blue);background:rgba(77,142,245,.06)}
+.task-card .select-cb{position:absolute;top:8px;left:8px;width:16px;height:16px;border-radius:4px;border:1.5px solid var(--border2);background:var(--bg4);display:none;align-items:center;justify-content:center;cursor:pointer;z-index:2;transition:.15s}
+.select-mode .task-card .select-cb{display:flex}
+.select-mode .task-card.selected .select-cb{background:var(--blue);border-color:var(--blue)}
+.select-mode .task-card:hover .select-cb{border-color:var(--blue)}
+
+/* ─── SCROLLBAR ──────────────────────────────────────────────────── */
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:99px}
+
+/* ─── TOOLTIP ────────────────────────────────────────────────────── */
+[title]{position:relative}
+
+/* ─── COLOR COLS ─────────────────────────────────────────────────── */
+.ch-backlog{background:linear-gradient(90deg,#374151,#4b5563)}
+.ch-todo{background:linear-gradient(90deg,#1e3a6e,#1d4ed8)}
+.ch-doing{background:linear-gradient(90deg,#78350f,#b45309)}
+.ch-review{background:linear-gradient(90deg,#3b1d8a,#6d28d9)}
+.ch-done{background:linear-gradient(90deg,#14532d,#15803d)}
+</style>
+</head>
+<body>
+
+
+<!-- MAIN -->
+<div class="main">
+
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <!-- LOGO inline no topbar -->
+    <div style="display:flex;align-items:center;gap:9px;margin-right:16px;padding-right:16px;border-right:1px solid var(--border);flex-shrink:0">
+      <div style="width:32px;height:32px;background:linear-gradient(135deg,var(--blue),var(--purple));border-radius:8px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;color:#fff;box-shadow:0 0 14px rgba(77,142,245,.3);flex-shrink:0">G</div>
+      <span style="font-size:15px;font-weight:700;letter-spacing:-.3px;white-space:nowrap">Grow<em style="color:var(--blue);font-style:normal">OS</em></span>
+    </div>
+    <span class="breadcrumb">Tarefas</span>
+    <span class="sep">/</span>
+    <span class="page-title">Sprint Q2 — Comercial</span>
+    <div class="sprint-pill" style="margin-left:8px"><i class="ti ti-bolt" style="font-size:11px"></i>Sprint 7 · 8 dias</div>
+    <div class="search-wrap">
+      <i class="ti ti-search"></i>
+      <input type="text" placeholder="Buscar tarefa, lead, responsável..." id="searchInput" oninput="filterCards(this.value)">
+    </div>
+    <div class="topbar-right">
+      <div class="icon-btn" title="Selecionar múltiplos" onclick="toggleBulkMode()"><i class="ti ti-adjustments-horizontal"></i></div>
+      <div class="icon-btn" title="Notificações"><i class="ti ti-bell"></i></div>
+      <div class="icon-btn" title="Sincronizar Google"><i class="ti ti-refresh"></i></div>
+      <!-- User avatar -->
+      <div style="display:flex;align-items:center;gap:7px;padding-left:10px;border-left:1px solid var(--border);cursor:pointer">
+        <div style="width:30px;height:30px;border-radius:50%;background:var(--purple-d);display:flex;align-items:center;justify-content:center;font-size:10.5px;font-weight:700;color:var(--purple);border:1.5px solid var(--purple)">RC</div>
+        <span style="font-size:12px;font-weight:500;color:var(--text2)">Rafael Costa</span>
+        <i class="ti ti-chevron-down" style="font-size:12px;color:var(--text3)"></i>
+      </div>
+      <button class="btn btn-primary" onclick="openNewTaskModal()"><i class="ti ti-plus"></i>Nova Tarefa</button>
+    </div>
+  </div>
+
+  <!-- STATS ROW -->
+  <div class="stats-row">
+    <div class="stat-card s-blue">
+      <div class="stat-icon si-blue"><i class="ti ti-checklist"></i></div>
+      <div>
+        <div class="stat-num">48</div>
+        <div class="stat-label">Total de tarefas</div>
+        <div class="stat-trend trend-up"><i class="ti ti-trending-up" style="font-size:11px"></i>+6 esta semana</div>
+      </div>
+    </div>
+    <div class="stat-card s-green">
+      <div class="stat-icon si-green"><i class="ti ti-circle-check"></i></div>
+      <div>
+        <div class="stat-num">31</div>
+        <div class="stat-label">Concluídas</div>
+        <div class="stat-trend trend-up"><i class="ti ti-trending-up" style="font-size:11px"></i>64.6% taxa</div>
+      </div>
+    </div>
+    <div class="stat-card s-red">
+      <div class="stat-icon si-red"><i class="ti ti-alert-circle"></i></div>
+      <div>
+        <div class="stat-num" id="overdueCount">7</div>
+        <div class="stat-label">Atrasadas</div>
+        <div class="stat-trend trend-down"><i class="ti ti-trending-down" style="font-size:11px"></i>Atenção urgente</div>
+      </div>
+    </div>
+    <div class="stat-card s-amber">
+      <div class="stat-icon si-amber"><i class="ti ti-clock"></i></div>
+      <div>
+        <div class="stat-num">12h</div>
+        <div class="stat-label">Tempo registrado</div>
+        <div class="stat-trend trend-neu">média 1.8h/tarefa</div>
+      </div>
+    </div>
+    <div class="stat-card s-purple">
+      <div class="stat-icon si-purple"><i class="ti ti-chart-pie"></i></div>
+      <div>
+        <div class="stat-num">5</div>
+        <div class="stat-label">Em revisão</div>
+        <div style="margin-top:5px">
+          <div class="progress-bar"><div class="progress-fill" style="width:64%;background:var(--purple)"></div></div>
+        </div>
+      </div>
+    </div>
+    <div class="stat-card s-teal">
+      <div class="stat-icon si-teal"><i class="ti ti-brand-whatsapp"></i></div>
+      <div>
+        <div class="stat-num">9</div>
+        <div class="stat-label">Lembretes enviados</div>
+        <div class="stat-trend trend-up"><i class="ti ti-trending-up" style="font-size:11px"></i>hoje</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOOLBAR -->
+  <div class="toolbar">
+    <div class="board-tabs" id="boardTabs">
+      <div class="board-tab active" onclick="selectBoard(this,'prosp')">Prospecção Ativa</div>
+      <div class="board-tab" onclick="selectBoard(this,'onboard')">Onboarding</div>
+      <div class="board-tab" onclick="selectBoard(this,'posv')">Pós-Venda</div>
+      <div class="board-tab" onclick="openNewBoardModal()" style="color:var(--text3)">+ Novo</div>
+    </div>
+    <div style="display:flex;gap:5px;align-items:center;margin-left:8px">
+      <div class="filter-chip active" id="chipMeu" onclick="toggleChip(this)"><i class="ti ti-user"></i>Meu time</div>
+      <div class="filter-chip" id="chipAlta" onclick="toggleChip(this)"><i class="ti ti-flag-2"></i>Alta prio</div>
+      <div class="filter-chip" id="chipHoje" onclick="toggleChip(this)"><i class="ti ti-calendar-due"></i>Vence hoje</div>
+      <div class="filter-chip" id="chipAtras" onclick="toggleChip(this)"><i class="ti ti-alert-triangle"></i>Atrasadas</div>
+    </div>
+    <div class="view-tabs">
+      <div class="view-tab active" id="vKanban" onclick="switchView('kanban')"><i class="ti ti-layout-kanban"></i>Kanban</div>
+      <div class="view-tab" id="vLista" onclick="switchView('lista')"><i class="ti ti-list"></i>Lista</div>
+      <div class="view-tab" id="vGantt" onclick="switchView('gantt')"><i class="ti ti-timeline"></i>Gantt</div>
+      <div class="view-tab" id="vCal" onclick="switchView('cal')"><i class="ti ti-calendar-month"></i>Calendário</div>
+    </div>
+  </div>
+
+  <!-- OVERDUE BANNER -->
+  <div class="overdue-banner" id="overdueBanner">
+    <div class="overdue-dot"></div>
+    <div class="overdue-text">
+      <strong>7 tarefas atrasadas</strong> —
+      <span class="overdue-pills">
+        <span class="overdue-pill">Demo TechVentures</span>
+        <span class="overdue-pill">Proposta Andrade</span>
+        <span class="overdue-pill">Follow-up Logística</span>
+        <span class="overdue-pill" style="color:var(--text3);background:var(--bg4)">+4 mais</span>
+      </span>
+    </div>
+    <div class="icon-btn" onclick="document.getElementById('overdueBanner').style.display='none'" title="Fechar"><i class="ti ti-x" style="font-size:13px"></i></div>
+  </div>
+
+  <!-- BOARD AREA -->
+  <div class="board-area" id="boardArea">
+
+    <!-- KANBAN VIEW -->
+    <div class="kanban-scroll" id="kanbanView">
+
+      <!-- BACKLOG -->
+      <div class="col" id="col-backlog">
+        <div class="col-header ch-backlog" style="color:#fff">
+          <div class="col-dot" style="background:#9ca3af"></div>
+          <div class="col-title">Backlog</div>
+          <div class="col-count" id="cnt-backlog">8</div>
+          <div class="col-wip">WIP 10</div>
+          <i class="ti ti-dots-vertical col-menu-btn"></i>
+        </div>
+        <div class="col-body" id="body-backlog" ondragover="allowDrop(event)" ondrop="drop(event,'backlog')">
+          <!-- card 1 -->
+          <div class="task-card media" draggable="true" ondragstart="drag(event,'t1')" onclick="openPanel('t1')" id="card-t1">
+            <div class="select-cb" onclick="toggleSelect(event,'t1')"><i class="ti ti-check" style="font-size:10px;color:#fff"></i></div>
+            <div class="card-top-stripe" style="background:var(--blue)"></div>
+            <div class="card-body">
+              <div class="card-tags"><span class="tag tag-blue">CRM</span><span class="tag tag-amber">Prospecção</span></div>
+              <div class="card-title">Mapear concorrentes do lead Acme Corp</div>
+              <div class="card-meta">
+                <span class="prio-badge p-media"><i class="ti ti-point-filled" style="font-size:8px"></i>Média</span>
+                <span class="date-badge"><i class="ti ti-calendar"></i>15 Jun</span>
+              </div>
+              <div class="checklist-bar">
+                <div class="cl-bar-track"><div class="cl-bar-fill" style="width:40%;background:var(--blue)"></div></div>
+                <div class="cl-bar-label"><span>2/5 checklist</span><span>40%</span></div>
+              </div>
+              <div class="card-bottom">
+                <div class="assignees">
+                  <div class="assignee-av" style="background:var(--blue-d);color:var(--blue)">RC</div>
+                </div>
+                <div class="card-info">
+                  <div class="card-info-item"><i class="ti ti-message-circle"></i>3</div>
+                  <div class="card-info-item"><i class="ti ti-paperclip"></i>1</div>
+                </div>
+              </div>
+            </div>
+            <div class="card-actions">
+              <div class="card-act" onclick="event.stopPropagation();openPanel('t1')"><i class="ti ti-edit"></i></div>
+              <div class="card-act" onclick="event.stopPropagation()"><i class="ti ti-copy"></i></div>
+              <div class="card-act del" onclick="event.stopPropagation();deleteCard('card-t1','cnt-backlog')"><i class="ti ti-trash"></i></div>
+            </div>
+          </div>
+          <!-- card 2 -->
+          <div class="task-card baixa" draggable="true" ondragstart="drag(event,'t2')" onclick="openPanel('t2')" id="card-t2">
+            <div class="select-cb" onclick="toggleSelect(event,'t2')"><i class="ti ti-check" style="font-size:10px;color:#fff"></i></div>
+            <div class="card-top-stripe" style="background:var(--text3)"></div>
+            <div class="card-body">
+              <div class="card-tags"><span class="tag tag-teal">Relatório</span></div>
+              <div class="card-title">Criar template de proposta comercial padrão</div>
+              <div class="card-meta">
+                <span class="prio-badge p-baixa"><i class="ti ti-point-filled" style="font-size:8px"></i>Baixa</span>
+                <span class="date-badge"><i class="ti ti-calendar"></i>20 Jun</span>
+              </div>
+              <div class="checklist-bar">
+                <div class="cl-bar-track"><div class="cl-bar-fill" style="width:0%;background:var(--text3)"></div></div>
+                <div class="cl-bar-label"><span>0/3 checklist</span><span>0%</span></div>
+              </div>
+              <div class="card-bottom">
+                <div class="assignees">
+                  <div class="assignee-av" style="background:var(--purple-d);color:var(--purple)">AM</div>
+                  <div class="assignee-av" style="background:var(--teal-d);color:var(--teal)">PL</div>
+                </div>
+                <div class="card-info"><div class="card-info-item"><i class="ti ti-message-circle"></i>1</div></div>
+              </div>
+            </div>
+            <div class="card-actions">
+              <div class="card-act" onclick="event.stopPropagation();openPanel('t2')"><i class="ti ti-edit"></i></div>
+              <div class="card-act" onclick="event.stopPropagation()"><i class="ti ti-copy"></i></div>
+              <div class="card-act del" onclick="event.stopPropagation();deleteCard('card-t2','cnt-backlog')"><i class="ti ti-trash"></i></div>
+            </div>
+          </div>
+          <button class="add-btn" onclick="showQuickAdd('body-backlog','cnt-backlog')"><i class="ti ti-plus"></i>Adicionar tarefa</button>
+        </div>
+      </div>
+
+      <!-- A FAZER -->
+      <div class="col" id="col-todo">
+        <div class="col-header ch-todo" style="color:#fff">
+          <div class="col-dot" style="background:var(--blue)"></div>
+          <div class="col-title">A Fazer</div>
+          <div class="col-count" id="cnt-todo">3</div>
+          <div class="col-wip">WIP 5</div>
+          <i class="ti ti-dots-vertical col-menu-btn"></i>
+        </div>
+        <div class="col-body" id="body-todo" ondragover="allowDrop(event)" ondrop="drop(event,'todo')">
+          <!-- URGENTE card -->
+          <div class="task-card urgent overdue" draggable="true" ondragstart="drag(event,'t3')" onclick="openPanel('t3')" id="card-t3">
+            <div class="select-cb" onclick="toggleSelect(event,'t3')"><i class="ti ti-check" style="font-size:10px;color:#fff"></i></div>
+            <div class="card-top-stripe" style="background:var(--red)"></div>
+            <div class="card-body">
+              <div class="card-tags"><span class="tag tag-red">Urgente</span><span class="tag tag-blue">Demo</span></div>
+              <div class="card-lead">
+                <div class="lead-avatar">TV</div>
+                <span class="lead-name">TechVentures SA</span>
+                <i class="ti ti-brand-whatsapp" style="color:var(--green);font-size:14px;margin-left:auto" title="Abrir conversa WhatsApp"></i>
+              </div>
+              <div class="card-title">Preparar demo personalizada — TechVentures SA</div>
+              <div class="card-meta">
+                <span class="prio-badge p-urgente"><i class="ti ti-point-filled" style="font-size:8px"></i>Urgente</span>
+                <span class="date-badge overdue"><i class="ti ti-calendar-exclamation"></i>Atrasada 2d</span>
+              </div>
+              <div class="checklist-bar">
+                <div class="cl-bar-track"><div class="cl-bar-fill" style="width:40%;background:var(--red)"></div></div>
+                <div class="cl-bar-label"><span>2/5 subtarefas</span><span style="color:var(--red)">40%</span></div>
+              </div>
+              <div class="card-bottom">
+                <div class="assignees">
+                  <div class="assignee-av" style="background:var(--blue-d);color:var(--blue)">RC</div>
+                </div>
+                <div class="card-info">
+                  <div class="card-info-item running"><i class="ti ti-player-play"></i><span style="font-family:var(--mono)">0:32:14</span></div>
+                </div>
+              </div>
+            </div>
+            <div class="card-actions">
+              <div class="card-act" onclick="event.stopPropagation();openPanel('t3')"><i class="ti ti-edit"></i></div>
+              <div class="card-act" onclick="event.stopPropagation()"><i class="ti ti-copy"></i></div>
+              <div class="card-act del" onclick="event.stopPropagation();deleteCard('card-t3','cnt-todo')"><i class="ti ti-trash"></i></div>
+            </div>
+          </div>
+          <!-- alta card -->
+          <div class="task-card alta" draggable="true" ondragstart="drag(event,'t4')" onclick="openPanel('t4')" id="card-t4">
+            <div class="select-cb" onclick="toggleSelect(event,'t4')"><i class="ti ti-check" style="font-size:10px;color:#fff"></i></div>
+            <div class="card-top-stripe" style="background:var(--amber)"></div>
+            <div class="card-body">
+              <div class="card-tags"><span class="tag tag-amber">Follow-up</span></div>
+              <div class="card-lead">
+                <div class="lead-avatar" style="background:var(--amber-d);color:var(--amber);border-color:var(--amber)">GL</div>
+                <span class="lead-name" style="color:var(--amber)">Global Logística</span>
+                <span class="badge badge-amber" style="margin-left:auto;font-size:9.5px">R$ 28k</span>
+              </div>
+              <div class="card-title">Enviar proposta revisada — Global Logística</div>
+              <div class="card-meta">
+                <span class="prio-badge p-alta"><i class="ti ti-point-filled" style="font-size:8px"></i>Alta</span>
+                <span class="date-badge"><i class="ti ti-calendar"></i>12 Jun</span>
+              </div>
+              <div class="checklist-bar">
+                <div class="cl-bar-track"><div class="cl-bar-fill" style="width:75%;background:var(--amber)"></div></div>
+                <div class="cl-bar-label"><span>3/4 checklist</span><span>75%</span></div>
+              </div>
+              <div class="card-bottom">
+                <div class="assignees"><div class="assignee-av" style="background:var(--amber-d);color:var(--amber)">JS</div></div>
+                <div class="card-info">
+                  <div class="card-info-item"><i class="ti ti-message-circle"></i>7</div>
+                  <div class="card-info-item"><i class="ti ti-clock"></i>2h14m</div>
+                </div>
+              </div>
+            </div>
+            <div class="card-actions">
+              <div class="card-act" onclick="event.stopPropagation();openPanel('t4')"><i class="ti ti-edit"></i></div>
+              <div class="card-act" onclick="event.stopPropagation()"><i class="ti ti-copy"></i></div>
+              <div class="card-act del" onclick="event.stopPropagation();deleteCard('card-t4','cnt-todo')"><i class="ti ti-trash"></i></div>
+            </div>
+          </div>
+          <!-- media card -->
+          <div class="task-card media" draggable="true" ondragstart="drag(event,'t5')" onclick="openPanel('t5')" id="card-t5">
+            <div class="select-cb" onclick="toggleSelect(event,'t5')"><i class="ti ti-check" style="font-size:10px;color:#fff"></i></div>
+            <div class="card-top-stripe" style="background:var(--blue)"></div>
+            <div class="card-body">
+              <div class="card-tags"><span class="tag tag-purple">Parceria</span></div>
+              <div class="card-title">Agendar reunião alinhamento com time de CS</div>
+              <div class="card-meta">
+                <span class="prio-badge p-media"><i class="ti ti-point-filled" style="font-size:8px"></i>Média</span>
+                <span class="date-badge"><i class="ti ti-calendar"></i>14 Jun</span>
+              </div>
+              <div class="card-bottom">
+                <div class="assignees">
+                  <div class="assignee-av" style="background:var(--blue-d);color:var(--blue)">RC</div>
+                  <div class="assignee-av" style="background:var(--purple-d);color:var(--purple)">AM</div>
+                </div>
+              </div>
+            </div>
+            <div class="card-actions">
+              <div class="card-act" onclick="event.stopPropagation();openPanel('t5')"><i class="ti ti-edit"></i></div>
+              <div class="card-act" onclick="event.stopPropagation()"><i class="ti ti-copy"></i></div>
+              <div class="card-act del" onclick="event.stopPropagation();deleteCard('card-t5','cnt-todo')"><i class="ti ti-trash"></i></div>
+            </div>
+          </div>
+          <button class="add-btn" onclick="showQuickAdd('body-todo','cnt-todo')"><i class="ti ti-plus"></i>Adicionar tarefa</button>
+        </div>
+      </div>
+
+      <!-- EM PROGRESSO -->
+      <div class="col" id="col-doing">
+        <div class="col-header ch-doing" style="color:#fff">
+          <div class="col-dot" style="background:var(--amber)"></div>
+          <div class="col-title">Em Progresso</div>
+          <div class="col-count" id="cnt-doing">2</div>
+          <div class="col-wip">WIP 4</div>
+          <i class="ti ti-dots-vertical col-menu-btn"></i>
+        </div>
+        <div class="col-body" id="body-doing" ondragover="allowDrop(event)" ondrop="drop(event,'doing')">
+          <div class="task-card alta" draggable="true" ondragstart="drag(event,'t6')" onclick="openPanel('t6')" id="card-t6">
+            <div class="select-cb" onclick="toggleSelect(event,'t6')"><i class="ti ti-check" style="font-size:10px;color:#fff"></i></div>
+            <div class="card-top-stripe" style="background:var(--amber)"></div>
+            <div class="card-body">
+              <div class="card-tags"><span class="tag tag-green">NPS</span><span class="tag tag-blue">CRM</span></div>
+              <div class="card-title">Qualificar 20 leads campanha de maio</div>
+              <div class="card-meta">
+                <span class="prio-badge p-alta"><i class="ti ti-point-filled" style="font-size:8px"></i>Alta</span>
+                <span class="date-badge"><i class="ti ti-calendar"></i>13 Jun</span>
+              </div>
+              <div class="checklist-bar">
+                <div class="cl-bar-track"><div class="cl-bar-fill" style="width:65%;background:var(--amber)"></div></div>
+                <div class="cl-bar-label"><span>13/20 qualificados</span><span style="color:var(--amber)">65%</span></div>
+              </div>
+              <div class="card-bottom">
+                <div class="assignees">
+                  <div class="assignee-av" style="background:var(--amber-d);color:var(--amber)">JS</div>
+                  <div class="assignee-av" style="background:var(--blue-d);color:var(--blue)">RC</div>
+                </div>
+                <div class="card-info">
+                  <div class="card-info-item"><i class="ti ti-message-circle"></i>12</div>
+                  <div class="card-info-item"><i class="ti ti-clock"></i>2h14m</div>
+                </div>
+              </div>
+            </div>
+            <div class="card-actions">
+              <div class="card-act" onclick="event.stopPropagation();openPanel('t6')"><i class="ti ti-edit"></i></div>
+              <div class="card-act" onclick="event.stopPropagation()"><i class="ti ti-copy"></i></div>
+              <div class="card-act del" onclick="event.stopPropagation();deleteCard('card-t6','cnt-doing')"><i class="ti ti-trash"></i></div>
+            </div>
+          </div>
+          <div class="task-card media" draggable="true" ondragstart="drag(event,'t7')" onclick="openPanel('t7')" id="card-t7">
+            <div class="select-cb" onclick="toggleSelect(event,'t7')"><i class="ti ti-check" style="font-size:10px;color:#fff"></i></div>
+            <div class="card-top-stripe" style="background:var(--blue)"></div>
+            <div class="card-body">
+              <div class="card-tags"><span class="tag tag-teal">Integração</span></div>
+              <div class="card-title">Configurar webhook Pipedrive → GrowOS</div>
+              <div class="card-meta">
+                <span class="prio-badge p-media"><i class="ti ti-point-filled" style="font-size:8px"></i>Média</span>
+                <span class="date-badge"><i class="ti ti-calendar"></i>16 Jun</span>
+              </div>
+              <div class="checklist-bar">
+                <div class="cl-bar-track"><div class="cl-bar-fill" style="width:25%;background:var(--teal)"></div></div>
+                <div class="cl-bar-label"><span>1/4 checklist</span><span>25%</span></div>
+              </div>
+              <div class="card-bottom">
+                <div class="assignees"><div class="assignee-av" style="background:var(--teal-d);color:var(--teal)">PL</div></div>
+              </div>
+            </div>
+            <div class="card-actions">
+              <div class="card-act" onclick="event.stopPropagation();openPanel('t7')"><i class="ti ti-edit"></i></div>
+              <div class="card-act" onclick="event.stopPropagation()"><i class="ti ti-copy"></i></div>
+              <div class="card-act del" onclick="event.stopPropagation();deleteCard('card-t7','cnt-doing')"><i class="ti ti-trash"></i></div>
+            </div>
+          </div>
+          <button class="add-btn" onclick="showQuickAdd('body-doing','cnt-doing')"><i class="ti ti-plus"></i>Adicionar tarefa</button>
+        </div>
+      </div>
+
+      <!-- EM REVISÃO -->
+      <div class="col" id="col-review">
+        <div class="col-header ch-review" style="color:#fff">
+          <div class="col-dot" style="background:var(--purple)"></div>
+          <div class="col-title">Em Revisão</div>
+          <div class="col-count" id="cnt-review">1</div>
+          <div class="col-wip">WIP 3</div>
+          <i class="ti ti-dots-vertical col-menu-btn"></i>
+        </div>
+        <div class="col-body" id="body-review" ondragover="allowDrop(event)" ondrop="drop(event,'review')">
+          <div class="task-card alta" draggable="true" ondragstart="drag(event,'t8')" onclick="openPanel('t8')" id="card-t8">
+            <div class="select-cb" onclick="toggleSelect(event,'t8')"><i class="ti ti-check" style="font-size:10px;color:#fff"></i></div>
+            <div class="card-top-stripe" style="background:var(--purple)"></div>
+            <div class="card-body">
+              <div class="card-tags"><span class="tag tag-purple">Contrato</span></div>
+              <div class="card-lead">
+                <div class="lead-avatar" style="background:var(--purple-d);color:var(--purple);border-color:var(--purple)">FB</div>
+                <span class="lead-name" style="color:var(--purple)">Fintec Brasil</span>
+                <span class="badge badge-purple" style="margin-left:auto;font-size:9.5px">Jurídico</span>
+              </div>
+              <div class="card-title">Revisar contrato de parceria — Fintec Brasil</div>
+              <div class="card-meta">
+                <span class="prio-badge p-alta"><i class="ti ti-point-filled" style="font-size:8px"></i>Alta</span>
+                <span class="date-badge"><i class="ti ti-calendar"></i>11 Jun</span>
+              </div>
+              <div class="card-bottom">
+                <div class="assignees"><div class="assignee-av" style="background:var(--purple-d);color:var(--purple)">AM</div></div>
+                <div class="card-info"><div class="card-info-item"><i class="ti ti-message-circle"></i>5</div></div>
+              </div>
+            </div>
+            <div class="card-actions">
+              <div class="card-act" onclick="event.stopPropagation();openPanel('t8')"><i class="ti ti-edit"></i></div>
+              <div class="card-act" onclick="event.stopPropagation()"><i class="ti ti-copy"></i></div>
+              <div class="card-act del" onclick="event.stopPropagation();deleteCard('card-t8','cnt-review')"><i class="ti ti-trash"></i></div>
+            </div>
+          </div>
+          <button class="add-btn" onclick="showQuickAdd('body-review','cnt-review')"><i class="ti ti-plus"></i>Adicionar tarefa</button>
+        </div>
+      </div>
+
+      <!-- GANHO -->
+      <div class="col" id="col-done">
+        <div class="col-header ch-done" style="color:#fff">
+          <div class="col-dot" style="background:var(--green)"></div>
+          <div class="col-title">✅ Ganho</div>
+          <div class="col-count" id="cnt-done">2</div>
+          <i class="ti ti-dots-vertical col-menu-btn"></i>
+        </div>
+        <div class="col-body" id="body-done" ondragover="allowDrop(event)" ondrop="drop(event,'done')">
+          <div class="task-card" style="opacity:.6" draggable="true" ondragstart="drag(event,'t9')" onclick="openPanel('t9')" id="card-t9">
+            <div class="card-top-stripe" style="background:var(--green)"></div>
+            <div class="card-body">
+              <div class="card-tags"><span class="tag tag-green">Fechado</span></div>
+              <div class="card-title done">Enviar NPS pós-reunião para 12 clientes</div>
+              <div class="card-meta">
+                <span class="badge badge-green" style="font-size:10px"><i class="ti ti-circle-check" style="font-size:11px"></i>Concluída</span>
+                <span class="date-badge"><i class="ti ti-calendar-check"></i>08 Jun</span>
+              </div>
+              <div class="card-bottom">
+                <div class="assignees"><div class="assignee-av" style="background:var(--blue-d);color:var(--blue)">RC</div></div>
+                <div class="card-info"><div class="card-info-item"><i class="ti ti-clock"></i>1h20m</div></div>
+              </div>
+            </div>
+          </div>
+          <div class="task-card" style="opacity:.6" draggable="true" ondragstart="drag(event,'t10')" onclick="openPanel('t10')" id="card-t10">
+            <div class="card-top-stripe" style="background:var(--green)"></div>
+            <div class="card-body">
+              <div class="card-tags"><span class="tag tag-green">Fechado</span><span class="tag tag-amber">Proposta</span></div>
+              <div class="card-lead">
+                <div class="lead-avatar" style="background:var(--amber-d);color:var(--amber);border-color:var(--amber)">CA</div>
+                <span class="lead-name" style="color:var(--amber)">Construtora Andrade</span>
+                <span class="badge badge-green" style="margin-left:auto;font-size:9.5px">R$ 48k</span>
+              </div>
+              <div class="card-title done">Fechar proposta — Construtora Andrade</div>
+              <div class="card-meta">
+                <span class="badge badge-green" style="font-size:10px"><i class="ti ti-circle-check" style="font-size:11px"></i>Concluída</span>
+                <span class="date-badge"><i class="ti ti-calendar-check"></i>07 Jun</span>
+              </div>
+              <div class="card-bottom">
+                <div class="assignees"><div class="assignee-av" style="background:var(--amber-d);color:var(--amber)">JS</div></div>
+              </div>
+            </div>
+          </div>
+          <button class="add-btn" onclick="showQuickAdd('body-done','cnt-done')"><i class="ti ti-plus"></i>Adicionar tarefa</button>
+        </div>
+      </div>
+
+      <!-- ADD COLUMN -->
+      <div class="add-col-btn" onclick="openNewColModal()" title="Nova coluna"><i class="ti ti-column-insert-right" style="font-size:20px"></i></div>
+
+    </div><!-- /kanban-scroll -->
+
+    <!-- LIST VIEW -->
+    <div class="list-view" id="listView" style="display:none">
+      <table class="list-table">
+        <thead>
+          <tr>
+            <th style="width:32px"></th>
+            <th>Tarefa</th>
+            <th>Lead</th>
+            <th>Prioridade</th>
+            <th>Status</th>
+            <th>Prazo</th>
+            <th>Responsável</th>
+            <th>Tempo</th>
+          </tr>
+        </thead>
+        <tbody id="listBody">
+          <tr onclick="openPanel('t3')">
+            <td><div class="list-col-dot" style="background:var(--red)"></div></td>
+            <td><span style="font-weight:500">Preparar demo — TechVentures SA</span></td>
+            <td><span style="color:var(--green);font-size:11.5px">TechVentures SA</span></td>
+            <td><span class="prio-badge p-urgente">Urgente</span></td>
+            <td><span class="badge badge-blue">A Fazer</span></td>
+            <td><span style="color:var(--red);font-size:11.5px">Atrasada 2d</span></td>
+            <td><div class="assignee-av" style="background:var(--blue-d);color:var(--blue);width:22px;height:22px;font-size:9px">RC</div></td>
+            <td><span style="font-family:var(--mono);font-size:11.5px;color:var(--red)">0:32:14 ●</span></td>
+          </tr>
+          <tr onclick="openPanel('t4')">
+            <td><div class="list-col-dot" style="background:var(--amber)"></div></td>
+            <td><span style="font-weight:500">Enviar proposta revisada — Global Logística</span></td>
+            <td><span style="color:var(--amber);font-size:11.5px">Global Logística</span></td>
+            <td><span class="prio-badge p-alta">Alta</span></td>
+            <td><span class="badge badge-blue">A Fazer</span></td>
+            <td><span style="font-size:11.5px">12 Jun</span></td>
+            <td><div class="assignee-av" style="background:var(--amber-d);color:var(--amber);width:22px;height:22px;font-size:9px">JS</div></td>
+            <td><span style="font-family:var(--mono);font-size:11.5px">2h14m</span></td>
+          </tr>
+          <tr onclick="openPanel('t6')">
+            <td><div class="list-col-dot" style="background:var(--amber)"></div></td>
+            <td><span style="font-weight:500">Qualificar 20 leads campanha de maio</span></td>
+            <td><span style="color:var(--text3);font-size:11.5px">—</span></td>
+            <td><span class="prio-badge p-alta">Alta</span></td>
+            <td><span class="badge badge-amber">Em Progresso</span></td>
+            <td><span style="font-size:11.5px">13 Jun</span></td>
+            <td><div style="display:flex"><div class="assignee-av" style="background:var(--amber-d);color:var(--amber);width:22px;height:22px;font-size:9px">JS</div><div class="assignee-av" style="background:var(--blue-d);color:var(--blue);width:22px;height:22px;font-size:9px;margin-left:-6px">RC</div></div></td>
+            <td><span style="font-family:var(--mono);font-size:11.5px">2h14m</span></td>
+          </tr>
+          <tr onclick="openPanel('t1')">
+            <td><div class="list-col-dot" style="background:var(--blue)"></div></td>
+            <td><span style="font-weight:500">Mapear concorrentes do lead Acme Corp</span></td>
+            <td><span style="color:var(--text3);font-size:11.5px">Acme Corp</span></td>
+            <td><span class="prio-badge p-media">Média</span></td>
+            <td><span class="badge badge-gray">Backlog</span></td>
+            <td><span style="font-size:11.5px">15 Jun</span></td>
+            <td><div class="assignee-av" style="background:var(--blue-d);color:var(--blue);width:22px;height:22px;font-size:9px">RC</div></td>
+            <td><span style="font-family:var(--mono);font-size:11.5px;color:var(--text3)">—</span></td>
+          </tr>
+          <tr onclick="openPanel('t8')">
+            <td><div class="list-col-dot" style="background:var(--purple)"></div></td>
+            <td><span style="font-weight:500">Revisar contrato parceria — Fintec Brasil</span></td>
+            <td><span style="color:var(--purple);font-size:11.5px">Fintec Brasil</span></td>
+            <td><span class="prio-badge p-alta">Alta</span></td>
+            <td><span class="badge badge-purple">Em Revisão</span></td>
+            <td><span style="font-size:11.5px">11 Jun</span></td>
+            <td><div class="assignee-av" style="background:var(--purple-d);color:var(--purple);width:22px;height:22px;font-size:9px">AM</div></td>
+            <td><span style="font-family:var(--mono);font-size:11.5px;color:var(--text3)">—</span></td>
+          </tr>
+          <tr onclick="openPanel('t9')" style="opacity:.55">
+            <td><div class="list-col-dot" style="background:var(--green)"></div></td>
+            <td><span style="text-decoration:line-through;color:var(--text3)">Enviar NPS pós-reunião para 12 clientes</span></td>
+            <td><span style="color:var(--text3);font-size:11.5px">—</span></td>
+            <td><span class="prio-badge p-media">Média</span></td>
+            <td><span class="badge badge-green"><i class="ti ti-circle-check" style="font-size:11px"></i>Concluída</span></td>
+            <td><span style="font-size:11.5px;color:var(--green)">08 Jun ✓</span></td>
+            <td><div class="assignee-av" style="background:var(--blue-d);color:var(--blue);width:22px;height:22px;font-size:9px">RC</div></td>
+            <td><span style="font-family:var(--mono);font-size:11.5px">1h20m</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- GANTT VIEW -->
+    <div class="gantt-view" id="ganttView" style="display:none">
+      <div class="gantt-header">
+        <div class="gantt-label-col">Tarefa</div>
+        <div class="gantt-track-header">
+          <div class="gantt-day">1/6</div><div class="gantt-day">3/6</div><div class="gantt-day">5/6</div>
+          <div class="gantt-day">7/6</div><div class="gantt-day">9/6</div><div class="gantt-day">11/6</div>
+          <div class="gantt-day">13/6</div><div class="gantt-day">15/6</div><div class="gantt-day">17/6</div>
+          <div class="gantt-day">19/6</div><div class="gantt-day">21/6</div><div class="gantt-day">23/6</div>
+        </div>
+      </div>
+      <div class="gantt-row">
+        <div class="gantt-row-label">Demo TechVentures</div>
+        <div class="gantt-track">
+          <div class="gantt-bar" style="left:0%;width:20%;background:var(--red);opacity:.9" onclick="openPanel('t3')">Demo TechVentures</div>
+        </div>
+      </div>
+      <div class="gantt-row">
+        <div class="gantt-row-label">Proposta Global Logística</div>
+        <div class="gantt-track">
+          <div class="gantt-bar" style="left:8%;width:22%;background:var(--amber)" onclick="openPanel('t4')">Proposta Logística</div>
+        </div>
+      </div>
+      <div class="gantt-row">
+        <div class="gantt-row-label">Qualificar leads campanha</div>
+        <div class="gantt-track">
+          <div class="gantt-bar" style="left:5%;width:35%;background:var(--blue)" onclick="openPanel('t6')">Qualificar leads</div>
+        </div>
+      </div>
+      <div class="gantt-row">
+        <div class="gantt-row-label">Webhook Pipedrive → GrowOS</div>
+        <div class="gantt-track">
+          <div class="gantt-bar" style="left:12%;width:28%;background:var(--teal)" onclick="openPanel('t7')">Webhook Pipedrive</div>
+        </div>
+      </div>
+      <div class="gantt-row">
+        <div class="gantt-row-label">Contrato Fintec Brasil</div>
+        <div class="gantt-track">
+          <div class="gantt-bar" style="left:0%;width:18%;background:var(--purple)" onclick="openPanel('t8')">Contrato Fintec</div>
+        </div>
+      </div>
+      <div class="gantt-row">
+        <div class="gantt-row-label">Template proposta padrão</div>
+        <div class="gantt-track">
+          <div class="gantt-bar" style="left:20%;width:40%;background:var(--text3)" onclick="openPanel('t2')">Template proposta</div>
+        </div>
+      </div>
+      <div class="gantt-row">
+        <div class="gantt-row-label">Reunião alinhamento CS</div>
+        <div class="gantt-track">
+          <div class="gantt-bar" style="left:25%;width:20%;background:var(--green-d);border:1px solid var(--green);color:var(--green)" onclick="openPanel('t5')">Reunião CS</div>
+        </div>
+      </div>
+      <div style="padding:16px 0;font-size:12px;color:var(--text3);text-align:center">Hoje: 09 Jun 2025 &nbsp;|&nbsp; Barras vermelhas = atrasadas &nbsp;|&nbsp; Clique em uma barra para ver detalhes</div>
+    </div>
+
+    <!-- CALENDÁRIO VIEW (placeholder elegante) -->
+    <div id="calView" style="display:none;flex:1;align-items:center;justify-content:center;flex-direction:column;gap:12px;color:var(--text3)">
+      <i class="ti ti-calendar-month" style="font-size:48px;opacity:.3"></i>
+      <div style="font-size:14px;font-weight:500">Visualização de Calendário</div>
+      <div style="font-size:12px;color:var(--text3)">As tarefas com prazo definido aparecem aqui organizadas por data</div>
+      <button class="btn btn-ghost" onclick="switchView('kanban')"><i class="ti ti-layout-kanban"></i>Voltar ao Kanban</button>
+    </div>
+
+    <!-- SIDE PANEL -->
+    <div class="side-panel" id="sidePanel">
+      <div class="panel-header">
+        <div style="flex:1">
+          <div style="font-size:10.5px;color:var(--text3);margin-bottom:3px" id="panelLeadCtx">TechVentures SA · Demo</div>
+          <div style="font-size:14.5px;font-weight:700;line-height:1.35;color:var(--text)" id="panelTitle">Preparar demo personalizada — TechVentures SA</div>
+        </div>
+        <div class="panel-close" onclick="closePanel()"><i class="ti ti-x"></i></div>
+      </div>
+      <div class="panel-tabs">
+        <div class="panel-tab active" onclick="switchPanelTab(this,'pDetails')">Detalhes</div>
+        <div class="panel-tab" onclick="switchPanelTab(this,'pChecklist')">Checklist</div>
+        <div class="panel-tab" onclick="switchPanelTab(this,'pComments')">Comentários</div>
+        <div class="panel-tab" onclick="switchPanelTab(this,'pActivity')">Atividade</div>
+      </div>
+      <div class="panel-body" id="panelBody">
+
+        <!-- DETAILS TAB -->
+        <div id="pDetails">
+          <div class="panel-section">
+            <div class="meta-grid">
+              <div class="meta-item">
+                <div class="panel-label">Prioridade</div>
+                <div class="meta-val"><span class="prio-badge p-urgente"><i class="ti ti-flag-2" style="font-size:11px"></i>Urgente</span></div>
+              </div>
+              <div class="meta-item">
+                <div class="panel-label">Status</div>
+                <div class="meta-val"><span class="badge badge-blue">A Fazer</span></div>
+              </div>
+              <div class="meta-item">
+                <div class="panel-label">Responsável</div>
+                <div class="meta-val">
+                  <div class="assignee-av" style="background:var(--blue-d);color:var(--blue);width:22px;height:22px;font-size:9px">RC</div>
+                  <span style="font-size:12px">Rafael Costa</span>
+                </div>
+              </div>
+              <div class="meta-item">
+                <div class="panel-label">Prazo</div>
+                <div class="meta-val" style="color:var(--red)"><i class="ti ti-calendar-x" style="font-size:13px"></i>Atrasada 2d</div>
+              </div>
+              <div class="meta-item">
+                <div class="panel-label">Lead vinculado</div>
+                <div class="meta-val">
+                  <i class="ti ti-building" style="color:var(--text3);font-size:13px"></i>
+                  <span style="color:var(--blue);font-size:12px;cursor:pointer">TechVentures SA</span>
+                </div>
+              </div>
+              <div class="meta-item">
+                <div class="panel-label">Valor do negócio</div>
+                <div class="meta-val"><span class="badge badge-amber">R$ 75.000</span></div>
+              </div>
+            </div>
+          </div>
+          <div class="panel-section">
+            <div class="panel-label">Timer</div>
+            <div class="timer-display">
+              <span class="timer-num running" id="timerDisplay">0:32:14</span>
+              <button class="timer-btn running" id="timerBtn" onclick="toggleTimer()"><i class="ti ti-player-pause"></i>Pausar</button>
+            </div>
+          </div>
+          <div class="panel-section">
+            <div class="panel-label">Tags</div>
+            <div style="display:flex;flex-wrap:wrap;gap:5px">
+              <span class="tag tag-red">Urgente</span>
+              <span class="tag tag-blue">Demo</span>
+              <span class="tag tag-amber">Prospecção</span>
+              <span style="width:20px;height:20px;border-radius:99px;border:1px dashed var(--border2);display:inline-flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text3)"><i class="ti ti-plus" style="font-size:11px"></i></span>
+            </div>
+          </div>
+          <div class="panel-section">
+            <div class="panel-label">Progresso do checklist</div>
+            <div class="progress-bar" style="margin-bottom:5px"><div class="progress-fill" style="width:40%;background:var(--blue)"></div></div>
+            <div style="font-size:10.5px;color:var(--text3);display:flex;justify-content:space-between"><span>2 de 5 concluídos</span><span>40%</span></div>
+          </div>
+          <div class="panel-section">
+            <div class="panel-label">Ações rápidas</div>
+            <div style="display:flex;gap:6px;flex-wrap:wrap">
+              <button class="btn btn-ghost" style="font-size:11px;padding:5px 10px"><i class="ti ti-brand-whatsapp" style="color:var(--green)"></i>Conversa WhatsApp</button>
+              <button class="btn btn-ghost" style="font-size:11px;padding:5px 10px"><i class="ti ti-bell"></i>Enviar lembrete</button>
+              <button class="btn btn-ghost" style="font-size:11px;padding:5px 10px"><i class="ti ti-copy"></i>Duplicar</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- CHECKLIST TAB -->
+        <div id="pChecklist" style="display:none">
+          <div class="panel-section">
+            <div class="progress-bar" style="margin-bottom:8px"><div class="progress-fill" style="width:40%;background:var(--blue)"></div></div>
+            <div id="checklistItems">
+              <div class="cl-item">
+                <div class="cl-check done" onclick="toggleCheck(this)"><i class="ti ti-check" style="font-size:10px;color:#fff"></i></div>
+                <span class="cl-text done">Pesquisar segmento da empresa</span>
+              </div>
+              <div class="cl-item">
+                <div class="cl-check done" onclick="toggleCheck(this)"><i class="ti ti-check" style="font-size:10px;color:#fff"></i></div>
+                <span class="cl-text done">Identificar dores principais do contato</span>
+              </div>
+              <div class="cl-item">
+                <div class="cl-check" onclick="toggleCheck(this)"></div>
+                <span class="cl-text">Preparar slides customizados (5–10 slides)</span>
+              </div>
+              <div class="cl-item">
+                <div class="cl-check" onclick="toggleCheck(this)"></div>
+                <span class="cl-text">Configurar ambiente de demo ao vivo</span>
+              </div>
+              <div class="cl-item">
+                <div class="cl-check" onclick="toggleCheck(this)"></div>
+                <span class="cl-text">Revisar proposta de valor com gerente</span>
+              </div>
+            </div>
+            <div style="display:flex;gap:6px;margin-top:10px">
+              <input type="text" class="field-input" placeholder="Adicionar item..." id="clInput" style="font-size:12px;padding:6px 10px" onkeydown="if(event.key==='Enter')addCheckItem()">
+              <button class="btn btn-ghost" style="padding:6px 10px;font-size:12px" onclick="addCheckItem()"><i class="ti ti-plus"></i></button>
+            </div>
+          </div>
+        </div>
+
+        <!-- COMMENTS TAB -->
+        <div id="pComments" style="display:none">
+          <div class="comment-item">
+            <div class="comment-av">RC</div>
+            <div class="comment-content">
+              <div><span class="comment-author">Rafael Costa</span><span class="comment-time">há 2h</span></div>
+              <div class="comment-text">Contato confirmou que quer ver especificamente o módulo de funil de vendas e integração com WhatsApp.</div>
+            </div>
+          </div>
+          <div class="comment-item">
+            <div class="comment-av" style="background:var(--purple-d);color:var(--purple)">AM</div>
+            <div class="comment-content">
+              <div><span class="comment-author">Ana Martins</span><span class="comment-time">há 45m</span></div>
+              <div class="comment-text">Preparei um ambiente de sandbox. Acesso no canal #demos no Slack.</div>
+            </div>
+          </div>
+          <div class="comment-input-wrap">
+            <div class="comment-av">RC</div>
+            <input class="comment-input" placeholder="Escreva um comentário... (@mencione alguém)" id="commentInput" onkeydown="if(event.key==='Enter'&&!event.shiftKey){addComment();event.preventDefault()}">
+            <button class="btn btn-primary" style="padding:7px 10px;font-size:12px" onclick="addComment()"><i class="ti ti-send"></i></button>
+          </div>
+        </div>
+
+        <!-- ACTIVITY TAB -->
+        <div id="pActivity" style="display:none">
+          <div class="act-item">
+            <div class="act-dot" style="background:var(--blue)"></div>
+            <div>
+              <div class="act-text"><strong>Rafael Costa</strong> moveu de <strong>Backlog → A Fazer</strong></div>
+              <div class="act-time">hoje às 09:14</div>
+            </div>
+          </div>
+          <div class="act-item">
+            <div class="act-dot" style="background:var(--green)"></div>
+            <div>
+              <div class="act-text"><strong>Ana Martins</strong> marcou 2 itens do checklist como concluídos</div>
+              <div class="act-time">hoje às 10:32</div>
+            </div>
+          </div>
+          <div class="act-item">
+            <div class="act-dot" style="background:var(--amber)"></div>
+            <div>
+              <div class="act-text">Prazo alterado para <strong>10 Jun</strong></div>
+              <div class="act-time">ontem às 16:48</div>
+            </div>
+          </div>
+          <div class="act-item">
+            <div class="act-dot" style="background:var(--purple)"></div>
+            <div>
+              <div class="act-text"><strong>Rafael Costa</strong> criou a tarefa</div>
+              <div class="act-time">05 Jun às 08:22</div>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- /panel-body -->
+      <div class="panel-footer">
+        <button class="btn btn-ghost" style="flex:1;justify-content:center" onclick="closePanel()"><i class="ti ti-x"></i>Fechar</button>
+        <button class="btn btn-primary" style="flex:1;justify-content:center"><i class="ti ti-circle-check"></i>Concluir</button>
+      </div>
+    </div><!-- /side-panel -->
+
+  </div><!-- /board-area -->
+
+</div><!-- /main -->
+
+<!-- BULK ACTION BAR -->
+<div class="bulk-bar" id="bulkBar">
+  <span class="bulk-count" id="bulkCount">0 selecionadas</span>
+  <div class="bulk-divider"></div>
+  <button class="btn btn-ghost" style="padding:5px 12px;font-size:12px" onclick="bulkMove()"><i class="ti ti-arrows-transfer-up"></i>Mover</button>
+  <button class="btn btn-ghost" style="padding:5px 12px;font-size:12px"><i class="ti ti-user-plus"></i>Atribuir</button>
+  <button class="btn btn-ghost" style="padding:5px 12px;font-size:12px;color:var(--red)" onclick="bulkDelete()"><i class="ti ti-trash"></i>Deletar</button>
+  <div class="bulk-divider"></div>
+  <button class="btn btn-ghost" style="padding:5px 12px;font-size:12px" onclick="clearSelection()"><i class="ti ti-x"></i>Cancelar</button>
+</div>
+
+<!-- NEW TASK MODAL -->
+<div class="modal-bg" id="newTaskModal">
+  <div class="modal" style="width:560px">
+    <div class="modal-header">
+      <div class="modal-title">Nova Tarefa</div>
+      <div class="panel-close" onclick="closeModal('newTaskModal')"><i class="ti ti-x"></i></div>
+    </div>
+    <div class="modal-body">
+      <div class="field-group">
+        <label class="field-label">Título da tarefa *</label>
+        <input class="field-input" type="text" placeholder="Ex: Preparar proposta para lead X" id="newTaskTitle">
+      </div>
+      <div class="field-group">
+        <label class="field-label">Descrição</label>
+        <textarea class="field-textarea" placeholder="Descreva a tarefa em detalhes..."></textarea>
+      </div>
+      <div class="field-grid">
+        <div class="field-group">
+          <label class="field-label">Prioridade</label>
+          <select class="field-select">
+            <option value="baixa">Baixa</option>
+            <option value="media" selected>Média</option>
+            <option value="alta">Alta</option>
+            <option value="urgente">Urgente</option>
+          </select>
+        </div>
+        <div class="field-group">
+          <label class="field-label">Coluna</label>
+          <select class="field-select">
+            <option>Backlog</option>
+            <option>A Fazer</option>
+            <option>Em Progresso</option>
+            <option>Em Revisão</option>
+            <option>Ganho</option>
+          </select>
+        </div>
+        <div class="field-group">
+          <label class="field-label">Data início</label>
+          <input class="field-input" type="date">
+        </div>
+        <div class="field-group">
+          <label class="field-label">Prazo final</label>
+          <input class="field-input" type="date">
+        </div>
+        <div class="field-group">
+          <label class="field-label">Responsável</label>
+          <select class="field-select">
+            <option>Rafael Costa</option>
+            <option>Ana Martins</option>
+            <option>Pedro Lima</option>
+            <option>Juliana Santos</option>
+          </select>
+        </div>
+        <div class="field-group">
+          <label class="field-label">Lead vinculado</label>
+          <select class="field-select">
+            <option value="">— Nenhum —</option>
+            <option>TechVentures SA</option>
+            <option>Global Logística</option>
+            <option>Fintec Brasil</option>
+            <option>Construtora Andrade</option>
+          </select>
+        </div>
+      </div>
+      <div class="field-group">
+        <label class="field-label">Tags</label>
+        <input class="field-input" type="text" placeholder="Ex: CRM, Demo, Follow-up (separar por vírgula)">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('newTaskModal')">Cancelar</button>
+      <button class="btn btn-primary" onclick="createTask()"><i class="ti ti-plus"></i>Criar Tarefa</button>
+    </div>
+  </div>
+</div>
+
+<!-- NEW BOARD MODAL -->
+<div class="modal-bg" id="newBoardModal">
+  <div class="modal" style="width:400px">
+    <div class="modal-header">
+      <div class="modal-title">Novo Quadro</div>
+      <div class="panel-close" onclick="closeModal('newBoardModal')"><i class="ti ti-x"></i></div>
+    </div>
+    <div class="modal-body">
+      <div class="field-group">
+        <label class="field-label">Nome do quadro *</label>
+        <input class="field-input" type="text" placeholder="Ex: Onboarding Clientes Q3" id="newBoardName">
+      </div>
+      <div class="field-group">
+        <label class="field-label">Descrição</label>
+        <input class="field-input" type="text" placeholder="Opcional">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('newBoardModal')">Cancelar</button>
+      <button class="btn btn-primary" onclick="createBoard()"><i class="ti ti-plus"></i>Criar Quadro</button>
+    </div>
+  </div>
+</div>
+
+<!-- NEW COLUMN MODAL -->
+<div class="modal-bg" id="newColModal">
+  <div class="modal" style="width:380px">
+    <div class="modal-header">
+      <div class="modal-title">Nova Coluna</div>
+      <div class="panel-close" onclick="closeModal('newColModal')"><i class="ti ti-x"></i></div>
+    </div>
+    <div class="modal-body">
+      <div class="field-group">
+        <label class="field-label">Nome da coluna *</label>
+        <input class="field-input" type="text" placeholder="Ex: Em Revisão, Aguardando Cliente" id="newColName">
+      </div>
+      <div class="field-group">
+        <label class="field-label">Cor</label>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:4px" id="colorPicker">
+          <div class="color-opt" onclick="selectColor(this,'#4d8ef5')" style="width:28px;height:28px;border-radius:6px;background:#4d8ef5;cursor:pointer;border:2px solid #fff;box-shadow:0 0 0 2px #4d8ef5"></div>
+          <div class="color-opt" onclick="selectColor(this,'#2dce7a')" style="width:28px;height:28px;border-radius:6px;background:#2dce7a;cursor:pointer;border:2px solid transparent"></div>
+          <div class="color-opt" onclick="selectColor(this,'#f5a623')" style="width:28px;height:28px;border-radius:6px;background:#f5a623;cursor:pointer;border:2px solid transparent"></div>
+          <div class="color-opt" onclick="selectColor(this,'#f05252')" style="width:28px;height:28px;border-radius:6px;background:#f05252;cursor:pointer;border:2px solid transparent"></div>
+          <div class="color-opt" onclick="selectColor(this,'#8b6cf5')" style="width:28px;height:28px;border-radius:6px;background:#8b6cf5;cursor:pointer;border:2px solid transparent"></div>
+          <div class="color-opt" onclick="selectColor(this,'#20c9bc')" style="width:28px;height:28px;border-radius:6px;background:#20c9bc;cursor:pointer;border:2px solid transparent"></div>
+          <div class="color-opt" onclick="selectColor(this,'#f472b6')" style="width:28px;height:28px;border-radius:6px;background:#f472b6;cursor:pointer;border:2px solid transparent"></div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('newColModal')">Cancelar</button>
+      <button class="btn btn-primary" onclick="createCol()"><i class="ti ti-plus"></i>Criar Coluna</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ─── STATE ─────────────────────────────────────────────────────────────
+let dragSrcId = null;
+let selectedCards = new Set();
+let selectMode = false;
+let timerRunning = true;
+let timerSec = 1934;
+let timerInterval = null;
+let selectedColor = '#4d8ef5';
+const panelData = {
+  t1:{title:'Mapear concorrentes do lead Acme Corp',lead:'Acme Corp',color:'var(--blue)'},
+  t2:{title:'Criar template de proposta comercial padrão',lead:'—',color:'var(--text3)'},
+  t3:{title:'Preparar demo personalizada — TechVentures SA',lead:'TechVentures SA · Demo',color:'var(--red)'},
+  t4:{title:'Enviar proposta revisada — Global Logística',lead:'Global Logística · Follow-up',color:'var(--amber)'},
+  t5:{title:'Agendar reunião alinhamento com time de CS',lead:'Interno',color:'var(--blue)'},
+  t6:{title:'Qualificar 20 leads campanha de maio',lead:'CRM · NPS',color:'var(--amber)'},
+  t7:{title:'Configurar webhook Pipedrive → GrowOS',lead:'Integração · Técnico',color:'var(--teal)'},
+  t8:{title:'Revisar contrato de parceria — Fintec Brasil',lead:'Fintec Brasil · Contrato',color:'var(--purple)'},
+  t9:{title:'Enviar NPS pós-reunião para 12 clientes',lead:'—',color:'var(--green)'},
+  t10:{title:'Fechar proposta — Construtora Andrade',lead:'Construtora Andrade · Proposta',color:'var(--green)'}
+};
+
+// ─── TIMER ─────────────────────────────────────────────────────────────
+function fmtTime(s){const h=Math.floor(s/3600),m=Math.floor((s%3600)/60),sec=s%60;return`${h}:${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`}
+function startTimer(){timerInterval=setInterval(()=>{timerSec++;const d=document.getElementById('timerDisplay');if(d)d.textContent=fmtTime(timerSec)},1000)}
+function toggleTimer(){timerRunning=!timerRunning;const b=document.getElementById('timerBtn');if(timerRunning){b.innerHTML='<i class="ti ti-player-pause"></i>Pausar';b.className='timer-btn running';startTimer()}else{clearInterval(timerInterval);b.innerHTML='<i class="ti ti-player-play"></i>Iniciar';b.className='timer-btn'}}
+startTimer();
+
+// ─── DRAG & DROP ────────────────────────────────────────────────────────
+function drag(e,id){dragSrcId=id;e.dataTransfer.effectAllowed='move';setTimeout(()=>{const c=document.getElementById('card-'+id);if(c)c.classList.add('dragging')},0)}
+function allowDrop(e){e.preventDefault();e.dataTransfer.dropEffect='move'}
+function drop(e,colId){
+  e.preventDefault();
+  if(!dragSrcId)return;
+  const card=document.getElementById('card-'+dragSrcId);
+  if(!card){dragSrcId=null;return}
+  card.classList.remove('dragging');
+  const target=document.getElementById('body-'+colId);
+  if(!target){dragSrcId=null;return}
+  const addBtn=target.querySelector('.add-btn');
+  if(addBtn)target.insertBefore(card,addBtn);else target.appendChild(card);
+  updateCounts();
+  dragSrcId=null;
+}
+document.addEventListener('dragend',()=>{document.querySelectorAll('.task-card.dragging').forEach(c=>c.classList.remove('dragging'))});
+
+// ─── COUNTS ─────────────────────────────────────────────────────────────
+function updateCounts(){
+  const cols=['backlog','todo','doing','review','done'];
+  cols.forEach(id=>{
+    const body=document.getElementById('body-'+id);
+    const cnt=document.getElementById('cnt-'+id);
+    if(!body||!cnt)return;
+    const cards=body.querySelectorAll('.task-card').length;
+    cnt.textContent=cards;
+  });
+}
+
+// ─── SIDE PANEL ──────────────────────────────────────────────────────────
+function openPanel(id){
+  const p=panelData[id];if(!p)return;
+  document.getElementById('panelTitle').textContent=p.title;
+  document.getElementById('panelLeadCtx').textContent=p.lead;
+  const panel=document.getElementById('sidePanel');
+  panel.classList.add('open');
+  switchPanelTab(document.querySelector('.panel-tab'),'pDetails');
+}
+function closePanel(){document.getElementById('sidePanel').classList.remove('open')}
+function switchPanelTab(el,tabId){
+  document.querySelectorAll('.panel-tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  ['pDetails','pChecklist','pComments','pActivity'].forEach(id=>{
+    const el2=document.getElementById(id);if(el2)el2.style.display=id===tabId?'block':'none';
+  });
+}
+
+// ─── CHECKLIST ────────────────────────────────────────────────────────────
+function toggleCheck(el){
+  const isDone=el.classList.toggle('done');
+  const txt=el.nextElementSibling;
+  if(txt){txt.classList.toggle('done',isDone)}
+  if(isDone)el.innerHTML='<i class="ti ti-check" style="font-size:10px;color:#fff"></i>';
+  else el.innerHTML='';
+}
+function addCheckItem(){
+  const inp=document.getElementById('clInput');
+  if(!inp||!inp.value.trim())return;
+  const list=document.getElementById('checklistItems');
+  const div=document.createElement('div');
+  div.className='cl-item';
+  div.innerHTML=`<div class="cl-check" onclick="toggleCheck(this)"></div><span class="cl-text">${inp.value}</span>`;
+  list.appendChild(div);
+  inp.value='';
+}
+
+// ─── COMMENTS ────────────────────────────────────────────────────────────
+function addComment(){
+  const inp=document.getElementById('commentInput');
+  if(!inp||!inp.value.trim())return;
+  const item=document.createElement('div');
+  item.className='comment-item';
+  item.innerHTML=`<div class="comment-av">RC</div><div class="comment-content"><div><span class="comment-author">Rafael Costa</span><span class="comment-time">agora</span></div><div class="comment-text">${inp.value}</div></div>`;
+  inp.parentElement.insertAdjacentElement('beforebegin',item);
+  inp.value='';
+}
+
+// ─── FILTER ───────────────────────────────────────────────────────────────
+function filterCards(q){
+  document.querySelectorAll('.task-card').forEach(c=>{
+    const t=c.querySelector('.card-title');
+    if(!t)return;
+    c.style.display=(!q||t.textContent.toLowerCase().includes(q.toLowerCase()))?'':'none';
+  });
+}
+function toggleChip(el){el.classList.toggle('active')}
+
+// ─── VIEW SWITCH ──────────────────────────────────────────────────────────
+function switchView(v){
+  ['kanban','lista','gantt','cal'].forEach(id=>{
+    const vEl=document.getElementById(id==='kanban'?'kanbanView':id==='lista'?'listView':id==='gantt'?'ganttView':'calView');
+    const tEl=document.getElementById('v'+id.charAt(0).toUpperCase()+id.slice(1));
+    if(vEl)vEl.style.display=id===v?(id==='cal'?'flex':'block'):'none';
+    if(tEl)tEl.classList.toggle('active',id===v);
+  });
+  if(v==='kanban'){document.getElementById('kanbanView').style.display='flex';}
+}
+
+// ─── BOARD TABS ───────────────────────────────────────────────────────────
+function selectBoard(el){
+  document.querySelectorAll('.board-tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+}
+
+// ─── MODALS ────────────────────────────────────────────────────────────────
+function openNewTaskModal(){document.getElementById('newTaskModal').classList.add('show')}
+function openNewBoardModal(){document.getElementById('newBoardModal').classList.add('show')}
+function openNewColModal(){document.getElementById('newColModal').classList.add('show')}
+function closeModal(id){document.getElementById(id).classList.remove('show')}
+document.querySelectorAll('.modal-bg').forEach(bg=>bg.addEventListener('click',e=>{if(e.target===bg)bg.classList.remove('show')}));
+
+function createTask(){
+  const title=document.getElementById('newTaskTitle').value.trim();
+  if(!title){alert('Digite o título da tarefa');return}
+  const body=document.getElementById('body-backlog');
+  const div=document.createElement('div');
+  div.className='task-card media';
+  div.draggable=true;
+  div.innerHTML=`<div class="card-top-stripe" style="background:var(--blue)"></div><div class="card-body"><div class="card-title">${title}</div><div class="card-meta"><span class="prio-badge p-media">Média</span></div><div class="card-bottom"><div class="card-info"><span style="font-size:11px;color:var(--text3)">recém criada</span></div></div></div>`;
+  const addBtn=body.querySelector('.add-btn');
+  body.insertBefore(div,addBtn);
+  updateCounts();
+  closeModal('newTaskModal');
+  document.getElementById('newTaskTitle').value='';
+}
+function createBoard(){
+  const name=document.getElementById('newBoardName').value.trim();
+  if(!name)return;
+  const tabs=document.getElementById('boardTabs');
+  const newTab=document.createElement('div');
+  newTab.className='board-tab';
+  newTab.textContent=name;
+  newTab.onclick=()=>selectBoard(newTab);
+  tabs.insertBefore(newTab,tabs.lastElementChild);
+  closeModal('newBoardModal');
+  document.getElementById('newBoardName').value='';
+}
+function createCol(){
+  const name=document.getElementById('newColName').value.trim();
+  if(!name)return;
+  const scroll=document.getElementById('kanbanView');
+  const addColBtn=scroll.querySelector('.add-col-btn');
+  const col=document.createElement('div');
+  col.className='col';
+  const id='col-'+Date.now();
+  col.innerHTML=`<div class="col-header" style="background:${selectedColor};color:#fff"><div class="col-dot" style="background:#fff;opacity:.6"></div><div class="col-title">${name}</div><div class="col-count" id="cnt-${id}">0</div></div><div class="col-body" id="body-${id}" ondragover="allowDrop(event)" ondrop="drop(event,'${id}')"><button class="add-btn" onclick="showQuickAdd('body-${id}','cnt-${id}')"><i class="ti ti-plus"></i>Adicionar tarefa</button></div>`;
+  scroll.insertBefore(col,addColBtn);
+  closeModal('newColModal');
+  document.getElementById('newColName').value='';
+}
+function selectColor(el,color){
+  selectedColor=color;
+  document.querySelectorAll('.color-opt').forEach(o=>{o.style.border='2px solid transparent';o.style.boxShadow='none'});
+  el.style.border='2px solid #fff';
+  el.style.boxShadow=`0 0 0 2px ${color}`;
+}
+
+// ─── DELETE ────────────────────────────────────────────────────────────────
+function deleteCard(cardId,cntId){
+  if(!confirm('Deletar esta tarefa?'))return;
+  const c=document.getElementById(cardId);
+  if(c){c.style.animation='fadeOut .2s forwards';setTimeout(()=>{c.remove();updateCounts()},200)}
+}
+const st=document.createElement('style');st.textContent='@keyframes fadeOut{to{opacity:0;transform:scale(.9)}}';document.head.appendChild(st);
+
+// ─── QUICK ADD ─────────────────────────────────────────────────────────────
+function showQuickAdd(bodyId,cntId){
+  const body=document.getElementById(bodyId);
+  const existing=body.querySelector('.quick-add');
+  if(existing){existing.remove();return}
+  const qa=document.createElement('div');
+  qa.className='quick-add';
+  qa.innerHTML=`<input type="text" placeholder="Título da tarefa..." onkeydown="if(event.key==='Enter')quickCreate(this,'${bodyId}','${cntId}');if(event.key==='Escape')this.closest('.quick-add').remove()"><div class="quick-add-actions"><button class="btn btn-primary" style="font-size:11.5px;padding:5px 11px" onclick="quickCreate(this.closest('.quick-add').querySelector('input'),'${bodyId}','${cntId}')">Criar</button><button class="btn btn-ghost" style="font-size:11.5px;padding:5px 9px" onclick="this.closest('.quick-add').remove()">Cancelar</button></div>`;
+  const addBtn=body.querySelector('.add-btn');
+  body.insertBefore(qa,addBtn);
+  qa.querySelector('input').focus();
+}
+function quickCreate(inp,bodyId,cntId){
+  const title=typeof inp==='string'?inp:inp.value.trim();
+  if(!title)return;
+  const body=document.getElementById(bodyId);
+  const qa=body.querySelector('.quick-add');
+  const div=document.createElement('div');
+  div.className='task-card media';
+  div.draggable=true;
+  const tid='t'+Date.now();
+  div.id='card-'+tid;
+  div.onclick=()=>openPanel(tid);
+  panelData[tid]={title,lead:'—',color:'var(--blue)'};
+  div.innerHTML=`<div class="select-cb" onclick="toggleSelect(event,'${tid}')"><i class="ti ti-check" style="font-size:10px;color:#fff"></i></div><div class="card-top-stripe" style="background:var(--blue)"></div><div class="card-body"><div class="card-title">${title}</div><div class="card-meta"><span class="prio-badge p-media">Média</span></div></div><div class="card-actions"><div class="card-act" onclick="event.stopPropagation()"><i class="ti ti-edit"></i></div><div class="card-act del" onclick="event.stopPropagation();deleteCard('card-${tid}','${cntId}')"><i class="ti ti-trash"></i></div></div>`;
+  if(qa)qa.insertAdjacentElement('beforebegin',div);
+  updateCounts();
+}
+
+// ─── BULK SELECT ────────────────────────────────────────────────────────────
+function toggleBulkMode(){
+  selectMode=!selectMode;
+  document.querySelector('.board-area').classList.toggle('select-mode',selectMode);
+  if(!selectMode)clearSelection();
+}
+function toggleSelect(e,id){
+  e.stopPropagation();
+  const card=document.getElementById('card-'+id);
+  if(!card)return;
+  if(selectedCards.has(id)){selectedCards.delete(id);card.classList.remove('selected')}
+  else{selectedCards.add(id);card.classList.add('selected')}
+  updateBulkBar();
+}
+function updateBulkBar(){
+  const bar=document.getElementById('bulkBar');
+  const cnt=document.getElementById('bulkCount');
+  cnt.textContent=`${selectedCards.size} selecionada${selectedCards.size!==1?'s':''}`;
+  if(selectedCards.size>0){bar.classList.add('show');if(!selectMode)toggleBulkMode()}
+  else bar.classList.remove('show');
+}
+function clearSelection(){
+  selectedCards.forEach(id=>{const c=document.getElementById('card-'+id);if(c)c.classList.remove('selected')});
+  selectedCards.clear();
+  document.getElementById('bulkBar').classList.remove('show');
+  selectMode=false;
+  document.querySelector('.board-area').classList.remove('select-mode');
+}
+function bulkMove(){
+  const col=prompt('Mover para coluna:\n1. Backlog\n2. A Fazer\n3. Em Progresso\n4. Em Revisão\n5. Ganho\n\nDigite o número:');
+  const map={'1':'backlog','2':'todo','3':'doing','4':'review','5':'done'};
+  const target=map[col];
+  if(!target)return;
+  const body=document.getElementById('body-'+target);
+  if(!body)return;
+  selectedCards.forEach(id=>{const c=document.getElementById('card-'+id);if(c){const addBtn=body.querySelector('.add-btn');body.insertBefore(c,addBtn)}});
+  updateCounts();
+  clearSelection();
+}
+function bulkDelete(){
+  if(!confirm(`Deletar ${selectedCards.size} tarefa(s)?`))return;
+  selectedCards.forEach(id=>{const c=document.getElementById('card-'+id);if(c)c.remove()});
+  updateCounts();
+  clearSelection();
+}
+
+// ─── KEYBOARD SHORTCUTS ────────────────────────────────────────────────────
+document.addEventListener('keydown',e=>{
+  if(e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA')return;
+  if(e.key==='n'&&!e.metaKey&&!e.ctrlKey){e.preventDefault();openNewTaskModal()}
+  if(e.key==='Escape'){closePanel();closeModal('newTaskModal');closeModal('newBoardModal');closeModal('newColModal');clearSelection()}
+  if(e.key==='1')switchView('kanban');
+  if(e.key==='2')switchView('lista');
+  if(e.key==='3')switchView('gantt');
+});
+</script>
+</body>
+</html>
