@@ -1,11 +1,19 @@
-export default function IA() {
+const IA = () => {
   return (
-    <div className="fixed inset-0 left-[var(--sidebar-width,16rem)] top-16 bg-[#070b12]">
+    <div className="h-full w-full min-h-screen bg-background flex flex-col">
       <iframe
-        src="/automacao.html"
         title="Automação & IA"
-        className="w-full h-full border-0"
+        src="/automacao.html"
+        style={{
+          width: "100%",
+          minHeight: "calc(100vh - 80px)",
+          height: "100%",
+          border: "0",
+          background: "#070b12",
+        }}
       />
     </div>
   );
-}
+};
+
+export default IA;
