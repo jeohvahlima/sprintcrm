@@ -1176,12 +1176,12 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
       </div>
       <div class="field-group">
         <label class="field-label">Descrição</label>
-        <textarea class="field-textarea" placeholder="Descreva a tarefa em detalhes..."></textarea>
+        <textarea class="field-textarea" placeholder="Descreva a tarefa em detalhes..." id="newTaskDesc"></textarea>
       </div>
       <div class="field-grid">
         <div class="field-group">
           <label class="field-label">Prioridade</label>
-          <select class="field-select">
+          <select class="field-select" id="newTaskPrio">
             <option value="baixa">Baixa</option>
             <option value="media" selected>Média</option>
             <option value="alta">Alta</option>
@@ -1190,45 +1190,28 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
         </div>
         <div class="field-group">
           <label class="field-label">Coluna</label>
-          <select class="field-select">
-            <option>Backlog</option>
-            <option>A Fazer</option>
-            <option>Em Progresso</option>
-            <option>Em Revisão</option>
-            <option>Ganho</option>
-          </select>
+          <select class="field-select" id="newTaskColumn"></select>
         </div>
         <div class="field-group">
           <label class="field-label">Data início</label>
-          <input class="field-input" type="date">
+          <input class="field-input" type="date" id="newTaskStart">
         </div>
         <div class="field-group">
           <label class="field-label">Prazo final</label>
-          <input class="field-input" type="date">
+          <input class="field-input" type="date" id="newTaskDue">
         </div>
         <div class="field-group">
           <label class="field-label">Responsável</label>
-          <select class="field-select">
-            <option>Rafael Costa</option>
-            <option>Ana Martins</option>
-            <option>Pedro Lima</option>
-            <option>Juliana Santos</option>
-          </select>
+          <select class="field-select" id="newTaskAssign"></select>
         </div>
         <div class="field-group">
           <label class="field-label">Lead vinculado</label>
-          <select class="field-select">
-            <option value="">— Nenhum —</option>
-            <option>TechVentures SA</option>
-            <option>Global Logística</option>
-            <option>Fintec Brasil</option>
-            <option>Construtora Andrade</option>
-          </select>
+          <select class="field-select" id="newTaskLead"><option value="">— Nenhum —</option></select>
         </div>
       </div>
       <div class="field-group">
         <label class="field-label">Tags</label>
-        <input class="field-input" type="text" placeholder="Ex: CRM, Demo, Follow-up (separar por vírgula)">
+        <input class="field-input" type="text" placeholder="Ex: CRM, Demo, Follow-up (separar por vírgula)" id="newTaskTags">
       </div>
     </div>
     <div class="modal-footer">
