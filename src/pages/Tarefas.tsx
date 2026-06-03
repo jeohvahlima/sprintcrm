@@ -109,7 +109,7 @@ const DroppableColumnContainer = React.memo(function DroppableColumnContainer({
       accepts: ['task'] // ✅ Aceita apenas tarefas
     }
   });
-  return <div ref={setNodeRef} data-column-id={columnId} data-droppable="true" className={`bg-secondary/20 p-4 rounded-b-lg min-h-[500px] transition-all duration-200 ${isOver ? 'bg-primary/20 border-2 border-primary border-dashed shadow-lg scale-[1.02]' : 'border border-transparent'}`}>
+  return <div ref={setNodeRef} data-column-id={columnId} data-droppable="true" className={`bg-[#111520]/60 backdrop-blur p-3 rounded-b-lg min-h-[500px] border border-white/5 border-t-0 transition-all duration-200 ${isOver ? 'bg-primary/10 border-primary/50 border-dashed shadow-lg' : ''}`}>
       {children}
     </div>;
 });
@@ -183,20 +183,30 @@ const SortableColumn = React.memo(function SortableColumn({
         </div>
       </div>
       
-      <div className="text-white p-3 rounded-t-lg" style={{
-      backgroundColor: column.cor
-    }}>
-        <div className="flex items-center justify-between mb-2">
-          <h3 className="font-semibold">{column.nome}</h3>
-          <div className="flex gap-1">
+      <div
+        className="relative text-white px-3.5 py-2.5 rounded-t-lg border border-white/5 border-b-0 overflow-hidden"
+        style={{
+          background: `linear-gradient(135deg, ${column.cor} 0%, ${column.cor}aa 50%, #161c2a 100%)`,
+        }}
+      >
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2 min-w-0">
+            <span className="h-2 w-2 rounded-full bg-white/80 shadow-[0_0_8px_rgba(255,255,255,.6)] flex-shrink-0" />
+            <h3 className="font-semibold text-[13px] truncate">{column.nome}</h3>
+            <span className="inline-flex items-center justify-center min-w-[22px] h-[20px] px-1.5 rounded-full bg-white/15 backdrop-blur text-[11px] font-bold">
+              {taskCountsByColumn[column.id] || 0}
+            </span>
+            <span className="hidden sm:inline-flex items-center px-1.5 h-[20px] rounded-md bg-black/25 text-[10px] font-semibold tracking-wide opacity-80">
+              WIP 10
+            </span>
+          </div>
+          <div className="flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
             <EditarColunaDialog columnId={column.id} nomeAtual={column.nome} corAtual={column.cor} onColumnUpdated={carregarDados} />
             <DeletarColunaDialog columnId={column.id} columnNome={column.nome} onColumnDeleted={carregarDados} />
           </div>
         </div>
-        <span className="text-sm">
-          {taskCountsByColumn[column.id] || 0} tarefas
-        </span>
       </div>
+
       <SortableContext id={column.id} items={(tasksByColumn[column.id] || []).slice(0, tasksPerColumn[column.id] || TASKS_PER_PAGE).map(t => t.id)} strategy={verticalListSortingStrategy}>
         <DroppableColumnContainer columnId={column.id}>
           <NovaTarefaDialog columnId={column.id} boardId={selectedBoard} onTaskCreated={() => {
@@ -1677,7 +1687,9 @@ export default function Tarefas() {
   }, [tasks, columns, selectedBoard]);
   if (loading) return <div className="flex items-center justify-center h-screen"><p>Carregando...</p></div>;
   return <TarefasProvider>
+    <div className="dark min-h-screen bg-[#0b0e14] text-[#e4eaf5]">
     <div className="container mx-auto p-4 md:p-6 space-y-5">
+
       {/* ── HEADER ── */}
       <div className="flex flex-col lg:flex-row lg:justify-between lg:items-end gap-4">
         <div>
@@ -2073,6 +2085,7 @@ export default function Tarefas() {
               </div> : null}
           </DragOverlay>
         </DndContext>}
+    </div>
     </div>
     </TarefasProvider>;
 }
