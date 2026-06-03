@@ -1556,5 +1556,361 @@ document.addEventListener('keydown',e=>{
   if(e.key==='3')switchView('gantt');
 });
 </script>
+
+<!-- ═══════════════════════════════════════════════════════════════════════
+     INTEGRAÇÃO SUPABASE — Opção B
+     Recebe sessão do parent (Tarefas.tsx) via postMessage,
+     conecta ao Lovable Cloud e wireia as ações nas edge functions.
+     ═══════════════════════════════════════════════════════════════════════ -->
+<script type="module">
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.4";
+
+const PRIO_LABEL = { baixa: 'Baixa', media: 'Média', alta: 'Alta', urgente: 'Urgente' };
+const PRIO_CLASS = { baixa: 'baixa', media: 'media', alta: 'alta', urgente: 'urgent' };
+const PRIO_COLOR = { baixa: 'var(--green)', media: 'var(--blue)', alta: 'var(--amber)', urgente: 'var(--red)' };
+
+let sb = null;
+let session = null;
+let companyId = null;
+let boards = [];
+let columns = [];
+let tasks = [];
+let users = [];
+let leads = [];
+let currentBoardId = null;
+let realtimeCh = null;
+
+// ── Helpers ────────────────────────────────────────────────────────────────
+const $ = (id) => document.getElementById(id);
+const fmtDate = (s) => {
+  if (!s) return '';
+  try { const d = new Date(s); return d.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' }); } catch { return ''; }
+};
+const isOverdue = (s) => s && new Date(s) < new Date(new Date().toDateString());
+
+async function callApi(action, data) {
+  const r = await sb.functions.invoke('api-tarefas', { body: { action, data } });
+  if (r.error) { alert('Erro: ' + (r.error.message || 'falha')); throw r.error; }
+  if (r.data?.error) { alert('Erro: ' + r.data.error); throw new Error(r.data.error); }
+  return r.data;
+}
+
+// ── Boot ───────────────────────────────────────────────────────────────────
+window.addEventListener('message', async (ev) => {
+  const m = ev.data;
+  if (!m || m.type !== 'tarefas-init') return;
+  try {
+    sb = createClient(m.supabaseUrl, m.anonKey, { auth: { persistSession: false, autoRefreshToken: false } });
+    await sb.auth.setSession({ access_token: m.accessToken, refresh_token: m.refreshToken });
+    session = (await sb.auth.getSession()).data.session;
+    const { data: ur } = await sb.from('user_roles').select('company_id').eq('user_id', session.user.id).maybeSingle();
+    companyId = ur?.company_id;
+    await loadAll();
+    subscribeRealtime();
+  } catch (e) {
+    console.error('[tarefas init]', e);
+  }
+}, false);
+
+// Pede sessão ao parent (caso já esteja pronto)
+try { window.parent.postMessage({ type: 'tarefas-ready' }, '*'); } catch {}
+
+// ── Data loaders ───────────────────────────────────────────────────────────
+async function loadAll() {
+  const [b, c, t, u] = await Promise.all([
+    sb.from('task_boards').select('*').order('criado_em', { ascending: true }),
+    sb.from('task_columns').select('*').order('posicao', { ascending: true }),
+    sb.from('tasks').select('*, assignee:assignee_id(id,full_name), lead:lead_id(id,name)').order('created_at', { ascending: false }).limit(500),
+    sb.from('profiles').select('id, full_name').order('full_name'),
+  ]);
+  boards = b.data || [];
+  columns = c.data || [];
+  tasks = t.data || [];
+  users = u.data || [];
+  try {
+    const { data: ld } = await sb.from('leads').select('id, name').order('name').limit(200);
+    leads = ld || [];
+  } catch { leads = []; }
+
+  if (!currentBoardId && boards[0]) currentBoardId = boards[0].id;
+  renderBoards();
+  renderKanban();
+  populateModalSelects();
+}
+
+function subscribeRealtime() {
+  if (realtimeCh) sb.removeChannel(realtimeCh);
+  realtimeCh = sb.channel('tarefas_iframe_rt')
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'tasks' }, debounceReload)
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'task_columns' }, debounceReload)
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'task_boards' }, debounceReload)
+    .subscribe();
+}
+let rtTimer = null;
+function debounceReload() { clearTimeout(rtTimer); rtTimer = setTimeout(loadAll, 400); }
+
+// ── Render: Board tabs ─────────────────────────────────────────────────────
+function renderBoards() {
+  const tabs = $('boardTabs');
+  if (!tabs) return;
+  tabs.innerHTML = '';
+  boards.forEach(b => {
+    const el = document.createElement('div');
+    el.className = 'board-tab' + (b.id === currentBoardId ? ' active' : '');
+    el.textContent = b.nome;
+    el.onclick = () => { currentBoardId = b.id; renderBoards(); renderKanban(); populateModalSelects(); };
+    tabs.appendChild(el);
+  });
+  const add = document.createElement('div');
+  add.className = 'board-tab';
+  add.style.color = 'var(--text3)';
+  add.textContent = '+ Novo';
+  add.onclick = () => window.openNewBoardModal();
+  tabs.appendChild(add);
+}
+
+// ── Render: Kanban ─────────────────────────────────────────────────────────
+function renderKanban() {
+  const view = $('kanbanView');
+  if (!view) return;
+  view.innerHTML = '';
+  const cols = columns.filter(c => c.board_id === currentBoardId);
+  cols.forEach(col => {
+    const colEl = document.createElement('div');
+    colEl.className = 'col';
+    colEl.id = 'col-' + col.id;
+    const colorBg = col.cor || '#4d8ef5';
+    const colTasks = tasks.filter(t => t.column_id === col.id);
+    colEl.innerHTML = `
+      <div class="col-header" style="background:${colorBg};color:#fff">
+        <div class="col-dot" style="background:#fff;opacity:.6"></div>
+        <div class="col-title">${escapeHtml(col.nome)}</div>
+        <div class="col-count" id="cnt-${col.id}">${colTasks.length}</div>
+        <i class="ti ti-dots-vertical col-menu-btn" data-col="${col.id}"></i>
+      </div>
+      <div class="col-body" id="body-${col.id}" ondragover="allowDrop(event)" ondrop="drop(event,'${col.id}')"></div>`;
+    view.appendChild(colEl);
+    const body = colEl.querySelector('.col-body');
+    colTasks.forEach(t => body.appendChild(buildCardEl(t)));
+    const addBtn = document.createElement('button');
+    addBtn.className = 'add-btn';
+    addBtn.innerHTML = '<i class="ti ti-plus"></i>Adicionar tarefa';
+    addBtn.onclick = () => window.showQuickAdd('body-' + col.id, 'cnt-' + col.id, col.id);
+    body.appendChild(addBtn);
+
+    // Menu da coluna: editar / excluir
+    colEl.querySelector('.col-menu-btn').onclick = (e) => {
+      e.stopPropagation();
+      const op = prompt('Coluna "' + col.nome + '":\n1 = Renomear\n2 = Mudar cor\n3 = Excluir', '');
+      if (op === '1') {
+        const nome = prompt('Novo nome:', col.nome);
+        if (nome) callApi('editar_coluna', { column_id: col.id, nome }).then(loadAll);
+      } else if (op === '2') {
+        const cor = prompt('Cor (#hex):', col.cor || '#4d8ef5');
+        if (cor) callApi('editar_coluna', { column_id: col.id, cor }).then(loadAll);
+      } else if (op === '3') {
+        if (confirm('Excluir coluna? Tarefas serão movidas para outra coluna.'))
+          callApi('excluir_coluna', { column_id: col.id }).then(loadAll);
+      }
+    };
+  });
+
+  // Botão "Nova coluna" no final
+  const addCol = document.createElement('div');
+  addCol.className = 'add-col-btn';
+  addCol.title = 'Nova coluna';
+  addCol.innerHTML = '<i class="ti ti-column-insert-right" style="font-size:20px"></i>';
+  addCol.onclick = () => window.openNewColModal();
+  view.appendChild(addCol);
+}
+
+function buildCardEl(t) {
+  const prio = t.priority || 'media';
+  const cls = PRIO_CLASS[prio] || 'media';
+  const color = PRIO_COLOR[prio];
+  const overdue = isOverdue(t.due_date) ? ' overdue' : '';
+  const div = document.createElement('div');
+  div.className = `task-card ${cls}${overdue}`;
+  div.draggable = true;
+  div.id = 'card-' + t.id;
+  div.addEventListener('dragstart', (e) => { window._dragId = t.id; e.dataTransfer.effectAllowed = 'move'; setTimeout(() => div.classList.add('dragging'), 0); });
+  div.addEventListener('dragend', () => div.classList.remove('dragging'));
+  div.onclick = () => openTaskPanel(t);
+  const leadName = t.lead?.name || '';
+  const dueLbl = t.due_date ? `<span class="date-badge"><i class="ti ti-calendar"></i>${fmtDate(t.due_date)}</span>` : '';
+  const tagsHtml = (t.tags || []).slice(0, 3).map(tg => `<span class="tag tag-blue">${escapeHtml(tg)}</span>`).join('');
+  const assName = t.assignee?.full_name || '';
+  const initials = assName ? assName.split(' ').map(s => s[0]).slice(0, 2).join('').toUpperCase() : '?';
+  div.innerHTML = `
+    <div class="card-top-stripe" style="background:${color}"></div>
+    <div class="card-body">
+      ${tagsHtml ? `<div class="card-tags">${tagsHtml}</div>` : ''}
+      <div class="card-title">${escapeHtml(t.title || '')}</div>
+      <div class="card-meta">
+        <span class="prio-badge p-${cls}"><i class="ti ti-point-filled" style="font-size:8px"></i>${PRIO_LABEL[prio]}</span>
+        ${dueLbl}
+      </div>
+      ${leadName ? `<div class="card-bottom"><div class="card-info"><span style="font-size:11px;color:var(--text3)"><i class="ti ti-user"></i> ${escapeHtml(leadName)}</span></div></div>` : ''}
+      <div class="card-bottom"><div class="card-info"><span style="font-size:11px;color:var(--text3)">${escapeHtml(assName || 'Sem responsável')}</span></div></div>
+    </div>
+    <div class="card-actions">
+      <div class="card-act" data-act="edit"><i class="ti ti-edit"></i></div>
+      <div class="card-act del" data-act="del"><i class="ti ti-trash"></i></div>
+    </div>`;
+  div.querySelector('[data-act="edit"]').onclick = (e) => { e.stopPropagation(); openTaskPanel(t); };
+  div.querySelector('[data-act="del"]').onclick = (e) => {
+    e.stopPropagation();
+    if (!confirm('Deletar esta tarefa?')) return;
+    callApi('excluir_tarefa', { task_id: t.id }).then(loadAll);
+  };
+  return div;
+}
+
+function escapeHtml(s) { return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
+
+// ── Side panel (edição rápida) ─────────────────────────────────────────────
+function openTaskPanel(t) {
+  const titleEl = $('panelTitle'); if (titleEl) titleEl.textContent = t.title;
+  const leadEl = $('panelLeadCtx'); if (leadEl) leadEl.textContent = t.lead?.name || '—';
+  $('sidePanel')?.classList.add('open');
+  window._currentTask = t;
+}
+
+// ── Override das ações estáticas do mockup ─────────────────────────────────
+function populateModalSelects() {
+  const colSel = $('newTaskColumn'); if (colSel) {
+    colSel.innerHTML = '';
+    columns.filter(c => c.board_id === currentBoardId).forEach(c => {
+      colSel.insertAdjacentHTML('beforeend', `<option value="${c.id}">${escapeHtml(c.nome)}</option>`);
+    });
+  }
+  const assSel = $('newTaskAssign'); if (assSel) {
+    assSel.innerHTML = '<option value="">— Não atribuído —</option>' + users.map(u => `<option value="${u.id}">${escapeHtml(u.full_name)}</option>`).join('');
+  }
+  const leadSel = $('newTaskLead'); if (leadSel) {
+    leadSel.innerHTML = '<option value="">— Nenhum —</option>' + leads.map(l => `<option value="${l.id}">${escapeHtml(l.name)}</option>`).join('');
+  }
+}
+
+window.createTask = async function () {
+  const title = $('newTaskTitle').value.trim();
+  if (!title) { alert('Digite o título'); return; }
+  if (!currentBoardId) { alert('Selecione um quadro'); return; }
+  const column_id = $('newTaskColumn').value || (columns.find(c => c.board_id === currentBoardId)?.id);
+  const due = $('newTaskDue').value;
+  const tagsRaw = $('newTaskTags').value.trim();
+  const payload = {
+    title,
+    description: $('newTaskDesc').value || null,
+    priority: $('newTaskPrio').value,
+    column_id, board_id: currentBoardId,
+    due_date: due ? new Date(due + 'T23:59:00').toISOString() : null,
+    assignee_id: $('newTaskAssign').value || null,
+    lead_id: $('newTaskLead').value || null,
+    tags: tagsRaw ? tagsRaw.split(',').map(s => s.trim()).filter(Boolean) : [],
+  };
+  await callApi('criar_tarefa', payload);
+  window.closeModal('newTaskModal');
+  $('newTaskTitle').value = ''; $('newTaskDesc').value = ''; $('newTaskTags').value = ''; $('newTaskDue').value = '';
+  loadAll();
+};
+
+window.createBoard = async function () {
+  const nome = $('newBoardName').value.trim();
+  if (!nome) return;
+  const r = await callApi('criar_board', { nome });
+  $('newBoardName').value = '';
+  window.closeModal('newBoardModal');
+  if (r?.data?.id) currentBoardId = r.data.id;
+  loadAll();
+};
+
+window.createCol = async function () {
+  const nome = $('newColName').value.trim();
+  if (!nome) return;
+  if (!currentBoardId) { alert('Selecione um quadro'); return; }
+  const cor = (window.selectedColor || '#4d8ef5');
+  const posicao = columns.filter(c => c.board_id === currentBoardId).length;
+  await callApi('criar_coluna', { nome, board_id: currentBoardId, posicao, cor });
+  $('newColName').value = '';
+  window.closeModal('newColModal');
+  loadAll();
+};
+
+window.deleteCard = async function (cardId) {
+  const taskId = cardId.replace(/^card-/, '');
+  if (!confirm('Deletar esta tarefa?')) return;
+  await callApi('excluir_tarefa', { task_id: taskId });
+  loadAll();
+};
+
+window.drop = function (e, colId) {
+  e.preventDefault();
+  const id = window._dragId; window._dragId = null;
+  if (!id) return;
+  const card = document.getElementById('card-' + id);
+  if (card) card.classList.remove('dragging');
+  callApi('mover_tarefa', { task_id: id, nova_coluna_id: colId }).then(loadAll);
+};
+
+window.showQuickAdd = function (bodyId, cntId, columnId) {
+  const body = document.getElementById(bodyId);
+  if (!body) return;
+  const existing = body.querySelector('.quick-add');
+  if (existing) { existing.remove(); return; }
+  const qa = document.createElement('div');
+  qa.className = 'quick-add';
+  qa.innerHTML = `<input type="text" placeholder="Título da tarefa..."><div class="quick-add-actions"><button class="btn btn-primary" style="font-size:11.5px;padding:5px 11px">Criar</button><button class="btn btn-ghost" style="font-size:11.5px;padding:5px 9px">Cancelar</button></div>`;
+  const addBtn = body.querySelector('.add-btn');
+  body.insertBefore(qa, addBtn);
+  const inp = qa.querySelector('input');
+  inp.focus();
+  const submit = async () => {
+    const title = inp.value.trim();
+    if (!title) return;
+    await callApi('criar_tarefa', { title, column_id: columnId, board_id: currentBoardId, priority: 'media' });
+    loadAll();
+  };
+  inp.addEventListener('keydown', (e) => { if (e.key === 'Enter') submit(); if (e.key === 'Escape') qa.remove(); });
+  qa.querySelectorAll('button')[0].onclick = submit;
+  qa.querySelectorAll('button')[1].onclick = () => qa.remove();
+};
+
+window.bulkDelete = async function () {
+  if (!window.selectedCards || !window.selectedCards.size) return;
+  if (!confirm(`Deletar ${window.selectedCards.size} tarefa(s)?`)) return;
+  for (const id of window.selectedCards) {
+    try { await callApi('excluir_tarefa', { task_id: id }); } catch {}
+  }
+  window.selectedCards.clear();
+  loadAll();
+};
+
+// Filtros (Meu time / Alta prio / Hoje / Atrasadas) — aplicar no client
+const _origToggleChip = window.toggleChip;
+window.toggleChip = function (el) {
+  el.classList.toggle('active');
+  applyFilters();
+};
+function applyFilters() {
+  const meu = $('chipMeu')?.classList.contains('active');
+  const alta = $('chipAlta')?.classList.contains('active');
+  const hoje = $('chipHoje')?.classList.contains('active');
+  const atras = $('chipAtras')?.classList.contains('active');
+  document.querySelectorAll('.task-card').forEach(card => {
+    const id = card.id.replace(/^card-/, '');
+    const t = tasks.find(x => x.id === id);
+    if (!t) return;
+    let show = true;
+    if (meu && session?.user?.id && t.assignee_id !== session.user.id) show = false;
+    if (alta && !(t.priority === 'alta' || t.priority === 'urgente')) show = false;
+    if (hoje && t.due_date) { const d = new Date(t.due_date); const today = new Date(); show = show && d.toDateString() === today.toDateString(); }
+    else if (hoje) show = false;
+    if (atras && !isOverdue(t.due_date)) show = false;
+    card.style.display = show ? '' : 'none';
+  });
+}
+</script>
+
 </body>
 </html>
