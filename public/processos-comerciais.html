@@ -1,0 +1,1586 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Processos Comerciais — GrowSOS</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg0: #0b0d11;
+  --bg1: #10131a;
+  --bg2: #15192300;
+  --bg3: #1c2030;
+  --bg4: #232840;
+  --border: #2a2f45;
+  --border2: #353c58;
+  --text0: #f0f2ff;
+  --text1: #b8bdd6;
+  --text2: #6b7299;
+  --text3: #40465e;
+  --green: #22c55e;
+  --green-dim: #16a34a;
+  --green-bg: #0d2318;
+  --green-border: #1a4030;
+  --blue: #3b82f6;
+  --blue-dim: #1d4ed8;
+  --blue-bg: #0d1626;
+  --purple: #a78bfa;
+  --purple-bg: #1a1030;
+  --amber: #f59e0b;
+  --amber-bg: #1a1400;
+  --red: #f87171;
+  --red-bg: #1a0a0a;
+  --cyan: #22d3ee;
+  --cyan-bg: #071a1e;
+  --sidebar-w: 248px;
+  --topbar-h: 52px;
+  --tab-h: 44px;
+  font-family: 'Geist', sans-serif;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; background: var(--bg0); color: var(--text0); font-size: 14px; line-height: 1.5; overflow: hidden; }
+
+/* ── LAYOUT ── */
+.app { display: flex; flex-direction: column; height: 100vh; }
+.topbar {
+  height: var(--topbar-h); background: var(--bg1); border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; padding: 0 16px; gap: 12px; flex-shrink: 0; z-index: 20;
+}
+.topbar-logo { display: flex; align-items: center; gap: 8px; }
+.logo-icon {
+  width: 30px; height: 30px; border-radius: 8px;
+  background: linear-gradient(135deg, var(--green) 0%, #15803d 100%);
+  display: flex; align-items: center; justify-content: center; font-size: 14px;
+}
+.logo-text { font-size: 13px; font-weight: 600; color: var(--text0); letter-spacing: -0.02em; }
+.topbar-sep { width: 1px; height: 20px; background: var(--border); }
+.topbar-title { font-size: 13px; color: var(--text2); }
+.topbar-title strong { color: var(--text0); font-weight: 500; }
+.topbar-actions { margin-left: auto; display: flex; align-items: center; gap: 6px; }
+
+.body { display: flex; flex: 1; overflow: hidden; }
+
+/* ── SIDEBAR ── */
+.sidebar {
+  width: var(--sidebar-w); background: var(--bg1); border-right: 1px solid var(--border);
+  display: flex; flex-direction: column; flex-shrink: 0; overflow: hidden;
+  transition: width 0.2s ease;
+}
+.sidebar.collapsed { width: 0; border-right: none; }
+.sidebar-header {
+  padding: 10px 12px 8px; border-bottom: 1px solid var(--border);
+  display: flex; flex-direction: column; gap: 6px;
+}
+.sidebar-search {
+  background: var(--bg3); border: 1px solid var(--border); border-radius: 8px;
+  display: flex; align-items: center; gap: 6px; padding: 0 10px; height: 30px;
+}
+.sidebar-search input {
+  background: none; border: none; outline: none; color: var(--text0); font-size: 12px;
+  width: 100%; font-family: inherit;
+}
+.sidebar-search input::placeholder { color: var(--text2); }
+.sidebar-search svg { color: var(--text2); flex-shrink: 0; }
+.sidebar-new {
+  display: flex; align-items: center; gap: 6px; padding: 5px 8px; border-radius: 6px;
+  cursor: pointer; color: var(--text1); font-size: 12px; transition: background 0.15s;
+  border: none; background: none; width: 100%; text-align: left;
+}
+.sidebar-new:hover { background: var(--bg3); color: var(--text0); }
+
+.sidebar-nav { flex: 1; overflow-y: auto; padding: 8px 6px; }
+.sidebar-nav::-webkit-scrollbar { width: 3px; }
+.sidebar-nav::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+.nav-section { margin-bottom: 16px; }
+.nav-section-title {
+  font-size: 10px; font-weight: 600; color: var(--text3); letter-spacing: 0.08em;
+  text-transform: uppercase; padding: 0 6px 4px;
+}
+.nav-item {
+  display: flex; align-items: center; gap: 6px; padding: 5px 8px; border-radius: 6px;
+  cursor: pointer; color: var(--text1); font-size: 12.5px; transition: background 0.12s, color 0.12s;
+  position: relative; user-select: none;
+}
+.nav-item:hover { background: var(--bg3); color: var(--text0); }
+.nav-item.active { background: var(--green-bg); color: var(--green); border: 1px solid var(--green-border); }
+.nav-item .icon { font-size: 14px; flex-shrink: 0; width: 16px; text-align: center; }
+.nav-item .badge {
+  margin-left: auto; font-size: 9px; background: var(--bg4); color: var(--text2);
+  padding: 1px 5px; border-radius: 4px; font-family: 'Geist Mono', monospace;
+}
+.nav-item .status-dot {
+  width: 6px; height: 6px; border-radius: 50%; margin-left: auto; flex-shrink: 0;
+}
+.nav-item .chevron { margin-left: auto; opacity: 0.4; transition: transform 0.15s; }
+.nav-item.open .chevron { transform: rotate(90deg); }
+.nav-sub { padding-left: 20px; }
+
+/* ── MAIN ── */
+.main { flex: 1; display: flex; flex-direction: column; overflow: hidden; background: var(--bg0); }
+
+/* TAB BAR */
+.tabbar {
+  height: var(--tab-h); background: var(--bg1); border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; gap: 2px; padding: 0 16px; flex-shrink: 0; overflow-x: auto;
+}
+.tabbar::-webkit-scrollbar { display: none; }
+.tab {
+  display: flex; align-items: center; gap: 6px; padding: 6px 14px; border-radius: 8px;
+  cursor: pointer; color: var(--text2); font-size: 12.5px; font-weight: 400;
+  transition: all 0.15s; white-space: nowrap; border: 1px solid transparent;
+  background: none; font-family: inherit; position: relative;
+}
+.tab:hover { color: var(--text0); background: var(--bg3); }
+.tab.active {
+  color: var(--text0); background: var(--bg3); border-color: var(--border);
+  font-weight: 500;
+}
+.tab.active::after {
+  content: ''; position: absolute; bottom: -7px; left: 0; right: 0; height: 2px;
+  background: var(--green); border-radius: 2px 2px 0 0;
+}
+.tab .tab-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--green); }
+.tab-divider { width: 1px; height: 20px; background: var(--border); margin: 0 4px; flex-shrink: 0; }
+
+/* CONTENT AREA */
+.content { flex: 1; overflow: hidden; display: flex; }
+
+/* ── WORKSPACE VIEW ── */
+.workspace { display: flex; flex: 1; overflow: hidden; }
+.page-area { flex: 1; overflow-y: auto; padding: 32px 48px 64px; max-width: 860px; margin: 0 auto; width: 100%; }
+.page-area::-webkit-scrollbar { width: 4px; }
+.page-area::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 4px; }
+
+/* PAGE HEADER */
+.page-icon { font-size: 48px; margin-bottom: 12px; cursor: pointer; display: inline-block; }
+.page-icon:hover { transform: scale(1.1); transition: transform 0.15s; }
+.page-cover { height: 120px; border-radius: 10px; background: linear-gradient(135deg, #0d2318 0%, #071a1e 50%, #1a1030 100%); margin-bottom: 20px; position: relative; overflow: hidden; }
+.page-cover::after { content: ''; position: absolute; inset: 0; background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%2322c55e' fill-opacity='0.04'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E"); }
+.page-cover-actions { position: absolute; bottom: 10px; right: 14px; display: flex; gap: 6px; }
+
+.page-title-wrap { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 8px; }
+.page-title { font-size: 30px; font-weight: 600; color: var(--text0); letter-spacing: -0.03em; background: none; border: none; outline: none; font-family: inherit; width: 100%; line-height: 1.2; }
+.page-title::placeholder { color: var(--text3); }
+.page-meta { display: flex; align-items: center; gap: 16px; margin-bottom: 24px; flex-wrap: wrap; }
+.meta-chip {
+  display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text2);
+  background: var(--bg3); border: 1px solid var(--border); border-radius: 6px;
+  padding: 4px 10px; cursor: pointer; transition: border-color 0.15s;
+}
+.meta-chip:hover { border-color: var(--border2); color: var(--text1); }
+.meta-chip .chip-label { color: var(--text3); margin-right: 2px; }
+.meta-status { background: var(--green-bg); border-color: var(--green-border); color: var(--green); }
+
+/* AI INLINE BANNER */
+.ai-banner {
+  background: linear-gradient(135deg, #0d1626 0%, #1a1030 100%);
+  border: 1px solid #2a1f50; border-radius: 10px; padding: 14px 16px;
+  margin-bottom: 20px; display: flex; align-items: center; gap: 12px;
+  animation: fadeIn 0.3s ease;
+}
+.ai-banner .ai-icon { font-size: 20px; }
+.ai-banner-text { flex: 1; font-size: 12.5px; color: var(--text1); line-height: 1.5; }
+.ai-banner-text strong { color: var(--purple); }
+.ai-actions { display: flex; gap: 6px; }
+
+/* BLOCK EDITOR */
+.block-editor { outline: none; }
+.block { position: relative; margin-bottom: 2px; }
+.block:hover .block-handle { opacity: 1; }
+.block-handle {
+  position: absolute; left: -24px; top: 2px; width: 18px; height: 22px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: grab; opacity: 0; transition: opacity 0.15s; color: var(--text3); font-size: 12px;
+}
+.block-content {
+  padding: 2px 4px; border-radius: 4px; outline: none; min-height: 28px;
+  transition: background 0.1s;
+}
+.block-content:hover, .block-content:focus { background: rgba(255,255,255,0.03); }
+.block-content[contenteditable]:empty::before {
+  content: attr(data-placeholder); color: var(--text3); pointer-events: none;
+}
+.block-h1 { font-size: 22px; font-weight: 600; color: var(--text0); letter-spacing: -0.02em; }
+.block-h2 { font-size: 17px; font-weight: 600; color: var(--text0); margin-top: 8px; }
+.block-h3 { font-size: 14px; font-weight: 600; color: var(--text1); margin-top: 4px; }
+.block-p { font-size: 14px; color: var(--text1); line-height: 1.7; }
+.block-callout {
+  background: var(--green-bg); border-left: 3px solid var(--green);
+  border-radius: 6px; padding: 10px 14px; display: flex; gap: 10px; align-items: flex-start;
+}
+.block-callout .callout-icon { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+.block-divider { height: 1px; background: var(--border); margin: 12px 0; border: none; }
+.block-toggle {
+  background: var(--bg3); border-radius: 6px; padding: 8px 12px;
+  display: flex; align-items: flex-start; gap: 8px; cursor: pointer;
+}
+.block-toggle .toggle-icon { color: var(--text2); transition: transform 0.15s; flex-shrink: 0; margin-top: 2px; }
+.block-toggle.open .toggle-icon { transform: rotate(90deg); }
+.toggle-content { padding: 8px 0 0 24px; font-size: 13px; color: var(--text1); line-height: 1.6; display: none; }
+.block-toggle.open + .toggle-content { display: block; }
+.block-checklist { display: flex; align-items: flex-start; gap: 8px; padding: 2px 0; }
+.block-checklist input[type=checkbox] {
+  accent-color: var(--green); width: 15px; height: 15px; flex-shrink: 0; margin-top: 2px; cursor: pointer;
+}
+.block-checklist.checked .check-text { text-decoration: line-through; color: var(--text3); }
+.check-text { font-size: 14px; color: var(--text1); line-height: 1.6; }
+.block-code {
+  background: var(--bg3); border: 1px solid var(--border); border-radius: 8px;
+  padding: 12px 16px; font-family: 'Geist Mono', monospace; font-size: 12px;
+  color: var(--cyan); overflow-x: auto; line-height: 1.6;
+}
+.block-code .code-lang {
+  font-size: 10px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.06em;
+  margin-bottom: 8px;
+}
+.block-table { width: 100%; border-collapse: collapse; border-radius: 8px; overflow: hidden; }
+.block-table th { background: var(--bg3); color: var(--text2); font-size: 11px; font-weight: 500; letter-spacing: 0.04em; text-transform: uppercase; padding: 8px 12px; text-align: left; border-bottom: 1px solid var(--border); }
+.block-table td { padding: 8px 12px; font-size: 13px; color: var(--text1); border-bottom: 1px solid var(--border); }
+.block-table tr:hover td { background: var(--bg3); }
+.block-table-wrap { border: 1px solid var(--border); border-radius: 8px; overflow: hidden; margin: 4px 0; }
+.tag { display: inline-flex; align-items: center; font-size: 11px; padding: 2px 8px; border-radius: 5px; font-weight: 500; }
+.tag-green { background: var(--green-bg); color: var(--green); border: 1px solid var(--green-border); }
+.tag-blue { background: var(--blue-bg); color: var(--blue); }
+.tag-amber { background: var(--amber-bg); color: var(--amber); }
+.tag-red { background: var(--red-bg); color: var(--red); }
+.tag-purple { background: var(--purple-bg); color: var(--purple); }
+
+/* SLASH COMMAND MENU */
+.slash-menu {
+  position: fixed; background: var(--bg2); border: 1px solid var(--border2);
+  border-radius: 10px; width: 240px; z-index: 100; overflow: hidden;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.6); backdrop-filter: blur(12px);
+  background: rgba(21, 25, 35, 0.95);
+}
+.slash-menu-header { padding: 8px 12px; border-bottom: 1px solid var(--border); }
+.slash-menu-search { font-size: 12px; color: var(--text2); }
+.slash-item {
+  display: flex; align-items: center; gap: 10px; padding: 8px 12px; cursor: pointer;
+  transition: background 0.1s;
+}
+.slash-item:hover, .slash-item.focused { background: var(--bg3); }
+.slash-item-icon {
+  width: 28px; height: 28px; background: var(--bg3); border: 1px solid var(--border);
+  border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 13px; flex-shrink: 0;
+}
+.slash-item-text .name { font-size: 12.5px; color: var(--text0); }
+.slash-item-text .desc { font-size: 11px; color: var(--text2); }
+.slash-section-title { padding: 6px 12px 2px; font-size: 10px; font-weight: 600; color: var(--text3); text-transform: uppercase; letter-spacing: 0.06em; }
+
+/* INLINE AI */
+.ai-tooltip {
+  position: fixed; background: rgba(21, 25, 35, 0.97); border: 1px solid #2a1f50;
+  border-radius: 10px; padding: 12px; z-index: 200; width: 300px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.7); backdrop-filter: blur(12px);
+}
+.ai-tooltip-title { font-size: 11px; color: var(--purple); font-weight: 600; letter-spacing: 0.04em; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
+.ai-tooltip-options { display: flex; flex-direction: column; gap: 2px; }
+.ai-option {
+  padding: 6px 10px; border-radius: 6px; font-size: 12.5px; color: var(--text1);
+  cursor: pointer; transition: background 0.1s; display: flex; align-items: center; gap: 8px;
+}
+.ai-option:hover { background: var(--bg3); color: var(--text0); }
+.ai-option .ai-opt-icon { font-size: 14px; }
+
+/* RIGHT PANEL */
+.right-panel {
+  width: 280px; border-left: 1px solid var(--border); background: var(--bg1);
+  overflow-y: auto; flex-shrink: 0; transition: width 0.2s, opacity 0.2s;
+}
+.right-panel::-webkit-scrollbar { width: 3px; }
+.right-panel::-webkit-scrollbar-thumb { background: var(--border2); }
+.rpanel-section { padding: 16px; border-bottom: 1px solid var(--border); }
+.rpanel-title { font-size: 11px; font-weight: 600; color: var(--text3); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between; }
+
+/* ── KANBAN VIEW ── */
+.kanban-view { flex: 1; overflow-x: auto; padding: 24px; display: flex; gap: 16px; align-items: flex-start; }
+.kanban-view::-webkit-scrollbar { height: 6px; }
+.kanban-view::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+.k-col { width: 280px; flex-shrink: 0; }
+.k-col-header { display: flex; align-items: center; gap: 8px; padding: 0 4px 10px; }
+.k-col-title { font-size: 12px; font-weight: 600; color: var(--text1); }
+.k-col-count { font-size: 11px; color: var(--text2); background: var(--bg3); padding: 1px 6px; border-radius: 4px; font-family: 'Geist Mono', monospace; }
+.k-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.k-cards { display: flex; flex-direction: column; gap: 8px; }
+.k-card {
+  background: var(--bg1); border: 1px solid var(--border); border-radius: 10px;
+  padding: 12px 14px; cursor: pointer; transition: border-color 0.15s, transform 0.15s;
+}
+.k-card:hover { border-color: var(--border2); transform: translateY(-1px); }
+.k-card-title { font-size: 13px; font-weight: 500; color: var(--text0); margin-bottom: 6px; line-height: 1.4; }
+.k-card-meta { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.k-card-footer { display: flex; align-items: center; justify-content: space-between; margin-top: 10px; }
+.k-card-avatars { display: flex; }
+.k-avatar { width: 20px; height: 20px; border-radius: 50%; background: var(--bg4); border: 2px solid var(--bg1); margin-left: -6px; font-size: 9px; display: flex; align-items: center; justify-content: center; color: var(--text1); }
+.k-avatar:first-child { margin-left: 0; }
+.k-progress { height: 3px; background: var(--bg3); border-radius: 2px; margin-top: 8px; }
+.k-progress-bar { height: 100%; background: var(--green); border-radius: 2px; transition: width 0.3s; }
+.k-add { width: 100%; margin-top: 6px; padding: 8px; border: 1px dashed var(--border); border-radius: 8px; background: none; color: var(--text2); font-size: 12px; cursor: pointer; transition: all 0.15s; font-family: inherit; display: flex; align-items: center; justify-content: center; gap: 6px; }
+.k-add:hover { border-color: var(--border2); color: var(--text1); background: var(--bg3); }
+
+/* ── CADENCES VIEW ── */
+.cadence-view { flex: 1; overflow-y: auto; padding: 24px 32px; }
+.cadence-view::-webkit-scrollbar { width: 4px; }
+.cadence-view::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 4px; }
+.cadence-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; }
+.cadence-title { font-size: 18px; font-weight: 600; color: var(--text0); }
+.cadences-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 14px; }
+.cadence-card { background: var(--bg1); border: 1px solid var(--border); border-radius: 12px; padding: 18px; }
+.cadence-card-header { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 14px; }
+.cadence-icon { width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+.cadence-card-title { font-size: 14px; font-weight: 600; color: var(--text0); margin-bottom: 3px; }
+.cadence-card-desc { font-size: 12px; color: var(--text2); line-height: 1.5; }
+.cadence-steps { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; }
+.cadence-step { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--text1); }
+.cadence-step-num { width: 20px; height: 20px; border-radius: 50%; border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 10px; color: var(--text2); flex-shrink: 0; font-family: 'Geist Mono', monospace; }
+.cadence-step.done .cadence-step-num { background: var(--green-bg); border-color: var(--green-border); color: var(--green); }
+.cadence-step-connector { width: 1px; height: 10px; background: var(--border); margin-left: 10px; }
+.cadence-metrics { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.cadence-metric { background: var(--bg3); border-radius: 6px; padding: 8px; text-align: center; }
+.cadence-metric-val { font-size: 16px; font-weight: 600; color: var(--text0); font-family: 'Geist Mono', monospace; }
+.cadence-metric-lbl { font-size: 10px; color: var(--text2); margin-top: 1px; }
+
+/* ── PLAYBOOKS VIEW ── */
+.playbooks-view { flex: 1; overflow-y: auto; padding: 24px 32px; }
+.playbooks-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; }
+.playbook-card { background: var(--bg1); border: 1px solid var(--border); border-radius: 12px; padding: 16px; cursor: pointer; transition: border-color 0.15s; }
+.playbook-card:hover { border-color: var(--border2); }
+.playbook-card-icon { font-size: 28px; margin-bottom: 10px; }
+.playbook-card-title { font-size: 14px; font-weight: 600; color: var(--text0); margin-bottom: 4px; }
+.playbook-card-desc { font-size: 12px; color: var(--text2); margin-bottom: 12px; line-height: 1.5; }
+.playbook-adoption { margin-bottom: 8px; }
+.adoption-label { display: flex; justify-content: space-between; font-size: 11px; color: var(--text2); margin-bottom: 4px; }
+.adoption-bar { height: 4px; background: var(--bg3); border-radius: 2px; }
+.adoption-fill { height: 100%; border-radius: 2px; transition: width 0.5s; }
+.playbook-footer { display: flex; align-items: center; justify-content: space-between; }
+.playbook-users { display: flex; align-items: center; gap: 4px; font-size: 11px; color: var(--text2); }
+
+/* ── KPI VIEW ── */
+.kpi-view { flex: 1; overflow-y: auto; padding: 24px 32px; }
+.kpi-grid-top { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px; }
+.kpi-card { background: var(--bg1); border: 1px solid var(--border); border-radius: 12px; padding: 16px; }
+.kpi-label { font-size: 11px; color: var(--text2); margin-bottom: 6px; font-weight: 500; }
+.kpi-value { font-size: 26px; font-weight: 600; color: var(--text0); letter-spacing: -0.02em; font-family: 'Geist Mono', monospace; }
+.kpi-change { font-size: 11px; margin-top: 4px; display: flex; align-items: center; gap: 4px; }
+.kpi-change.up { color: var(--green); }
+.kpi-change.down { color: var(--red); }
+.kpi-chart-row { display: grid; grid-template-columns: 2fr 1fr; gap: 12px; }
+.kpi-chart-card { background: var(--bg1); border: 1px solid var(--border); border-radius: 12px; padding: 16px; }
+.kpi-chart-title { font-size: 12px; font-weight: 600; color: var(--text1); margin-bottom: 14px; }
+.simple-bar-chart { display: flex; align-items: flex-end; gap: 6px; height: 80px; }
+.bar-item { display: flex; flex-direction: column; align-items: center; gap: 4px; flex: 1; }
+.bar { background: var(--green-dim); border-radius: 3px 3px 0 0; width: 100%; transition: background 0.15s; cursor: pointer; }
+.bar:hover { background: var(--green); }
+.bar-label { font-size: 9px; color: var(--text3); }
+.funnel-steps { display: flex; flex-direction: column; gap: 6px; }
+.funnel-step { display: flex; align-items: center; gap: 10px; }
+.funnel-step-label { font-size: 12px; color: var(--text1); width: 100px; flex-shrink: 0; }
+.funnel-step-bar-wrap { flex: 1; height: 20px; background: var(--bg3); border-radius: 4px; overflow: hidden; }
+.funnel-step-bar { height: 100%; border-radius: 4px; display: flex; align-items: center; padding-left: 8px; }
+.funnel-step-val { font-size: 11px; font-family: 'Geist Mono', monospace; font-weight: 500; }
+
+/* ── AUTOMATION VIEW ── */
+.auto-view { flex: 1; overflow-y: auto; padding: 24px 32px; }
+.auto-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 12px; }
+.auto-card { background: var(--bg1); border: 1px solid var(--border); border-radius: 12px; padding: 16px; }
+.auto-card-header { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+.auto-badge { font-size: 10px; padding: 2px 8px; border-radius: 5px; font-weight: 600; margin-left: auto; }
+.badge-active { background: var(--green-bg); color: var(--green); border: 1px solid var(--green-border); }
+.badge-draft { background: var(--bg3); color: var(--text2); }
+.auto-card-title { font-size: 13px; font-weight: 600; color: var(--text0); }
+.auto-flow { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.auto-node {
+  display: flex; align-items: center; gap: 5px; font-size: 11px; padding: 5px 10px;
+  border-radius: 6px; font-weight: 500;
+}
+.node-trigger { background: var(--blue-bg); color: var(--blue); border: 1px solid #1d3a6a; }
+.node-action { background: var(--green-bg); color: var(--green); border: 1px solid var(--green-border); }
+.node-condition { background: var(--amber-bg); color: var(--amber); border: 1px solid #3a2a00; }
+.node-ai { background: var(--purple-bg); color: var(--purple); border: 1px solid #2a1a50; }
+.auto-arrow { color: var(--text3); font-size: 14px; }
+.auto-card-footer { display: flex; align-items: center; gap: 10px; margin-top: 12px; font-size: 11px; color: var(--text2); }
+.toggle-switch { width: 32px; height: 18px; border-radius: 9px; background: var(--bg3); border: 1px solid var(--border); position: relative; cursor: pointer; transition: background 0.2s; }
+.toggle-switch.on { background: var(--green); border-color: var(--green); }
+.toggle-knob { width: 12px; height: 12px; border-radius: 50%; background: var(--text3); position: absolute; top: 2px; left: 2px; transition: transform 0.2s, background 0.2s; }
+.toggle-switch.on .toggle-knob { transform: translateX(14px); background: white; }
+
+/* ── SCRIPTS VIEW ── */
+.scripts-view { flex: 1; display: flex; overflow: hidden; }
+.scripts-sidebar { width: 240px; border-right: 1px solid var(--border); overflow-y: auto; flex-shrink: 0; padding: 12px; }
+.scripts-content { flex: 1; overflow-y: auto; padding: 24px 32px; }
+.script-list-item { padding: 8px 10px; border-radius: 8px; cursor: pointer; transition: background 0.12s; margin-bottom: 2px; }
+.script-list-item:hover { background: var(--bg3); }
+.script-list-item.active { background: var(--green-bg); border: 1px solid var(--green-border); }
+.script-item-title { font-size: 12.5px; color: var(--text0); font-weight: 500; margin-bottom: 2px; }
+.script-item-meta { font-size: 11px; color: var(--text2); }
+.script-block { background: var(--bg1); border: 1px solid var(--border); border-radius: 10px; padding: 16px; margin-bottom: 12px; }
+.script-role { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 8px; padding: 3px 8px; border-radius: 5px; display: inline-block; }
+.role-vendedor { background: var(--blue-bg); color: var(--blue); }
+.role-cliente { background: var(--bg3); color: var(--text2); }
+.role-objection { background: var(--amber-bg); color: var(--amber); }
+.script-text { font-size: 13.5px; color: var(--text1); line-height: 1.7; }
+.script-tip { background: var(--green-bg); border-left: 2px solid var(--green); padding: 8px 12px; border-radius: 0 6px 6px 0; font-size: 12px; color: var(--text1); margin-top: 8px; }
+.script-tip strong { color: var(--green); }
+
+/* ── SHARED BUTTONS ── */
+.btn {
+  display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px;
+  border-radius: 8px; font-size: 12.5px; font-weight: 500; cursor: pointer;
+  transition: all 0.15s; border: 1px solid var(--border); background: var(--bg3);
+  color: var(--text1); font-family: inherit; white-space: nowrap;
+}
+.btn:hover { background: var(--bg4); color: var(--text0); border-color: var(--border2); }
+.btn-primary { background: var(--green); border-color: var(--green); color: #000; }
+.btn-primary:hover { background: #16a34a; border-color: #16a34a; }
+.btn-ghost { background: none; border-color: transparent; }
+.btn-ghost:hover { background: var(--bg3); border-color: var(--border); }
+.btn-sm { padding: 4px 10px; font-size: 11.5px; }
+.btn-ai { background: linear-gradient(135deg, #1a1030, #0d1626); border-color: #2a1f50; color: var(--purple); }
+.btn-ai:hover { border-color: var(--purple); color: var(--purple); background: #200f40; }
+
+/* ── VIEW SWITCHER ── */
+.view-switcher { display: flex; gap: 2px; background: var(--bg3); padding: 3px; border-radius: 8px; border: 1px solid var(--border); }
+.view-btn { padding: 4px 10px; border-radius: 5px; font-size: 11.5px; font-weight: 500; color: var(--text2); cursor: pointer; transition: all 0.12s; display: flex; align-items: center; gap: 4px; border: none; background: none; font-family: inherit; }
+.view-btn:hover { color: var(--text0); }
+.view-btn.active { background: var(--bg1); color: var(--text0); border: 1px solid var(--border); }
+
+/* ── UTILITY ── */
+.flex { display: flex; }
+.flex-center { display: flex; align-items: center; }
+.gap-4 { gap: 4px; } .gap-6 { gap: 6px; } .gap-8 { gap: 8px; } .gap-12 { gap: 12px; }
+.ml-auto { margin-left: auto; }
+.mt-4 { margin-top: 4px; } .mt-8 { margin-top: 8px; } .mt-12 { margin-top: 12px; } .mt-16 { margin-top: 16px; }
+.mb-8 { margin-bottom: 8px; } .mb-12 { margin-bottom: 12px; } .mb-16 { margin-bottom: 16px; }
+.text-xs { font-size: 11px; } .text-sm { font-size: 12.5px; } .text-base { font-size: 14px; }
+.text-muted { color: var(--text2); }
+.text-green { color: var(--green); } .text-blue { color: var(--blue); } .text-purple { color: var(--purple); }
+.font-mono { font-family: 'Geist Mono', monospace; }
+.font-medium { font-weight: 500; } .font-semibold { font-weight: 600; }
+
+@keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.5; } }
+.animate-in { animation: fadeIn 0.25s ease; }
+.pulse { animation: pulse 2s infinite; }
+
+/* SEARCH OVERLAY */
+.search-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 300; display: flex; align-items: flex-start; justify-content: center; padding-top: 80px;
+  backdrop-filter: blur(4px);
+}
+.search-modal {
+  background: var(--bg1); border: 1px solid var(--border2); border-radius: 14px;
+  width: 580px; max-height: 70vh; overflow: hidden; display: flex; flex-direction: column;
+}
+.search-input-wrap { display: flex; align-items: center; gap: 10px; padding: 14px 16px; border-bottom: 1px solid var(--border); }
+.search-input-wrap input { flex: 1; background: none; border: none; outline: none; font-size: 15px; color: var(--text0); font-family: inherit; }
+.search-input-wrap input::placeholder { color: var(--text3); }
+.search-results { overflow-y: auto; padding: 8px; }
+.search-result-item { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 8px; cursor: pointer; transition: background 0.1s; }
+.search-result-item:hover { background: var(--bg3); }
+.search-result-icon { font-size: 18px; flex-shrink: 0; }
+.search-result-title { font-size: 13px; font-weight: 500; color: var(--text0); }
+.search-result-breadcrumb { font-size: 11px; color: var(--text2); margin-top: 1px; }
+.search-highlight { color: var(--green); }
+.search-result-type { margin-left: auto; font-size: 10px; background: var(--bg3); color: var(--text2); padding: 2px 7px; border-radius: 5px; flex-shrink: 0; }
+</style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div class="topbar">
+  <div class="topbar-logo">
+    <div class="logo-icon">🌱</div>
+    <span class="logo-text">GrowSOS</span>
+  </div>
+  <div class="topbar-sep"></div>
+  <div class="topbar-title">
+    <strong>Processos Comerciais</strong>
+    <span style="color:var(--text3)"> · workspace</span>
+  </div>
+  <div class="topbar-actions">
+    <button class="btn btn-ghost btn-sm" onclick="openSearch()">
+      <span>🔍</span> Busca global <kbd style="font-size:10px;background:var(--bg3);border:1px solid var(--border);border-radius:4px;padding:1px 5px;">⌘K</kbd>
+    </button>
+    <button class="btn btn-ai btn-sm" onclick="toggleAI()">✦ IA</button>
+    <button class="btn btn-primary btn-sm" onclick="showNewMenu()">+ Novo</button>
+    <div style="width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,#3b82f6,#a78bfa);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;cursor:pointer;">LM</div>
+  </div>
+</div>
+
+<div class="body">
+
+<!-- SIDEBAR -->
+<div class="sidebar" id="sidebar">
+  <div class="sidebar-header">
+    <div class="sidebar-search">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      <input placeholder="Filtrar..." />
+    </div>
+    <button class="sidebar-new" onclick="setTab('workspace')">
+      <span>📄</span> Nova página
+    </button>
+  </div>
+  <div class="sidebar-nav">
+    <div class="nav-section">
+      <div class="nav-section-title">⭐ Favoritos</div>
+      <div class="nav-item" onclick="setDoc('metodologia')">
+        <span class="icon">🎯</span> Metodologia de Vendas
+        <span class="badge">HOT</span>
+      </div>
+      <div class="nav-item" onclick="setDoc('script-objecoes')">
+        <span class="icon">💬</span> Scripts de Objeções
+      </div>
+    </div>
+
+    <div class="nav-section">
+      <div class="nav-section-title">📁 Documentos</div>
+      <div class="nav-item active open" onclick="setDoc('playbook-vendas')">
+        <span class="icon">📖</span> Playbook de Vendas
+        <span class="chevron">▶</span>
+      </div>
+      <div class="nav-sub">
+        <div class="nav-item" style="font-size:11.5px;" onclick="setDoc('cold-call')">
+          <span class="icon">📞</span> Cold Call
+        </div>
+        <div class="nav-item" style="font-size:11.5px;" onclick="setDoc('proposta')">
+          <span class="icon">📋</span> Proposta Comercial
+        </div>
+        <div class="nav-item" style="font-size:11.5px;" onclick="setDoc('followup')">
+          <span class="icon">🔄</span> Follow-up
+        </div>
+      </div>
+      <div class="nav-item" onclick="setDoc('icp')">
+        <span class="icon">🎯</span> ICP e Personas
+      </div>
+      <div class="nav-item" onclick="setDoc('onboarding')">
+        <span class="icon">🚀</span> Onboarding de Vendedor
+      </div>
+      <div class="nav-item" onclick="setDoc('objecoes')">
+        <span class="icon">🛡️</span> Mapa de Objeções
+      </div>
+    </div>
+
+    <div class="nav-section">
+      <div class="nav-section-title">✅ Tarefas</div>
+      <div class="nav-item" onclick="setTab('kanban')">
+        <span class="icon">📌</span> Sprint Comercial
+        <div class="status-dot" style="background:var(--amber);"></div>
+      </div>
+      <div class="nav-item" onclick="setTab('kanban')">
+        <span class="icon">📌</span> Revisão Q3
+        <div class="status-dot" style="background:var(--green);"></div>
+      </div>
+    </div>
+
+    <div class="nav-section">
+      <div class="nav-section-title">⚡ Cadências</div>
+      <div class="nav-item" onclick="setTab('cadencias')">
+        <span class="icon">🔄</span> Cadência Outbound
+        <span class="badge">8d</span>
+      </div>
+      <div class="nav-item" onclick="setTab('cadencias')">
+        <span class="icon">🔄</span> Reativação
+        <span class="badge">5d</span>
+      </div>
+    </div>
+
+    <div class="nav-section">
+      <div class="nav-section-title">⚙️ Automações</div>
+      <div class="nav-item" onclick="setTab('automacoes')">
+        <span class="icon">🤖</span> Follow-up Automático
+        <div class="status-dot" style="background:var(--green);"></div>
+      </div>
+      <div class="nav-item" onclick="setTab('automacoes')">
+        <span class="icon">🤖</span> Alerta de Estagnação
+        <div class="status-dot" style="background:var(--green);"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN CONTENT -->
+<div class="main">
+  <!-- TAB BAR -->
+  <div class="tabbar">
+    <button class="tab active" id="tab-workspace" onclick="setTab('workspace')">📄 Workspace <span class="tab-dot"></span></button>
+    <button class="tab" id="tab-kanban" onclick="setTab('kanban')">📌 Etapas do Processo</button>
+    <button class="tab" id="tab-cadencias" onclick="setTab('cadencias')">⚡ Cadências</button>
+    <button class="tab" id="tab-playbooks" onclick="setTab('playbooks')">📖 Playbooks</button>
+    <button class="tab" id="tab-scripts" onclick="setTab('scripts')">💬 Scripts</button>
+    <button class="tab" id="tab-kpis" onclick="setTab('kpis')">📊 KPIs</button>
+    <button class="tab" id="tab-automacoes" onclick="setTab('automacoes')">🤖 Automações</button>
+    <div class="tab-divider"></div>
+    <button class="tab btn-ghost" style="font-size:11px;color:var(--text2);" onclick="setTab('diagnostico')">🧠 Diagnóstico IA</button>
+  </div>
+
+  <!-- CONTENT -->
+  <div class="content">
+
+    <!-- ── WORKSPACE ── -->
+    <div id="view-workspace" class="workspace animate-in">
+      <div class="page-area">
+        <div class="page-cover">
+          <div class="page-cover-actions">
+            <button class="btn btn-sm" style="font-size:11px;">🖼️ Capa</button>
+            <button class="btn btn-sm" style="font-size:11px;">😀 Ícone</button>
+          </div>
+        </div>
+        <div class="page-icon">📖</div>
+        <input class="page-title" value="Playbook de Vendas — Clínicas" placeholder="Título..." />
+
+        <div class="page-meta">
+          <div class="meta-chip meta-status">
+            <span class="chip-label">Status</span> ✅ Publicado
+          </div>
+          <div class="meta-chip" onclick="showAssignees()">
+            <span class="chip-label">Responsável</span>
+            <div style="width:16px;height:16px;border-radius:50%;background:linear-gradient(135deg,#3b82f6,#a78bfa);font-size:8px;display:flex;align-items:center;justify-content:center;">LM</div>
+            Lucas M.
+          </div>
+          <div class="meta-chip">
+            <span class="chip-label">Segmento</span> 🏥 Clínicas
+          </div>
+          <div class="meta-chip">
+            <span class="chip-label">Versão</span> v2.3
+          </div>
+          <div class="meta-chip" onclick="showHistory()">
+            <span class="chip-label">Atualizado</span> hoje
+          </div>
+        </div>
+
+        <!-- AI BANNER -->
+        <div class="ai-banner" id="ai-banner" style="display:none;">
+          <div class="ai-icon">✦</div>
+          <div class="ai-banner-text">
+            <strong>IA Comercial</strong> — Selecione qualquer texto e pressione <strong>✦ IA</strong> para reescrever, resumir, traduzir ou gerar variações. Use <kbd style="font-size:11px;background:rgba(167,139,250,0.15);border:1px solid rgba(167,139,250,0.3);border-radius:4px;padding:1px 5px;">/</kbd> para inserir novos blocos inteligentes.
+          </div>
+          <button class="btn btn-sm btn-ghost" onclick="document.getElementById('ai-banner').style.display='none'">✕</button>
+        </div>
+
+        <!-- BLOCK EDITOR -->
+        <div class="block-editor">
+
+          <div class="block">
+            <div class="block-handle">⠿</div>
+            <div class="block-content block-h1" contenteditable="true">🎯 O Processo de Vendas</div>
+          </div>
+
+          <div class="block">
+            <div class="block-handle">⠿</div>
+            <div class="block-content block-p" contenteditable="true">Este playbook define o processo comercial padrão para abordagem de clínicas odontológicas e médicas. Cada etapa possui scripts específicos, critérios de avanço e automações configuradas. Pressione <strong style="color:var(--text0);">/</strong> para adicionar blocos.</div>
+          </div>
+
+          <hr class="block-divider">
+
+          <div class="block">
+            <div class="block-handle">⠿</div>
+            <div class="block-content block-h2" contenteditable="true">📋 Etapas do Funil</div>
+          </div>
+
+          <div class="block">
+            <div class="block-callout">
+              <span class="callout-icon">💡</span>
+              <div class="block-content" style="color:var(--text1);" contenteditable="true">Cada etapa deve ser validada com o lead antes de avançar. Taxa de conversão mínima esperada entre etapas: 40%.</div>
+            </div>
+          </div>
+
+          <div style="margin: 8px 0;">
+            <div class="block-table-wrap">
+              <table class="block-table">
+                <thead>
+                  <tr>
+                    <th>Etapa</th><th>Critério de Entrada</th><th>Ação Principal</th><th>SLA</th><th>Conversão</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr><td>🌱 Prospecção</td><td>Lead capturado</td><td>1º contato WhatsApp</td><td>24h</td><td><span class="tag tag-green">72%</span></td></tr>
+                  <tr><td>📞 Qualificação</td><td>Respondeu ao contato</td><td>BANT + Dor identificada</td><td>48h</td><td><span class="tag tag-amber">54%</span></td></tr>
+                  <tr><td>🎯 Apresentação</td><td>Orçamento confirmado</td><td>Demo + Proposta</td><td>3 dias</td><td><span class="tag tag-amber">48%</span></td></tr>
+                  <tr><td>🤝 Negociação</td><td>Proposta enviada</td><td>Follow-up + Objeções</td><td>5 dias</td><td><span class="tag tag-green">61%</span></td></tr>
+                  <tr><td>✅ Fechamento</td><td>Aceite verbal</td><td>Contrato + Onboarding</td><td>2 dias</td><td><span class="tag tag-green">89%</span></td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="block">
+            <div class="block-handle">⠿</div>
+            <div class="block-content block-h2" contenteditable="true">✅ Checklist de Qualificação (BANT)</div>
+          </div>
+
+          <div class="block">
+            <div class="block-checklist" onclick="toggleCheck(this)">
+              <input type="checkbox" checked onclick="event.stopPropagation();">
+              <span class="check-text">Budget confirmado — clínica tem budget > R$3k/mês</span>
+            </div>
+          </div>
+          <div class="block">
+            <div class="block-checklist" onclick="toggleCheck(this)">
+              <input type="checkbox" checked onclick="event.stopPropagation();">
+              <span class="check-text">Authority — fala com o dono ou sócio</span>
+            </div>
+          </div>
+          <div class="block">
+            <div class="block-checklist" onclick="toggleCheck(this)">
+              <input type="checkbox" onclick="event.stopPropagation();">
+              <span class="check-text">Need — identificou dor em gestão de leads/pacientes</span>
+            </div>
+          </div>
+          <div class="block">
+            <div class="block-checklist" onclick="toggleCheck(this)">
+              <input type="checkbox" onclick="event.stopPropagation();">
+              <span class="check-text">Timeline — pretende implementar em até 30 dias</span>
+            </div>
+          </div>
+
+          <div class="block" style="margin-top:12px;">
+            <div class="block-handle">⠿</div>
+            <div class="block-content block-h2" contenteditable="true">🛡️ Principais Objeções</div>
+          </div>
+
+          <div class="block">
+            <div class="block-toggle" onclick="this.classList.toggle('open'); this.nextElementSibling.style.display = this.classList.contains('open') ? 'block' : 'none'">
+              <span class="toggle-icon">▶</span>
+              <div class="block-content" contenteditable="true">"Já tenho um sistema" — Como contornar</div>
+            </div>
+            <div class="toggle-content">
+              Reconhecer o sistema atual. Perguntar: <em>"Você consegue ver em tempo real quantos leads estão parados?"</em> → mostrar diferencial de pipeline visual + automação. Oferecer teste gratuito de 14 dias.
+            </div>
+          </div>
+
+          <div class="block">
+            <div class="block-toggle" onclick="this.classList.toggle('open'); this.nextElementSibling.style.display = this.classList.contains('open') ? 'block' : 'none'">
+              <span class="toggle-icon">▶</span>
+              <div class="block-content" contenteditable="true">"Está caro" — Técnica de ancoragem</div>
+            </div>
+            <div class="toggle-content">
+              Calcular o custo de 1 lead perdido por semana. Para uma clínica com ticket médio de R$800: 4 leads/mês × R$800 = R$3.200/mês em perdas. O sistema custa R$X/mês. ROI positivo em D+1.
+            </div>
+          </div>
+
+          <div class="block" style="margin-top:12px;">
+            <div class="block-handle">⠿</div>
+            <div class="block-content block-h2" contenteditable="true">💻 Código — Mensagem Padrão de Abertura</div>
+          </div>
+
+          <div class="block">
+            <div class="block-code">
+              <div class="code-lang">WhatsApp Template</div>
+Olá Dr(a). {{NOME}}, tudo bem?
+
+Vi que a {{CLINICA}} está crescendo — parabéns!
+
+Trabalho com clínicas de alto desempenho e 
+ajudo a organizar a gestão de novos pacientes 
+com um sistema simples. 
+
+Posso te mostrar em 10 minutos como funciona?
+            </div>
+          </div>
+
+          <div style="margin-top:16px; padding: 12px; background: var(--bg3); border-radius: 10px; display:flex; align-items:center; gap:12px; border: 1px dashed var(--border);">
+            <span style="color:var(--text2); font-size:13px;">✦ Digite <strong style="color:var(--text0);">/</strong> para adicionar bloco · <strong style="color:var(--purple);">✦IA</strong> para gerar conteúdo</span>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- RIGHT PANEL -->
+      <div class="right-panel">
+        <div class="rpanel-section">
+          <div class="rpanel-title">Progresso do Playbook</div>
+          <div style="font-size:28px;font-weight:600;color:var(--green);font-family:'Geist Mono',monospace;">76%</div>
+          <div style="height:6px;background:var(--bg3);border-radius:4px;margin:8px 0;">
+            <div style="width:76%;height:100%;background:var(--green);border-radius:4px;"></div>
+          </div>
+          <div style="font-size:11px;color:var(--text2);">19 de 25 itens concluídos</div>
+        </div>
+
+        <div class="rpanel-section">
+          <div class="rpanel-title">Adoção pelo Time</div>
+          <div style="display:flex;flex-direction:column;gap:8px;">
+            <div style="display:flex;align-items:center;gap:8px;">
+              <div style="width:24px;height:24px;border-radius:50%;background:linear-gradient(135deg,#22c55e,#16a34a);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;">LM</div>
+              <div style="flex:1;">
+                <div style="height:4px;background:var(--bg3);border-radius:2px;"><div style="width:100%;height:100%;background:var(--green);border-radius:2px;"></div></div>
+              </div>
+              <span class="text-xs text-muted">100%</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;">
+              <div style="width:24px;height:24px;border-radius:50%;background:linear-gradient(135deg,#3b82f6,#1d4ed8);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;">AR</div>
+              <div style="flex:1;"><div style="height:4px;background:var(--bg3);border-radius:2px;"><div style="width:84%;height:100%;background:var(--blue);border-radius:2px;"></div></div></div>
+              <span class="text-xs text-muted">84%</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;">
+              <div style="width:24px;height:24px;border-radius:50%;background:linear-gradient(135deg,#f59e0b,#d97706);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;">FC</div>
+              <div style="flex:1;"><div style="height:4px;background:var(--bg3);border-radius:2px;"><div style="width:61%;height:100%;background:var(--amber);border-radius:2px;"></div></div></div>
+              <span class="text-xs text-muted">61%</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;">
+              <div style="width:24px;height:24px;border-radius:50%;background:linear-gradient(135deg,#a78bfa,#7c3aed);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;">BR</div>
+              <div style="flex:1;"><div style="height:4px;background:var(--bg3);border-radius:2px;"><div style="width:45%;height:100%;background:var(--purple);border-radius:2px;"></div></div></div>
+              <span class="text-xs text-muted">45%</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="rpanel-section">
+          <div class="rpanel-title">Histórico de Versões <span style="margin-left:auto;cursor:pointer;color:var(--blue);font-size:10px;">Ver diff</span></div>
+          <div style="display:flex;flex-direction:column;gap:8px;">
+            <div style="font-size:12px;display:flex;gap:8px;">
+              <div style="width:4px;flex-shrink:0;background:var(--green);border-radius:2px;"></div>
+              <div><div style="color:var(--text0);">v2.3 — hoje</div><div style="color:var(--text2);font-size:11px;">Lucas M. · Objeções atualizadas</div></div>
+            </div>
+            <div style="font-size:12px;display:flex;gap:8px;">
+              <div style="width:4px;flex-shrink:0;background:var(--border);border-radius:2px;"></div>
+              <div><div style="color:var(--text1);">v2.2 — ontem</div><div style="color:var(--text2);font-size:11px;">Ana R. · Tabela de etapas</div></div>
+            </div>
+            <div style="font-size:12px;display:flex;gap:8px;">
+              <div style="width:4px;flex-shrink:0;background:var(--border);border-radius:2px;"></div>
+              <div><div style="color:var(--text1);">v2.1 — 3 dias</div><div style="color:var(--text2);font-size:11px;">Lucas M. · Checklist BANT</div></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="rpanel-section">
+          <div class="rpanel-title">Comentários <span style="background:var(--red-bg);color:var(--red);font-size:10px;padding:1px 6px;border-radius:4px;">2</span></div>
+          <div style="display:flex;flex-direction:column;gap:10px;">
+            <div style="background:var(--bg3);border-radius:8px;padding:10px;">
+              <div style="display:flex;gap:6px;align-items:center;margin-bottom:6px;">
+                <div style="width:20px;height:20px;border-radius:50%;background:#1d4ed8;font-size:9px;display:flex;align-items:center;justify-content:center;font-weight:600;">AR</div>
+                <span style="font-size:11px;color:var(--text0);">Ana R.</span>
+                <span style="font-size:10px;color:var(--text2);margin-left:auto;">há 2h</span>
+              </div>
+              <p style="font-size:12px;color:var(--text1);">Podemos adicionar um script para reativação de leads frios? Tivemos muitos casos essa semana.</p>
+            </div>
+            <div style="display:flex;gap:6px;">
+              <div style="width:20px;height:20px;border-radius:50%;background:linear-gradient(135deg,#22c55e,#16a34a);font-size:9px;display:flex;align-items:center;justify-content:center;font-weight:600;">LM</div>
+              <input placeholder="Adicionar comentário..." style="flex:1;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:6px 10px;font-size:12px;color:var(--text1);outline:none;font-family:inherit;" />
+            </div>
+          </div>
+        </div>
+
+        <div class="rpanel-section">
+          <div class="rpanel-title">Relacionado ao CRM</div>
+          <div style="display:flex;flex-direction:column;gap:6px;">
+            <div style="display:flex;align-items:center;gap:8px;padding:7px 10px;background:var(--bg3);border-radius:8px;cursor:pointer;border:1px solid var(--border);">
+              <span style="font-size:14px;">🏥</span>
+              <div style="flex:1;"><div style="font-size:12px;color:var(--text0);">Clínica Sorriso Belo</div><div style="font-size:10px;color:var(--text2);">Em negociação</div></div>
+              <span style="font-size:10px;color:var(--amber);">↗</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;padding:7px 10px;background:var(--bg3);border-radius:8px;cursor:pointer;border:1px solid var(--border);">
+              <span style="font-size:14px;">👤</span>
+              <div style="flex:1;"><div style="font-size:12px;color:var(--text0);">Dr. Roberto Lima</div><div style="font-size:10px;color:var(--text2);">Prospect · 3 interações</div></div>
+              <span style="font-size:10px;color:var(--blue);">↗</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── KANBAN ── -->
+    <div id="view-kanban" class="animate-in" style="display:none;flex:1;flex-direction:column;overflow:hidden;">
+      <div style="padding:12px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;background:var(--bg1);">
+        <div class="view-switcher">
+          <button class="view-btn active">📌 Kanban</button>
+          <button class="view-btn">📋 Lista</button>
+          <button class="view-btn">📅 Timeline</button>
+          <button class="view-btn">📊 Tabela</button>
+        </div>
+        <div class="ml-auto flex gap-6">
+          <button class="btn btn-sm">🔍 Filtrar</button>
+          <button class="btn btn-sm">👤 Agrupado por</button>
+          <button class="btn btn-primary btn-sm">+ Nova tarefa</button>
+        </div>
+      </div>
+      <div class="kanban-view">
+        <!-- Backlog -->
+        <div class="k-col">
+          <div class="k-col-header"><div class="k-dot" style="background:var(--text3)"></div><span class="k-col-title">Backlog</span><span class="k-col-count">4</span></div>
+          <div class="k-cards">
+            <div class="k-card">
+              <div class="k-card-title">Mapear ICP para clínicas veterinárias</div>
+              <div class="k-card-meta"><span class="tag tag-purple">Pesquisa</span><span class="tag tag-blue">Alto</span></div>
+              <div class="k-progress"><div class="k-progress-bar" style="width:0%"></div></div>
+              <div class="k-card-footer"><div class="k-card-avatars"><div class="k-avatar">LM</div></div><span class="text-xs text-muted">Sem prazo</span></div>
+            </div>
+            <div class="k-card">
+              <div class="k-card-title">Criar template de proposta para plano anual</div>
+              <div class="k-card-meta"><span class="tag tag-amber">Conteúdo</span></div>
+              <div class="k-progress"><div class="k-progress-bar" style="width:20%"></div></div>
+              <div class="k-card-footer"><div class="k-card-avatars"><div class="k-avatar">AR</div><div class="k-avatar">FC</div></div><span class="text-xs text-muted">15 Jun</span></div>
+            </div>
+          </div>
+          <button class="k-add">+ Adicionar tarefa</button>
+        </div>
+        <!-- Em andamento -->
+        <div class="k-col">
+          <div class="k-col-header"><div class="k-dot" style="background:var(--blue)"></div><span class="k-col-title">Em andamento</span><span class="k-col-count">3</span></div>
+          <div class="k-cards">
+            <div class="k-card" style="border-color:var(--blue-dim);">
+              <div class="k-card-title">Revisar scripts de objeções — setor odonto</div>
+              <div class="k-card-meta"><span class="tag tag-blue">Script</span><span class="tag tag-red">Urgente</span></div>
+              <div class="k-progress"><div class="k-progress-bar" style="width:65%;background:var(--blue)"></div></div>
+              <div class="k-card-footer"><div class="k-card-avatars"><div class="k-avatar">LM</div></div><span class="text-xs text-muted">Hoje</span></div>
+            </div>
+            <div class="k-card">
+              <div class="k-card-title">Gravar vídeo treinamento cold call</div>
+              <div class="k-card-meta"><span class="tag tag-purple">Treinamento</span></div>
+              <div class="k-progress"><div class="k-progress-bar" style="width:40%;background:var(--blue)"></div></div>
+              <div class="k-card-footer"><div class="k-card-avatars"><div class="k-avatar">BR</div></div><span class="text-xs text-muted">18 Jun</span></div>
+            </div>
+          </div>
+          <button class="k-add">+ Adicionar tarefa</button>
+        </div>
+        <!-- Em revisão -->
+        <div class="k-col">
+          <div class="k-col-header"><div class="k-dot" style="background:var(--amber)"></div><span class="k-col-title">Em revisão</span><span class="k-col-count">2</span></div>
+          <div class="k-cards">
+            <div class="k-card">
+              <div class="k-card-title">Playbook Clínicas v2.3 — aprovação final</div>
+              <div class="k-card-meta"><span class="tag tag-amber">Docs</span></div>
+              <div class="k-progress"><div class="k-progress-bar" style="width:90%;background:var(--amber)"></div></div>
+              <div class="k-card-footer"><div class="k-card-avatars"><div class="k-avatar">LM</div><div class="k-avatar">AR</div></div><span class="text-xs text-muted">Amanhã</span></div>
+            </div>
+          </div>
+          <button class="k-add">+ Adicionar tarefa</button>
+        </div>
+        <!-- Concluído -->
+        <div class="k-col">
+          <div class="k-col-header"><div class="k-dot" style="background:var(--green)"></div><span class="k-col-title">Concluído</span><span class="k-col-count">7</span></div>
+          <div class="k-cards">
+            <div class="k-card" style="opacity:0.65;">
+              <div class="k-card-title" style="text-decoration:line-through;color:var(--text2);">Mapear etapas do funil atual</div>
+              <div class="k-card-meta"><span class="tag tag-green">Processo</span></div>
+              <div class="k-progress"><div class="k-progress-bar" style="width:100%"></div></div>
+              <div class="k-card-footer"><div class="k-card-avatars"><div class="k-avatar">LM</div></div><span class="text-xs" style="color:var(--green);">✓ Concluído</span></div>
+            </div>
+            <div class="k-card" style="opacity:0.65;">
+              <div class="k-card-title" style="text-decoration:line-through;color:var(--text2);">Definir SLA por etapa</div>
+              <div class="k-card-meta"><span class="tag tag-green">Processo</span></div>
+              <div class="k-card-footer"><div class="k-card-avatars"><div class="k-avatar">AR</div></div><span class="text-xs" style="color:var(--green);">✓ Concluído</span></div>
+            </div>
+          </div>
+          <button class="k-add">+ Adicionar tarefa</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── CADÊNCIAS ── -->
+    <div id="view-cadencias" class="animate-in" style="display:none;flex:1;overflow:hidden;">
+      <div class="cadence-view">
+        <div class="cadence-header">
+          <div>
+            <div class="cadence-title">⚡ Cadências Comerciais</div>
+            <div class="text-sm text-muted mt-4">Sequências automáticas de touchpoints por segmento</div>
+          </div>
+          <div class="flex gap-6">
+            <button class="btn btn-sm">📊 Relatório</button>
+            <button class="btn btn-primary btn-sm">+ Nova Cadência</button>
+          </div>
+        </div>
+        <div class="cadences-grid">
+          <div class="cadence-card">
+            <div class="cadence-card-header">
+              <div class="cadence-icon" style="background:var(--blue-bg);">📞</div>
+              <div>
+                <div class="cadence-card-title">Outbound Clínicas — 8 dias</div>
+                <div class="cadence-card-desc">Sequência de abordagem para clínicas sem contato prévio</div>
+              </div>
+              <div class="auto-badge badge-active" style="margin-left:auto;align-self:flex-start;">Ativa</div>
+            </div>
+            <div class="cadence-steps">
+              <div class="cadence-step done"><div class="cadence-step-num">1</div> D+0 · WhatsApp de apresentação</div>
+              <div class="cadence-step-connector"></div>
+              <div class="cadence-step done"><div class="cadence-step-num">2</div> D+1 · Ligação de qualificação</div>
+              <div class="cadence-step-connector"></div>
+              <div class="cadence-step done"><div class="cadence-step-num">3</div> D+3 · E-mail com case de sucesso</div>
+              <div class="cadence-step-connector"></div>
+              <div class="cadence-step"><div class="cadence-step-num">4</div> D+5 · WhatsApp com vídeo demo</div>
+              <div class="cadence-step-connector"></div>
+              <div class="cadence-step"><div class="cadence-step-num">5</div> D+8 · Proposta ou breakup</div>
+            </div>
+            <div class="cadence-metrics">
+              <div class="cadence-metric"><div class="cadence-metric-val text-green">38%</div><div class="cadence-metric-lbl">Resposta</div></div>
+              <div class="cadence-metric"><div class="cadence-metric-val" style="color:var(--blue);">142</div><div class="cadence-metric-lbl">Ativos</div></div>
+              <div class="cadence-metric"><div class="cadence-metric-val" style="color:var(--amber);">12%</div><div class="cadence-metric-lbl">Conversão</div></div>
+            </div>
+          </div>
+
+          <div class="cadence-card">
+            <div class="cadence-card-header">
+              <div class="cadence-icon" style="background:var(--amber-bg);">🔄</div>
+              <div>
+                <div class="cadence-card-title">Reativação de Leads Frios — 5 dias</div>
+                <div class="cadence-card-desc">Para leads que pararam de responder há +30 dias</div>
+              </div>
+              <div class="auto-badge badge-active" style="margin-left:auto;align-self:flex-start;">Ativa</div>
+            </div>
+            <div class="cadence-steps">
+              <div class="cadence-step done"><div class="cadence-step-num">1</div> D+0 · "Lembrei de você" — WPP casual</div>
+              <div class="cadence-step-connector"></div>
+              <div class="cadence-step done"><div class="cadence-step-num">2</div> D+2 · Conteúdo relevante (artigo/vídeo)</div>
+              <div class="cadence-step-connector"></div>
+              <div class="cadence-step"><div class="cadence-step-num">3</div> D+4 · Oferta especial por tempo limitado</div>
+              <div class="cadence-step-connector"></div>
+              <div class="cadence-step"><div class="cadence-step-num">4</div> D+5 · Breakup — pergunta de encerramento</div>
+            </div>
+            <div class="cadence-metrics">
+              <div class="cadence-metric"><div class="cadence-metric-val text-green">22%</div><div class="cadence-metric-lbl">Reativação</div></div>
+              <div class="cadence-metric"><div class="cadence-metric-val" style="color:var(--blue);">67</div><div class="cadence-metric-lbl">Ativos</div></div>
+              <div class="cadence-metric"><div class="cadence-metric-val" style="color:var(--amber);">8%</div><div class="cadence-metric-lbl">Conversão</div></div>
+            </div>
+          </div>
+
+          <div class="cadence-card">
+            <div class="cadence-card-header">
+              <div class="cadence-icon" style="background:var(--green-bg);">🤝</div>
+              <div>
+                <div class="cadence-card-title">Pós-Proposta — 7 dias</div>
+                <div class="cadence-card-desc">Sequência após envio de proposta sem resposta</div>
+              </div>
+              <div class="auto-badge badge-draft" style="margin-left:auto;align-self:flex-start;">Rascunho</div>
+            </div>
+            <div class="cadence-steps">
+              <div class="cadence-step"><div class="cadence-step-num">1</div> D+1 · Confirmação de recebimento</div>
+              <div class="cadence-step-connector"></div>
+              <div class="cadence-step"><div class="cadence-step-num">2</div> D+3 · Dúvida sobre a proposta?</div>
+              <div class="cadence-step-connector"></div>
+              <div class="cadence-step"><div class="cadence-step-num">3</div> D+5 · Vídeo explicativo do ROI</div>
+              <div class="cadence-step-connector"></div>
+              <div class="cadence-step"><div class="cadence-step-num">4</div> D+7 · Última chance + breakup</div>
+            </div>
+            <div class="cadence-metrics">
+              <div class="cadence-metric"><div class="cadence-metric-val" style="color:var(--text2);">—</div><div class="cadence-metric-lbl">Resposta</div></div>
+              <div class="cadence-metric"><div class="cadence-metric-val" style="color:var(--text2);">0</div><div class="cadence-metric-lbl">Ativos</div></div>
+              <div class="cadence-metric"><div class="cadence-metric-val" style="color:var(--text2);">—</div><div class="cadence-metric-lbl">Conversão</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── PLAYBOOKS ── -->
+    <div id="view-playbooks" class="animate-in" style="display:none;flex:1;overflow:hidden;">
+      <div class="playbooks-view">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+          <div>
+            <div style="font-size:18px;font-weight:600;color:var(--text0);">📖 Biblioteca de Playbooks</div>
+            <div class="text-sm text-muted mt-4">Média de adoção do time: <span style="color:var(--green);font-weight:600;">72%</span></div>
+          </div>
+          <div class="flex gap-6">
+            <button class="btn btn-sm">🔍 Filtrar</button>
+            <button class="btn btn-ai btn-sm">✦ Gerar com IA</button>
+            <button class="btn btn-primary btn-sm">+ Novo Playbook</button>
+          </div>
+        </div>
+        <div class="playbooks-grid">
+          <div class="playbook-card" onclick="setTab('workspace')">
+            <div class="playbook-card-icon">📖</div>
+            <div class="playbook-card-title">Playbook de Vendas — Clínicas</div>
+            <div class="playbook-card-desc">Processo completo do funil para clínicas odontológicas e médicas</div>
+            <div class="playbook-adoption">
+              <div class="adoption-label"><span>Adoção do time</span><span style="color:var(--green);">76%</span></div>
+              <div class="adoption-bar"><div class="adoption-fill" style="width:76%;background:var(--green);"></div></div>
+            </div>
+            <div class="playbook-footer">
+              <span class="tag tag-green">Publicado</span>
+              <div class="playbook-users">👥 4 membros · v2.3</div>
+            </div>
+          </div>
+          <div class="playbook-card">
+            <div class="playbook-card-icon">🛡️</div>
+            <div class="playbook-card-title">Mapa de Objeções — Completo</div>
+            <div class="playbook-card-desc">72 objeções catalogadas com scripts de contorno por segmento</div>
+            <div class="playbook-adoption">
+              <div class="adoption-label"><span>Adoção do time</span><span style="color:var(--blue);">54%</span></div>
+              <div class="adoption-bar"><div class="adoption-fill" style="width:54%;background:var(--blue);"></div></div>
+            </div>
+            <div class="playbook-footer">
+              <span class="tag tag-amber">Em revisão</span>
+              <div class="playbook-users">👥 2 membros · v1.8</div>
+            </div>
+          </div>
+          <div class="playbook-card">
+            <div class="playbook-card-icon">🚀</div>
+            <div class="playbook-card-title">Onboarding de Novos Vendedores</div>
+            <div class="playbook-card-desc">Trilha de 30 dias para novos SDRs e closers entrarem em produção</div>
+            <div class="playbook-adoption">
+              <div class="adoption-label"><span>Adoção do time</span><span style="color:var(--purple);">91%</span></div>
+              <div class="adoption-bar"><div class="adoption-fill" style="width:91%;background:var(--purple);"></div></div>
+            </div>
+            <div class="playbook-footer">
+              <span class="tag tag-green">Publicado</span>
+              <div class="playbook-users">👥 6 membros · v3.1</div>
+            </div>
+          </div>
+          <div class="playbook-card">
+            <div class="playbook-card-icon">🎯</div>
+            <div class="playbook-card-title">ICP e Personas por Segmento</div>
+            <div class="playbook-card-desc">Perfil ideal de cliente detalhado para 5 segmentos de saúde</div>
+            <div class="playbook-adoption">
+              <div class="adoption-label"><span>Adoção do time</span><span style="color:var(--amber);">62%</span></div>
+              <div class="adoption-bar"><div class="adoption-fill" style="width:62%;background:var(--amber);"></div></div>
+            </div>
+            <div class="playbook-footer">
+              <span class="tag tag-green">Publicado</span>
+              <div class="playbook-users">👥 4 membros · v1.2</div>
+            </div>
+          </div>
+          <div class="playbook-card" style="border-style:dashed;background:none;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;cursor:pointer;min-height:180px;">
+            <div style="font-size:28px;opacity:0.4;">+</div>
+            <div style="font-size:13px;color:var(--text2);">Novo Playbook</div>
+            <button class="btn btn-ai btn-sm" style="margin-top:4px;">✦ Gerar com IA</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── SCRIPTS ── -->
+    <div id="view-scripts" class="animate-in" style="display:none;flex:1;overflow:hidden;">
+      <div class="scripts-view">
+        <div class="scripts-sidebar">
+          <div style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:0.06em;padding:0 4px 8px;">Scripts Comerciais</div>
+          <div class="script-list-item active">
+            <div class="script-item-title">Cold Call — Abertura</div>
+            <div class="script-item-meta">🏥 Clínicas · 2 min</div>
+          </div>
+          <div class="script-list-item">
+            <div class="script-item-title">Qualificação BANT</div>
+            <div class="script-item-meta">🏥 Clínicas · 5 min</div>
+          </div>
+          <div class="script-list-item">
+            <div class="script-item-title">Apresentação de Proposta</div>
+            <div class="script-item-meta">Geral · 15 min</div>
+          </div>
+          <div class="script-list-item">
+            <div class="script-item-title">Objeção: "Está caro"</div>
+            <div class="script-item-meta">⚡ Objeção · 3 min</div>
+          </div>
+          <div class="script-list-item">
+            <div class="script-item-title">Objeção: "Tenho sistema"</div>
+            <div class="script-item-meta">⚡ Objeção · 4 min</div>
+          </div>
+          <div class="script-list-item">
+            <div class="script-item-title">Fechamento Direto</div>
+            <div class="script-item-meta">💪 Fechamento · 3 min</div>
+          </div>
+          <button class="btn btn-ai btn-sm" style="margin-top:12px;width:100%;justify-content:center;">✦ Gerar Script com IA</button>
+        </div>
+        <div class="scripts-content">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+            <div>
+              <div style="font-size:17px;font-weight:600;color:var(--text0);">Cold Call — Abertura para Clínicas</div>
+              <div class="text-sm text-muted mt-4">Duração estimada: 2 min · Taxa de resposta positiva: <span style="color:var(--green);">38%</span></div>
+            </div>
+            <div class="flex gap-6">
+              <button class="btn btn-ai btn-sm">✦ Melhorar com IA</button>
+              <button class="btn btn-sm">📋 Copiar</button>
+            </div>
+          </div>
+
+          <div class="script-block">
+            <div class="script-role role-vendedor">🗣 Vendedor</div>
+            <div class="script-text">
+              Olá, posso falar com o Dr. [NOME] ou com quem cuida dos assuntos administrativos da clínica?
+            </div>
+          </div>
+
+          <div class="script-block" style="background:var(--bg3);">
+            <div class="script-role role-cliente">👤 Cliente</div>
+            <div class="script-text" style="color:var(--text2);">
+              <em>[Confirma que é a pessoa certa]</em> — Sim, sou eu. O que você precisa?
+            </div>
+          </div>
+
+          <div class="script-block">
+            <div class="script-role role-vendedor">🗣 Vendedor</div>
+            <div class="script-text">
+              Dr. [NOME], tudo bem? Me chamo [SEU NOME], sou da GrowSOS. Não quero tomar seu tempo — sei que médico/dentista não tem tempo a perder. Tenho só uma pergunta rápida: hoje, quando um paciente novo entra em contato com a clínica fora do horário, o que acontece com esse lead?
+            </div>
+            <div class="script-tip">
+              <strong>💡 Dica:</strong> Pause aqui e espere a resposta. O silêncio funciona. A maioria vai dizer "fica sem resposta" ou "anoto e esqueço" — essa é sua abertura para a dor.
+            </div>
+          </div>
+
+          <div class="script-block" style="border-color:var(--amber-dim);">
+            <div class="script-role role-objection">⚠️ Objeção frequente</div>
+            <div class="script-text">
+              "Já temos uma secretária que cuida disso."
+            </div>
+          </div>
+
+          <div class="script-block">
+            <div class="script-role role-vendedor">🗣 Contorno</div>
+            <div class="script-text">
+              Ótimo! E quando ela está no almoço ou no fim de semana? Nossos clientes relatam que perdem em média 4 pacientes por semana nesses horários. Para uma clínica com ticket de R$800, isso são R$3.200/mês. É por isso que estou ligando.
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── KPIs ── -->
+    <div id="view-kpis" class="animate-in" style="display:none;flex:1;overflow:hidden;">
+      <div class="kpi-view">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+          <div style="font-size:18px;font-weight:600;color:var(--text0);">📊 KPIs do Processo Comercial</div>
+          <div class="flex gap-6">
+            <div class="view-switcher">
+              <button class="view-btn active">Mês</button>
+              <button class="view-btn">Trimestre</button>
+              <button class="view-btn">Ano</button>
+            </div>
+            <button class="btn btn-sm">📤 Exportar</button>
+          </div>
+        </div>
+        <div class="kpi-grid-top">
+          <div class="kpi-card">
+            <div class="kpi-label">Leads Gerados</div>
+            <div class="kpi-value">347</div>
+            <div class="kpi-change up">↑ +23% vs mês anterior</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-label">Taxa de Conversão</div>
+            <div class="kpi-value">18%</div>
+            <div class="kpi-change up">↑ +4pp vs meta</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-label">Ticket Médio</div>
+            <div class="kpi-value font-mono">R$1.2k</div>
+            <div class="kpi-change down">↓ -8% meta de R$1.3k</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-label">MRR Gerado</div>
+            <div class="kpi-value font-mono">R$74k</div>
+            <div class="kpi-change up">↑ +31% YoY</div>
+          </div>
+        </div>
+        <div class="kpi-chart-row">
+          <div class="kpi-chart-card">
+            <div class="kpi-chart-title">Leads por semana — Junho</div>
+            <div class="simple-bar-chart">
+              <div class="bar-item"><div class="bar" style="height:55%"></div><div class="bar-label">S1</div></div>
+              <div class="bar-item"><div class="bar" style="height:72%"></div><div class="bar-label">S2</div></div>
+              <div class="bar-item"><div class="bar" style="height:48%"></div><div class="bar-label">S3</div></div>
+              <div class="bar-item"><div class="bar" style="height:90%;background:var(--green)"></div><div class="bar-label">S4</div></div>
+            </div>
+          </div>
+          <div class="kpi-chart-card">
+            <div class="kpi-chart-title">Funil de Conversão</div>
+            <div class="funnel-steps">
+              <div class="funnel-step"><span class="funnel-step-label">Prospecção</span><div class="funnel-step-bar-wrap"><div class="funnel-step-bar" style="width:100%;background:var(--green-bg);border:1px solid var(--green-border);"><span class="funnel-step-val text-green">347</span></div></div></div>
+              <div class="funnel-step"><span class="funnel-step-label">Qualificação</span><div class="funnel-step-bar-wrap"><div class="funnel-step-bar" style="width:72%;background:var(--blue-bg);border:1px solid #1d3a6a;"><span class="funnel-step-val" style="color:var(--blue);">250</span></div></div></div>
+              <div class="funnel-step"><span class="funnel-step-label">Apresentação</span><div class="funnel-step-bar-wrap"><div class="funnel-step-bar" style="width:48%;background:var(--amber-bg);border:1px solid #3a2a00;"><span class="funnel-step-val" style="color:var(--amber);">166</span></div></div></div>
+              <div class="funnel-step"><span class="funnel-step-label">Negociação</span><div class="funnel-step-bar-wrap"><div class="funnel-step-bar" style="width:30%;background:var(--purple-bg);border:1px solid #2a1a50;"><span class="funnel-step-val" style="color:var(--purple);">104</span></div></div></div>
+              <div class="funnel-step"><span class="funnel-step-label">Fechamento</span><div class="funnel-step-bar-wrap"><div class="funnel-step-bar" style="width:18%;background:var(--green-bg);border:1px solid var(--green-border);"><span class="funnel-step-val text-green">62</span></div></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── AUTOMAÇÕES ── -->
+    <div id="view-automacoes" class="animate-in" style="display:none;flex:1;overflow:hidden;">
+      <div class="auto-view">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+          <div>
+            <div style="font-size:18px;font-weight:600;color:var(--text0);">🤖 Automações do Processo</div>
+            <div class="text-sm text-muted mt-4">Gatilhos conectados às etapas comerciais · <span style="color:var(--green);">4 ativas</span></div>
+          </div>
+          <div class="flex gap-6">
+            <button class="btn btn-sm">📊 Logs</button>
+            <button class="btn btn-primary btn-sm">+ Nova Automação</button>
+          </div>
+        </div>
+        <div class="auto-grid">
+          <div class="auto-card">
+            <div class="auto-card-header">
+              <span style="font-size:20px;">⚡</span>
+              <div class="auto-card-title">Follow-up após proposta enviada</div>
+              <div class="auto-badge badge-active">Ativa</div>
+            </div>
+            <div class="auto-flow">
+              <div class="auto-node node-trigger">🎯 Etapa muda para "Proposta"</div>
+              <span class="auto-arrow">→</span>
+              <div class="auto-node node-condition">⏱️ Aguardar 24h</div>
+              <span class="auto-arrow">→</span>
+              <div class="auto-node node-action">💬 Enviar WPP</div>
+            </div>
+            <div class="auto-card-footer">
+              <div class="toggle-switch on" onclick="this.classList.toggle('on')"><div class="toggle-knob"></div></div>
+              <span>Executada 47x este mês</span>
+              <span class="ml-auto" style="color:var(--green);">+12% taxa resposta</span>
+            </div>
+          </div>
+
+          <div class="auto-card">
+            <div class="auto-card-header">
+              <span style="font-size:20px;">🚨</span>
+              <div class="auto-card-title">Alerta de lead estagnado</div>
+              <div class="auto-badge badge-active">Ativa</div>
+            </div>
+            <div class="auto-flow">
+              <div class="auto-node node-trigger">⏳ Lead sem atividade +3 dias</div>
+              <span class="auto-arrow">→</span>
+              <div class="auto-node node-action">🔔 Notif. vendedor</div>
+              <span class="auto-arrow">→</span>
+              <div class="auto-node node-ai">✦ IA sugere ação</div>
+            </div>
+            <div class="auto-card-footer">
+              <div class="toggle-switch on" onclick="this.classList.toggle('on')"><div class="toggle-knob"></div></div>
+              <span>Executada 23x este mês</span>
+            </div>
+          </div>
+
+          <div class="auto-card">
+            <div class="auto-card-header">
+              <span style="font-size:20px;">🎉</span>
+              <div class="auto-card-title">Onboarding pós-fechamento</div>
+              <div class="auto-badge badge-active">Ativa</div>
+            </div>
+            <div class="auto-flow">
+              <div class="auto-node node-trigger">✅ Lead vai para "Ganho"</div>
+              <span class="auto-arrow">→</span>
+              <div class="auto-node node-action">📧 Email boas-vindas</div>
+              <span class="auto-arrow">→</span>
+              <div class="auto-node node-action">📋 Criar tarefa onboarding</div>
+            </div>
+            <div class="auto-card-footer">
+              <div class="toggle-switch on" onclick="this.classList.toggle('on')"><div class="toggle-knob"></div></div>
+              <span>Executada 62x este mês</span>
+              <span class="ml-auto" style="color:var(--green);">100% sucesso</span>
+            </div>
+          </div>
+
+          <div class="auto-card">
+            <div class="auto-card-header">
+              <span style="font-size:20px;">🤖</span>
+              <div class="auto-card-title">IA analisa playbook e sugere melhoria</div>
+              <div class="auto-badge badge-active">Ativa</div>
+            </div>
+            <div class="auto-flow">
+              <div class="auto-node node-trigger">📅 Todo domingo</div>
+              <span class="auto-arrow">→</span>
+              <div class="auto-node node-ai">✦ IA analisa dados</div>
+              <span class="auto-arrow">→</span>
+              <div class="auto-node node-action">📝 Cria sugestão no doc</div>
+            </div>
+            <div class="auto-card-footer">
+              <div class="toggle-switch on" onclick="this.classList.toggle('on')"><div class="toggle-knob"></div></div>
+              <span>Última execução: ontem</span>
+            </div>
+          </div>
+
+          <div class="auto-card" style="border-style:dashed;background:none;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;min-height:140px;cursor:pointer;">
+            <div style="font-size:24px;opacity:0.4;">+</div>
+            <div class="text-sm text-muted">Nova automação</div>
+            <button class="btn btn-ai btn-sm">✦ Criar com IA</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── DIAGNÓSTICO IA ── -->
+    <div id="view-diagnostico" class="animate-in" style="display:none;flex:1;overflow:hidden;">
+      <div style="flex:1;overflow-y:auto;padding:32px 40px;max-width:720px;">
+        <div style="font-size:18px;font-weight:600;color:var(--text0);margin-bottom:4px;">🧠 Diagnóstico IA do Processo Comercial</div>
+        <div class="text-sm text-muted mb-16">Análise gerada com base nos últimos 30 dias de dados · Atualizado hoje</div>
+
+        <div style="background:linear-gradient(135deg,#0d1626,#1a1030);border:1px solid #2a1f50;border-radius:12px;padding:20px;margin-bottom:20px;">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
+            <span style="font-size:24px;">✦</span>
+            <div style="font-size:15px;font-weight:600;color:var(--purple);">Score de Maturidade Comercial</div>
+            <div style="margin-left:auto;font-size:32px;font-weight:600;color:var(--text0);font-family:'Geist Mono',monospace;">72<span style="font-size:16px;color:var(--text2);">/100</span></div>
+          </div>
+          <div style="height:8px;background:var(--bg3);border-radius:4px;margin-bottom:12px;">
+            <div style="width:72%;height:100%;background:linear-gradient(90deg,var(--green),var(--blue));border-radius:4px;"></div>
+          </div>
+          <div style="font-size:13px;color:var(--text1);line-height:1.7;">
+            Seu processo comercial está no nível <strong style="color:var(--amber);">Estruturado</strong>. Você tem etapas definidas e scripts documentados, mas ainda falta consistência na adoção pelo time (62% média) e as automações cobrem apenas 40% dos cenários críticos. Próximo nível: <strong style="color:var(--purple);">Otimizado</strong>.
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px;">
+          <div style="background:var(--green-bg);border:1px solid var(--green-border);border-radius:10px;padding:14px;">
+            <div style="font-size:11px;font-weight:600;color:var(--green);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px;">✅ Pontos Fortes</div>
+            <div style="display:flex;flex-direction:column;gap:6px;font-size:12.5px;color:var(--text1);">
+              <div>• Playbooks bem documentados (76% completo)</div>
+              <div>• Taxa de fechamento acima da média do setor (18% vs 12%)</div>
+              <div>• Cadência de follow-up com 38% de resposta</div>
+            </div>
+          </div>
+          <div style="background:var(--red-bg);border:1px solid #3a1212;border-radius:10px;padding:14px;">
+            <div style="font-size:11px;font-weight:600;color:var(--red);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px;">⚠️ Pontos de Atenção</div>
+            <div style="display:flex;flex-direction:column;gap:6px;font-size:12.5px;color:var(--text1);">
+              <div>• 2 vendedores com adoção de playbook abaixo de 50%</div>
+              <div>• Ticket médio 8% abaixo da meta</div>
+              <div>• 23 leads estagnados há +5 dias</div>
+            </div>
+          </div>
+        </div>
+
+        <div style="background:var(--bg1);border:1px solid var(--border);border-radius:12px;padding:16px;">
+          <div style="font-size:13px;font-weight:600;color:var(--text0);margin-bottom:12px;">💡 Recomendações da IA</div>
+          <div style="display:flex;flex-direction:column;gap:8px;">
+            <div style="display:flex;gap:10px;padding:10px;background:var(--bg3);border-radius:8px;">
+              <span style="font-size:16px;">1️⃣</span>
+              <div><div style="font-size:13px;color:var(--text0);margin-bottom:3px;">Sessão de review de playbook com Bruno e Felipe</div><div style="font-size:12px;color:var(--text2);">Adoção abaixo de 50% → agendar 30min esta semana</div></div>
+              <button class="btn btn-sm ml-auto" style="flex-shrink:0;">Agendar ↗</button>
+            </div>
+            <div style="display:flex;gap:10px;padding:10px;background:var(--bg3);border-radius:8px;">
+              <span style="font-size:16px;">2️⃣</span>
+              <div><div style="font-size:13px;color:var(--text0);margin-bottom:3px;">Ativar automação de alerta para leads estagnados +3 dias</div><div style="font-size:12px;color:var(--text2);">23 leads em risco → impacto estimado de R$18k</div></div>
+              <button class="btn btn-primary btn-sm ml-auto" style="flex-shrink:0;">Ativar</button>
+            </div>
+            <div style="display:flex;gap:10px;padding:10px;background:var(--bg3);border-radius:8px;">
+              <span style="font-size:16px;">3️⃣</span>
+              <div><div style="font-size:13px;color:var(--text0);margin-bottom:3px;">Testar upsell na etapa de Negociação</div><div style="font-size:12px;color:var(--text2);">Ticket médio abaixo da meta → incluir plano anual no script</div></div>
+              <button class="btn btn-ai btn-sm ml-auto" style="flex-shrink:0;">✦ Gerar Script</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /content -->
+</div><!-- /main -->
+
+</div><!-- /body -->
+
+<!-- SEARCH OVERLAY -->
+<div class="search-overlay" id="search-overlay" style="display:none;" onclick="closeSearch(event)">
+  <div class="search-modal">
+    <div class="search-input-wrap">
+      <span style="font-size:18px;">🔍</span>
+      <input placeholder="Buscar em todos os documentos, playbooks, scripts..." id="search-input" oninput="updateSearch(this.value)" />
+      <kbd style="font-size:11px;background:var(--bg3);border:1px solid var(--border);border-radius:5px;padding:2px 8px;color:var(--text2);">ESC</kbd>
+    </div>
+    <div class="search-results" id="search-results">
+      <div class="slash-section-title">Resultados</div>
+      <div class="search-result-item" onclick="setTab('workspace');closeSearch()">
+        <div class="search-result-icon">📖</div>
+        <div><div class="search-result-title">Playbook de Vendas — Clínicas <span class="search-highlight">v2.3</span></div><div class="search-result-breadcrumb">Documentos › Playbooks</div></div>
+        <div class="search-result-type">Documento</div>
+      </div>
+      <div class="search-result-item" onclick="setTab('scripts');closeSearch()">
+        <div class="search-result-icon">💬</div>
+        <div><div class="search-result-title">Cold Call — Script de <span class="search-highlight">Abertura</span></div><div class="search-result-breadcrumb">Scripts › Clínicas</div></div>
+        <div class="search-result-type">Script</div>
+      </div>
+      <div class="search-result-item" onclick="setTab('cadencias');closeSearch()">
+        <div class="search-result-icon">⚡</div>
+        <div><div class="search-result-title">Cadência <span class="search-highlight">Outbound</span> — 8 dias</div><div class="search-result-breadcrumb">Cadências › Ativas</div></div>
+        <div class="search-result-type">Cadência</div>
+      </div>
+      <div class="search-result-item" onclick="setTab('kpis');closeSearch()">
+        <div class="search-result-icon">📊</div>
+        <div><div class="search-result-title">Taxa de <span class="search-highlight">Conversão</span> por Etapa — Junho</div><div class="search-result-breadcrumb">KPIs › Funil</div></div>
+        <div class="search-result-type">KPI</div>
+      </div>
+      <div class="search-result-item">
+        <div class="search-result-icon">🛡️</div>
+        <div><div class="search-result-title">Objeção: "<span class="search-highlight">Já tenho um sistema</span>"</div><div class="search-result-breadcrumb">Documentos › Mapa de Objeções</div></div>
+        <div class="search-result-type">Bloco</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SLASH MENU -->
+<div class="slash-menu" id="slash-menu" style="display:none;top:300px;left:300px;">
+  <div class="slash-menu-header">
+    <div class="slash-menu-search">Blocos básicos</div>
+  </div>
+  <div class="slash-section-title">Texto</div>
+  <div class="slash-item focused" onclick="hideSlash()"><div class="slash-item-icon">📝</div><div class="slash-item-text"><div class="name">Parágrafo</div><div class="desc">Texto simples</div></div></div>
+  <div class="slash-item" onclick="hideSlash()"><div class="slash-item-icon">H1</div><div class="slash-item-text"><div class="name">Título Grande</div><div class="desc">Seção principal</div></div></div>
+  <div class="slash-item" onclick="hideSlash()"><div class="slash-item-icon">H2</div><div class="slash-item-text"><div class="name">Título Médio</div><div class="desc">Subseção</div></div></div>
+  <div class="slash-section-title">IA</div>
+  <div class="slash-item" onclick="hideSlash();toggleAI()"><div class="slash-item-icon" style="background:var(--purple-bg);border-color:#2a1a50;">✦</div><div class="slash-item-text"><div class="name" style="color:var(--purple);">Gerar com IA</div><div class="desc">Criar conteúdo automaticamente</div></div></div>
+  <div class="slash-item" onclick="hideSlash()"><div class="slash-item-icon" style="background:var(--purple-bg);border-color:#2a1a50;">📋</div><div class="slash-item-text"><div class="name" style="color:var(--purple);">Resumir com IA</div><div class="desc">Resumir seção selecionada</div></div></div>
+  <div class="slash-section-title">Dados</div>
+  <div class="slash-item" onclick="hideSlash()"><div class="slash-item-icon">📋</div><div class="slash-item-text"><div class="name">Tabela</div><div class="desc">Grade de dados</div></div></div>
+  <div class="slash-item" onclick="hideSlash()"><div class="slash-item-icon">✅</div><div class="slash-item-text"><div class="name">Checklist</div><div class="desc">Lista de tarefas</div></div></div>
+  <div class="slash-item" onclick="hideSlash()"><div class="slash-item-icon">📌</div><div class="slash-item-text"><div class="name">Kanban inline</div><div class="desc">Mini-quadro embutido</div></div></div>
+  <div class="slash-item" onclick="hideSlash()"><div class="slash-item-icon">💡</div><div class="slash-item-text"><div class="name">Callout</div><div class="desc">Destaque colorido</div></div></div>
+</div>
+
+<script>
+// View switching
+function setTab(tab) {
+  const views = ['workspace','kanban','cadencias','playbooks','scripts','kpis','automacoes','diagnostico'];
+  views.forEach(v => {
+    const el = document.getElementById('view-' + v);
+    if (el) el.style.display = 'none';
+  });
+  const active = document.getElementById('view-' + tab);
+  if (active) { active.style.display = tab === 'kanban' ? 'flex' : ''; }
+
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  const tabEl = document.getElementById('tab-' + tab);
+  if (tabEl) tabEl.classList.add('active');
+}
+
+function toggleCheck(el) {
+  const cb = el.querySelector('input[type=checkbox]');
+  cb.checked = !cb.checked;
+  el.classList.toggle('checked', cb.checked);
+}
+
+// AI Banner
+function toggleAI() {
+  const banner = document.getElementById('ai-banner');
+  banner.style.display = banner.style.display === 'none' ? 'flex' : 'none';
+}
+
+// Search
+function openSearch() {
+  document.getElementById('search-overlay').style.display = 'flex';
+  setTimeout(() => document.getElementById('search-input').focus(), 50);
+}
+function closeSearch(e) {
+  if (!e || e.target === document.getElementById('search-overlay')) {
+    document.getElementById('search-overlay').style.display = 'none';
+  }
+}
+function updateSearch(v) { /* live filter would go here */ }
+
+// Slash menu
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') {
+    closeSearch(); hideSlash();
+  }
+  if (e.key === 'k' && (e.ctrlKey || e.metaKey)) { e.preventDefault(); openSearch(); }
+});
+
+function hideSlash() { document.getElementById('slash-menu').style.display = 'none'; }
+
+// Show slash menu on / in contenteditable
+document.querySelectorAll('[contenteditable]').forEach(el => {
+  el.addEventListener('keydown', e => {
+    if (e.key === '/') {
+      setTimeout(() => {
+        const rect = el.getBoundingClientRect();
+        const menu = document.getElementById('slash-menu');
+        menu.style.display = 'block';
+        menu.style.top = (rect.bottom + 8) + 'px';
+        menu.style.left = rect.left + 'px';
+      }, 10);
+    } else {
+      hideSlash();
+    }
+  });
+});
+
+// Toggle blocks
+document.querySelectorAll('.block-checklist').forEach(el => {
+  const cb = el.querySelector('input');
+  if (cb && cb.checked) el.classList.add('checked');
+});
+</script>
+</body>
+</html>
