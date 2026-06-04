@@ -1,0 +1,349 @@
+
+<h2 class="sr-only">Prévia do módulo Contatos do CRM do GrowSOS com novo visual</h2>
+
+<style>
+  .crm-wrap { font-family: var(--font-sans); color: var(--color-text-primary); padding: 0; }
+  .sidebar { width: 52px; background: #0f1117; border-right: 1px solid #1e2028; display: flex; flex-direction: column; align-items: center; padding: 12px 0; gap: 6px; flex-shrink: 0; }
+  .sidebar-icon { width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #6b7280; font-size: 18px; }
+  .sidebar-icon.active { background: #1a7f5a; color: #fff; }
+  .sidebar-icon:hover:not(.active) { background: #1e2028; }
+  .topbar { height: 48px; border-bottom: 0.5px solid var(--color-border-tertiary); display: flex; align-items: center; padding: 0 16px; gap: 10px; background: var(--color-background-primary); flex-shrink: 0; }
+  .topbar-title { font-size: 14px; font-weight: 500; display: flex; align-items: center; gap: 6px; }
+  .count-badge { font-size: 11px; background: var(--color-background-secondary); border: 0.5px solid var(--color-border-tertiary); border-radius: 20px; padding: 2px 8px; color: var(--color-text-secondary); }
+  .btn { font-size: 12px; padding: 5px 12px; border-radius: 6px; border: 0.5px solid var(--color-border-secondary); background: var(--color-background-primary); color: var(--color-text-primary); cursor: pointer; display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; }
+  .btn-primary { background: #1a7f5a; border-color: #1a7f5a; color: #fff; }
+  .btn-sm { font-size: 11px; padding: 4px 9px; }
+  .stat-grid { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 8px; padding: 12px 16px; }
+  .stat-card { background: var(--color-background-secondary); border-radius: 8px; padding: 10px 12px; display: flex; align-items: center; gap: 10px; }
+  .stat-icon { width: 32px; height: 32px; border-radius: 7px; display: flex; align-items: center; justify-content: center; font-size: 15px; flex-shrink: 0; }
+  .stat-label { font-size: 11px; color: var(--color-text-secondary); margin: 0 0 1px; }
+  .stat-val { font-size: 15px; font-weight: 500; margin: 0; }
+  .filters-bar { padding: 0 16px 10px; display: flex; flex-direction: column; gap: 8px; }
+  .search-wrap { position: relative; }
+  .search-wrap input { width: 100%; box-sizing: border-box; padding: 7px 12px 7px 34px; font-size: 12px; border-radius: 7px; border: 0.5px solid var(--color-border-secondary); background: var(--color-background-primary); color: var(--color-text-primary); outline: none; }
+  .search-icon { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); font-size: 14px; color: var(--color-text-secondary); pointer-events: none; }
+  .chips { display: flex; gap: 6px; flex-wrap: wrap; }
+  .chip { font-size: 11px; padding: 4px 11px; border-radius: 20px; border: 0.5px solid var(--color-border-secondary); background: var(--color-background-primary); color: var(--color-text-primary); cursor: pointer; display: inline-flex; align-items: center; gap: 4px; }
+  .chip.active { background: #1a7f5a; border-color: #1a7f5a; color: #fff; }
+  .chip.active-green { background: #16a34a; border-color: #16a34a; color: #fff; }
+  .chip.active-red { background: #dc2626; border-color: #dc2626; color: #fff; }
+  .lead-list { padding: 0 16px 16px; display: flex; flex-direction: column; gap: 8px; }
+  .lead-card { background: var(--color-background-primary); border: 0.5px solid var(--color-border-tertiary); border-radius: 10px; padding: 12px 12px 12px 16px; display: flex; gap: 10px; align-items: flex-start; position: relative; overflow: hidden; }
+  .lead-card:hover { border-color: var(--color-border-secondary); }
+  .accent-bar { position: absolute; left: 0; top: 0; bottom: 0; width: 3px; border-radius: 0; }
+  .avatar { width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 500; flex-shrink: 0; border: 2px solid var(--color-background-secondary); }
+  .lead-body { flex: 1; min-width: 0; }
+  .lead-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; margin-bottom: 5px; }
+  .lead-name { font-size: 13px; font-weight: 500; }
+  .lead-right { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+  .lead-value { font-size: 13px; font-weight: 500; color: #059669; }
+  .status-pill { font-size: 10px; padding: 2px 8px; border-radius: 20px; display: inline-flex; align-items: center; gap: 4px; border: 0.5px solid; }
+  .dot { width: 5px; height: 5px; border-radius: 50%; }
+  .pill-novo { background: #eff6ff; border-color: #bfdbfe; color: #1d4ed8; }
+  .dot-novo { background: #3b82f6; }
+  .pill-ganho { background: #f0fdf4; border-color: #bbf7d0; color: #15803d; }
+  .dot-ganho { background: #22c55e; }
+  .pill-proposta { background: #faf5ff; border-color: #e9d5ff; color: #7e22ce; }
+  .dot-proposta { background: #a855f7; }
+  .pill-qualificado { background: #ecfdf5; border-color: #a7f3d0; color: #065f46; }
+  .dot-qualificado { background: #10b981; }
+  .pill-perdido { background: #fef2f2; border-color: #fecaca; color: #991b1b; }
+  .dot-perdido { background: #ef4444; }
+  .lead-contacts { display: flex; gap: 12px; margin-bottom: 5px; flex-wrap: wrap; }
+  .contact-item { font-size: 11px; color: var(--color-text-secondary); display: flex; align-items: center; gap: 4px; }
+  .wa-btn { font-size: 10px; padding: 2px 7px; border-radius: 5px; background: #dcfce7; color: #166534; border: none; cursor: pointer; display: inline-flex; align-items: center; gap: 3px; margin-left: 4px; }
+  .tag-row { display: flex; gap: 4px; align-items: center; flex-wrap: wrap; }
+  .tag { font-size: 10px; padding: 2px 8px; border-radius: 20px; background: var(--color-background-secondary); color: var(--color-text-secondary); border: 0.5px solid var(--color-border-tertiary); display: inline-flex; align-items: center; gap: 3px; }
+  .date-tag { font-size: 10px; color: var(--color-text-secondary); margin-left: auto; display: flex; align-items: center; gap: 3px; }
+  .action-btns { display: flex; gap: 4px; align-items: center; }
+  .icon-btn { width: 26px; height: 26px; border-radius: 6px; border: 0.5px solid var(--color-border-tertiary); background: var(--color-background-primary); display: flex; align-items: center; justify-content: center; font-size: 13px; cursor: pointer; color: var(--color-text-secondary); }
+  .icon-btn:hover { background: var(--color-background-secondary); color: var(--color-text-primary); }
+  .source-badge { font-size: 10px; padding: 2px 7px; border-radius: 20px; border: 0.5px solid var(--color-border-tertiary); color: var(--color-text-secondary); display: inline-flex; align-items: center; gap: 3px; }
+  .empty-state { text-align: center; padding: 32px 16px; }
+  .empty-icon { width: 52px; height: 52px; border-radius: 50%; background: var(--color-background-secondary); margin: 0 auto 12px; display: flex; align-items: center; justify-content: center; font-size: 22px; color: var(--color-text-secondary); }
+  .load-more { text-align: center; padding: 10px; font-size: 12px; color: var(--color-text-secondary); }
+  .check-area { display: none; }
+  .results-count { font-size: 11px; color: var(--color-text-secondary); padding: 0 16px 6px; }
+</style>
+
+<div class="crm-wrap">
+
+  <div style="display:flex; height:520px; border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-lg); overflow: hidden;">
+
+    <div class="sidebar">
+      <div class="sidebar-icon"><i class="ti ti-layout-dashboard" aria-hidden="true"></i></div>
+      <div class="sidebar-icon active"><i class="ti ti-users" aria-hidden="true"></i></div>
+      <div class="sidebar-icon"><i class="ti ti-git-branch" aria-hidden="true"></i></div>
+      <div class="sidebar-icon"><i class="ti ti-message-circle" aria-hidden="true"></i></div>
+      <div class="sidebar-icon"><i class="ti ti-calendar" aria-hidden="true"></i></div>
+      <div class="sidebar-icon"><i class="ti ti-chart-bar" aria-hidden="true"></i></div>
+      <div class="sidebar-icon" style="margin-top:auto;"><i class="ti ti-settings" aria-hidden="true"></i></div>
+    </div>
+
+    <div style="flex:1; display:flex; flex-direction:column; overflow:hidden; background: var(--color-background-tertiary);">
+
+      <div class="topbar">
+        <i class="ti ti-users" style="font-size:16px; color:#1a7f5a;" aria-hidden="true"></i>
+        <span class="topbar-title">Contatos do CRM <span class="count-badge">127 carregados</span></span>
+        <div style="margin-left:auto; display:flex; gap:6px; align-items:center;">
+          <button class="btn btn-sm"><i class="ti ti-tag" aria-hidden="true"></i> Tags</button>
+          <button class="btn btn-sm"><i class="ti ti-adjustments-horizontal" aria-hidden="true"></i></button>
+          <button class="btn btn-sm"><i class="ti ti-download" aria-hidden="true"></i> Exportar</button>
+          <button class="btn btn-sm"><i class="ti ti-upload" aria-hidden="true"></i></button>
+          <button class="btn btn-primary btn-sm"><i class="ti ti-plus" aria-hidden="true"></i> Novo</button>
+        </div>
+      </div>
+
+      <div style="flex:1; overflow-y:auto;">
+
+        <div class="stat-grid">
+          <div class="stat-card">
+            <div class="stat-icon" style="background:#eff6ff;"><i class="ti ti-users" style="color:#3b82f6;" aria-hidden="true"></i></div>
+            <div><p class="stat-label">Total</p><p class="stat-val">127</p></div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon" style="background:#f0fdf4;"><i class="ti ti-trophy" style="color:#16a34a;" aria-hidden="true"></i></div>
+            <div><p class="stat-label">Ganhos</p><p class="stat-val">23</p></div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon" style="background:#fef2f2;"><i class="ti ti-x-circle" style="color:#dc2626;" aria-hidden="true"></i></div>
+            <div><p class="stat-label">Perdidos</p><p class="stat-val">11</p></div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon" style="background:#ecfdf5;"><i class="ti ti-currency-dollar" style="color:#059669;" aria-hidden="true"></i></div>
+            <div><p class="stat-label">Valor total</p><p class="stat-val">R$ 84k</p></div>
+          </div>
+        </div>
+
+        <div class="filters-bar">
+          <div class="search-wrap">
+            <i class="ti ti-search search-icon" aria-hidden="true"></i>
+            <input type="text" id="searchInput" placeholder="Buscar por nome, email, telefone… (use >1000 para valor)" />
+          </div>
+          <div class="chips">
+            <span class="chip active" onclick="filterStatus('all',this)">Todos</span>
+            <span class="chip" onclick="filterStatus('novo',this)">Novos</span>
+            <span class="chip" onclick="filterStatus('qualificado',this)">Qualificados</span>
+            <span class="chip" onclick="filterStatus('proposta',this)">Proposta</span>
+            <span class="chip" onclick="filterStatus('valor',this)"><i class="ti ti-currency-dollar" aria-hidden="true"></i> Com Valor</span>
+            <span class="chip" onclick="filterStatus('ganho',this)"><i class="ti ti-trophy" aria-hidden="true"></i> Ganhos</span>
+            <span class="chip" onclick="filterStatus('perdido',this)"><i class="ti ti-x-circle" aria-hidden="true"></i> Perdidos</span>
+            <span class="chip" onclick="toggleSelection(this)"><i class="ti ti-checkbox" aria-hidden="true"></i> Seleção</span>
+          </div>
+        </div>
+
+        <div class="results-count" id="resultsCount">Mostrando 5 de 127 leads</div>
+
+        <div class="lead-list" id="leadList">
+
+          <div class="lead-card" data-status="ganho" data-valor="4500">
+            <div class="accent-bar" style="background:#22c55e;"></div>
+            <div class="avatar" style="background:#d1fae5; color:#065f46;">CA</div>
+            <div class="lead-body">
+              <div class="lead-top">
+                <div style="display:flex; align-items:center; gap:7px; flex-wrap:wrap;">
+                  <span class="lead-name">Carlos Andrade</span>
+                  <span class="status-pill pill-ganho"><span class="dot dot-ganho"></span>Ganho</span>
+                  <span class="source-badge"><i class="ti ti-tag" style="font-size:10px;" aria-hidden="true"></i> Facebook</span>
+                </div>
+                <div class="lead-right">
+                  <span class="lead-value">R$ 4.500</span>
+                  <div class="action-btns">
+                    <div class="icon-btn"><i class="ti ti-dots-vertical" aria-hidden="true"></i></div>
+                    <div class="icon-btn"><i class="ti ti-tag" aria-hidden="true"></i></div>
+                  </div>
+                </div>
+              </div>
+              <div class="lead-contacts">
+                <span class="contact-item"><i class="ti ti-mail" style="font-size:12px;" aria-hidden="true"></i>carlos@email.com</span>
+                <span class="contact-item"><i class="ti ti-phone" style="font-size:12px;" aria-hidden="true"></i>(71) 99123-4567<button class="wa-btn"><i class="ti ti-brand-whatsapp" aria-hidden="true"></i>WhatsApp</button></span>
+                <span class="contact-item"><i class="ti ti-building" style="font-size:12px;" aria-hidden="true"></i><strong>Andrade Corp</strong></span>
+              </div>
+              <div class="tag-row">
+                <span class="tag"><i class="ti ti-tag" style="font-size:9px;" aria-hidden="true"></i>cliente-vip</span>
+                <span class="tag"><i class="ti ti-tag" style="font-size:9px;" aria-hidden="true"></i>odonto</span>
+                <span class="date-tag"><i class="ti ti-clock" style="font-size:11px;" aria-hidden="true"></i>03 jun</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="lead-card" data-status="novo" data-valor="0">
+            <div class="accent-bar" style="background:#3b82f6;"></div>
+            <div class="avatar" style="background:#dbeafe; color:#1e40af;">MF</div>
+            <div class="lead-body">
+              <div class="lead-top">
+                <div style="display:flex; align-items:center; gap:7px; flex-wrap:wrap;">
+                  <span class="lead-name">Marina Figueiredo</span>
+                  <span class="status-pill pill-novo"><span class="dot dot-novo"></span>Novo</span>
+                </div>
+                <div class="lead-right">
+                  <div class="action-btns">
+                    <div class="icon-btn"><i class="ti ti-dots-vertical" aria-hidden="true"></i></div>
+                    <div class="icon-btn"><i class="ti ti-tag" aria-hidden="true"></i></div>
+                  </div>
+                </div>
+              </div>
+              <div class="lead-contacts">
+                <span class="contact-item"><i class="ti ti-mail" style="font-size:12px;" aria-hidden="true"></i>marina.fig@gmail.com</span>
+                <span class="contact-item"><i class="ti ti-phone" style="font-size:12px;" aria-hidden="true"></i>(11) 98765-4321<button class="wa-btn"><i class="ti ti-brand-whatsapp" aria-hidden="true"></i>WhatsApp</button></span>
+              </div>
+              <div class="tag-row">
+                <span class="tag"><i class="ti ti-tag" style="font-size:9px;" aria-hidden="true"></i>indicação</span>
+                <span class="date-tag"><i class="ti ti-clock" style="font-size:11px;" aria-hidden="true"></i>02 jun</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="lead-card" data-status="proposta" data-valor="12000">
+            <div class="accent-bar" style="background:#a855f7;"></div>
+            <div class="avatar" style="background:#f3e8ff; color:#6b21a8;">RS</div>
+            <div class="lead-body">
+              <div class="lead-top">
+                <div style="display:flex; align-items:center; gap:7px; flex-wrap:wrap;">
+                  <span class="lead-name">Roberto Silva</span>
+                  <span class="status-pill pill-proposta"><span class="dot dot-proposta"></span>Proposta</span>
+                  <span class="source-badge"><i class="ti ti-tag" style="font-size:10px;" aria-hidden="true"></i> Google Ads</span>
+                </div>
+                <div class="lead-right">
+                  <span class="lead-value">R$ 12.000</span>
+                  <div class="action-btns">
+                    <div class="icon-btn"><i class="ti ti-dots-vertical" aria-hidden="true"></i></div>
+                    <div class="icon-btn"><i class="ti ti-tag" aria-hidden="true"></i></div>
+                  </div>
+                </div>
+              </div>
+              <div class="lead-contacts">
+                <span class="contact-item"><i class="ti ti-mail" style="font-size:12px;" aria-hidden="true"></i>roberto@empresa.com.br</span>
+                <span class="contact-item"><i class="ti ti-phone" style="font-size:12px;" aria-hidden="true"></i>(21) 97654-3210<button class="wa-btn"><i class="ti ti-brand-whatsapp" aria-hidden="true"></i>WhatsApp</button></span>
+                <span class="contact-item"><i class="ti ti-building" style="font-size:12px;" aria-hidden="true"></i><strong>Silva &amp; Cia</strong></span>
+              </div>
+              <div class="tag-row">
+                <span class="tag"><i class="ti ti-tag" style="font-size:9px;" aria-hidden="true"></i>alta-prioridade</span>
+                <span class="tag"><i class="ti ti-tag" style="font-size:9px;" aria-hidden="true"></i>implante</span>
+                <span class="tag"><i class="ti ti-tag" style="font-size:9px;" aria-hidden="true"></i>retorno</span>
+                <span style="font-size:10px; color: var(--color-text-secondary);">+1</span>
+                <span class="date-tag"><i class="ti ti-clock" style="font-size:11px;" aria-hidden="true"></i>01 jun</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="lead-card" data-status="qualificado" data-valor="3200">
+            <div class="accent-bar" style="background:#10b981;"></div>
+            <div class="avatar" style="background:#d1fae5; color:#065f46;">AL</div>
+            <div class="lead-body">
+              <div class="lead-top">
+                <div style="display:flex; align-items:center; gap:7px; flex-wrap:wrap;">
+                  <span class="lead-name">Ana Lima</span>
+                  <span class="status-pill pill-qualificado"><span class="dot dot-qualificado"></span>Qualificado</span>
+                </div>
+                <div class="lead-right">
+                  <span class="lead-value">R$ 3.200</span>
+                  <div class="action-btns">
+                    <div class="icon-btn"><i class="ti ti-dots-vertical" aria-hidden="true"></i></div>
+                    <div class="icon-btn"><i class="ti ti-tag" aria-hidden="true"></i></div>
+                  </div>
+                </div>
+              </div>
+              <div class="lead-contacts">
+                <span class="contact-item"><i class="ti ti-phone" style="font-size:12px;" aria-hidden="true"></i>(85) 99000-1122<button class="wa-btn"><i class="ti ti-brand-whatsapp" aria-hidden="true"></i>WhatsApp</button></span>
+                <span class="contact-item"><i class="ti ti-building" style="font-size:12px;" aria-hidden="true"></i><strong>Clínica Norte</strong></span>
+              </div>
+              <div class="tag-row">
+                <span class="date-tag"><i class="ti ti-clock" style="font-size:11px;" aria-hidden="true"></i>29 mai</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="lead-card" data-status="perdido" data-valor="0">
+            <div class="accent-bar" style="background:#ef4444;"></div>
+            <div class="avatar" style="background:#fee2e2; color:#991b1b;">JP</div>
+            <div class="lead-body">
+              <div class="lead-top">
+                <div style="display:flex; align-items:center; gap:7px;">
+                  <span class="lead-name">João Pedro</span>
+                  <span class="status-pill pill-perdido"><span class="dot dot-perdido"></span>Perdido</span>
+                </div>
+                <div class="lead-right">
+                  <div class="action-btns">
+                    <div class="icon-btn"><i class="ti ti-dots-vertical" aria-hidden="true"></i></div>
+                    <div class="icon-btn"><i class="ti ti-tag" aria-hidden="true"></i></div>
+                  </div>
+                </div>
+              </div>
+              <div class="lead-contacts">
+                <span class="contact-item"><i class="ti ti-mail" style="font-size:12px;" aria-hidden="true"></i>joao.pedro@outlook.com</span>
+                <span class="contact-item"><i class="ti ti-phone" style="font-size:12px;" aria-hidden="true"></i>(31) 98888-7777</span>
+              </div>
+              <div class="tag-row">
+                <span class="tag"><i class="ti ti-tag" style="font-size:9px;" aria-hidden="true"></i>preço</span>
+                <span class="date-tag"><i class="ti ti-clock" style="font-size:11px;" aria-hidden="true"></i>25 mai</span>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <div class="load-more">
+          <i class="ti ti-chevron-down" aria-hidden="true"></i> Role para carregar mais · Todos os 127 leads carregados
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const allCards = document.querySelectorAll('.lead-card');
+  const resultEl = document.getElementById('resultsCount');
+  const chips = document.querySelectorAll('.chips .chip');
+  let currentFilter = 'all';
+  let selMode = false;
+
+  function updateCount() {
+    let visible = 0;
+    allCards.forEach(c => { if (c.style.display !== 'none') visible++; });
+    resultEl.textContent = visible < allCards.length
+      ? 'Mostrando ' + visible + ' de 127 leads'
+      : 'Mostrando todos os 127 leads';
+  }
+
+  function applyFilters(search) {
+    const s = (search || document.getElementById('searchInput').value).toLowerCase().trim();
+    allCards.forEach(c => {
+      const statusMatch = currentFilter === 'all' || c.dataset.status === currentFilter
+        || (currentFilter === 'valor' && parseInt(c.dataset.valor) > 0);
+      const textMatch = !s || c.textContent.toLowerCase().includes(s);
+      c.style.display = (statusMatch && textMatch) ? '' : 'none';
+    });
+    updateCount();
+  }
+
+  function filterStatus(status, el) {
+    if (el.textContent.includes('Seleção')) return;
+    currentFilter = status;
+    chips.forEach(c => {
+      if (c.textContent.includes('Seleção')) return;
+      c.className = 'chip';
+    });
+    el.className = 'chip ' + (status === 'ganho' ? 'active-green' : status === 'perdido' ? 'active-red' : 'active');
+    applyFilters();
+  }
+
+  function toggleSelection(el) {
+    selMode = !selMode;
+    el.className = 'chip' + (selMode ? ' active' : '');
+    allCards.forEach(c => {
+      let ca = c.querySelector('.check-area');
+      if (!ca) {
+        ca = document.createElement('div');
+        ca.className = 'check-area';
+        ca.style.cssText = 'display:flex;align-items:center;margin-right:8px;margin-top:2px;';
+        ca.innerHTML = '<input type="checkbox" style="width:14px;height:14px;cursor:pointer;">';
+        c.insertBefore(ca, c.children[1]);
+      }
+      ca.style.display = selMode ? 'flex' : 'none';
+    });
+  }
+
+  document.getElementById('searchInput').addEventListener('input', e => applyFilters(e.target.value));
+</script>
