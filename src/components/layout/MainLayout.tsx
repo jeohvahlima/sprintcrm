@@ -193,7 +193,7 @@ export function MainLayout() {
   };
 
   const isEmbed = typeof window !== "undefined" && new URLSearchParams(window.location.search).get("embed") === "1";
-  const hideFloatingButtons = location.pathname === "/leads";
+  const hideFloatingButtons = location.pathname === "/leads" || location.pathname === "/agenda";
 
   if (isEmbed) {
     return (
