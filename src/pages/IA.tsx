@@ -4,17 +4,12 @@
 // edite somente public/automacao.html.
 export default function IA() {
   return (
-    <iframe
-      src="/automacao.html"
-      title="Automação & IA"
-      style={{
-        position: "fixed",
-        inset: 0,
-        width: "100vw",
-        height: "100vh",
-        border: "none",
-        zIndex: 1,
-      }}
-    />
+    <div className="w-full h-[calc(100vh-7rem)] min-h-[640px] overflow-hidden rounded-lg border border-border bg-background">
+      <iframe
+        src="/automacao.html"
+        title="Automação & IA"
+        className="w-full h-full border-0 block"
+      />
+    </div>
   );
 }
