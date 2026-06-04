@@ -1,4 +1,4 @@
-import { Navigate, Outlet } from "react-router-dom";
+import { Navigate, Outlet, useLocation } from "react-router-dom";
 import { Sidebar } from "./Sidebar";
 import { Header } from "./Header";
 import { useEffect, useState } from "react";
@@ -15,6 +15,7 @@ import { useFloatingButtonsVisibility } from "@/hooks/useFloatingButtonsVisibili
 import { useClinicaSeeds } from "@/hooks/useClinicaSeeds";
 
 export function MainLayout() {
+  const location = useLocation();
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const isMobile = useIsMobile();
@@ -192,6 +193,7 @@ export function MainLayout() {
   };
 
   const isEmbed = typeof window !== "undefined" && new URLSearchParams(window.location.search).get("embed") === "1";
+  const hideFloatingButtons = location.pathname === "/leads";
 
   if (isEmbed) {
     return (
@@ -243,13 +245,13 @@ export function MainLayout() {
       />
       
       {/* Botão flutuante do chat interno */}
-      {chatVisible && <FloatingChatButton />}
+      {chatVisible && !hideFloatingButtons && <FloatingChatButton />}
       
       {/* Botão flutuante do discador */}
-      {dialerVisible && <FloatingDialerButton />}
+      {dialerVisible && !hideFloatingButtons && <FloatingDialerButton />}
       
       {/* Botão flutuante do suporte técnico */}
-      {supportVisible && <FloatingSupportButton />}
+      {supportVisible && !hideFloatingButtons && <FloatingSupportButton />}
     </div>
   );
 }
