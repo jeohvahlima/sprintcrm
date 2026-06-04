@@ -69,7 +69,7 @@ async function getServiceEnv(): Promise<string> {
   const data = await easyPanelCall("services.app.inspectService", {
     projectName: EASYPANEL_PROJECT,
     serviceName: EASYPANEL_SERVICE,
-  });
+  }, "query");
   return data?.result?.data?.json?.env || "";
 }
 
