@@ -1885,6 +1885,15 @@ function openTaskPanel(t) {
           <button class="btn btn-ghost" style="font-size:11px;padding:5px 10px" onclick="openWhatsAppForCurrentTask()"><i class="ti ti-brand-whatsapp" style="color:var(--green)"></i>Conversa WhatsApp</button>
           <button class="btn btn-ghost" style="font-size:11px;padding:5px 10px" onclick="concluirCurrentTask()"><i class="ti ti-circle-check" style="color:var(--green)"></i>Concluir tarefa</button>
           <button class="btn btn-ghost" style="font-size:11px;padding:5px 10px" onclick="duplicateCurrentTask()"><i class="ti ti-copy"></i>Duplicar</button>
+          <button class="btn btn-ghost" style="font-size:11px;padding:5px 10px" onclick="document.getElementById('taskAttachInput').click()"><i class="ti ti-paperclip" style="color:var(--blue)"></i>Anexar arquivo</button>
+          <input type="file" id="taskAttachInput" style="display:none" accept="image/*,application/pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,.zip" onchange="onTaskAttachPicked(this)">
+        </div>
+        <div id="taskAttachList" style="margin-top:8px;display:flex;flex-direction:column;gap:6px">
+          ${(t.attachments || []).map(a => `
+            <a href="${a.url}" target="_blank" style="display:flex;align-items:center;gap:6px;padding:6px 10px;background:var(--bg3);border-radius:6px;color:var(--text2);font-size:11px;text-decoration:none">
+              <i class="ti ti-file"></i><span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${a.name || 'Arquivo'}</span>
+            </a>
+          `).join('')}
         </div>
       </div>
     `;
