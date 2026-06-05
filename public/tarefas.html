@@ -376,11 +376,11 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
       <div class="icon-btn" title="Notificações"><i class="ti ti-bell"></i></div>
       <div class="icon-btn" title="Sincronizar Google"><i class="ti ti-refresh"></i></div>
       <!-- User avatar -->
-      <div style="display:flex;align-items:center;gap:7px;padding-left:10px;border-left:1px solid var(--border);cursor:pointer">
-        <div style="width:30px;height:30px;border-radius:50%;background:var(--purple-d);display:flex;align-items:center;justify-content:center;font-size:10.5px;font-weight:700;color:var(--purple);border:1.5px solid var(--purple)">RC</div>
-        <span style="font-size:12px;font-weight:500;color:var(--text2)">Rafael Costa</span>
-        <i class="ti ti-chevron-down" style="font-size:12px;color:var(--text3)"></i>
-      </div>
+       <div style="display:flex;align-items:center;gap:7px;padding-left:10px;border-left:1px solid var(--border);cursor:pointer">
+         <div id="topbarUserAvatar" style="width:30px;height:30px;border-radius:50%;background:var(--purple-d);display:flex;align-items:center;justify-content:center;font-size:10.5px;font-weight:700;color:var(--purple);border:1.5px solid var(--purple)">--</div>
+         <span id="topbarUserName" style="font-size:12px;font-weight:500;color:var(--text2)">Carregando...</span>
+         <i class="ti ti-chevron-down" style="font-size:12px;color:var(--text3)"></i>
+       </div>
       <button class="btn btn-primary" onclick="openNewTaskModal()"><i class="ti ti-plus"></i>Nova Tarefa</button>
     </div>
   </div>
