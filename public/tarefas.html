@@ -1885,6 +1885,15 @@ function openTaskPanel(t) {
           <button class="btn btn-ghost" style="font-size:11px;padding:5px 10px" onclick="openWhatsAppForCurrentTask()"><i class="ti ti-brand-whatsapp" style="color:var(--green)"></i>Conversa WhatsApp</button>
           <button class="btn btn-ghost" style="font-size:11px;padding:5px 10px" onclick="concluirCurrentTask()"><i class="ti ti-circle-check" style="color:var(--green)"></i>Concluir tarefa</button>
           <button class="btn btn-ghost" style="font-size:11px;padding:5px 10px" onclick="duplicateCurrentTask()"><i class="ti ti-copy"></i>Duplicar</button>
+          <button class="btn btn-ghost" style="font-size:11px;padding:5px 10px" onclick="document.getElementById('taskAttachInput').click()"><i class="ti ti-paperclip" style="color:var(--blue)"></i>Anexar arquivo</button>
+          <input type="file" id="taskAttachInput" style="display:none" accept="image/*,application/pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,.zip" onchange="onTaskAttachPicked(this)">
+        </div>
+        <div id="taskAttachList" style="margin-top:8px;display:flex;flex-direction:column;gap:6px">
+          ${(t.attachments || []).map(a => `
+            <a href="${a.url}" target="_blank" style="display:flex;align-items:center;gap:6px;padding:6px 10px;background:var(--bg3);border-radius:6px;color:var(--text2);font-size:11px;text-decoration:none">
+              <i class="ti ti-file"></i><span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${a.name || 'Arquivo'}</span>
+            </a>
+          `).join('')}
         </div>
       </div>
     `;
@@ -2031,6 +2040,31 @@ window.concluirCurrentTask = async function () {
     document.getElementById('sidePanel')?.classList.remove('open');
     await loadAll();
   } catch (e) { alert('Erro ao concluir: ' + (e.message || e)); }
+};
+
+window.onTaskAttachPicked = async function (input) {
+  const file = input.files?.[0]; if (!file) { return; }
+  const t = window._currentTask; if (!t || !sb) return;
+  const list = document.getElementById('taskAttachList');
+  const loadingEl = document.createElement('div');
+  loadingEl.style.cssText = 'font-size:11px;color:var(--text3);padding:6px 10px';
+  loadingEl.innerHTML = `<i class="ti ti-loader"></i> Enviando ${file.name}...`;
+  list?.appendChild(loadingEl);
+  try {
+    const path = `tarefas/${t.id}/${Date.now()}-${file.name.replace(/[^\w.\-]/g,'_')}`;
+    const { error } = await sb.storage.from('lead-attachments').upload(path, file, { upsert: false });
+    if (error) throw error;
+    const { data: pub } = sb.storage.from('lead-attachments').getPublicUrl(path);
+    const att = { name: file.name, url: pub.publicUrl };
+    t.attachments = Array.isArray(t.attachments) ? [...t.attachments, att] : [att];
+    await callApi('editar_tarefa', { task_id: t.id, attachments: t.attachments });
+    openTaskPanel(t);
+  } catch (e) {
+    console.error('[task attach]', e);
+    alert('Erro ao anexar: ' + (e.message || e));
+    loadingEl.remove();
+  }
+  input.value = '';
 };
 
 window.duplicateCurrentTask = async function () {
