@@ -1867,9 +1867,9 @@ function openTaskPanel(t) {
       <div class="panel-section">
         <div class="panel-label">Ações rápidas</div>
         <div style="display:flex;gap:6px;flex-wrap:wrap">
-          <button class="btn btn-ghost" style="font-size:11px;padding:5px 10px"><i class="ti ti-brand-whatsapp" style="color:var(--green)"></i>Conversa WhatsApp</button>
-          <button class="btn btn-ghost" style="font-size:11px;padding:5px 10px"><i class="ti ti-bell"></i>Enviar lembrete</button>
-          <button class="btn btn-ghost" style="font-size:11px;padding:5px 10px"><i class="ti ti-copy"></i>Duplicar</button>
+          <button class="btn btn-ghost" style="font-size:11px;padding:5px 10px" onclick="openWhatsAppForCurrentTask()"><i class="ti ti-brand-whatsapp" style="color:var(--green)"></i>Conversa WhatsApp</button>
+          <button class="btn btn-ghost" style="font-size:11px;padding:5px 10px" onclick="concluirCurrentTask()"><i class="ti ti-circle-check" style="color:var(--green)"></i>Concluir tarefa</button>
+          <button class="btn btn-ghost" style="font-size:11px;padding:5px 10px" onclick="duplicateCurrentTask()"><i class="ti ti-copy"></i>Duplicar</button>
         </div>
       </div>
     `;
