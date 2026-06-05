@@ -1769,12 +1769,170 @@ function buildCardEl(t) {
 function escapeHtml(s) { return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
 
 // ── Side panel (edição rápida) ─────────────────────────────────────────────
-function openTaskPanel(t) {
-  const titleEl = $('panelTitle'); if (titleEl) titleEl.textContent = t.title;
-  const leadEl = $('panelLeadCtx'); if (leadEl) leadEl.textContent = t.lead?.name || '—';
-  $('sidePanel')?.classList.add('open');
-  window._currentTask = t;
+function initials(name) {
+  if (!name) return '?';
+  return name.split(' ').filter(Boolean).map(s => s[0]).slice(0, 2).join('').toUpperCase();
 }
+function formatBR(date) {
+  if (!date) return 'Sem prazo';
+  try {
+    const d = new Date(date);
+    const today = new Date(); today.setHours(0,0,0,0);
+    const dd = new Date(d); dd.setHours(0,0,0,0);
+    const diff = Math.round((dd - today) / 86400000);
+    const fmt = d.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' });
+    if (diff < 0) return { text: `Atrasada ${Math.abs(diff)}d`, overdue: true };
+    if (diff === 0) return { text: 'Vence hoje', overdue: false };
+    if (diff === 1) return { text: 'Vence amanhã', overdue: false };
+    return { text: fmt, overdue: false };
+  } catch { return { text: '—', overdue: false }; }
+}
+const TAG_COLORS = ['tag-red','tag-blue','tag-amber','tag-green','tag-purple'];
+
+function openTaskPanel(t) {
+  window._currentTask = t;
+  const col = columns.find(c => c.id === t.column_id);
+  const prio = t.priority || 'media';
+  const prioLabels = { baixa: 'Baixa', media: 'Média', alta: 'Alta', urgente: 'Urgente' };
+  const prioClass = PRIO_CLASS[prio] || 'media';
+  const assName = t.assignee?.full_name || 'Sem responsável';
+  const due = formatBR(t.due_date);
+  const leadName = t.lead?.name || '—';
+  const leadValue = t.lead?.valor || t.valor_negocio;
+
+  // Header
+  $('panelTitle').textContent = t.title || '(sem título)';
+  $('panelLeadCtx').textContent = [leadName !== '—' ? leadName : null, col?.nome].filter(Boolean).join(' · ') || '—';
+
+  // Details tab — rebuild meta grid
+  const details = $('pDetails');
+  if (details) {
+    const tags = Array.isArray(t.tags) ? t.tags : [];
+    const tagsHtml = tags.length
+      ? tags.map((tg, i) => `<span class="tag ${TAG_COLORS[i % TAG_COLORS.length]}">${escapeHtml(tg)}</span>`).join('')
+      : '<span style="font-size:11px;color:var(--text3)">Sem tags</span>';
+
+    const checklist = Array.isArray(t.checklist) ? t.checklist : [];
+    const done = checklist.filter(c => c.done).length;
+    const pct = checklist.length ? Math.round(done / checklist.length * 100) : 0;
+
+    details.innerHTML = `
+      <div class="panel-section">
+        <div class="meta-grid">
+          <div class="meta-item">
+            <div class="panel-label">Prioridade</div>
+            <div class="meta-val"><span class="prio-badge p-${prioClass}"><i class="ti ti-flag-2" style="font-size:11px"></i>${prioLabels[prio]}</span></div>
+          </div>
+          <div class="meta-item">
+            <div class="panel-label">Status</div>
+            <div class="meta-val"><span class="badge badge-blue">${escapeHtml(col?.nome || '—')}</span></div>
+          </div>
+          <div class="meta-item">
+            <div class="panel-label">Responsável</div>
+            <div class="meta-val">
+              <div class="assignee-av" style="background:var(--blue-d);color:var(--blue);width:22px;height:22px;font-size:9px">${initials(assName)}</div>
+              <span style="font-size:12px">${escapeHtml(assName)}</span>
+            </div>
+          </div>
+          <div class="meta-item">
+            <div class="panel-label">Prazo</div>
+            <div class="meta-val" style="color:${due.overdue ? 'var(--red)' : 'var(--text)'}"><i class="ti ti-${due.overdue ? 'calendar-x' : 'calendar'}" style="font-size:13px"></i>${escapeHtml(due.text)}</div>
+          </div>
+          <div class="meta-item">
+            <div class="panel-label">Lead vinculado</div>
+            <div class="meta-val">
+              <i class="ti ti-building" style="color:var(--text3);font-size:13px"></i>
+              <span style="color:var(--blue);font-size:12px">${escapeHtml(leadName)}</span>
+            </div>
+          </div>
+          <div class="meta-item">
+            <div class="panel-label">Valor do negócio</div>
+            <div class="meta-val">${leadValue ? `<span class="badge badge-amber">R$ ${Number(leadValue).toLocaleString('pt-BR')}</span>` : '<span style="font-size:11px;color:var(--text3)">—</span>'}</div>
+          </div>
+        </div>
+      </div>
+      ${t.description ? `<div class="panel-section"><div class="panel-label">Descrição</div><div style="font-size:12px;color:var(--text2);white-space:pre-wrap">${escapeHtml(t.description)}</div></div>` : ''}
+      <div class="panel-section">
+        <div class="panel-label">Tags</div>
+        <div style="display:flex;flex-wrap:wrap;gap:5px">${tagsHtml}</div>
+      </div>
+      <div class="panel-section">
+        <div class="panel-label">Progresso do checklist</div>
+        <div class="progress-bar" style="margin-bottom:5px"><div class="progress-fill" style="width:${pct}%;background:var(--blue)"></div></div>
+        <div style="font-size:10.5px;color:var(--text3);display:flex;justify-content:space-between"><span>${done} de ${checklist.length} concluídos</span><span>${pct}%</span></div>
+      </div>
+      <div class="panel-section">
+        <div class="panel-label">Ações rápidas</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+          <button class="btn btn-ghost" style="font-size:11px;padding:5px 10px"><i class="ti ti-brand-whatsapp" style="color:var(--green)"></i>Conversa WhatsApp</button>
+          <button class="btn btn-ghost" style="font-size:11px;padding:5px 10px"><i class="ti ti-bell"></i>Enviar lembrete</button>
+          <button class="btn btn-ghost" style="font-size:11px;padding:5px 10px"><i class="ti ti-copy"></i>Duplicar</button>
+        </div>
+      </div>
+    `;
+  }
+
+  // Checklist tab
+  const cl = $('pChecklist');
+  if (cl) {
+    const checklist = Array.isArray(t.checklist) ? t.checklist : [];
+    const done = checklist.filter(c => c.done).length;
+    const pct = checklist.length ? Math.round(done / checklist.length * 100) : 0;
+    cl.innerHTML = `
+      <div class="panel-section">
+        <div class="progress-bar" style="margin-bottom:8px"><div class="progress-fill" style="width:${pct}%;background:var(--blue)"></div></div>
+        <div id="checklistItems">
+          ${checklist.length ? checklist.map(it => `
+            <div class="cl-item">
+              <div class="cl-check${it.done ? ' done' : ''}" onclick="toggleCheck(this)">${it.done ? '<i class="ti ti-check" style="font-size:10px;color:#fff"></i>' : ''}</div>
+              <span class="cl-text${it.done ? ' done' : ''}">${escapeHtml(it.text || '')}</span>
+            </div>`).join('') : '<div style="font-size:12px;color:var(--text3);text-align:center;padding:20px">Nenhum item no checklist</div>'}
+        </div>
+        <div style="display:flex;gap:6px;margin-top:10px">
+          <input type="text" class="field-input" placeholder="Adicionar item..." id="clInput" style="font-size:12px;padding:6px 10px" onkeydown="if(event.key==='Enter')addCheckItem()">
+          <button class="btn btn-ghost" style="padding:6px 10px;font-size:12px" onclick="addCheckItem()"><i class="ti ti-plus"></i></button>
+        </div>
+      </div>
+    `;
+  }
+
+  // Comments tab
+  const cm = $('pComments');
+  if (cm) {
+    const comments = Array.isArray(t.comments) ? t.comments : [];
+    const list = comments.length
+      ? comments.map(c => `
+          <div class="comment-item">
+            <div class="comment-av">${initials(c.author_name || 'U')}</div>
+            <div class="comment-content">
+              <div><span class="comment-author">${escapeHtml(c.author_name || 'Usuário')}</span><span class="comment-time">${c.created_at ? new Date(c.created_at).toLocaleString('pt-BR') : ''}</span></div>
+              <div class="comment-text">${escapeHtml(c.text || '')}</div>
+            </div>
+          </div>`).join('')
+      : '<div style="font-size:12px;color:var(--text3);text-align:center;padding:20px">Nenhum comentário ainda</div>';
+    cm.innerHTML = `
+      <div class="panel-section">${list}
+        <div style="display:flex;gap:6px;margin-top:12px">
+          <input type="text" class="field-input" id="commentInput" placeholder="Escreva um comentário..." style="font-size:12px;padding:6px 10px;flex:1" onkeydown="if(event.key==='Enter')addComment()">
+          <button class="btn btn-primary" style="padding:6px 12px;font-size:12px" onclick="addComment()">Enviar</button>
+        </div>
+      </div>
+    `;
+  }
+
+  // Reset to details tab
+  document.querySelectorAll('.panel-tab').forEach((tab, i) => tab.classList.toggle('active', i === 0));
+  ['pDetails','pChecklist','pComments','pActivity'].forEach((id, i) => {
+    const el = document.getElementById(id);
+    if (el) el.style.display = i === 0 ? 'block' : 'none';
+  });
+
+  $('sidePanel')?.classList.add('open');
+}
+window.openPanel = (id) => {
+  const t = tasks.find(x => x.id === id);
+  if (t) openTaskPanel(t);
+};
 
 // ── Override das ações estáticas do mockup ─────────────────────────────────
 function populateModalSelects() {
