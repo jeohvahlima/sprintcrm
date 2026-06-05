@@ -544,6 +544,8 @@ serve(async (req) => {
         if (validatedData.title !== undefined) updateData.title = validatedData.title;
         if (validatedData.description !== undefined) updateData.description = validatedData.description;
         if (validatedData.priority !== undefined) updateData.priority = validatedData.priority;
+        if (validatedData.status !== undefined) updateData.status = validatedData.status;
+        if (validatedData.column_id !== undefined) updateData.column_id = validatedData.column_id;
         if (validatedData.due_date !== undefined) updateData.due_date = validatedData.due_date;
         if (validatedData.assignee_id !== undefined) updateData.assignee_id = validatedData.assignee_id;
         if (validatedData.responsaveis !== undefined) updateData.responsaveis = validatedData.responsaveis;
