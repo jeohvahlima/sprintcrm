@@ -376,11 +376,11 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
       <div class="icon-btn" title="Notificações"><i class="ti ti-bell"></i></div>
       <div class="icon-btn" title="Sincronizar Google"><i class="ti ti-refresh"></i></div>
       <!-- User avatar -->
-      <div style="display:flex;align-items:center;gap:7px;padding-left:10px;border-left:1px solid var(--border);cursor:pointer">
-        <div style="width:30px;height:30px;border-radius:50%;background:var(--purple-d);display:flex;align-items:center;justify-content:center;font-size:10.5px;font-weight:700;color:var(--purple);border:1.5px solid var(--purple)">RC</div>
-        <span style="font-size:12px;font-weight:500;color:var(--text2)">Rafael Costa</span>
-        <i class="ti ti-chevron-down" style="font-size:12px;color:var(--text3)"></i>
-      </div>
+       <div style="display:flex;align-items:center;gap:7px;padding-left:10px;border-left:1px solid var(--border);cursor:pointer">
+         <div id="topbarUserAvatar" style="width:30px;height:30px;border-radius:50%;background:var(--purple-d);display:flex;align-items:center;justify-content:center;font-size:10.5px;font-weight:700;color:var(--purple);border:1.5px solid var(--purple)">--</div>
+         <span id="topbarUserName" style="font-size:12px;font-weight:500;color:var(--text2)">Carregando...</span>
+         <i class="ti ti-chevron-down" style="font-size:12px;color:var(--text3)"></i>
+       </div>
       <button class="btn btn-primary" onclick="openNewTaskModal()"><i class="ti ti-plus"></i>Nova Tarefa</button>
     </div>
   </div>
@@ -1605,9 +1605,24 @@ window.addEventListener('message', async (ev) => {
     const { data: ur } = await sb.from('user_roles').select('company_id').eq('user_id', session.user.id).maybeSingle();
     companyId = ur?.company_id;
     try {
-      const { data: prof } = await sb.from('profiles').select('full_name').eq('id', session.user.id).maybeSingle();
+      const { data: prof } = await sb.from('profiles').select('full_name,avatar_url').eq('id', session.user.id).maybeSingle();
       window._currentUserName = prof?.full_name || session.user.email || 'Usuário';
+      window._currentUserAvatar = prof?.avatar_url || null;
     } catch { window._currentUserName = session.user.email || 'Usuário'; }
+    try {
+      const name = window._currentUserName || 'Usuário';
+      const initials = name.trim().split(/\s+/).slice(0,2).map(s=>s[0]?.toUpperCase()||'').join('') || 'U';
+      const nameEl = document.getElementById('topbarUserName');
+      const avEl = document.getElementById('topbarUserAvatar');
+      if (nameEl) nameEl.textContent = name;
+      if (avEl) {
+        if (window._currentUserAvatar) {
+          avEl.innerHTML = `<img src="${window._currentUserAvatar}" style="width:100%;height:100%;border-radius:50%;object-fit:cover" alt="">`;
+        } else {
+          avEl.textContent = initials;
+        }
+      }
+    } catch {}
     await loadAll();
     subscribeRealtime();
   } catch (e) {
