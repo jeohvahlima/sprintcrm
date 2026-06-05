@@ -339,7 +339,7 @@
         <span class="eyebrow"><i class="ti ti-users" aria-hidden="true"></i> CRM</span>
         <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
           <p class="page-title">Contatos do CRM</p>
-          <span class="count-badge">127 carregados</span>
+          <span class="count-badge" id="badgeCount">0 carregados</span>
         </div>
       </div>
       <div class="actions">
@@ -355,19 +355,19 @@
       <div class="stat-grid">
         <article class="stat-card">
           <div class="stat-icon tone-total"><i class="ti ti-users" aria-hidden="true"></i></div>
-          <div><p class="stat-label">Total</p><p class="stat-val">127</p></div>
+          <div><p class="stat-label">Total</p><p class="stat-val" id="statTotal">0</p></div>
         </article>
         <article class="stat-card">
           <div class="stat-icon tone-win"><i class="ti ti-trophy" aria-hidden="true"></i></div>
-          <div><p class="stat-label">Ganhos</p><p class="stat-val">23</p></div>
+          <div><p class="stat-label">Ganhos</p><p class="stat-val" id="statWon">0</p></div>
         </article>
         <article class="stat-card">
           <div class="stat-icon tone-lost"><i class="ti ti-x-circle" aria-hidden="true"></i></div>
-          <div><p class="stat-label">Perdidos</p><p class="stat-val">11</p></div>
+          <div><p class="stat-label">Perdidos</p><p class="stat-val" id="statLost">0</p></div>
         </article>
         <article class="stat-card">
           <div class="stat-icon tone-value"><i class="ti ti-currency-dollar" aria-hidden="true"></i></div>
-          <div><p class="stat-label">Valor total</p><p class="stat-val">R$ 84k</p></div>
+          <div><p class="stat-label">Valor total</p><p class="stat-val" id="statValue">R$ 0</p></div>
         </article>
       </div>
 
@@ -523,6 +523,26 @@
     }
 
     document.getElementById('searchInput').addEventListener('input', e => applyFilters(e.target.value));
+
+    // Recebe contagens reais do CRM via postMessage do parent (Leads.tsx)
+    function fmtBR(n) { try { return new Intl.NumberFormat('pt-BR').format(n || 0); } catch { return String(n || 0); } }
+    function fmtMoneyShort(v) {
+      v = Number(v) || 0;
+      if (v >= 1_000_000) return 'R$ ' + (v / 1_000_000).toFixed(v >= 10_000_000 ? 0 : 1) + 'M';
+      if (v >= 1000) return 'R$ ' + (v / 1000).toFixed(v >= 10_000 ? 0 : 1) + 'k';
+      return 'R$ ' + fmtBR(Math.round(v));
+    }
+    window.addEventListener('message', (ev) => {
+      const m = ev.data;
+      if (!m || m.type !== 'contatos-stats') return;
+      const setText = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+      setText('badgeCount', `${fmtBR(m.total)} carregados`);
+      setText('statTotal', fmtBR(m.total));
+      setText('statWon', fmtBR(m.won));
+      setText('statLost', fmtBR(m.lost));
+      setText('statValue', fmtMoneyShort(m.value));
+    });
+    try { window.parent.postMessage({ type: 'contatos-ready' }, '*'); } catch {}
   </script>
 </body>
 </html>
