@@ -1,0 +1,1301 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GrowOS — Central Meta WhatsApp</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.x/dist/tabler-icons.min.css">
+<style>
+:root {
+  --bg:     #050810;
+  --bg2:    #090d19;
+  --bg3:    #0d1224;
+  --bg4:    #111830;
+  --bg5:    #16203a;
+  --border: rgba(255,255,255,.055);
+  --border2:rgba(255,255,255,.11);
+  --text:   #e2eaf8;
+  --text2:  #64789c;
+  --text3:  #344260;
+  --green:  #00d97e;   --gd: rgba(0,217,126,.12);
+  --blue:   #3b82f6;   --bd: rgba(59,130,246,.14);
+  --purple: #a855f7;   --pd: rgba(168,85,247,.14);
+  --amber:  #f59e0b;   --ad: rgba(245,158,11,.14);
+  --red:    #f43f5e;   --rd: rgba(244,63,94,.14);
+  --teal:   #14b8a6;   --td: rgba(20,184,166,.13);
+  --cyan:   #22d3ee;   --cd: rgba(34,211,238,.12);
+  --r:10px; --r-sm:7px; --r-lg:16px;
+  --font:'Outfit',sans-serif; --mono:'Space Mono',monospace;
+  --sh: 0 4px 32px rgba(0,0,0,.5);
+  --sh-lg: 0 12px 56px rgba(0,0,0,.65);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden}
+body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13px;display:flex;flex-direction:column}
+
+/* ─── TOPBAR ─── */
+.topbar{height:54px;background:var(--bg2);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 24px;gap:12px;flex-shrink:0;z-index:40}
+.logo{display:flex;align-items:center;gap:8px;padding-right:18px;border-right:1px solid var(--border)}
+.logo-mark{width:30px;height:30px;border-radius:8px;background:linear-gradient(135deg,#3b82f6,#a855f7);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px;color:#fff;box-shadow:0 0 16px rgba(59,130,246,.4)}
+.logo-text{font-size:14px;font-weight:700;letter-spacing:-.3px}
+.logo-text em{color:var(--blue);font-style:normal}
+.page-info{display:flex;align-items:center;gap:8px}
+.page-icon{width:26px;height:26px;border-radius:6px;background:var(--gd);display:flex;align-items:center;justify-content:center;color:var(--green);font-size:14px}
+.page-title{font-size:13.5px;font-weight:700}
+.page-sub{font-size:10.5px;color:var(--text3);margin-top:1px}
+.meta-pill{display:inline-flex;align-items:center;gap:5px;background:linear-gradient(90deg,rgba(24,119,242,.18),rgba(24,119,242,.08));border:1px solid rgba(24,119,242,.3);border-radius:99px;padding:3px 10px;font-size:10.5px;font-weight:700;color:#4a9ef7;margin-left:6px}
+.topbar-right{margin-left:auto;display:flex;align-items:center;gap:7px}
+.icon-btn{width:30px;height:30px;border-radius:var(--r-sm);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text2);border:1px solid var(--border);background:transparent;font-size:14px;transition:.15s}
+.icon-btn:hover{background:var(--bg3);color:var(--text)}
+.user-chip{display:flex;align-items:center;gap:6px;padding:3px 10px 3px 4px;border-radius:99px;border:1px solid var(--border);background:var(--bg3);cursor:pointer}
+.user-av{width:22px;height:22px;border-radius:50%;background:var(--pd);display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:var(--purple);border:1.5px solid var(--purple)}
+.user-name{font-size:11px;font-weight:500;color:var(--text2)}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:var(--r-sm);font-size:12.5px;font-weight:600;cursor:pointer;border:none;font-family:var(--font);transition:all .15s;white-space:nowrap}
+.btn-primary{background:linear-gradient(135deg,#1877f2,#3b82f6);color:#fff;box-shadow:0 0 14px rgba(24,119,242,.35)}
+.btn-primary:hover{opacity:.88;transform:translateY(-1px)}
+.btn-green{background:linear-gradient(135deg,#00d97e,#10b981);color:#fff;box-shadow:0 0 14px rgba(0,217,126,.3)}
+.btn-green:hover{opacity:.88;transform:translateY(-1px)}
+.btn-ghost{background:transparent;color:var(--text2);border:1px solid var(--border)}
+.btn-ghost:hover{background:var(--bg3);color:var(--text)}
+.btn-amber{background:linear-gradient(135deg,#f59e0b,#fb923c);color:#fff}
+.btn i{font-size:15px}
+
+/* ─── LAYOUT ─── */
+.layout{flex:1;display:flex;overflow:hidden}
+
+/* ─── SIDEBAR ─── */
+.sidebar{width:214px;min-width:214px;background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;padding:14px 8px;gap:2px;overflow-y:auto}
+.nav-section{font-size:9px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.12em;padding:8px 10px 4px;margin-top:4px}
+.nav-item{display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:var(--r-sm);color:var(--text2);cursor:pointer;transition:.14s;font-size:12.5px;font-weight:500;position:relative}
+.nav-item:hover{background:var(--bg3);color:var(--text)}
+.nav-item.active{background:rgba(59,130,246,.1);color:var(--blue)}
+.nav-item.active::before{content:'';position:absolute;left:0;top:6px;bottom:6px;width:2.5px;background:var(--blue);border-radius:0 3px 3px 0}
+.nav-item i{font-size:16px;width:18px;text-align:center;flex-shrink:0}
+.nav-badge{margin-left:auto;font-size:9.5px;font-weight:700;padding:1px 6px;border-radius:99px}
+.nb-green{background:var(--gd);color:var(--green)}
+.nb-amber{background:var(--ad);color:var(--amber)}
+.nb-red{background:var(--rd);color:var(--red)}
+.nb-blue{background:var(--bd);color:var(--blue)}
+.status-dot{width:6px;height:6px;border-radius:50%;margin-left:auto;flex-shrink:0}
+.dot-on{background:var(--green);box-shadow:0 0 5px var(--green)}
+.dot-off{background:var(--text3)}
+.sidebar-footer{padding:10px 8px;border-top:1px solid var(--border);margin-top:auto}
+.conn-card{background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);padding:10px 12px}
+.conn-label{font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:6px}
+.conn-row{display:flex;align-items:center;gap:6px;font-size:11.5px;margin-bottom:4px}
+.conn-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+
+/* ─── CONTENT ─── */
+.content{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.panel{display:none;flex-direction:column;flex:1;overflow:hidden}
+.panel.active{display:flex}
+
+/* ─── PANEL HEADER ─── */
+.phdr{padding:18px 24px 14px;border-bottom:1px solid var(--border);background:var(--bg2);display:flex;align-items:center;gap:14px;flex-shrink:0}
+.phdr-icon{width:42px;height:42px;border-radius:var(--r);display:flex;align-items:center;justify-content:center;font-size:21px;flex-shrink:0}
+.phdr-title{font-size:17px;font-weight:800;line-height:1}
+.phdr-sub{font-size:11.5px;color:var(--text2);margin-top:4px}
+.phdr-actions{margin-left:auto;display:flex;gap:7px;align-items:center;flex-shrink:0}
+
+/* ─── INNER TABS ─── */
+.inner-tabs{display:flex;gap:2px;padding:12px 24px;border-bottom:1px solid var(--border);background:var(--bg2);flex-shrink:0}
+.inner-tab{padding:6px 14px;border-radius:var(--r-sm);font-size:12px;font-weight:600;cursor:pointer;color:var(--text2);transition:.14s;display:flex;align-items:center;gap:6px}
+.inner-tab.active{background:var(--bd);color:var(--blue)}
+.inner-tab:hover:not(.active){background:var(--bg3);color:var(--text)}
+.inner-tab i{font-size:14px}
+
+/* ─── SCROLL BODY ─── */
+.pbody{flex:1;overflow-y:auto;padding:20px 24px}
+.pbody::-webkit-scrollbar{width:5px}
+.pbody::-webkit-scrollbar-thumb{background:var(--border2);border-radius:99px}
+
+/* ─── CARDS ─── */
+.card{background:var(--bg3);border:1px solid var(--border);border-radius:var(--r-lg);padding:16px 18px;transition:.14s}
+.card:hover{border-color:var(--border2)}
+.card-sm{background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);padding:12px 14px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.sec-title{font-size:12px;font-weight:700;color:var(--text);margin-bottom:10px;display:flex;align-items:center;gap:6px;letter-spacing:-.1px}
+.sec-title i{font-size:15px}
+
+/* ─── METRICS ─── */
+.metric{background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);padding:12px 14px;border-top:2px solid transparent;transition:.14s}
+.metric:hover{border-color:var(--border2);transform:translateY(-1px)}
+.m-green{border-top-color:var(--green)}
+.m-blue{border-top-color:var(--blue)}
+.m-amber{border-top-color:var(--amber)}
+.m-red{border-top-color:var(--red)}
+.m-purple{border-top-color:var(--purple)}
+.metric-icon{width:30px;height:30px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:15px;margin-bottom:8px}
+.mi-g{background:var(--gd);color:var(--green)}
+.mi-b{background:var(--bd);color:var(--blue)}
+.mi-a{background:var(--ad);color:var(--amber)}
+.mi-r{background:var(--rd);color:var(--red)}
+.mi-p{background:var(--pd);color:var(--purple)}
+.metric-num{font-size:22px;font-weight:800;line-height:1;font-family:var(--font)}
+.metric-label{font-size:10.5px;color:var(--text2);margin-top:3px}
+.metric-trend{font-size:10px;margin-top:4px;display:flex;align-items:center;gap:3px}
+.mt-up{color:var(--green)} .mt-dn{color:var(--red)} .mt-n{color:var(--text3)}
+
+/* ─── BADGES ─── */
+.badge{display:inline-flex;align-items:center;gap:3px;padding:2px 8px;border-radius:99px;font-size:10.5px;font-weight:700}
+.bg-g{background:var(--gd);color:var(--green)}
+.bg-b{background:var(--bd);color:var(--blue)}
+.bg-a{background:var(--ad);color:var(--amber)}
+.bg-r{background:var(--rd);color:var(--red)}
+.bg-p{background:var(--pd);color:var(--purple)}
+.bg-t{background:var(--td);color:var(--teal)}
+.bg-gray{background:var(--bg5);color:var(--text2)}
+.bg-meta{background:rgba(24,119,242,.15);color:#4a9ef7}
+
+/* ─── TEMPLATE CARD ─── */
+.tpl-card{background:var(--bg3);border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden;transition:.18s;cursor:pointer}
+.tpl-card:hover{border-color:var(--border2);transform:translateY(-2px);box-shadow:var(--sh)}
+.tpl-card.approved{border-top:3px solid var(--green)}
+.tpl-card.pending{border-top:3px solid var(--amber)}
+.tpl-card.rejected{border-top:3px solid var(--red)}
+.tpl-header{padding:12px 14px 10px;display:flex;align-items:flex-start;gap:8px}
+.tpl-icon{width:34px;height:34px;border-radius:var(--r-sm);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.tpl-name{font-size:13px;font-weight:700;color:var(--text);letter-spacing:-.1px;font-family:var(--mono)}
+.tpl-cat{font-size:10px;color:var(--text3);margin-top:2px}
+.tpl-body{padding:0 14px 10px;font-size:11.5px;color:var(--text2);line-height:1.6;font-style:italic}
+.tpl-footer{padding:8px 14px;border-top:1px solid var(--border);display:flex;align-items:center;gap:6px;background:var(--bg4)}
+.tpl-actions{display:flex;gap:5px;margin-left:auto}
+.tpl-act{width:26px;height:26px;border-radius:5px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text2);font-size:13px;border:1px solid var(--border);background:transparent;transition:.14s}
+.tpl-act:hover{background:var(--bg3);color:var(--text)}
+.tpl-act.del:hover{color:var(--red);border-color:var(--red)}
+/* variable highlight */
+.var-highlight{background:rgba(245,158,11,.18);color:var(--amber);padding:1px 4px;border-radius:4px;font-family:var(--mono);font-size:10.5px}
+
+/* ─── WA PREVIEW BUBBLE ─── */
+.wa-preview{background:#0b141a;border-radius:var(--r-lg);padding:16px;min-height:160px}
+.wa-bubble{background:#1f2c34;border-radius:0 10px 10px 10px;padding:10px 12px;max-width:260px;position:relative}
+.wa-bubble::before{content:'';position:absolute;top:0;left:-8px;width:0;height:0;border-top:0 solid transparent;border-right:8px solid #1f2c34;border-bottom:8px solid transparent}
+.wa-bubble-media{background:#2a3942;border-radius:6px;padding:20px;text-align:center;margin-bottom:8px;color:var(--text3);font-size:20px}
+.wa-bubble-title{font-size:12.5px;font-weight:700;color:#e9edef;margin-bottom:5px}
+.wa-bubble-body{font-size:12px;color:#c4c9cc;line-height:1.55;white-space:pre-wrap}
+.wa-bubble-footer{font-size:10.5px;color:#8696a0;margin-top:5px;font-style:italic}
+.wa-bubble-time{font-size:10px;color:#8696a0;text-align:right;margin-top:5px;display:flex;align-items:center;justify-content:flex-end;gap:3px}
+.wa-btn-row{display:flex;flex-direction:column;gap:4px;margin-top:6px}
+.wa-btn{background:#1f2c34;border-radius:6px;padding:7px 12px;text-align:center;font-size:11.5px;color:#00a884;font-weight:600;display:flex;align-items:center;justify-content:center;gap:5px}
+
+/* ─── FLOW BUILDER CANVAS ─── */
+.flow-canvas{background:var(--bg);border:1px solid var(--border);border-radius:var(--r-lg);min-height:280px;position:relative;overflow:hidden;display:flex;align-items:center;padding:20px}
+.flow-canvas-bg{position:absolute;inset:0;background-image:radial-gradient(circle,var(--border) 1px,transparent 1px);background-size:22px 22px;pointer-events:none}
+.flow-node{background:var(--bg3);border:1.5px solid var(--border2);border-radius:var(--r);padding:10px 14px;min-width:130px;position:relative;flex-shrink:0;transition:.15s;cursor:pointer}
+.flow-node:hover{transform:translateY(-2px);box-shadow:var(--sh)}
+.fn-trigger{border-color:rgba(0,217,126,.4);background:rgba(0,217,126,.06)}
+.fn-delay{border-color:rgba(20,184,166,.4);background:rgba(20,184,166,.06)}
+.fn-condition{border-color:rgba(245,158,11,.4);background:rgba(245,158,11,.06)}
+.fn-message{border-color:rgba(59,130,246,.4);background:rgba(59,130,246,.06)}
+.fn-action{border-color:rgba(168,85,247,.4);background:rgba(168,85,247,.06)}
+.fn-end{border-color:rgba(244,63,94,.4);background:rgba(244,63,94,.06)}
+.fn-type{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px}
+.fn-title{font-size:11.5px;font-weight:700;color:var(--text)}
+.fn-desc{font-size:10px;color:var(--text3);margin-top:2px}
+.fn-connector-r{width:10px;height:10px;border-radius:50%;position:absolute;top:50%;right:-5px;transform:translateY(-50%);border:2px solid #fff}
+.fn-connector-l{width:10px;height:10px;border-radius:50%;position:absolute;top:50%;left:-5px;transform:translateY(-50%);border:2px solid #fff}
+.flow-arrow{color:var(--text3);padding:0 8px;font-size:20px;flex-shrink:0}
+
+/* ─── FORM FIELDS ─── */
+.field-label{font-size:10.5px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.07em;display:block;margin-bottom:5px}
+.field-input{width:100%;background:var(--bg4);border:1px solid var(--border);border-radius:var(--r-sm);padding:8px 12px;color:var(--text);font-size:12.5px;outline:none;font-family:var(--font);transition:.14s}
+.field-input:focus{border-color:var(--blue);background:var(--bg5)}
+.field-select{width:100%;background:var(--bg4);border:1px solid var(--border);border-radius:var(--r-sm);padding:8px 12px;color:var(--text);font-size:12.5px;outline:none;font-family:var(--font);appearance:none;cursor:pointer}
+.field-textarea{width:100%;background:var(--bg4);border:1px solid var(--border);border-radius:var(--r-sm);padding:8px 12px;color:var(--text);font-size:12.5px;outline:none;font-family:var(--font);resize:vertical;min-height:80px;line-height:1.6}
+.field-textarea:focus,.field-input:focus,.field-select:focus{border-color:var(--blue)}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
+.field-group{margin-bottom:12px}
+.char-count{font-size:10px;color:var(--text3);text-align:right;margin-top:3px}
+.var-hint{font-size:10.5px;color:var(--text3);margin-top:4px}
+.var-tag{display:inline-block;background:var(--ad);color:var(--amber);padding:1px 7px;border-radius:4px;font-family:var(--mono);font-size:10px;cursor:pointer;margin:2px;border:1px solid rgba(245,158,11,.2)}
+.var-tag:hover{background:var(--amber);color:#fff}
+
+/* ─── HEADER TYPE BUTTONS ─── */
+.htype-grid{display:flex;gap:6px;flex-wrap:wrap}
+.htype-btn{padding:6px 14px;border-radius:var(--r-sm);font-size:11.5px;font-weight:600;cursor:pointer;border:1px solid var(--border);background:var(--bg4);color:var(--text2);transition:.14s;display:flex;align-items:center;gap:5px}
+.htype-btn.active{border-color:var(--blue);background:var(--bd);color:var(--blue)}
+.htype-btn:hover:not(.active){border-color:var(--border2);color:var(--text)}
+
+/* ─── CTA BUTTONS in form ─── */
+.cta-type-row{display:flex;gap:7px}
+.cta-type{flex:1;padding:9px 10px;border-radius:var(--r-sm);font-size:11.5px;font-weight:600;cursor:pointer;border:1px solid var(--border);background:var(--bg4);color:var(--text2);transition:.14s;text-align:center}
+.cta-type.active{border-color:var(--green);background:var(--gd);color:var(--green)}
+.cta-type i{font-size:14px;display:block;margin-bottom:3px}
+
+/* ─── BUTTON ROWS EDITOR ─── */
+.btn-editor-row{background:var(--bg5);border:1px solid var(--border);border-radius:var(--r-sm);padding:8px 12px;display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.btn-editor-type{font-size:10px;font-weight:700;padding:2px 8px;border-radius:99px;flex-shrink:0}
+
+/* ─── FLOW LIST ─── */
+.flow-item{background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);padding:12px 14px;display:flex;align-items:center;gap:10px;cursor:pointer;transition:.14s;margin-bottom:7px}
+.flow-item:hover{border-color:var(--border2);background:var(--bg4)}
+.flow-item.fi-active{border-color:rgba(0,217,126,.3);background:rgba(0,217,126,.04)}
+.fi-icon{width:34px;height:34px;border-radius:var(--r-sm);display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0}
+.fi-name{font-size:12.5px;font-weight:700;color:var(--text)}
+.fi-meta{font-size:10.5px;color:var(--text3);display:flex;gap:8px;margin-top:2px}
+.fi-meta span{display:flex;align-items:center;gap:3px}
+
+/* ─── ANALYTICS TABLE ─── */
+.atbl{width:100%;border-collapse:collapse}
+.atbl th{text-align:left;font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;padding:7px 12px;border-bottom:1px solid var(--border)}
+.atbl td{padding:9px 12px;border-bottom:1px solid var(--border);font-size:12px;vertical-align:middle}
+.atbl tr:hover td{background:var(--bg4)}
+.atbl tr:last-child td{border-bottom:none}
+.mono{font-family:var(--mono);font-size:11px}
+
+/* ─── PROGRESS ─── */
+.progress{height:4px;background:var(--bg5);border-radius:99px;overflow:hidden}
+.progress-fill{height:100%;border-radius:99px;transition:width .4s}
+
+/* ─── TOGGLE ─── */
+.toggle{width:36px;height:19px;border-radius:99px;cursor:pointer;position:relative;transition:.18s;border:none;flex-shrink:0}
+.toggle.on{background:var(--green)}
+.toggle.off{background:var(--bg5)}
+.toggle::after{content:'';position:absolute;top:2px;width:15px;height:15px;border-radius:50%;background:#fff;transition:.18s;box-shadow:0 1px 3px rgba(0,0,0,.3)}
+.toggle.on::after{left:19px}
+.toggle.off::after{left:2px}
+
+/* ─── META CONNECTION STATUS ─── */
+.meta-status-bar{background:linear-gradient(90deg,rgba(24,119,242,.1),rgba(24,119,242,.04));border:1px solid rgba(24,119,242,.2);border-radius:var(--r);padding:10px 14px;display:flex;align-items:center;gap:10px;margin-bottom:16px}
+.meta-logo{font-size:20px;flex-shrink:0}
+.meta-status-text{flex:1}
+.meta-title{font-size:12.5px;font-weight:700;color:#4a9ef7}
+.meta-sub{font-size:11px;color:var(--text2);margin-top:1px}
+
+/* ─── SCROLLBAR ─── */
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:99px}
+
+/* ─── MODAL ─── */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.7);display:none;align-items:center;justify-content:center;z-index:600;backdrop-filter:blur(6px)}
+.modal-bg.show{display:flex;animation:mfade .15s}
+@keyframes mfade{from{opacity:0}to{opacity:1}}
+.modal{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--r-lg);width:860px;max-height:88vh;display:flex;overflow:hidden;box-shadow:var(--sh-lg);animation:mslide .18s cubic-bezier(.4,0,.2,1)}
+@keyframes mslide{from{transform:translateY(12px);opacity:0}to{transform:none;opacity:1}}
+.modal-left{flex:1;display:flex;flex-direction:column;overflow:hidden;border-right:1px solid var(--border)}
+.modal-right{width:280px;flex-shrink:0;display:flex;flex-direction:column;background:var(--bg3)}
+.modal-header{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;flex-shrink:0}
+.modal-title{font-size:15px;font-weight:800;flex:1}
+.modal-close{width:26px;height:26px;border-radius:6px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text2);border:1px solid var(--border);background:transparent;font-size:14px}
+.modal-close:hover{background:var(--bg3);color:var(--text)}
+.modal-body{flex:1;overflow-y:auto;padding:18px 20px}
+.modal-footer{padding:12px 20px;border-top:1px solid var(--border);display:flex;gap:7px;justify-content:flex-end;flex-shrink:0}
+.modal-preview-header{padding:12px 14px;border-bottom:1px solid var(--border);font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.07em}
+.modal-preview-body{flex:1;overflow-y:auto;padding:14px}
+.modal-steps{display:flex;gap:4px;padding:0 20px 12px;flex-shrink:0}
+.step-pill{flex:1;padding:5px 8px;border-radius:5px;font-size:10.5px;font-weight:600;text-align:center;cursor:pointer;border:1px solid var(--border);color:var(--text3);transition:.14s}
+.step-pill.done{background:var(--gd);border-color:rgba(0,217,126,.3);color:var(--green)}
+.step-pill.active{background:var(--bd);border-color:rgba(59,130,246,.3);color:var(--blue)}
+
+/* ─── API STATUS INDICATOR ─── */
+.api-status{display:inline-flex;align-items:center;gap:5px;font-size:10.5px;font-weight:600;padding:3px 9px;border-radius:99px}
+.api-live{background:var(--gd);color:var(--green);border:1px solid rgba(0,217,126,.2)}
+.api-live::before{content:'';display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 5px var(--green);animation:apiPulse 1.5s ease-in-out infinite}
+@keyframes apiPulse{0%,100%{opacity:1}50%{opacity:.4}}
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="logo">
+    <div class="logo-mark">G</div>
+    <div class="logo-text">Grow<em>OS</em></div>
+  </div>
+  <div class="page-info">
+    <div class="page-icon"><i class="ti ti-brand-whatsapp"></i></div>
+    <div>
+      <div class="page-title">Central Meta WhatsApp</div>
+      <div class="page-sub">Templates oficiais, fluxos e analytics</div>
+    </div>
+    <div class="meta-pill"><i class="ti ti-brand-facebook" style="font-size:12px"></i>Meta Business API</div>
+  </div>
+  <div class="topbar-right">
+    <div class="api-status api-live">API Conectada</div>
+    <div class="icon-btn" title="Sincronizar"><i class="ti ti-refresh"></i></div>
+    <div class="icon-btn" title="Notificações"><i class="ti ti-bell"></i></div>
+    <div class="user-chip">
+      <div class="user-av">RC</div>
+      <span class="user-name">Rafael Costa</span>
+    </div>
+  </div>
+</div>
+
+<!-- LAYOUT -->
+<div class="layout">
+
+<!-- SIDEBAR -->
+<div class="sidebar">
+  <div class="nav-section">WhatsApp</div>
+  <div class="nav-item active" onclick="switchPanel('dashboard',this)">
+    <i class="ti ti-chart-bar"></i>Dashboard
+    <div class="status-dot dot-on"></div>
+  </div>
+  <div class="nav-item" onclick="switchPanel('templates',this)">
+    <i class="ti ti-file-text"></i>Templates
+    <span class="nav-badge nb-green">6 aprovados</span>
+  </div>
+  <div class="nav-item" onclick="switchPanel('fluxos',this)">
+    <i class="ti ti-workflow"></i>Fluxos
+    <span class="nav-badge nb-blue">3 ativos</span>
+  </div>
+  <div class="nav-section">Disparos</div>
+  <div class="nav-item" onclick="switchPanel('campanhas',this)">
+    <i class="ti ti-send"></i>Campanhas
+    <span class="nav-badge nb-amber">2</span>
+  </div>
+  <div class="nav-item" onclick="switchPanel('agenda',this)">
+    <i class="ti ti-calendar-event"></i>Agendamentos
+  </div>
+  <div class="nav-section">Analytics</div>
+  <div class="nav-item" onclick="switchPanel('analytics',this)">
+    <i class="ti ti-chart-pie"></i>Métricas Meta
+  </div>
+  <div class="nav-item" onclick="switchPanel('custos',this)">
+    <i class="ti ti-coin"></i>Custos & Tarifas
+  </div>
+  <div class="nav-section">Config</div>
+  <div class="nav-item" onclick="switchPanel('config',this)">
+    <i class="ti ti-settings-2"></i>App & Credenciais
+    <div class="status-dot dot-on"></div>
+  </div>
+  <div class="sidebar-footer">
+    <div class="conn-card">
+      <div class="conn-label">Conexão Ativa</div>
+      <div class="conn-row"><div class="conn-dot" style="background:var(--green)"></div><span style="color:var(--text2)">WABA ID: <span style="font-family:var(--mono);font-size:10.5px;color:var(--text)">108474...</span></span></div>
+      <div class="conn-row"><div class="conn-dot" style="background:var(--blue)"></div><span style="color:var(--text2)">App ID: <span style="font-family:var(--mono);font-size:10.5px;color:var(--text)">1935320...</span></span></div>
+      <div class="conn-row"><div class="conn-dot" style="background:var(--amber)"></div><span style="color:var(--text2)">Tier: <span style="color:var(--amber);font-weight:600">1.000/dia</span></span></div>
+    </div>
+  </div>
+</div>
+
+<!-- CONTENT AREA -->
+<div class="content">
+
+<!-- ═══ DASHBOARD ═══ -->
+<div class="panel active" id="panel-dashboard">
+  <div class="phdr">
+    <div class="phdr-icon" style="background:var(--gd);color:var(--green)"><i class="ti ti-chart-bar"></i></div>
+    <div>
+      <div class="phdr-title">Dashboard WhatsApp Meta</div>
+      <div class="phdr-sub">Performance geral, entregas e conversas ativas</div>
+    </div>
+    <div class="phdr-actions">
+      <button class="btn btn-ghost" style="font-size:11.5px"><i class="ti ti-download"></i>Exportar</button>
+      <button class="btn btn-primary"><i class="ti ti-refresh"></i>Sincronizar Meta</button>
+    </div>
+  </div>
+  <div class="pbody">
+    <!-- Meta status bar -->
+    <div class="meta-status-bar">
+      <div class="meta-logo">🟦</div>
+      <div class="meta-status-text">
+        <div class="meta-title">Meta Business App: GrowOS CRM — conectado e ativo</div>
+        <div class="meta-sub">Phone Number ID: 595392426979627 · Account: wazesales · Tier: 1.000 conversas/dia · Qualidade do número: <span style="color:var(--green);font-weight:600">ALTA</span></div>
+      </div>
+      <button class="btn btn-ghost" style="font-size:11px"><i class="ti ti-external-link"></i>Meta Business Suite</button>
+    </div>
+
+    <!-- Metrics -->
+    <div class="grid4" style="margin-bottom:18px">
+      <div class="metric m-green">
+        <div class="metric-icon mi-g"><i class="ti ti-send"></i></div>
+        <div class="metric-num" style="color:var(--green)">12.4k</div>
+        <div class="metric-label">Mensagens enviadas</div>
+        <div class="metric-trend mt-up"><i class="ti ti-trending-up" style="font-size:11px"></i>+23% este mês</div>
+      </div>
+      <div class="metric m-blue">
+        <div class="metric-icon mi-b"><i class="ti ti-eye"></i></div>
+        <div class="metric-num" style="color:var(--blue)">78%</div>
+        <div class="metric-label">Taxa de visualização</div>
+        <div class="metric-trend mt-up"><i class="ti ti-trending-up" style="font-size:11px"></i>acima da média</div>
+      </div>
+      <div class="metric m-amber">
+        <div class="metric-icon mi-a"><i class="ti ti-message-circle"></i></div>
+        <div class="metric-num" style="color:var(--amber)">32%</div>
+        <div class="metric-label">Taxa de resposta</div>
+        <div class="metric-trend mt-up"><i class="ti ti-trending-up" style="font-size:11px"></i>+5% vs mês ant.</div>
+      </div>
+      <div class="metric m-red">
+        <div class="metric-icon mi-r"><i class="ti ti-coin"></i></div>
+        <div class="metric-num" style="color:var(--amber)">R$1.2k</div>
+        <div class="metric-label">Custo total</div>
+        <div class="metric-trend mt-n">~R$0,097/msg</div>
+      </div>
+    </div>
+
+    <div class="grid2">
+      <!-- Templates status -->
+      <div class="card">
+        <div class="sec-title"><i class="ti ti-file-text" style="color:var(--blue)"></i>Status dos Templates</div>
+        <div style="display:flex;flex-direction:column;gap:7px">
+          <div style="display:flex;align-items:center;justify-content:space-between">
+            <span class="badge bg-g"><i class="ti ti-circle-check" style="font-size:10px"></i>APPROVED</span>
+            <div style="display:flex;align-items:center;gap:8px;flex:1;margin:0 12px">
+              <div class="progress" style="flex:1"><div class="progress-fill" style="width:75%;background:var(--green)"></div></div>
+            </div>
+            <span style="font-family:var(--mono);font-size:12px;color:var(--text)">6</span>
+          </div>
+          <div style="display:flex;align-items:center;justify-content:space-between">
+            <span class="badge bg-a">PENDING</span>
+            <div style="display:flex;align-items:center;gap:8px;flex:1;margin:0 12px">
+              <div class="progress" style="flex:1"><div class="progress-fill" style="width:12%;background:var(--amber)"></div></div>
+            </div>
+            <span style="font-family:var(--mono);font-size:12px;color:var(--text)">1</span>
+          </div>
+          <div style="display:flex;align-items:center;justify-content:space-between">
+            <span class="badge bg-r">REJECTED</span>
+            <div style="display:flex;align-items:center;gap:8px;flex:1;margin:0 12px">
+              <div class="progress" style="flex:1"><div class="progress-fill" style="width:12%;background:var(--red)"></div></div>
+            </div>
+            <span style="font-family:var(--mono);font-size:12px;color:var(--text)">1</span>
+          </div>
+        </div>
+        <button class="btn btn-ghost" style="width:100%;justify-content:center;margin-top:12px;font-size:11.5px" onclick="switchPanel('templates',document.querySelector('[onclick*=templates]'))"><i class="ti ti-external-link"></i>Gerenciar Templates</button>
+      </div>
+      <!-- Recent activity -->
+      <div class="card">
+        <div class="sec-title"><i class="ti ti-activity" style="color:var(--purple)"></i>Atividade Recente</div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <div style="display:flex;gap:9px;align-items:flex-start">
+            <div style="width:7px;height:7px;border-radius:50%;background:var(--green);margin-top:5px;flex-shrink:0"></div>
+            <div><div style="font-size:12px;color:var(--text)">Template <span style="font-family:var(--mono);color:var(--green)">boas_vindas</span> aprovado</div><div style="font-size:10.5px;color:var(--text3)">há 12min</div></div>
+          </div>
+          <div style="display:flex;gap:9px;align-items:flex-start">
+            <div style="width:7px;height:7px;border-radius:50%;background:var(--blue);margin-top:5px;flex-shrink:0"></div>
+            <div><div style="font-size:12px;color:var(--text)">4.200 msgs entregues — Campanha Black Friday</div><div style="font-size:10.5px;color:var(--text3)">há 2h</div></div>
+          </div>
+          <div style="display:flex;gap:9px;align-items:flex-start">
+            <div style="width:7px;height:7px;border-radius:50%;background:var(--amber);margin-top:5px;flex-shrink:0"></div>
+            <div><div style="font-size:12px;color:var(--text)">Fluxo <span style="font-family:var(--mono);color:var(--amber)">follow_up_d3</span> executou 89 vezes</div><div style="font-size:10.5px;color:var(--text3)">há 4h</div></div>
+          </div>
+          <div style="display:flex;gap:9px;align-items:flex-start">
+            <div style="width:7px;height:7px;border-radius:50%;background:var(--red);margin-top:5px;flex-shrink:0"></div>
+            <div><div style="font-size:12px;color:var(--text)">Template <span style="font-family:var(--mono);color:var(--red)">promo_teste</span> rejeitado pela Meta</div><div style="font-size:10.5px;color:var(--text3)">há 6h</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Campaigns summary -->
+    <div class="sec-title" style="margin-top:18px"><i class="ti ti-speakerphone" style="color:var(--amber)"></i>Campanhas Recentes</div>
+    <table class="atbl" style="margin-top:8px">
+      <thead><tr><th>Campanha</th><th>Template</th><th>Enviados</th><th>Visualiz.</th><th>Respostas</th><th>Custo</th><th>Status</th></tr></thead>
+      <tbody>
+        <tr><td style="font-weight:600">Black Friday 2025</td><td><span class="mono">promo_black_friday</span></td><td><span class="mono">4.200</span></td><td><span style="color:var(--teal)">82%</span></td><td><span style="color:var(--purple)">38%</span></td><td><span class="mono" style="color:var(--amber)">R$ 525</span></td><td><span class="badge bg-g">concluída</span></td></tr>
+        <tr><td style="font-weight:600">Reengajamento Leads Frios</td><td><span class="mono">reeng_01</span></td><td><span class="mono">1.800</span></td><td><span style="color:var(--teal)">61%</span></td><td><span style="color:var(--purple)">24%</span></td><td><span class="mono" style="color:var(--amber)">R$ 225</span></td><td><span class="badge bg-b">em andamento</span></td></tr>
+        <tr><td style="font-weight:600">Boas-vindas Novos Leads</td><td><span class="mono">boas_vindas</span></td><td><span class="mono">247</span></td><td><span style="color:var(--teal)">91%</span></td><td><span style="color:var(--purple)">44%</span></td><td><span class="mono" style="color:var(--green)">R$ 15</span></td><td><span class="badge bg-g">ativo/fluxo</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ═══ TEMPLATES ═══ -->
+<div class="panel" id="panel-templates">
+  <div class="phdr">
+    <div class="phdr-icon" style="background:var(--bd);color:var(--blue)"><i class="ti ti-file-text"></i></div>
+    <div>
+      <div class="phdr-title">Templates Oficiais Meta</div>
+      <div class="phdr-sub">Crie, envie para aprovação e gerencie templates da Meta Business API</div>
+    </div>
+    <div class="phdr-actions">
+      <button class="btn btn-ghost" style="font-size:11.5px"><i class="ti ti-refresh"></i>Sincronizar Meta</button>
+      <button class="btn btn-green" onclick="openNewTemplate()"><i class="ti ti-plus"></i>Novo Template</button>
+    </div>
+  </div>
+  <div class="inner-tabs" id="tplTabs">
+    <div class="inner-tab active" onclick="switchInnerTab('tplAll',this,'tplTabs')"><i class="ti ti-layout-grid"></i>Todos (8)</div>
+    <div class="inner-tab" onclick="switchInnerTab('tplApproved',this,'tplTabs')"><i class="ti ti-circle-check"></i>Aprovados (6)</div>
+    <div class="inner-tab" onclick="switchInnerTab('tplPending',this,'tplTabs')"><i class="ti ti-clock"></i>Pendentes (1)</div>
+    <div class="inner-tab" onclick="switchInnerTab('tplRejected',this,'tplTabs')"><i class="ti ti-x"></i>Rejeitados (1)</div>
+  </div>
+  <div class="pbody">
+    <!-- INFO META -->
+    <div style="background:rgba(24,119,242,.07);border:1px solid rgba(24,119,242,.2);border-radius:var(--r);padding:10px 14px;display:flex;align-items:center;gap:10px;margin-bottom:16px">
+      <i class="ti ti-info-circle" style="color:#4a9ef7;font-size:17px;flex-shrink:0"></i>
+      <div style="font-size:11.5px;color:var(--text2);flex:1">Templates são enviados diretamente à Meta via API. Após envio, o processo de aprovação leva <strong style="color:var(--text)">de alguns minutos a horas</strong>. Templates APPROVED ficam disponíveis para uso em campanhas e fluxos automaticamente.</div>
+      <a href="https://business.facebook.com/wa/manage/message-templates/" target="_blank" class="btn btn-ghost" style="font-size:11px;padding:5px 10px"><i class="ti ti-external-link"></i>Meta Manager</a>
+    </div>
+
+    <!-- Templates grid -->
+    <div id="tplAll" class="tpl-grid-panel">
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px">
+
+        <!-- APPROVED -->
+        <div class="tpl-card approved">
+          <div class="tpl-header">
+            <div class="tpl-icon" style="background:var(--gd);color:var(--green)"><i class="ti ti-hand-click"></i></div>
+            <div style="flex:1">
+              <div class="tpl-name">boas_vindas</div>
+              <div class="tpl-cat" style="display:flex;gap:4px;margin-top:3px"><span class="badge bg-g" style="font-size:9.5px">APPROVED</span><span class="badge bg-meta" style="font-size:9.5px">MARKETING</span></div>
+            </div>
+          </div>
+          <div class="tpl-body">Olá <span class="var-highlight">{{1}}</span>! 👋<br>Temos uma oferta especial para você...</div>
+          <div class="tpl-footer">
+            <span style="font-size:10px;color:var(--text3)">pt_BR · <span style="font-family:var(--mono)">1.240</span> envios</span>
+            <div class="tpl-actions">
+              <div class="tpl-act" title="Visualizar"><i class="ti ti-eye"></i></div>
+              <div class="tpl-act" title="Duplicar"><i class="ti ti-copy"></i></div>
+              <div class="tpl-act" title="Usar em campanha" style="color:var(--green)"><i class="ti ti-send"></i></div>
+              <div class="tpl-act del" title="Deletar"><i class="ti ti-trash"></i></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="tpl-card approved">
+          <div class="tpl-header">
+            <div class="tpl-icon" style="background:var(--bd);color:var(--blue)"><i class="ti ti-phone-call"></i></div>
+            <div style="flex:1">
+              <div class="tpl-name">ola_tudo_bem</div>
+              <div class="tpl-cat" style="display:flex;gap:4px;margin-top:3px"><span class="badge bg-g" style="font-size:9.5px">APPROVED</span><span class="badge bg-meta" style="font-size:9.5px">MARKETING</span></div>
+            </div>
+          </div>
+          <div class="tpl-body">Olá <span class="var-highlight">{{1}}</span>! Como você está? Aqui é da equipe <span class="var-highlight">{{2}}</span>...</div>
+          <div class="tpl-footer">
+            <span style="font-size:10px;color:var(--text3)">pt_BR · <span style="font-family:var(--mono)">892</span> envios</span>
+            <div class="tpl-actions">
+              <div class="tpl-act"><i class="ti ti-eye"></i></div>
+              <div class="tpl-act"><i class="ti ti-copy"></i></div>
+              <div class="tpl-act" style="color:var(--green)"><i class="ti ti-send"></i></div>
+              <div class="tpl-act del"><i class="ti ti-trash"></i></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="tpl-card approved">
+          <div class="tpl-header">
+            <div class="tpl-icon" style="background:var(--pd);color:var(--purple)"><i class="ti ti-star"></i></div>
+            <div style="flex:1">
+              <div class="tpl-name">pois_ligacao</div>
+              <div class="tpl-cat" style="display:flex;gap:4px;margin-top:3px"><span class="badge bg-g" style="font-size:9.5px">APPROVED</span><span class="badge bg-meta" style="font-size:9.5px">MARKETING</span></div>
+            </div>
+          </div>
+          <div class="tpl-body">Ei <span class="var-highlight">{{1}}</span>! Que tal conversarmos sobre como podemos ajudar <span class="var-highlight">{{2}}</span>?</div>
+          <div class="tpl-footer">
+            <span style="font-size:10px;color:var(--text3)">pt_BR · <span style="font-family:var(--mono)">431</span> envios</span>
+            <div class="tpl-actions">
+              <div class="tpl-act"><i class="ti ti-eye"></i></div>
+              <div class="tpl-act"><i class="ti ti-copy"></i></div>
+              <div class="tpl-act" style="color:var(--green)"><i class="ti ti-send"></i></div>
+              <div class="tpl-act del"><i class="ti ti-trash"></i></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="tpl-card approved">
+          <div class="tpl-header">
+            <div class="tpl-icon" style="background:var(--td);color:var(--teal)"><i class="ti ti-bell"></i></div>
+            <div style="flex:1">
+              <div class="tpl-name">hello_world</div>
+              <div class="tpl-cat" style="display:flex;gap:4px;margin-top:3px"><span class="badge bg-g" style="font-size:9.5px">APPROVED</span><span class="badge bg-t" style="font-size:9.5px">UTILITY</span></div>
+            </div>
+          </div>
+          <div class="tpl-body">Hello! This is a test message. Your code is <span class="var-highlight">{{1}}</span>.</div>
+          <div class="tpl-footer">
+            <span style="font-size:10px;color:var(--text3)">en_US · <span style="font-family:var(--mono)">12</span> envios</span>
+            <div class="tpl-actions">
+              <div class="tpl-act"><i class="ti ti-eye"></i></div>
+              <div class="tpl-act"><i class="ti ti-copy"></i></div>
+              <div class="tpl-act" style="color:var(--green)"><i class="ti ti-send"></i></div>
+              <div class="tpl-act del"><i class="ti ti-trash"></i></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- PENDING -->
+        <div class="tpl-card pending">
+          <div class="tpl-header">
+            <div class="tpl-icon" style="background:var(--ad);color:var(--amber)"><i class="ti ti-clock"></i></div>
+            <div style="flex:1">
+              <div class="tpl-name">promo_verao_25</div>
+              <div class="tpl-cat" style="display:flex;gap:4px;margin-top:3px"><span class="badge bg-a" style="font-size:9.5px">PENDING</span><span class="badge bg-meta" style="font-size:9.5px">MARKETING</span></div>
+            </div>
+          </div>
+          <div class="tpl-body">🌞 Olá <span class="var-highlight">{{1}}</span>! Nossas promoções de verão chegaram! Aproveite <span class="var-highlight">{{2}}</span>% de desconto...</div>
+          <div class="tpl-footer">
+            <span style="font-size:10px;color:var(--amber)"><i class="ti ti-clock" style="font-size:11px"></i>Aguardando aprovação Meta</span>
+            <div class="tpl-actions">
+              <div class="tpl-act"><i class="ti ti-eye"></i></div>
+              <div class="tpl-act del"><i class="ti ti-trash"></i></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- REJECTED -->
+        <div class="tpl-card rejected">
+          <div class="tpl-header">
+            <div class="tpl-icon" style="background:var(--rd);color:var(--red)"><i class="ti ti-x"></i></div>
+            <div style="flex:1">
+              <div class="tpl-name">teste</div>
+              <div class="tpl-cat" style="display:flex;gap:4px;margin-top:3px"><span class="badge bg-r" style="font-size:9.5px">REJECTED</span><span class="badge bg-meta" style="font-size:9.5px">MARKETING</span></div>
+            </div>
+          </div>
+          <div class="tpl-body" style="color:var(--red);opacity:.7">Template rejeitado pela Meta. Verifique as políticas de uso e corrija o conteúdo.</div>
+          <div class="tpl-footer">
+            <span style="font-size:10px;color:var(--red)"><i class="ti ti-alert-circle" style="font-size:11px"></i>Violação de política</span>
+            <div class="tpl-actions">
+              <div class="tpl-act" title="Editar e reenviar" style="color:var(--amber)"><i class="ti ti-edit"></i></div>
+              <div class="tpl-act del"><i class="ti ti-trash"></i></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ADD NEW CARD -->
+        <div class="tpl-card" style="border-style:dashed;border-color:var(--border2);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:8px;min-height:140px;cursor:pointer" onclick="openNewTemplate()">
+          <div style="width:40px;height:40px;border-radius:50%;background:var(--bg4);border:1.5px dashed var(--border2);display:flex;align-items:center;justify-content:center;color:var(--text3);font-size:20px"><i class="ti ti-plus"></i></div>
+          <div style="font-size:12px;font-weight:600;color:var(--text3)">Criar novo template</div>
+          <div style="font-size:10.5px;color:var(--text3)">Enviar direto para Meta API</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ FLUXOS ═══ -->
+<div class="panel" id="panel-fluxos">
+  <div class="phdr">
+    <div class="phdr-icon" style="background:var(--gd);color:var(--green)"><i class="ti ti-workflow"></i></div>
+    <div>
+      <div class="phdr-title">Fluxos de Mensagem</div>
+      <div class="phdr-sub">Sequências automáticas usando templates aprovados pela Meta</div>
+    </div>
+    <div class="phdr-actions">
+      <button class="btn btn-ghost" style="font-size:11.5px"><i class="ti ti-template"></i>Templates</button>
+      <button class="btn btn-green"><i class="ti ti-plus"></i>Novo Fluxo</button>
+    </div>
+  </div>
+  <div class="pbody">
+    <!-- Alert -->
+    <div style="background:rgba(245,158,11,.07);border:1px solid rgba(245,158,11,.22);border-radius:var(--r);padding:10px 14px;display:flex;align-items:center;gap:10px;margin-bottom:16px">
+      <i class="ti ti-info-circle" style="color:var(--amber);font-size:16px;flex-shrink:0"></i>
+      <div style="font-size:11.5px;color:var(--text2)">Fluxos usam templates <strong style="color:var(--green)">APPROVED</strong> da Meta. Cada nó de mensagem deve ter um template aprovado vinculado. Mensagens fora do template padrão só funcionam dentro da janela de 24h de resposta.</div>
+    </div>
+
+    <div class="grid2">
+      <!-- Flow list -->
+      <div>
+        <div class="sec-title"><i class="ti ti-list" style="color:var(--text2)"></i>Seus fluxos (4)</div>
+
+        <div class="flow-item fi-active" onclick="selectFlow('boas-vindas')">
+          <div class="fi-icon" style="background:var(--gd);color:var(--green)"><i class="ti ti-hand-click"></i></div>
+          <div style="flex:1">
+            <div class="fi-name">Boas-vindas Novo Lead</div>
+            <div class="fi-meta"><span><i class="ti ti-bolt"></i>novo_lead</span><span><i class="ti ti-device-analytics"></i>3 nós</span><span><i class="ti ti-users"></i>247 execuções</span></div>
+          </div>
+          <span class="badge bg-g">ativo</span>
+          <div class="toggle on" onclick="event.stopPropagation();this.classList.toggle('on');this.classList.toggle('off')"></div>
+        </div>
+
+        <div class="flow-item fi-active" onclick="selectFlow('follow-up')">
+          <div class="fi-icon" style="background:var(--bd);color:var(--blue)"><i class="ti ti-clock"></i></div>
+          <div style="flex:1">
+            <div class="fi-name">Follow-up D+3 Sem Resposta</div>
+            <div class="fi-meta"><span><i class="ti ti-bolt"></i>delay+condição</span><span><i class="ti ti-device-analytics"></i>5 nós</span><span><i class="ti ti-users"></i>89 execuções</span></div>
+          </div>
+          <span class="badge bg-g">ativo</span>
+          <div class="toggle on" onclick="event.stopPropagation();this.classList.toggle('on');this.classList.toggle('off')"></div>
+        </div>
+
+        <div class="flow-item fi-active" onclick="selectFlow('qualificacao')">
+          <div class="fi-icon" style="background:var(--pd);color:var(--purple)"><i class="ti ti-git-branch"></i></div>
+          <div style="flex:1">
+            <div class="fi-name">Qualificação SDR Automática</div>
+            <div class="fi-meta"><span><i class="ti ti-bolt"></i>nova_mensagem</span><span><i class="ti ti-device-analytics"></i>7 nós</span><span><i class="ti ti-users"></i>134 execuções</span></div>
+          </div>
+          <span class="badge bg-g">ativo</span>
+          <div class="toggle on" onclick="event.stopPropagation();this.classList.toggle('on');this.classList.toggle('off')"></div>
+        </div>
+
+        <div class="flow-item" onclick="selectFlow('nps')">
+          <div class="fi-icon" style="background:var(--ad);color:var(--amber)"><i class="ti ti-star"></i></div>
+          <div style="flex:1">
+            <div class="fi-name">NPS Pós-Atendimento</div>
+            <div class="fi-meta"><span><i class="ti ti-bolt"></i>lead_movido</span><span><i class="ti ti-device-analytics"></i>4 nós</span><span><i class="ti ti-users"></i>12 execuções</span></div>
+          </div>
+          <span class="badge bg-gray">inativo</span>
+          <div class="toggle off" onclick="event.stopPropagation();this.classList.toggle('on');this.classList.toggle('off')"></div>
+        </div>
+
+        <button class="btn btn-ghost" style="width:100%;justify-content:center;margin-top:6px;font-size:11.5px"><i class="ti ti-plus"></i>Criar novo fluxo</button>
+      </div>
+
+      <!-- Flow preview canvas -->
+      <div>
+        <div class="sec-title"><i class="ti ti-eye" style="color:var(--text2)"></i>Preview: Boas-vindas Novo Lead</div>
+        <div class="flow-canvas" style="flex-direction:column;min-height:320px;padding:16px;gap:10px;align-items:stretch">
+          <div class="flow-canvas-bg"></div>
+          <div style="display:flex;align-items:center;gap:8px;position:relative;z-index:1">
+            <div class="flow-node fn-trigger" style="flex:1">
+              <div class="fn-connector-r" style="background:var(--green)"></div>
+              <div class="fn-type" style="color:var(--green)">🟢 Gatilho</div>
+              <div class="fn-title">Novo Lead Criado</div>
+              <div class="fn-desc">CRM → novo lead no funil</div>
+            </div>
+            <div class="flow-arrow"><i class="ti ti-arrow-right"></i></div>
+            <div class="flow-node fn-delay" style="flex:1">
+              <div class="fn-connector-l" style="background:var(--teal)"></div>
+              <div class="fn-connector-r" style="background:var(--teal)"></div>
+              <div class="fn-type" style="color:var(--teal)">⏱ Delay</div>
+              <div class="fn-title">Aguardar 5 min</div>
+              <div class="fn-desc">Evitar msg imediata</div>
+            </div>
+          </div>
+          <div style="display:flex;justify-content:center;position:relative;z-index:1"><i class="ti ti-arrow-down" style="color:var(--text3);font-size:18px"></i></div>
+          <div style="display:flex;align-items:center;gap:8px;position:relative;z-index:1">
+            <div class="flow-node fn-message" style="flex:1">
+              <div class="fn-connector-r" style="background:var(--blue)"></div>
+              <div class="fn-type" style="color:var(--blue)">💬 Template Meta</div>
+              <div class="fn-title">boas_vindas</div>
+              <div class="fn-desc" style="color:var(--green)">✓ APPROVED</div>
+            </div>
+            <div class="flow-arrow"><i class="ti ti-arrow-right"></i></div>
+            <div class="flow-node fn-condition" style="flex:1">
+              <div class="fn-connector-l" style="background:var(--amber)"></div>
+              <div class="fn-connector-r" style="background:var(--amber)"></div>
+              <div class="fn-type" style="color:var(--amber)">🔀 Condição</div>
+              <div class="fn-title">Respondeu?</div>
+              <div class="fn-desc">Sim / Não → split</div>
+            </div>
+          </div>
+          <div style="display:flex;justify-content:center;position:relative;z-index:1"><i class="ti ti-arrow-down" style="color:var(--text3);font-size:18px"></i></div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;position:relative;z-index:1">
+            <div class="flow-node fn-action">
+              <div class="fn-type" style="color:var(--purple)">✅ Ação (SIM)</div>
+              <div class="fn-title">Mover no Funil</div>
+              <div class="fn-desc">Etapa: Qualificado</div>
+            </div>
+            <div class="flow-node fn-message">
+              <div class="fn-type" style="color:var(--blue)">💬 Ação (NÃO)</div>
+              <div class="fn-title">pois_ligacao</div>
+              <div class="fn-desc" style="color:var(--green)">✓ APPROVED</div>
+            </div>
+          </div>
+        </div>
+        <div style="display:flex;gap:7px;margin-top:8px;justify-content:flex-end">
+          <button class="btn btn-ghost" style="font-size:11.5px"><i class="ti ti-player-play"></i>Simular</button>
+          <button class="btn btn-primary" style="font-size:11.5px"><i class="ti ti-edit"></i>Editar no Builder</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ ANALYTICS ═══ -->
+<div class="panel" id="panel-analytics">
+  <div class="phdr">
+    <div class="phdr-icon" style="background:var(--pd);color:var(--purple)"><i class="ti ti-chart-pie"></i></div>
+    <div><div class="phdr-title">Métricas Meta WhatsApp</div><div class="phdr-sub">Dados oficiais via Meta Business API</div></div>
+    <div class="phdr-actions"><button class="btn btn-primary"><i class="ti ti-refresh"></i>Atualizar dados</button></div>
+  </div>
+  <div class="pbody">
+    <div class="grid4" style="margin-bottom:18px">
+      <div class="metric m-green"><div class="metric-icon mi-g"><i class="ti ti-send"></i></div><div class="metric-num" style="color:var(--green)">12.4k</div><div class="metric-label">Enviadas</div></div>
+      <div class="metric m-blue"><div class="metric-icon mi-b"><i class="ti ti-check"></i></div><div class="metric-num" style="color:var(--blue)">11.8k</div><div class="metric-label">Entregues (95%)</div></div>
+      <div class="metric m-amber"><div class="metric-icon mi-a"><i class="ti ti-eye"></i></div><div class="metric-num" style="color:var(--amber)">9.2k</div><div class="metric-label">Visualizadas (78%)</div></div>
+      <div class="metric m-red"><div class="metric-icon mi-r"><i class="ti ti-message-reply"></i></div><div class="metric-num" style="color:var(--purple)">3.8k</div><div class="metric-label">Respondidas (32%)</div></div>
+    </div>
+    <div class="sec-title"><i class="ti ti-table" style="color:var(--text2)"></i>Performance por Template</div>
+    <div class="card" style="margin-top:8px">
+      <table class="atbl">
+        <thead><tr><th>Template</th><th>Categoria</th><th>Enviados</th><th>Entregues</th><th>Visualiz.</th><th>Respostas</th><th>Qualidade</th></tr></thead>
+        <tbody>
+          <tr><td><span class="mono">boas_vindas</span></td><td><span class="badge bg-meta">MARKETING</span></td><td><span class="mono">1.240</span></td><td><span style="color:var(--green)">98%</span></td><td><span style="color:var(--teal)">91%</span></td><td><span style="color:var(--purple)">44%</span></td><td><span class="badge bg-g">ALTA</span></td></tr>
+          <tr><td><span class="mono">ola_tudo_bem</span></td><td><span class="badge bg-meta">MARKETING</span></td><td><span class="mono">892</span></td><td><span style="color:var(--green)">97%</span></td><td><span style="color:var(--teal)">82%</span></td><td><span style="color:var(--purple)">38%</span></td><td><span class="badge bg-g">ALTA</span></td></tr>
+          <tr><td><span class="mono">pois_ligacao</span></td><td><span class="badge bg-meta">MARKETING</span></td><td><span class="mono">431</span></td><td><span style="color:var(--green)">96%</span></td><td><span style="color:var(--teal)">74%</span></td><td><span style="color:var(--purple)">29%</span></td><td><span class="badge bg-a">MÉDIA</span></td></tr>
+          <tr><td><span class="mono">hello_world</span></td><td><span class="badge bg-t">UTILITY</span></td><td><span class="mono">12</span></td><td><span style="color:var(--green)">100%</span></td><td><span style="color:var(--teal)">67%</span></td><td><span style="color:var(--purple)">17%</span></td><td><span class="badge bg-gray">—</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ CUSTOS ═══ -->
+<div class="panel" id="panel-custos">
+  <div class="phdr">
+    <div class="phdr-icon" style="background:var(--ad);color:var(--amber)"><i class="ti ti-coin"></i></div>
+    <div><div class="phdr-title">Custos & Tarifas Meta</div><div class="phdr-sub">Tabela de preços por categoria de mensagem</div></div>
+  </div>
+  <div class="pbody">
+    <div class="grid4" style="margin-bottom:18px">
+      <div class="metric m-amber"><div class="metric-icon mi-a"><i class="ti ti-coin"></i></div><div class="metric-num" style="color:var(--amber)">R$1.2k</div><div class="metric-label">Custo total mês</div></div>
+      <div class="metric m-blue"><div class="metric-icon mi-b"><i class="ti ti-messages"></i></div><div class="metric-num" style="color:var(--blue)">12.4k</div><div class="metric-label">Msgs este mês</div></div>
+      <div class="metric m-green"><div class="metric-icon mi-g"><i class="ti ti-percentage"></i></div><div class="metric-num" style="color:var(--green)">R$0,09</div><div class="metric-label">Custo médio/msg</div></div>
+      <div class="metric m-red"><div class="metric-icon mi-r"><i class="ti ti-calendar"></i></div><div class="metric-num" style="color:var(--red)">R$320</div><div class="metric-label">Previsão restante</div></div>
+    </div>
+    <div class="card">
+      <div class="sec-title"><i class="ti ti-table" style="color:var(--text2)"></i>Tabela de tarifas por categoria</div>
+      <table class="atbl" style="margin-top:8px">
+        <thead><tr><th>Categoria</th><th>Descrição</th><th>Preço BRL</th><th>Preço USD</th><th>Uso este mês</th><th>Subtotal</th></tr></thead>
+        <tbody>
+          <tr><td><span class="badge bg-b">UTILITY</span></td><td style="color:var(--text2)">Confirmações, atualizações, alertas</td><td><span class="mono" style="color:var(--green)">R$ 0,0625</span></td><td><span class="mono" style="color:var(--text3)">$0,012</span></td><td><span class="badge bg-g">3.200 msgs</span></td><td><span class="mono" style="color:var(--amber)">R$ 200</span></td></tr>
+          <tr><td><span class="badge bg-p">MARKETING</span></td><td style="color:var(--text2)">Promoções, ofertas, campanhas</td><td><span class="mono" style="color:var(--amber)">R$ 0,1250</span></td><td><span class="mono" style="color:var(--text3)">$0,025</span></td><td><span class="badge bg-a">6.800 msgs</span></td><td><span class="mono" style="color:var(--amber)">R$ 850</span></td></tr>
+          <tr><td><span class="badge bg-t">AUTH</span></td><td style="color:var(--text2)">Códigos OTP, 2FA, verificação</td><td><span class="mono" style="color:var(--green)">R$ 0,0525</span></td><td><span class="mono" style="color:var(--text3)">$0,010</span></td><td><span class="badge bg-b">420 msgs</span></td><td><span class="mono" style="color:var(--green)">R$ 22</span></td></tr>
+          <tr><td><span class="badge bg-g">SERVICE</span></td><td style="color:var(--text2)">Respostas dentro da janela de 24h</td><td><span class="mono" style="color:var(--green)">Grátis</span></td><td><span class="mono" style="color:var(--text3)">Free</span></td><td><span class="badge bg-g">2.000 msgs</span></td><td><span class="mono" style="color:var(--green)">R$ 0</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ CONFIG ═══ -->
+<div class="panel" id="panel-config">
+  <div class="phdr">
+    <div class="phdr-icon" style="background:var(--bd);color:var(--blue)"><i class="ti ti-settings-2"></i></div>
+    <div><div class="phdr-title">App & Credenciais Meta</div><div class="phdr-sub">Configurações do Facebook App e WhatsApp Business API</div></div>
+    <div class="phdr-actions"><button class="btn btn-primary"><i class="ti ti-device-floppy"></i>Salvar</button></div>
+  </div>
+  <div class="pbody" style="max-width:700px">
+    <div class="meta-status-bar">
+      <div class="meta-logo">✅</div>
+      <div class="meta-status-text"><div class="meta-title">Conexão Meta ativa e funcionando</div><div class="meta-sub">App ID: 1935320540670328 · WABA ID: 108474255428012 · Token válido</div></div>
+      <a href="https://business.facebook.com" target="_blank" class="btn btn-ghost" style="font-size:11px"><i class="ti ti-external-link"></i>Business Suite</a>
+    </div>
+    <div class="card" style="margin-bottom:12px">
+      <div class="sec-title"><i class="ti ti-brand-facebook" style="color:#4a9ef7"></i>Facebook App</div>
+      <div class="field-row">
+        <div class="field-group"><label class="field-label">App ID</label><input class="field-input" value="1935320540670328" readonly style="font-family:var(--mono);font-size:11.5px"></div>
+        <div class="field-group"><label class="field-label">App Secret</label><input class="field-input" type="password" value="••••••••••••••••" readonly></div>
+      </div>
+      <div class="field-group"><label class="field-label">Access Token (permanente)</label><div style="display:flex;gap:7px"><input class="field-input" type="password" value="EAABsbCS..." style="flex:1;font-family:var(--mono);font-size:11px"><button class="btn btn-ghost" style="font-size:11.5px;flex-shrink:0"><i class="ti ti-refresh"></i>Renovar</button></div><div style="font-size:10.5px;color:var(--green);margin-top:4px"><i class="ti ti-circle-check"></i> Token válido · Expira: Nunca (token permanente)</div></div>
+    </div>
+    <div class="card" style="margin-bottom:12px">
+      <div class="sec-title"><i class="ti ti-brand-whatsapp" style="color:var(--green)"></i>WhatsApp Business API</div>
+      <div class="field-row">
+        <div class="field-group"><label class="field-label">WABA ID</label><input class="field-input" value="108474255428012" readonly style="font-family:var(--mono);font-size:11.5px"></div>
+        <div class="field-group"><label class="field-label">Phone Number ID</label><input class="field-input" value="595392426979627" readonly style="font-family:var(--mono);font-size:11.5px"></div>
+      </div>
+      <div class="field-row">
+        <div class="field-group"><label class="field-label">Número do WhatsApp</label><input class="field-input" value="+55 11 9 9999-0000"></div>
+        <div class="field-group"><label class="field-label">Display Name</label><input class="field-input" value="GrowOS CRM"></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="sec-title"><i class="ti ti-webhook" style="color:var(--teal)"></i>Webhook</div>
+      <div class="field-group"><label class="field-label">URL do Webhook (receber eventos Meta)</label><div style="display:flex;gap:7px"><input class="field-input" value="https://xxxxxxxxxxx.supabase.co/functions/v1/whatsapp-webhook" style="font-family:var(--mono);font-size:11px;flex:1" readonly><button class="btn btn-ghost" style="font-size:11px"><i class="ti ti-copy"></i></button></div></div>
+      <div class="field-group"><label class="field-label">Verify Token</label><input class="field-input" value="growos_webhook_secret_2025" style="font-family:var(--mono);font-size:11px"></div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px">
+        <div style="display:flex;align-items:center;gap:6px;background:var(--bg4);border-radius:6px;padding:5px 10px;font-size:11px"><div class="toggle on" onclick="this.classList.toggle('on');this.classList.toggle('off')"></div>messages</div>
+        <div style="display:flex;align-items:center;gap:6px;background:var(--bg4);border-radius:6px;padding:5px 10px;font-size:11px"><div class="toggle on" onclick="this.classList.toggle('on');this.classList.toggle('off')"></div>message_deliveries</div>
+        <div style="display:flex;align-items:center;gap:6px;background:var(--bg4);border-radius:6px;padding:5px 10px;font-size:11px"><div class="toggle on" onclick="this.classList.toggle('on');this.classList.toggle('off')"></div>message_reads</div>
+        <div style="display:flex;align-items:center;gap:6px;background:var(--bg4);border-radius:6px;padding:5px 10px;font-size:11px"><div class="toggle off" onclick="this.classList.toggle('on');this.classList.toggle('off')"></div>message_template_status_update</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ CAMPANHAS + AGENDA panels (placeholder) ═══ -->
+<div class="panel" id="panel-campanhas">
+  <div class="phdr">
+    <div class="phdr-icon" style="background:var(--ad);color:var(--amber)"><i class="ti ti-send"></i></div>
+    <div><div class="phdr-title">Campanhas</div><div class="phdr-sub">Disparos usando templates aprovados pela Meta</div></div>
+    <div class="phdr-actions"><button class="btn btn-green"><i class="ti ti-plus"></i>Nova Campanha</button></div>
+  </div>
+  <div class="pbody">
+    <div class="card" style="text-align:center;padding:40px;border-style:dashed">
+      <i class="ti ti-send" style="font-size:38px;color:var(--text3);opacity:.4"></i>
+      <div style="font-size:14px;font-weight:700;color:var(--text2);margin-top:12px">Gerencie campanhas de disparo em massa</div>
+      <div style="font-size:12px;color:var(--text3);margin-top:5px">Selecione leads, escolha um template aprovado e configure o disparo</div>
+      <button class="btn btn-green" style="margin-top:14px"><i class="ti ti-plus"></i>Criar primeira campanha</button>
+    </div>
+  </div>
+</div>
+<div class="panel" id="panel-agenda">
+  <div class="phdr"><div class="phdr-icon" style="background:var(--td);color:var(--teal)"><i class="ti ti-calendar-event"></i></div><div><div class="phdr-title">Agendamentos</div><div class="phdr-sub">Disparos agendados e recorrentes</div></div></div>
+  <div class="pbody"><div class="card" style="text-align:center;padding:40px;border-style:dashed"><i class="ti ti-calendar-event" style="font-size:38px;color:var(--text3);opacity:.4"></i><div style="font-size:14px;font-weight:700;color:var(--text2);margin-top:12px">Nenhum agendamento ativo</div><div style="font-size:12px;color:var(--text3);margin-top:5px">Configure disparos recorrentes ou agendados para uma data específica</div><button class="btn btn-primary" style="margin-top:14px"><i class="ti ti-plus"></i>Novo agendamento</button></div></div>
+</div>
+
+</div><!-- /content -->
+</div><!-- /layout -->
+
+<!-- ═══════════════════════════════════════════
+     MODAL: CRIAR NOVO TEMPLATE
+════════════════════════════════════════════════ -->
+<div class="modal-bg" id="newTemplateModal">
+  <div class="modal">
+    <!-- LEFT: Form -->
+    <div class="modal-left">
+      <div class="modal-header">
+        <div style="width:32px;height:32px;border-radius:7px;background:var(--gd);display:flex;align-items:center;justify-content:center;color:var(--green);font-size:16px"><i class="ti ti-file-plus"></i></div>
+        <div class="modal-title">Novo Template — Enviar para Meta</div>
+        <div class="modal-close" onclick="closeModal('newTemplateModal')"><i class="ti ti-x"></i></div>
+      </div>
+      <!-- INFO BANNER -->
+      <div style="padding:0 20px 12px">
+        <div style="background:rgba(0,217,126,.07);border:1px solid rgba(0,217,126,.2);border-radius:var(--r-sm);padding:8px 12px;display:flex;align-items:flex-start;gap:7px;font-size:11.5px;color:var(--text2)">
+          <i class="ti ti-sparkles" style="color:var(--green);flex-shrink:0;font-size:14px;margin-top:1px"></i>
+          <span><strong style="color:var(--green)">Criação direta via API!</strong> O template será enviado automaticamente para aprovação da Meta. Após aprovado (geralmente em minutos a horas), ficará disponível para uso nos disparos em massa.</span>
+        </div>
+      </div>
+      <!-- Steps -->
+      <div class="modal-steps" id="steps">
+        <div class="step-pill done" id="step1">1. Básico</div>
+        <div class="step-pill active" id="step2">2. Conteúdo</div>
+        <div class="step-pill" id="step3">3. Botões</div>
+        <div class="step-pill" id="step4">4. Revisão</div>
+      </div>
+      <div class="modal-body">
+        <!-- STEP 1: Basic -->
+        <div id="stepContent1" style="display:none">
+          <div class="field-row">
+            <div class="field-group">
+              <label class="field-label">Nome do template *</label>
+              <input class="field-input" id="tplName" placeholder="ex: boas_vindas (só minúsculas e _)" oninput="updatePreview()">
+              <div style="font-size:10px;color:var(--text3);margin-top:3px">Apenas letras minúsculas e underscores</div>
+            </div>
+            <div class="field-group">
+              <label class="field-label">Categoria *</label>
+              <select class="field-select" id="tplCategory" onchange="updatePreview()">
+                <option value="MARKETING">Marketing (R$ 0,125)</option>
+                <option value="UTILITY">Utility (R$ 0,063)</option>
+                <option value="AUTHENTICATION">Authentication (R$ 0,053)</option>
+              </select>
+            </div>
+          </div>
+          <div class="field-row">
+            <div class="field-group">
+              <label class="field-label">Idioma</label>
+              <select class="field-select" id="tplLanguage">
+                <option value="pt_BR" selected>Português (Brasil)</option>
+                <option value="en_US">English (US)</option>
+                <option value="es_ES">Español</option>
+              </select>
+            </div>
+            <div class="field-group">
+              <label class="field-label">Tipo de Cabeçalho</label>
+              <div class="htype-grid" id="headerTypeGrid">
+                <div class="htype-btn active" onclick="selectHeaderType('NONE',this)">Nenhum</div>
+                <div class="htype-btn" onclick="selectHeaderType('TEXT',this)"><i class="ti ti-letter-t" style="font-size:13px"></i>Texto</div>
+                <div class="htype-btn" onclick="selectHeaderType('IMAGE',this)"><i class="ti ti-photo" style="font-size:13px"></i>Imagem</div>
+                <div class="htype-btn" onclick="selectHeaderType('VIDEO',this)"><i class="ti ti-video" style="font-size:13px"></i>Vídeo</div>
+                <div class="htype-btn" onclick="selectHeaderType('DOCUMENT',this)"><i class="ti ti-file" style="font-size:13px"></i>Doc</div>
+              </div>
+            </div>
+          </div>
+          <div class="field-group" id="headerTextArea" style="display:none">
+            <label class="field-label">Texto do cabeçalho</label>
+            <input class="field-input" id="tplHeaderText" placeholder="Ex: 🎉 Oferta Especial" oninput="updatePreview()">
+          </div>
+          <div class="field-group" id="headerMediaArea" style="display:none">
+            <label class="field-label">URL da mídia (imagem/vídeo/documento)</label>
+            <input class="field-input" id="tplHeaderMedia" placeholder="https://..." oninput="updatePreview()">
+            <div style="font-size:10px;color:var(--text3);margin-top:3px">Será feito upload automaticamente para a Meta via Resumable Upload API</div>
+          </div>
+        </div>
+
+        <!-- STEP 2: Content -->
+        <div id="stepContent2">
+          <div class="field-group">
+            <label class="field-label">Corpo da mensagem *</label>
+            <textarea class="field-textarea" id="tplBody" rows="5" placeholder="Ex: Olá {{1}}! 👋 Temos uma oferta especial para você. Clique abaixo para saber mais!" oninput="updatePreview();countChars()"></textarea>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-top:4px">
+              <div class="var-hint">Use <span class="var-tag" onclick="insertVar('tplBody')">{{1}}</span> <span class="var-tag" onclick="insertVar2('tplBody')">{{2}}</span> para variáveis personalizadas</div>
+              <div class="char-count"><span id="charCount">0</span>/1024</div>
+            </div>
+          </div>
+          <div class="field-group">
+            <label class="field-label">Rodapé (opcional)</label>
+            <input class="field-input" id="tplFooter" placeholder="Ex: Para cancelar, responda SAIR" oninput="updatePreview()">
+            <div style="font-size:10px;color:var(--text3);margin-top:3px">Texto pequeno abaixo da mensagem</div>
+          </div>
+        </div>
+
+        <!-- STEP 3: Buttons -->
+        <div id="stepContent3" style="display:none">
+          <div style="font-size:12px;color:var(--text2);margin-bottom:12px">Adicione até 3 botões ao template. Os botões aparecem abaixo da mensagem no WhatsApp.</div>
+          <div class="cta-type-row" style="margin-bottom:14px">
+            <div class="cta-type active" onclick="addButton('QUICK_REPLY',this)"><i class="ti ti-message-circle-reply"></i>+ Resposta Rápida</div>
+            <div class="cta-type" onclick="addButton('URL',this)"><i class="ti ti-link"></i>+ Link</div>
+            <div class="cta-type" onclick="addButton('PHONE_NUMBER',this)"><i class="ti ti-phone"></i>+ Telefone</div>
+          </div>
+          <div id="btnList">
+            <!-- Buttons added here -->
+            <div class="btn-editor-row">
+              <span class="btn-editor-type bg-b">RESPOSTA RÁPIDA</span>
+              <input class="field-input" style="flex:1;height:30px;font-size:12px" placeholder="Texto do botão" value="Quero saber mais">
+              <div class="icon-btn" style="flex-shrink:0" onclick="this.closest('.btn-editor-row').remove();updatePreview()"><i class="ti ti-x" style="font-size:12px"></i></div>
+            </div>
+            <div class="btn-editor-row">
+              <span class="btn-editor-type bg-g">LINK</span>
+              <input class="field-input" style="flex:1;height:30px;font-size:12px" placeholder="Texto" value="Acessar site">
+              <input class="field-input" style="width:160px;height:30px;font-size:11px;font-family:var(--mono)" placeholder="https://...">
+              <div class="icon-btn" style="flex-shrink:0" onclick="this.closest('.btn-editor-row').remove();updatePreview()"><i class="ti ti-x" style="font-size:12px"></i></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- STEP 4: Review -->
+        <div id="stepContent4" style="display:none">
+          <div style="background:var(--bg4);border-radius:var(--r);padding:14px;margin-bottom:14px">
+            <div class="sec-title" style="margin-bottom:10px"><i class="ti ti-list-check" style="color:var(--green)"></i>Resumo do template</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:12px">
+              <div><span style="color:var(--text3)">Nome: </span><span class="mono" style="color:var(--text)" id="reviewName">—</span></div>
+              <div><span style="color:var(--text3)">Categoria: </span><span style="color:var(--amber)" id="reviewCat">—</span></div>
+              <div><span style="color:var(--text3)">Idioma: </span><span style="color:var(--text)" id="reviewLang">pt_BR</span></div>
+              <div><span style="color:var(--text3)">Cabeçalho: </span><span style="color:var(--text)" id="reviewHeader">Nenhum</span></div>
+              <div><span style="color:var(--text3)">Botões: </span><span style="color:var(--blue)" id="reviewBtns">0</span></div>
+              <div><span style="color:var(--text3)">Custo estimado: </span><span style="color:var(--amber)" id="reviewCost">—</span></div>
+            </div>
+          </div>
+          <div style="background:rgba(0,217,126,.06);border:1px solid rgba(0,217,126,.2);border-radius:var(--r-sm);padding:10px 12px;font-size:11.5px;color:var(--text2)">
+            <strong style="color:var(--green)">✓ Pronto para enviar!</strong> Ao confirmar, o template será enviado para a Meta API e colocado em fila de aprovação. Você receberá uma notificação quando for aprovado ou rejeitado.
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" id="prevBtn" onclick="prevStep()" style="display:none"><i class="ti ti-arrow-left"></i>Voltar</button>
+        <button class="btn btn-ghost" onclick="closeModal('newTemplateModal')">Cancelar</button>
+        <button class="btn btn-primary" id="nextBtn" onclick="nextStep()">Próximo <i class="ti ti-arrow-right"></i></button>
+        <button class="btn btn-green" id="submitBtn" style="display:none" onclick="submitTemplate()"><i class="ti ti-send"></i>Criar e Enviar para Aprovação</button>
+      </div>
+    </div>
+    <!-- RIGHT: Preview -->
+    <div class="modal-right">
+      <div class="modal-preview-header"><i class="ti ti-brand-whatsapp" style="color:var(--green);margin-right:5px"></i>Pré-visualização WhatsApp</div>
+      <div class="modal-preview-body">
+        <div class="wa-preview">
+          <div style="font-size:9.5px;color:#8696a0;text-align:center;margin-bottom:10px;padding:4px 10px;background:rgba(255,255,255,.04);border-radius:99px;display:inline-block">HOJE</div>
+          <div class="wa-bubble">
+            <div id="previewMedia" class="wa-bubble-media" style="display:none"><i class="ti ti-photo" style="font-size:24px"></i></div>
+            <div id="previewHeader" class="wa-bubble-title" style="display:none"></div>
+            <div id="previewBody" class="wa-bubble-body" style="font-size:11.5px;color:#e9edef">Corpo da mensagem aparecerá aqui...</div>
+            <div id="previewFooter" class="wa-bubble-footer" style="display:none"></div>
+            <div class="wa-bubble-time"><span>agora</span><i class="ti ti-checks" style="font-size:11px;color:#53bdeb"></i></div>
+          </div>
+          <div id="previewBtns" class="wa-btn-row" style="display:none"></div>
+        </div>
+        <!-- Category cost info -->
+        <div style="margin-top:14px;background:var(--bg4);border-radius:var(--r-sm);padding:10px 12px">
+          <div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:6px">Custo estimado</div>
+          <div id="costInfo" style="font-size:12px;color:var(--text2)">
+            <div style="display:flex;justify-content:space-between;margin-bottom:4px"><span>1.000 envios</span><span class="mono" style="color:var(--amber)">R$ 125,00</span></div>
+            <div style="display:flex;justify-content:space-between;margin-bottom:4px"><span>5.000 envios</span><span class="mono" style="color:var(--amber)">R$ 625,00</span></div>
+            <div style="display:flex;justify-content:space-between"><span>10.000 envios</span><span class="mono" style="color:var(--amber)">R$ 1.250,00</span></div>
+          </div>
+        </div>
+        <!-- Tips -->
+        <div style="margin-top:10px;font-size:11px;color:var(--text3);line-height:1.6">
+          <div style="font-weight:700;color:var(--text2);margin-bottom:4px">💡 Dicas de aprovação Meta</div>
+          <div>• Evite linguagem promocional agressiva</div>
+          <div>• Não inclua preços sem contexto</div>
+          <div>• Clareza sobre quem está enviando</div>
+          <div>• Opt-out obrigatório em MARKETING</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ─── NAVIGATION ───────────────────────────────────────────────
+function switchPanel(id, el) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  const panel = document.getElementById('panel-' + id);
+  if (panel) panel.classList.add('active');
+  if (el) el.classList.add('active');
+}
+function switchInnerTab(contentId, el, tabsId) {
+  // hide all grid panels in templates
+  document.querySelectorAll('.tpl-grid-panel').forEach(p => p.style.display = 'none');
+  const panel = document.getElementById(contentId);
+  if (panel) panel.style.display = 'block';
+  const tabContainer = document.getElementById(tabsId);
+  if (tabContainer) tabContainer.querySelectorAll('.inner-tab').forEach(t => t.classList.remove('active'));
+  if (el) el.classList.add('active');
+}
+
+// ─── TEMPLATE MODAL ────────────────────────────────────────────
+let currentStep = 2;
+let selectedHeaderType = 'NONE';
+
+function openNewTemplate() {
+  document.getElementById('newTemplateModal').classList.add('show');
+  goToStep(2);
+  updatePreview();
+}
+function closeModal(id) {
+  document.getElementById(id).classList.remove('show');
+}
+document.getElementById('newTemplateModal').addEventListener('click', function(e) {
+  if (e.target === this) closeModal('newTemplateModal');
+});
+
+function goToStep(s) {
+  currentStep = s;
+  [1,2,3,4].forEach(n => {
+    const sc = document.getElementById('stepContent' + n);
+    const sp = document.getElementById('step' + n);
+    if (sc) sc.style.display = n === s ? 'block' : 'none';
+    if (sp) {
+      sp.classList.remove('active','done');
+      if (n === s) sp.classList.add('active');
+      else if (n < s) sp.classList.add('done');
+    }
+  });
+  document.getElementById('prevBtn').style.display = s > 1 ? 'inline-flex' : 'none';
+  document.getElementById('nextBtn').style.display = s < 4 ? 'inline-flex' : 'none';
+  document.getElementById('submitBtn').style.display = s === 4 ? 'inline-flex' : 'none';
+  if (s === 4) fillReview();
+}
+function nextStep() { if (currentStep < 4) goToStep(currentStep + 1); }
+function prevStep() { if (currentStep > 1) goToStep(currentStep - 1); }
+
+function selectHeaderType(type, el) {
+  selectedHeaderType = type;
+  document.querySelectorAll('.htype-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('headerTextArea').style.display = type === 'TEXT' ? 'block' : 'none';
+  document.getElementById('headerMediaArea').style.display = ['IMAGE','VIDEO','DOCUMENT'].includes(type) ? 'block' : 'none';
+  updatePreview();
+}
+
+function updatePreview() {
+  const body = document.getElementById('tplBody')?.value || '';
+  const header = document.getElementById('tplHeaderText')?.value || '';
+  const footer = document.getElementById('tplFooter')?.value || '';
+
+  const previewBody = document.getElementById('previewBody');
+  const previewHeader = document.getElementById('previewHeader');
+  const previewFooter = document.getElementById('previewFooter');
+  const previewMedia = document.getElementById('previewMedia');
+
+  // Body
+  if (previewBody) {
+    const html = body.replace(/\{\{(\d+)\}\}/g, '<span style="background:rgba(245,158,11,.2);color:#f59e0b;padding:1px 4px;border-radius:3px;font-weight:600">{{$1}}</span>');
+    previewBody.innerHTML = html || '<span style="color:#8696a0;font-style:italic">Corpo da mensagem aparecerá aqui...</span>';
+  }
+
+  // Header
+  if (selectedHeaderType === 'TEXT' && header) {
+    previewHeader.style.display = 'block';
+    previewHeader.textContent = header;
+    previewMedia.style.display = 'none';
+  } else if (['IMAGE','VIDEO','DOCUMENT'].includes(selectedHeaderType)) {
+    previewMedia.style.display = 'block';
+    const icons = {IMAGE:'ti-photo',VIDEO:'ti-video',DOCUMENT:'ti-file'};
+    previewMedia.innerHTML = `<i class="ti ${icons[selectedHeaderType]}" style="font-size:26px"></i><div style="font-size:10px;margin-top:5px;color:var(--text3)">${selectedHeaderType}</div>`;
+    previewHeader.style.display = 'none';
+  } else {
+    previewHeader.style.display = 'none';
+    previewMedia.style.display = 'none';
+  }
+
+  // Footer
+  if (footer) {
+    previewFooter.style.display = 'block';
+    previewFooter.textContent = footer;
+  } else {
+    previewFooter.style.display = 'none';
+  }
+
+  // Buttons
+  const btnRows = document.querySelectorAll('#btnList .btn-editor-row');
+  const previewBtns = document.getElementById('previewBtns');
+  if (btnRows.length > 0) {
+    previewBtns.style.display = 'flex';
+    previewBtns.innerHTML = '';
+    btnRows.forEach(row => {
+      const label = row.querySelector('input')?.value || 'Botão';
+      const type = row.querySelector('.btn-editor-type')?.textContent?.trim() || '';
+      const icon = type.includes('LINK') ? 'ti-external-link' : type.includes('TELEFONE') ? 'ti-phone-call' : 'ti-message-circle-reply';
+      previewBtns.innerHTML += `<div class="wa-btn"><i class="ti ${icon}" style="font-size:13px"></i>${label}</div>`;
+    });
+  } else {
+    previewBtns.style.display = 'none';
+  }
+}
+
+function countChars() {
+  const val = document.getElementById('tplBody')?.value || '';
+  const cc = document.getElementById('charCount');
+  if (cc) cc.textContent = val.length;
+}
+
+function insertVar(id) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  const pos = el.selectionStart;
+  const n = (el.value.match(/\{\{(\d+)\}\}/g) || []).length + 1;
+  el.value = el.value.slice(0,pos) + '{{' + n + '}}' + el.value.slice(pos);
+  updatePreview(); countChars();
+}
+function insertVar2(id) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  const pos = el.selectionStart;
+  const n = (el.value.match(/\{\{(\d+)\}\}/g) || []).length + 1;
+  el.value = el.value.slice(0,pos) + '{{' + n + '}}' + el.value.slice(pos);
+  updatePreview(); countChars();
+}
+
+function addButton(type, el) {
+  const list = document.getElementById('btnList');
+  const existing = list.querySelectorAll('.btn-editor-row').length;
+  if (existing >= 3) { alert('Máximo de 3 botões por template'); return; }
+  const labels = {QUICK_REPLY:'RESPOSTA RÁPIDA', URL:'LINK', PHONE_NUMBER:'TELEFONE'};
+  const colors = {QUICK_REPLY:'bg-b', URL:'bg-g', PHONE_NUMBER:'bg-p'};
+  const row = document.createElement('div');
+  row.className = 'btn-editor-row';
+  let extra = type === 'URL' ? `<input class="field-input" style="width:140px;height:30px;font-size:11px;font-family:var(--mono)" placeholder="https://...">` : '';
+  if (type === 'PHONE_NUMBER') extra = `<input class="field-input" style="width:120px;height:30px;font-size:11px;font-family:var(--mono)" placeholder="+55...">`;
+  row.innerHTML = `<span class="btn-editor-type ${colors[type]}">${labels[type]}</span><input class="field-input" style="flex:1;height:30px;font-size:12px" placeholder="Texto do botão" oninput="updatePreview()">${extra}<div class="icon-btn" style="flex-shrink:0" onclick="this.closest('.btn-editor-row').remove();updatePreview()"><i class="ti ti-x" style="font-size:12px"></i></div>`;
+  list.appendChild(row);
+  updatePreview();
+}
+
+function fillReview() {
+  const name = document.getElementById('tplName')?.value || '—';
+  const cat = document.getElementById('tplCategory')?.value || '—';
+  const lang = document.getElementById('tplLanguage')?.value || '—';
+  const btns = document.querySelectorAll('#btnList .btn-editor-row').length;
+  const costs = {MARKETING:'R$ 0,125/msg', UTILITY:'R$ 0,063/msg', AUTHENTICATION:'R$ 0,053/msg'};
+  document.getElementById('reviewName').textContent = name || '—';
+  document.getElementById('reviewCat').textContent = cat;
+  document.getElementById('reviewLang').textContent = lang;
+  document.getElementById('reviewHeader').textContent = selectedHeaderType === 'NONE' ? 'Nenhum' : selectedHeaderType;
+  document.getElementById('reviewBtns').textContent = btns;
+  document.getElementById('reviewCost').textContent = costs[cat] || '—';
+}
+
+function submitTemplate() {
+  const btn = document.getElementById('submitBtn');
+  btn.innerHTML = '<i class="ti ti-loader-2" style="animation:spin .8s linear infinite"></i>Enviando para Meta...';
+  btn.disabled = true;
+  setTimeout(() => {
+    closeModal('newTemplateModal');
+    btn.innerHTML = '<i class="ti ti-send"></i>Criar e Enviar para Aprovação';
+    btn.disabled = false;
+    showToast('✅ Template enviado para a Meta! Aguardando aprovação...');
+  }, 2000);
+}
+
+function showToast(msg) {
+  const t = document.createElement('div');
+  t.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#0d1320;border:1px solid rgba(0,217,126,.4);border-radius:99px;padding:10px 20px;font-size:13px;font-weight:600;color:var(--green);z-index:9999;box-shadow:0 4px 24px rgba(0,0,0,.5);white-space:nowrap;animation:toastIn .2s ease';
+  t.textContent = msg;
+  document.body.appendChild(t);
+  const style = document.createElement('style');
+  style.textContent = '@keyframes toastIn{from{opacity:0;transform:translateX(-50%) translateY(10px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}';
+  document.head.appendChild(style);
+  setTimeout(() => t.remove(), 3500);
+}
+
+function selectFlow(id) {
+  document.querySelectorAll('.flow-item').forEach(f => f.classList.remove('fi-active'));
+  event.currentTarget.classList.add('fi-active');
+}
+
+// ─── KEYBOARD ─────────────────────────────────────────────────
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') {
+    document.querySelectorAll('.modal-bg.show').forEach(m => m.classList.remove('show'));
+  }
+});
+</script>
+</body>
+</html>

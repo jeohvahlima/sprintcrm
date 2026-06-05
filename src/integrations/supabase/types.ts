@@ -6881,6 +6881,78 @@ export type Database = {
         }
         Relationships: []
       }
+      meta_whatsapp_config: {
+        Row: {
+          access_token: string | null
+          business_account_id: string | null
+          company_id: string
+          cost_alerts: Json
+          created_at: string
+          daily_message_limit: number | null
+          dashboard_prefs: Json
+          display_name: string | null
+          id: string
+          is_active: boolean
+          last_balance_sync_at: string | null
+          last_template_sync_at: string | null
+          messages_sent_today: number | null
+          messaging_tier: string | null
+          meta_balance_cents: number | null
+          phone_number: string | null
+          phone_number_id: string | null
+          quality_rating: string | null
+          updated_at: string
+          webhook_url: string | null
+          webhook_verify_token: string | null
+        }
+        Insert: {
+          access_token?: string | null
+          business_account_id?: string | null
+          company_id: string
+          cost_alerts?: Json
+          created_at?: string
+          daily_message_limit?: number | null
+          dashboard_prefs?: Json
+          display_name?: string | null
+          id?: string
+          is_active?: boolean
+          last_balance_sync_at?: string | null
+          last_template_sync_at?: string | null
+          messages_sent_today?: number | null
+          messaging_tier?: string | null
+          meta_balance_cents?: number | null
+          phone_number?: string | null
+          phone_number_id?: string | null
+          quality_rating?: string | null
+          updated_at?: string
+          webhook_url?: string | null
+          webhook_verify_token?: string | null
+        }
+        Update: {
+          access_token?: string | null
+          business_account_id?: string | null
+          company_id?: string
+          cost_alerts?: Json
+          created_at?: string
+          daily_message_limit?: number | null
+          dashboard_prefs?: Json
+          display_name?: string | null
+          id?: string
+          is_active?: boolean
+          last_balance_sync_at?: string | null
+          last_template_sync_at?: string | null
+          messages_sent_today?: number | null
+          messaging_tier?: string | null
+          meta_balance_cents?: number | null
+          phone_number?: string | null
+          phone_number_id?: string | null
+          quality_rating?: string | null
+          updated_at?: string
+          webhook_url?: string | null
+          webhook_verify_token?: string | null
+        }
+        Relationships: []
+      }
       notificacoes: {
         Row: {
           company_id: string | null
