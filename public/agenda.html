@@ -987,8 +987,17 @@
         document.getElementById('f_start').value = ev?.start || prefill?.start || '09:00';
         document.getElementById('f_end').value = ev?.end || '09:30';
         document.getElementById('f_type').value = ev?.type || 'Consulta';
-        document.getElementById('f_prof').value = ev?.prof || '';
+        document.getElementById('f_agenda').value = ev?.agenda || 'Dr. Carlos Pinto — Cardiologia';
+        document.getElementById('f_prof').value = ev?.prof || 'Dr. Carlos Pinto';
+        document.getElementById('f_value').value = ev?.value ?? '';
         document.getElementById('f_phone').value = ev?.phone || '';
+        document.getElementById('f_email').value = ev?.email || '';
+        document.getElementById('f_remWa').checked = ev?.remWa ?? true;
+        document.getElementById('f_remEmail').checked = ev?.remEmail ?? false;
+        document.getElementById('f_remTime').value = ev?.remTime || '60';
+        document.getElementById('f_confirmNow').checked = ev?.confirmNow ?? true;
+        document.getElementById('f_confirmEmail').checked = ev?.confirmEmail ?? false;
+        document.getElementById('f_notes').value = ev?.notes || '';
         document.getElementById('apptDelete').style.display = ev ? 'inline-flex' : 'none';
         document.getElementById('apptModal').style.display = 'flex';
       }
