@@ -1688,6 +1688,142 @@ Posso te mostrar em 10 minutos como funciona?
       </div>
     </div>
 
+<!-- ══════════════════════════════════════
+     VIEW: MAPAS MENTAIS
+     ══════════════════════════════════════ -->
+<div id="view-mindmap" class="mm-view animate-in" style="display:none;">
+  <div class="mm-toolbar">
+    <input class="mm-title-inp" id="mm-map-title" value="Novo Mapa Mental" oninput="mmUpdateTitle(this.value)" />
+    <div class="mm-tsep"></div>
+    <button class="mm-tbtn primary" onclick="mmAddRoot()">＋ Nó Raiz</button>
+    <button class="mm-tbtn ghost" onclick="mmAddChild()" title="Tab">⤵ Filho</button>
+    <button class="mm-tbtn ghost" onclick="mmDelSelected()" title="Del">🗑 Apagar</button>
+    <div class="mm-tsep"></div>
+    <button class="mm-tbtn ghost" onclick="mmZoom(-0.15)">−</button>
+    <div class="mm-zoom-lbl" id="mm-zoom-lbl">100%</div>
+    <button class="mm-tbtn ghost" onclick="mmZoom(0.15)">+</button>
+    <button class="mm-tbtn ghost" onclick="mmFit()" title="F">⊞ Fit</button>
+    <div class="mm-tsep"></div>
+    <button class="mm-tbtn ghost" onclick="mmUndo()" title="Ctrl+Z">↩</button>
+    <button class="mm-tbtn ghost" onclick="mmRedo()" title="Ctrl+Y">↪</button>
+    <div class="mm-tsep"></div>
+    <button class="mm-tbtn ghost" id="mm-toggle-panel" onclick="mmTogglePanel()">🎨 Estilos</button>
+    <button class="mm-tbtn ai" onclick="mmOpenAI()">✦ IA</button>
+  </div>
+  <div class="mm-body">
+    <div class="mm-sidebar">
+      <div class="mm-sidebar-hd">
+        <div class="mm-sidebar-title">📂 Meus Mapas</div>
+        <button class="mm-new-btn" onclick="mmNewMap()">＋ Novo mapa</button>
+      </div>
+      <div class="mm-map-list" id="mm-map-list"></div>
+    </div>
+    <div class="mm-canvas" id="mm-canvas"
+      onmousedown="mmCanvasDown(event)"
+      onmousemove="mmCanvasMove(event)"
+      onmouseup="mmCanvasUp(event)"
+      onwheel="mmCanvasWheel(event)"
+      ondblclick="mmCanvasDbl(event)"
+      oncontextmenu="return false">
+      <svg id="mm-svg-layer">
+        <defs>
+          <marker id="mm-arr" markerWidth="7" markerHeight="5" refX="7" refY="2.5" orient="auto">
+            <polygon points="0 0,7 2.5,0 5" fill="rgba(255,255,255,0.12)"/>
+          </marker>
+        </defs>
+        <g id="mm-edges"></g>
+        <path id="mm-preview" style="stroke:rgba(34,197,94,0.55);stroke-width:2;fill:none;stroke-dasharray:6 4;display:none"/>
+      </svg>
+      <div id="mm-node-layer"></div>
+      <div class="mm-empty" id="mm-empty">
+        <div class="mm-empty-icon">🧠</div>
+        <div class="mm-empty-title">Crie seu primeiro mapa mental</div>
+        <div class="mm-empty-sub">Clique em <strong style="color:var(--text0)">＋ Nó Raiz</strong> ou escolha um template →</div>
+      </div>
+      <div class="mm-statsbar" id="mm-statsbar" style="display:none">
+        <span>🗂 Nós: <b class="mm-statsval" id="mm-sn">0</b></span>
+        <span>🔗 Conexões: <b class="mm-statsval" id="mm-se">0</b></span>
+        <span>📐 Profundidade: <b class="mm-statsval" id="mm-sd">0</b></span>
+      </div>
+    </div>
+    <div class="mm-panel" id="mm-panel">
+      <div class="mm-panel-body">
+        <div class="mm-psec">
+          <div class="mm-psec-title">🎨 Cor do Nó</div>
+          <div class="mm-swatches">
+            <div class="mm-swatch active" data-c="nc-gray"   style="background:#1c2030" onclick="mmSetColor('nc-gray',this)"></div>
+            <div class="mm-swatch" data-c="nc-green"  style="background:#0b2d1c" onclick="mmSetColor('nc-green',this)"></div>
+            <div class="mm-swatch" data-c="nc-blue"   style="background:#0e1e38" onclick="mmSetColor('nc-blue',this)"></div>
+            <div class="mm-swatch" data-c="nc-purple" style="background:#1e1638" onclick="mmSetColor('nc-purple',this)"></div>
+            <div class="mm-swatch" data-c="nc-amber"  style="background:#2c1e00" onclick="mmSetColor('nc-amber',this)"></div>
+            <div class="mm-swatch" data-c="nc-red"    style="background:#2e0f0f" onclick="mmSetColor('nc-red',this)"></div>
+            <div class="mm-swatch" data-c="nc-cyan"   style="background:#061e2a" onclick="mmSetColor('nc-cyan',this)"></div>
+          </div>
+        </div>
+        <div class="mm-psec">
+          <div class="mm-psec-title">😀 Emoji</div>
+          <div class="mm-emoji-grid">
+            <div class="mm-epick" onclick="mmSetEmoji('')">✕</div>
+            <div class="mm-epick" onclick="mmSetEmoji('🎯')">🎯</div>
+            <div class="mm-epick" onclick="mmSetEmoji('💡')">💡</div>
+            <div class="mm-epick" onclick="mmSetEmoji('🚀')">🚀</div>
+            <div class="mm-epick" onclick="mmSetEmoji('⚡')">⚡</div>
+            <div class="mm-epick" onclick="mmSetEmoji('🔥')">🔥</div>
+            <div class="mm-epick" onclick="mmSetEmoji('✅')">✅</div>
+            <div class="mm-epick" onclick="mmSetEmoji('📌')">📌</div>
+            <div class="mm-epick" onclick="mmSetEmoji('💬')">💬</div>
+            <div class="mm-epick" onclick="mmSetEmoji('📊')">📊</div>
+            <div class="mm-epick" onclick="mmSetEmoji('🏆')">🏆</div>
+            <div class="mm-epick" onclick="mmSetEmoji('💰')">💰</div>
+            <div class="mm-epick" onclick="mmSetEmoji('🤝')">🤝</div>
+            <div class="mm-epick" onclick="mmSetEmoji('⚠️')">⚠️</div>
+            <div class="mm-epick" onclick="mmSetEmoji('🔑')">🔑</div>
+            <div class="mm-epick" onclick="mmSetEmoji('👤')">👤</div>
+            <div class="mm-epick" onclick="mmSetEmoji('⚙️')">⚙️</div>
+            <div class="mm-epick" onclick="mmSetEmoji('📋')">📋</div>
+          </div>
+        </div>
+        <div class="mm-psec">
+          <div class="mm-psec-title">🔗 Estilo das Linhas</div>
+          <div class="mm-linebts">
+            <button class="mm-linebtn active" id="mml-curved"   onclick="mmLineStyle('curved',this)">Curva</button>
+            <button class="mm-linebtn"        id="mml-straight" onclick="mmLineStyle('straight',this)">Reta</button>
+            <button class="mm-linebtn"        id="mml-elbow"    onclick="mmLineStyle('elbow',this)">Angular</button>
+          </div>
+        </div>
+        <div class="mm-psec">
+          <div class="mm-psec-title">📚 Templates</div>
+          <div class="mm-tmpl-grid">
+            <div class="mm-tmpl-card" onclick="mmLoadTmpl('processos')"><div class="mm-tmpl-icon">⚙️</div><div class="mm-tmpl-name">Montar Processos</div></div>
+            <div class="mm-tmpl-card" onclick="mmLoadTmpl('funil')"><div class="mm-tmpl-icon">🎯</div><div class="mm-tmpl-name">Funil de Vendas</div></div>
+            <div class="mm-tmpl-card" onclick="mmLoadTmpl('objecoes')"><div class="mm-tmpl-icon">🛡</div><div class="mm-tmpl-name">Mapa Objeções</div></div>
+            <div class="mm-tmpl-card" onclick="mmLoadTmpl('icp')"><div class="mm-tmpl-icon">👤</div><div class="mm-tmpl-name">ICP & Personas</div></div>
+            <div class="mm-tmpl-card" onclick="mmLoadTmpl('cadencia')"><div class="mm-tmpl-icon">⚡</div><div class="mm-tmpl-name">Cadência</div></div>
+            <div class="mm-tmpl-card" onclick="mmLoadTmpl('onboarding')"><div class="mm-tmpl-icon">🚀</div><div class="mm-tmpl-name">Onboarding SDR</div></div>
+          </div>
+        </div>
+        <div class="mm-psec">
+          <div class="mm-psec-title">📤 Exportar</div>
+          <button class="mm-expbtn" onclick="mmExportSVG()">🖼 Exportar SVG</button>
+          <button class="mm-expbtn" onclick="mmExportJSON()">📄 Exportar JSON</button>
+          <button class="mm-expbtn" onclick="mmExportTxt()">📝 Exportar Texto</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="mm-modal-overlay" id="mm-ai-modal">
+  <div class="mm-modal">
+    <div class="mm-modal-title">✦ Gerar Mapa com IA</div>
+    <div class="mm-modal-sub">Descreva o tema e a IA gera automaticamente o mapa mental.</div>
+    <textarea class="mm-modal-inp" id="mm-ai-prompt" placeholder="Ex: Processo de vendas para clínicas com prospecção, qualificação, proposta e fechamento..."></textarea>
+    <div class="mm-modal-btns">
+      <button class="mm-modal-btn" onclick="mmCloseAI()">Cancelar</button>
+      <button class="mm-modal-btn confirm" id="mm-ai-genbtn" onclick="mmGenAI()"><span id="mm-ai-lbl">✦ Gerar</span></button>
+    </div>
+  </div>
+</div>
+<div class="mm-toast" id="mm-toast"></div>
   </div><!-- /content -->
 </div><!-- /main -->
 
