@@ -74,6 +74,12 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
 .tab-item.active::before{content:'';position:absolute;left:0;top:5px;bottom:5px;width:3px;background:var(--blue);border-radius:0 3px 3px 0}
 .tab-item i{font-size:16px;width:18px;text-align:center;flex-shrink:0}
 .tab-badge{margin-left:auto;font-size:9.5px;font-weight:700;padding:1px 6px;border-radius:99px}
+.tab-group .tab-sub{display:none;flex-direction:column;gap:1px;margin:2px 0 4px;padding-left:6px;border-left:1px dashed var(--bg3);margin-left:14px}
+.tab-group.open .tab-sub{display:flex}
+.tab-group.open .tab-chev{transform:rotate(180deg)}
+.tab-subsection{font-size:9px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.1em;padding:8px 8px 3px}
+.tab-subitem{padding:7px 9px;font-size:12px}
+.tab-subitem i{font-size:14px;width:16px}
 .tb-red{background:var(--red-d);color:var(--red)}
 .tb-amber{background:var(--amber-d);color:var(--amber)}
 .tb-green{background:var(--green-d);color:var(--green)}
