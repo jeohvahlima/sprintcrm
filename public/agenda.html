@@ -337,10 +337,11 @@
       </div>
       <div class="actions">
         <span class="status-chip"><span class="dot"></span> <strong>Google Calendar</strong> <span class="conn">conectado</span></span>
-        <button class="btn"><i class="ti ti-refresh"></i> Sincronizar</button>
-        <button class="btn icon" title="Configurações"><i class="ti ti-settings"></i></button>
-        <button class="btn primary"><i class="ti ti-plus"></i> Criar</button>
+        <button class="btn" id="btnSync"><i class="ti ti-refresh"></i> Sincronizar</button>
+        <button class="btn icon" title="Configurações" id="btnConfig"><i class="ti ti-settings"></i></button>
+        <button class="btn primary" id="btnCriar"><i class="ti ti-plus"></i> Criar</button>
       </div>
+
     </header>
 
     <div class="content">
@@ -706,5 +707,295 @@
       </section>
     </div>
   </div>
+
+  <!-- MODAL Criar/Editar Compromisso -->
+  <div id="apptModal" style="display:none; position:fixed; inset:0; background:rgba(15,23,42,0.55); z-index:9999; align-items:center; justify-content:center; padding:20px;">
+    <div style="background:hsl(var(--surface)); border-radius:14px; width:100%; max-width:520px; box-shadow:0 20px 60px rgba(0,0,0,0.25); overflow:hidden;">
+      <div style="display:flex; align-items:center; justify-content:space-between; padding:16px 20px; border-bottom:1px solid hsl(var(--border));">
+        <h3 id="apptTitle" style="margin:0; font-size:16px; font-weight:700; color:hsl(var(--text));">Novo compromisso</h3>
+        <button id="apptClose" class="iconbtn" title="Fechar"><i class="ti ti-x"></i></button>
+      </div>
+      <div style="padding:18px 20px; display:flex; flex-direction:column; gap:12px;">
+        <label style="display:flex; flex-direction:column; gap:6px; font-size:12px; color:hsl(var(--text-muted)); font-weight:600;">Cliente
+          <input id="f_name" type="text" placeholder="Nome do cliente" style="padding:9px 12px; border:1px solid hsl(var(--border)); border-radius:8px; font-size:13px; background:hsl(var(--surface)); color:hsl(var(--text));"/>
+        </label>
+        <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px;">
+          <label style="display:flex; flex-direction:column; gap:6px; font-size:12px; color:hsl(var(--text-muted)); font-weight:600;">Data
+            <input id="f_date" type="date" style="padding:9px 12px; border:1px solid hsl(var(--border)); border-radius:8px; font-size:13px;"/>
+          </label>
+          <label style="display:flex; flex-direction:column; gap:6px; font-size:12px; color:hsl(var(--text-muted)); font-weight:600;">Início
+            <input id="f_start" type="time" style="padding:9px 12px; border:1px solid hsl(var(--border)); border-radius:8px; font-size:13px;"/>
+          </label>
+          <label style="display:flex; flex-direction:column; gap:6px; font-size:12px; color:hsl(var(--text-muted)); font-weight:600;">Fim
+            <input id="f_end" type="time" style="padding:9px 12px; border:1px solid hsl(var(--border)); border-radius:8px; font-size:13px;"/>
+          </label>
+        </div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+          <label style="display:flex; flex-direction:column; gap:6px; font-size:12px; color:hsl(var(--text-muted)); font-weight:600;">Tipo
+            <select id="f_type" style="padding:9px 12px; border:1px solid hsl(var(--border)); border-radius:8px; font-size:13px; background:hsl(var(--surface));">
+              <option>Consulta</option><option>Retorno</option><option>Procedimento</option><option>Reunião</option>
+            </select>
+          </label>
+          <label style="display:flex; flex-direction:column; gap:6px; font-size:12px; color:hsl(var(--text-muted)); font-weight:600;">Profissional
+            <input id="f_prof" type="text" placeholder="Ex: Dr. Carlos Pinto" style="padding:9px 12px; border:1px solid hsl(var(--border)); border-radius:8px; font-size:13px;"/>
+          </label>
+        </div>
+        <label style="display:flex; flex-direction:column; gap:6px; font-size:12px; color:hsl(var(--text-muted)); font-weight:600;">WhatsApp (opcional)
+          <input id="f_phone" type="tel" placeholder="(11) 90000-0000" style="padding:9px 12px; border:1px solid hsl(var(--border)); border-radius:8px; font-size:13px;"/>
+        </label>
+      </div>
+      <div style="padding:14px 20px; border-top:1px solid hsl(var(--border)); display:flex; gap:8px; justify-content:flex-end;">
+        <button id="apptDelete" class="btn" style="display:none; color:hsl(var(--danger)); border-color:hsl(var(--danger-soft));"><i class="ti ti-trash"></i> Excluir</button>
+        <button id="apptCancel" class="btn">Cancelar</button>
+        <button id="apptSave" class="btn primary"><i class="ti ti-check"></i> Salvar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div id="toast" style="display:none; position:fixed; bottom:20px; right:20px; background:hsl(var(--text)); color:hsl(var(--surface)); padding:10px 16px; border-radius:8px; font-size:13px; z-index:10000; box-shadow:0 10px 30px rgba(0,0,0,0.25);"></div>
+
+  <script>
+    (function(){
+      const STORAGE_KEY = 'agenda_appointments_v1';
+      const monthNames = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+      const dowShort = ['DOM','SEG','TER','QUA','QUI','SEX','SÁB'];
+
+      let viewDate = new Date(2026, 5, 3); // Junho 2026 selecionado dia 3
+      let selectedDate = new Date(viewDate);
+      let editingId = null;
+
+      function load(){ try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; } catch { return []; } }
+      function save(list){ localStorage.setItem(STORAGE_KEY, JSON.stringify(list)); }
+      function toast(msg){ const t=document.getElementById('toast'); t.textContent=msg; t.style.display='block'; clearTimeout(t._h); t._h=setTimeout(()=>t.style.display='none',2500); }
+      function pad(n){ return String(n).padStart(2,'0'); }
+      function fmtDateISO(d){ return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate()); }
+      function parseISO(s){ const [y,m,d]=s.split('-').map(Number); return new Date(y,m-1,d); }
+      function sameDay(a,b){ return a.getFullYear()===b.getFullYear()&&a.getMonth()===b.getMonth()&&a.getDate()===b.getDate(); }
+
+      // ---------- Calendar render ----------
+      function renderCalendar(){
+        const grid = document.querySelector('.cal-grid');
+        const head = document.querySelector('.cal-head span');
+        head.textContent = monthNames[viewDate.getMonth()] + ' ' + viewDate.getFullYear();
+        // keep dow headers (first 7 children)
+        const dowEls = Array.from(grid.querySelectorAll('.cal-dow'));
+        grid.innerHTML = '';
+        dowEls.forEach(e => grid.appendChild(e));
+
+        const year = viewDate.getFullYear(), month = viewDate.getMonth();
+        const firstDow = new Date(year, month, 1).getDay();
+        const daysInMonth = new Date(year, month+1, 0).getDate();
+        const prevDays = new Date(year, month, 0).getDate();
+        const items = load();
+        const today = new Date();
+
+        const cells = [];
+        for(let i=firstDow-1;i>=0;i--) cells.push({day: prevDays-i, muted:true, date:new Date(year,month-1,prevDays-i)});
+        for(let d=1; d<=daysInMonth; d++) cells.push({day:d, date:new Date(year,month,d)});
+        while(cells.length % 7 !== 0 || cells.length < 42){
+          const last = cells[cells.length-1].date;
+          const next = new Date(last); next.setDate(last.getDate()+1);
+          cells.push({day: next.getDate(), muted:true, date: next});
+          if(cells.length>=42) break;
+        }
+        cells.forEach(c => {
+          const el = document.createElement('div');
+          el.className = 'cal-day';
+          if(c.muted) el.classList.add('muted');
+          if(sameDay(c.date, today)) el.classList.add('today');
+          if(sameDay(c.date, selectedDate) && !c.muted) el.classList.add('today');
+          const dayItems = items.filter(it => it.date === fmtDateISO(c.date));
+          if(dayItems.some(i => i.status==='cancelado')) el.classList.add('has-cancel');
+          else if(dayItems.some(i => i.status==='concluido')) el.classList.add('has-completed');
+          el.innerHTML = c.day + (dayItems.length ? '<span class="ev-dot"></span>' : '');
+          el.style.cursor = 'pointer';
+          el.addEventListener('click', () => {
+            selectedDate = new Date(c.date);
+            if(c.muted){ viewDate = new Date(c.date); }
+            renderAll();
+          });
+          grid.appendChild(el);
+        });
+      }
+
+      // ---------- Week view render ----------
+      function renderWeek(){
+        const wg = document.querySelector('.week-grid');
+        const title = document.querySelector('.week-toolbar .panel-title');
+        const start = new Date(selectedDate);
+        start.setDate(selectedDate.getDate() - selectedDate.getDay()); // domingo
+        const end = new Date(start); end.setDate(start.getDate()+6);
+        title.innerHTML = '<i class="ti ti-calendar-week"></i> Visão semanal — ' + start.getDate() + ' a ' + end.getDate() + ' ' + monthNames[end.getMonth()].slice(0,3).toLowerCase();
+
+        wg.innerHTML = '';
+        const today = new Date();
+        // header row
+        wg.appendChild(Object.assign(document.createElement('div'),{className:'wh-head'}));
+        for(let i=0;i<7;i++){
+          const d = new Date(start); d.setDate(start.getDate()+i);
+          const h = document.createElement('div'); h.className='wh-head';
+          if(sameDay(d, selectedDate) || sameDay(d, today)) h.classList.add('today');
+          h.innerHTML = '<span>'+dowShort[i]+'</span><span class="num">'+d.getDate()+'</span>';
+          h.style.cursor='pointer';
+          h.addEventListener('click', () => { selectedDate = new Date(d); renderAll(); });
+          wg.appendChild(h);
+        }
+        const items = load();
+        const colorOf = t => ({Consulta:'blue', Retorno:'green', Procedimento:'orange', 'Reunião':'purple'}[t] || 'blue');
+        for(let h=8; h<=12; h++){
+          const time = document.createElement('div'); time.className='wh-time'; time.textContent = pad(h)+':00'; wg.appendChild(time);
+          for(let i=0;i<7;i++){
+            const d = new Date(start); d.setDate(start.getDate()+i);
+            const cell = document.createElement('div'); cell.className='wh-slot wh-cell';
+            if(sameDay(d, selectedDate)) cell.classList.add('today-col');
+            cell.style.cursor='pointer';
+            cell.addEventListener('click', () => openModal(null, {date: fmtDateISO(d), start: pad(h)+':00'}));
+            const ev = items.find(it => it.date===fmtDateISO(d) && it.start && parseInt(it.start)===h);
+            if(ev){
+              const e = document.createElement('div'); e.className='ev '+colorOf(ev.type);
+              e.innerHTML = '<div class="nm">'+escapeHTML(ev.name)+'</div><div class="tm">'+ev.start+' – '+(ev.end||'')+'</div>';
+              e.addEventListener('click', (evt) => { evt.stopPropagation(); openModal(ev.id); });
+              cell.appendChild(e);
+            }
+            wg.appendChild(cell);
+          }
+        }
+      }
+
+      // ---------- List render (user-added items appended) ----------
+      function renderList(){
+        let extra = document.getElementById('extraList');
+        if(!extra){
+          const list = document.querySelector('.compromisso-list');
+          extra = document.createElement('div'); extra.id='extraList'; extra.style.display='contents';
+          list.appendChild(extra);
+        }
+        extra.innerHTML = '';
+        const items = load().sort((a,b)=> (a.date+a.start).localeCompare(b.date+b.start));
+        items.forEach(ev => {
+          const initials = (ev.name||'?').split(/\s+/).slice(0,2).map(s=>s[0]||'').join('').toUpperCase();
+          const colorClass = ev.status==='cancelado' ? 'c-danger' : ev.status==='concluido' ? 'c-success' : 'c-info';
+          const statusPill = ev.status==='cancelado'
+            ? '<span class="pill danger"><i class="ti ti-x"></i> Cancelado</span>'
+            : ev.status==='concluido'
+              ? '<span class="pill success"><i class="ti ti-circle-check"></i> Concluído</span>'
+              : '<span class="pill info"><i class="ti ti-calendar-time"></i> Agendado</span>';
+          const [y,m,d] = ev.date.split('-');
+          const wa = ev.phone ? '<button class="iconbtn green" data-wa="'+escapeAttr(ev.phone)+'" title="WhatsApp"><i class="ti ti-brand-whatsapp"></i></button>' : '';
+          const div = document.createElement('div');
+          div.className = 'item '+colorClass;
+          div.innerHTML = `
+            <div class="avatar">${escapeHTML(initials)}</div>
+            <div class="item-main">
+              <div class="item-head">
+                <span class="item-name">${escapeHTML(ev.name)}</span>
+                ${statusPill}
+              </div>
+              <div class="item-meta-row">
+                <div class="item-meta">
+                  <span><i class="ti ti-calendar"></i> ${d}/${m}/${y} às ${ev.start}</span>
+                  <span class="sep">·</span>
+                  <span><i class="ti ti-clock"></i> ${ev.start} – ${ev.end||''}</span>
+                  <span class="pill neutral">${escapeHTML(ev.type||'Consulta')}</span>
+                </div>
+                ${ev.prof ? '<div class="item-meta"><span><i class="ti ti-user"></i> '+escapeHTML(ev.prof)+'</span></div>' : ''}
+              </div>
+            </div>
+            <div class="item-actions">
+              ${wa}
+              <button class="iconbtn" data-edit="${ev.id}" title="Editar"><i class="ti ti-pencil"></i></button>
+              <button class="iconbtn" data-del="${ev.id}" title="Excluir"><i class="ti ti-trash"></i></button>
+            </div>`;
+          extra.appendChild(div);
+        });
+      }
+
+      function escapeHTML(s){ return String(s||'').replace(/[&<>"]/g, c=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;' }[c])); }
+      function escapeAttr(s){ return escapeHTML(s); }
+
+      // ---------- Modal ----------
+      function openModal(id, prefill){
+        editingId = id || null;
+        const items = load();
+        const ev = id ? items.find(i=>i.id===id) : null;
+        document.getElementById('apptTitle').textContent = ev ? 'Editar compromisso' : 'Novo compromisso';
+        document.getElementById('f_name').value = ev?.name || '';
+        document.getElementById('f_date').value = ev?.date || prefill?.date || fmtDateISO(selectedDate);
+        document.getElementById('f_start').value = ev?.start || prefill?.start || '09:00';
+        document.getElementById('f_end').value = ev?.end || '09:30';
+        document.getElementById('f_type').value = ev?.type || 'Consulta';
+        document.getElementById('f_prof').value = ev?.prof || '';
+        document.getElementById('f_phone').value = ev?.phone || '';
+        document.getElementById('apptDelete').style.display = ev ? 'inline-flex' : 'none';
+        document.getElementById('apptModal').style.display = 'flex';
+      }
+      function closeModal(){ document.getElementById('apptModal').style.display='none'; editingId=null; }
+
+      document.getElementById('apptClose').addEventListener('click', closeModal);
+      document.getElementById('apptCancel').addEventListener('click', closeModal);
+      document.getElementById('apptModal').addEventListener('click', (e)=>{ if(e.target.id==='apptModal') closeModal(); });
+      document.getElementById('apptSave').addEventListener('click', () => {
+        const name = document.getElementById('f_name').value.trim();
+        const date = document.getElementById('f_date').value;
+        const start = document.getElementById('f_start').value;
+        if(!name || !date || !start){ toast('Preencha cliente, data e início'); return; }
+        const items = load();
+        const payload = {
+          id: editingId || ('a_'+Date.now()),
+          name, date, start,
+          end: document.getElementById('f_end').value,
+          type: document.getElementById('f_type').value,
+          prof: document.getElementById('f_prof').value.trim(),
+          phone: document.getElementById('f_phone').value.trim(),
+          status: 'agendado'
+        };
+        if(editingId){
+          const idx = items.findIndex(i=>i.id===editingId);
+          if(idx>=0) items[idx] = { ...items[idx], ...payload };
+        } else items.push(payload);
+        save(items); closeModal(); selectedDate = parseISO(date); renderAll();
+        toast(editingId ? 'Compromisso atualizado' : 'Compromisso criado');
+      });
+      document.getElementById('apptDelete').addEventListener('click', () => {
+        if(!editingId) return;
+        if(!confirm('Excluir este compromisso?')) return;
+        save(load().filter(i=>i.id!==editingId)); closeModal(); renderAll(); toast('Compromisso excluído');
+      });
+
+      // ---------- Top buttons ----------
+      document.getElementById('btnCriar').addEventListener('click', () => openModal(null));
+      document.getElementById('btnSync').addEventListener('click', () => toast('Sincronizado com Google Calendar'));
+      document.getElementById('btnConfig').addEventListener('click', () => toast('Abrindo configurações...'));
+
+      // calendar nav
+      const navBtns = document.querySelectorAll('.cal-nav button');
+      if(navBtns[0]) navBtns[0].addEventListener('click', () => { viewDate.setMonth(viewDate.getMonth()-1); renderAll(); });
+      if(navBtns[1]) navBtns[1].addEventListener('click', () => { viewDate.setMonth(viewDate.getMonth()+1); renderAll(); });
+      const todayBtn = document.querySelector('.panel-head .btn');
+      if(todayBtn) todayBtn.addEventListener('click', () => { const t=new Date(); viewDate=new Date(t); selectedDate=new Date(t); renderAll(); });
+
+      // delegated clicks on list (works for static items too)
+      document.addEventListener('click', (e) => {
+        const wa = e.target.closest('[data-wa]');
+        if(wa){ const ph=wa.getAttribute('data-wa').replace(/\D/g,''); window.open('https://wa.me/'+ph,'_blank'); return; }
+        const ed = e.target.closest('[data-edit]');
+        if(ed){ openModal(ed.getAttribute('data-edit')); return; }
+        const dl = e.target.closest('[data-del]');
+        if(dl){ const id=dl.getAttribute('data-del'); if(confirm('Excluir?')){ save(load().filter(i=>i.id!==id)); renderAll(); toast('Excluído'); } return; }
+        // wire whatsapp/edit buttons on static items
+        const ib = e.target.closest('.iconbtn');
+        if(ib && ib.closest('.compromisso-list') && !ib.hasAttribute('data-wa') && !ib.hasAttribute('data-edit') && !ib.hasAttribute('data-del')){
+          const title = ib.getAttribute('title') || '';
+          if(title==='WhatsApp'){ window.open('https://wa.me/','_blank'); }
+          else if(title==='Editar' || title==='Reagendar'){ openModal(null, {date: fmtDateISO(selectedDate)}); }
+        }
+      });
+
+      function renderAll(){ renderCalendar(); renderWeek(); renderList(); }
+      renderAll();
+    })();
+  </script>
 </body>
 </html>
+
