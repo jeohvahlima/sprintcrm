@@ -1017,8 +1017,17 @@
           name, date, start,
           end: document.getElementById('f_end').value,
           type: document.getElementById('f_type').value,
+          agenda: document.getElementById('f_agenda').value,
           prof: document.getElementById('f_prof').value.trim(),
+          value: parseFloat(document.getElementById('f_value').value) || 0,
           phone: document.getElementById('f_phone').value.trim(),
+          email: document.getElementById('f_email').value.trim(),
+          remWa: document.getElementById('f_remWa').checked,
+          remEmail: document.getElementById('f_remEmail').checked,
+          remTime: document.getElementById('f_remTime').value,
+          confirmNow: document.getElementById('f_confirmNow').checked,
+          confirmEmail: document.getElementById('f_confirmEmail').checked,
+          notes: document.getElementById('f_notes').value.trim(),
           status: 'agendado'
         };
         if(editingId){
@@ -1026,7 +1035,11 @@
           if(idx>=0) items[idx] = { ...items[idx], ...payload };
         } else items.push(payload);
         save(items); closeModal(); selectedDate = parseISO(date); renderAll();
-        toast(editingId ? 'Compromisso atualizado' : 'Compromisso criado');
+        const extras = [];
+        if(payload.confirmNow && payload.phone) extras.push('confirmação WhatsApp enviada');
+        if(payload.confirmEmail && payload.email) extras.push('e-mail de confirmação enviado');
+        if(payload.remWa || payload.remEmail) extras.push('lembrete agendado');
+        toast((editingId ? 'Compromisso atualizado' : 'Compromisso criado') + (extras.length ? ' · ' + extras.join(' · ') : ''));
       });
       document.getElementById('apptDelete').addEventListener('click', () => {
         if(!editingId) return;
