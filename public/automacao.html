@@ -1334,6 +1334,27 @@ function post(msg) {
   try { window.parent.postMessage({ __growos: true, ...msg }, '*'); } catch (e) {}
 }
 
+function toggleWaGroup(el) {
+  const g = document.getElementById('waGroup');
+  if (g) g.classList.toggle('open');
+}
+
+function switchWa(panel, el) {
+  const g = document.getElementById('waGroup');
+  if (g) g.classList.add('open');
+  // ativa a aba whatsapp-oficial
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
+  const tp = document.getElementById('tab-whatsapp-oficial');
+  if (tp) tp.classList.add('active');
+  if (el) el.classList.add('active');
+  // pede ao iframe para trocar de painel interno
+  const iframe = document.getElementById('waIframe');
+  if (iframe && iframe.contentWindow) {
+    iframe.contentWindow.postMessage({ __wa: true, type: 'switchPanel', panel }, '*');
+  }
+}
+
 // Delegação global por texto de botão
 document.addEventListener('click', function (e) {
   const btn = e.target.closest('button, .cp-cta, .sp-btn-prim, .sp-btn-sec, .sp-cta-sm');
