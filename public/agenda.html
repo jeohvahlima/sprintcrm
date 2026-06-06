@@ -710,8 +710,8 @@
 
   <!-- MODAL Criar/Editar Compromisso -->
   <div id="apptModal" style="display:none; position:fixed; inset:0; background:rgba(15,23,42,0.55); z-index:9999; align-items:center; justify-content:center; padding:20px;">
-    <div style="background:hsl(var(--surface)); border-radius:14px; width:100%; max-width:520px; box-shadow:0 20px 60px rgba(0,0,0,0.25); overflow:hidden;">
-      <div style="display:flex; align-items:center; justify-content:space-between; padding:16px 20px; border-bottom:1px solid hsl(var(--border));">
+    <div style="background:hsl(var(--surface)); border-radius:14px; width:100%; max-width:560px; max-height:90vh; overflow-y:auto; box-shadow:0 20px 60px rgba(0,0,0,0.25);">
+      <div style="display:flex; align-items:center; justify-content:space-between; padding:16px 20px; border-bottom:1px solid hsl(var(--border)); position:sticky; top:0; background:hsl(var(--surface)); z-index:1;">
         <h3 id="apptTitle" style="margin:0; font-size:16px; font-weight:700; color:hsl(var(--text));">Novo compromisso</h3>
         <button id="apptClose" class="iconbtn" title="Fechar"><i class="ti ti-x"></i></button>
       </div>
@@ -719,6 +719,24 @@
         <label style="display:flex; flex-direction:column; gap:6px; font-size:12px; color:hsl(var(--text-muted)); font-weight:600;">Cliente
           <input id="f_name" type="text" placeholder="Nome do cliente" style="padding:9px 12px; border:1px solid hsl(var(--border)); border-radius:8px; font-size:13px; background:hsl(var(--surface)); color:hsl(var(--text));"/>
         </label>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+          <label style="display:flex; flex-direction:column; gap:6px; font-size:12px; color:hsl(var(--text-muted)); font-weight:600;">Agenda
+            <select id="f_agenda" style="padding:9px 12px; border:1px solid hsl(var(--border)); border-radius:8px; font-size:13px; background:hsl(var(--surface));">
+              <option>Dr. Carlos Pinto — Cardiologia</option>
+              <option>Dra. Ana Souza — Pediatria</option>
+              <option>Dr. João Lima — Clínica Geral</option>
+              <option>Agenda compartilhada</option>
+            </select>
+          </label>
+          <label style="display:flex; flex-direction:column; gap:6px; font-size:12px; color:hsl(var(--text-muted)); font-weight:600;">Profissional / Especialista
+            <select id="f_prof" style="padding:9px 12px; border:1px solid hsl(var(--border)); border-radius:8px; font-size:13px; background:hsl(var(--surface));">
+              <option>Dr. Carlos Pinto</option>
+              <option>Dra. Ana Souza</option>
+              <option>Dr. João Lima</option>
+              <option>Equipe Comercial</option>
+            </select>
+          </label>
+        </div>
         <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px;">
           <label style="display:flex; flex-direction:column; gap:6px; font-size:12px; color:hsl(var(--text-muted)); font-weight:600;">Data
             <input id="f_date" type="date" style="padding:9px 12px; border:1px solid hsl(var(--border)); border-radius:8px; font-size:13px;"/>
@@ -731,20 +749,64 @@
           </label>
         </div>
         <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
-          <label style="display:flex; flex-direction:column; gap:6px; font-size:12px; color:hsl(var(--text-muted)); font-weight:600;">Tipo
+          <label style="display:flex; flex-direction:column; gap:6px; font-size:12px; color:hsl(var(--text-muted)); font-weight:600;">Tipo de serviço
             <select id="f_type" style="padding:9px 12px; border:1px solid hsl(var(--border)); border-radius:8px; font-size:13px; background:hsl(var(--surface));">
               <option>Consulta</option><option>Retorno</option><option>Procedimento</option><option>Reunião</option>
             </select>
           </label>
-          <label style="display:flex; flex-direction:column; gap:6px; font-size:12px; color:hsl(var(--text-muted)); font-weight:600;">Profissional
-            <input id="f_prof" type="text" placeholder="Ex: Dr. Carlos Pinto" style="padding:9px 12px; border:1px solid hsl(var(--border)); border-radius:8px; font-size:13px;"/>
+          <label style="display:flex; flex-direction:column; gap:6px; font-size:12px; color:hsl(var(--text-muted)); font-weight:600;">Valor estimado (R$)
+            <input id="f_value" type="number" min="0" step="0.01" placeholder="0,00" style="padding:9px 12px; border:1px solid hsl(var(--border)); border-radius:8px; font-size:13px;"/>
           </label>
         </div>
-        <label style="display:flex; flex-direction:column; gap:6px; font-size:12px; color:hsl(var(--text-muted)); font-weight:600;">WhatsApp (opcional)
-          <input id="f_phone" type="tel" placeholder="(11) 90000-0000" style="padding:9px 12px; border:1px solid hsl(var(--border)); border-radius:8px; font-size:13px;"/>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+          <label style="display:flex; flex-direction:column; gap:6px; font-size:12px; color:hsl(var(--text-muted)); font-weight:600;">WhatsApp
+            <input id="f_phone" type="tel" placeholder="(11) 90000-0000" style="padding:9px 12px; border:1px solid hsl(var(--border)); border-radius:8px; font-size:13px;"/>
+          </label>
+          <label style="display:flex; flex-direction:column; gap:6px; font-size:12px; color:hsl(var(--text-muted)); font-weight:600;">E-mail
+            <input id="f_email" type="email" placeholder="cliente@email.com" style="padding:9px 12px; border:1px solid hsl(var(--border)); border-radius:8px; font-size:13px;"/>
+          </label>
+        </div>
+
+        <div style="margin-top:6px; padding:12px; border:1px solid hsl(var(--border)); border-radius:10px;">
+          <div style="font-size:12px; font-weight:700; color:hsl(var(--text)); margin-bottom:8px; display:flex; align-items:center; gap:6px;"><i class="ti ti-bell"></i> Lembretes e confirmações</div>
+
+          <label style="display:flex; align-items:center; justify-content:space-between; gap:10px; padding:8px 0; border-bottom:1px dashed hsl(var(--border));">
+            <span style="font-size:13px; color:hsl(var(--text));">Lembrete via WhatsApp<span style="display:block; font-size:11px; color:hsl(var(--text-muted)); font-weight:500;">Cliente receberá lembrete antes do horário</span></span>
+            <input id="f_remWa" type="checkbox" checked style="width:18px; height:18px; accent-color:hsl(var(--primary));"/>
+          </label>
+
+          <label style="display:flex; align-items:center; justify-content:space-between; gap:10px; padding:8px 0; border-bottom:1px dashed hsl(var(--border));">
+            <span style="font-size:13px; color:hsl(var(--text));">Lembrete via E-mail<span style="display:block; font-size:11px; color:hsl(var(--text-muted)); font-weight:500;">Envia e-mail antes do compromisso</span></span>
+            <input id="f_remEmail" type="checkbox" style="width:18px; height:18px; accent-color:hsl(var(--primary));"/>
+          </label>
+
+          <label style="display:flex; flex-direction:column; gap:6px; padding:8px 0; border-bottom:1px dashed hsl(var(--border)); font-size:12px; color:hsl(var(--text-muted)); font-weight:600;">Antecedência do lembrete
+            <select id="f_remTime" style="padding:8px 12px; border:1px solid hsl(var(--border)); border-radius:8px; font-size:13px; background:hsl(var(--surface));">
+              <option value="15">15 minutos antes</option>
+              <option value="30">30 minutos antes</option>
+              <option value="60" selected>1 hora antes</option>
+              <option value="180">3 horas antes</option>
+              <option value="1440">1 dia antes</option>
+              <option value="2880">2 dias antes</option>
+            </select>
+          </label>
+
+          <label style="display:flex; align-items:center; justify-content:space-between; gap:10px; padding:8px 0; border-bottom:1px dashed hsl(var(--border));">
+            <span style="font-size:13px; color:hsl(var(--text));">Confirmação imediata via WhatsApp<span style="display:block; font-size:11px; color:hsl(var(--text-muted)); font-weight:500;">Envia mensagem de confirmação agora</span></span>
+            <input id="f_confirmNow" type="checkbox" checked style="width:18px; height:18px; accent-color:hsl(var(--primary));"/>
+          </label>
+
+          <label style="display:flex; align-items:center; justify-content:space-between; gap:10px; padding:8px 0;">
+            <span style="font-size:13px; color:hsl(var(--text));">Confirmação por e-mail<span style="display:block; font-size:11px; color:hsl(var(--text-muted)); font-weight:500;">Envia e-mail de confirmação do compromisso</span></span>
+            <input id="f_confirmEmail" type="checkbox" style="width:18px; height:18px; accent-color:hsl(var(--primary));"/>
+          </label>
+        </div>
+
+        <label style="display:flex; flex-direction:column; gap:6px; font-size:12px; color:hsl(var(--text-muted)); font-weight:600;">Observações
+          <textarea id="f_notes" rows="2" placeholder="Notas internas sobre o compromisso..." style="padding:9px 12px; border:1px solid hsl(var(--border)); border-radius:8px; font-size:13px; resize:vertical; font-family:inherit;"></textarea>
         </label>
       </div>
-      <div style="padding:14px 20px; border-top:1px solid hsl(var(--border)); display:flex; gap:8px; justify-content:flex-end;">
+      <div style="padding:14px 20px; border-top:1px solid hsl(var(--border)); display:flex; gap:8px; justify-content:flex-end; position:sticky; bottom:0; background:hsl(var(--surface));">
         <button id="apptDelete" class="btn" style="display:none; color:hsl(var(--danger)); border-color:hsl(var(--danger-soft));"><i class="ti ti-trash"></i> Excluir</button>
         <button id="apptCancel" class="btn">Cancelar</button>
         <button id="apptSave" class="btn primary"><i class="ti ti-check"></i> Salvar</button>
@@ -925,8 +987,17 @@
         document.getElementById('f_start').value = ev?.start || prefill?.start || '09:00';
         document.getElementById('f_end').value = ev?.end || '09:30';
         document.getElementById('f_type').value = ev?.type || 'Consulta';
-        document.getElementById('f_prof').value = ev?.prof || '';
+        document.getElementById('f_agenda').value = ev?.agenda || 'Dr. Carlos Pinto — Cardiologia';
+        document.getElementById('f_prof').value = ev?.prof || 'Dr. Carlos Pinto';
+        document.getElementById('f_value').value = ev?.value ?? '';
         document.getElementById('f_phone').value = ev?.phone || '';
+        document.getElementById('f_email').value = ev?.email || '';
+        document.getElementById('f_remWa').checked = ev?.remWa ?? true;
+        document.getElementById('f_remEmail').checked = ev?.remEmail ?? false;
+        document.getElementById('f_remTime').value = ev?.remTime || '60';
+        document.getElementById('f_confirmNow').checked = ev?.confirmNow ?? true;
+        document.getElementById('f_confirmEmail').checked = ev?.confirmEmail ?? false;
+        document.getElementById('f_notes').value = ev?.notes || '';
         document.getElementById('apptDelete').style.display = ev ? 'inline-flex' : 'none';
         document.getElementById('apptModal').style.display = 'flex';
       }
@@ -946,8 +1017,17 @@
           name, date, start,
           end: document.getElementById('f_end').value,
           type: document.getElementById('f_type').value,
+          agenda: document.getElementById('f_agenda').value,
           prof: document.getElementById('f_prof').value.trim(),
+          value: parseFloat(document.getElementById('f_value').value) || 0,
           phone: document.getElementById('f_phone').value.trim(),
+          email: document.getElementById('f_email').value.trim(),
+          remWa: document.getElementById('f_remWa').checked,
+          remEmail: document.getElementById('f_remEmail').checked,
+          remTime: document.getElementById('f_remTime').value,
+          confirmNow: document.getElementById('f_confirmNow').checked,
+          confirmEmail: document.getElementById('f_confirmEmail').checked,
+          notes: document.getElementById('f_notes').value.trim(),
           status: 'agendado'
         };
         if(editingId){
@@ -955,7 +1035,11 @@
           if(idx>=0) items[idx] = { ...items[idx], ...payload };
         } else items.push(payload);
         save(items); closeModal(); selectedDate = parseISO(date); renderAll();
-        toast(editingId ? 'Compromisso atualizado' : 'Compromisso criado');
+        const extras = [];
+        if(payload.confirmNow && payload.phone) extras.push('confirmação WhatsApp enviada');
+        if(payload.confirmEmail && payload.email) extras.push('e-mail de confirmação enviado');
+        if(payload.remWa || payload.remEmail) extras.push('lembrete agendado');
+        toast((editingId ? 'Compromisso atualizado' : 'Compromisso criado') + (extras.length ? ' · ' + extras.join(' · ') : ''));
       });
       document.getElementById('apptDelete').addEventListener('click', () => {
         if(!editingId) return;
