@@ -15,7 +15,7 @@ import { Switch } from "@/components/ui/switch";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { MessageSquare, Instagram, Facebook, Send, Search, Bot, User, Paperclip, Clock, Calendar, Zap, FileText, Tag, TrendingUp, ArrowRightLeft, Image as ImageIcon, Mic, FileUp, Check, CheckCheck, Phone, Video, Info, DollarSign, Users, Bell, Download, Volume2, RefreshCw, CheckCircle2, AlertCircle, Reply, CheckSquare, X, Plus, Trash2, Loader2, UserCog, ArrowLeft, SpellCheck, Trophy, XCircle, Eye, ChevronDown, ChevronUp, MoreHorizontal, Mail, Building2, Globe, Pencil, MapPin, Key, Shield, Package, PenLine, BarChart3, Music, Workflow } from "lucide-react";
+import { MessageSquare, Instagram, Facebook, Send, Search, Bot, User, Paperclip, Clock, Calendar, Zap, FileText, Tag, TrendingUp, ArrowRightLeft, Image as ImageIcon, Mic, FileUp, Check, CheckCheck, Phone, Video, Info, DollarSign, Users, Bell, Download, Volume2, RefreshCw, CheckCircle2, AlertCircle, Reply, CheckSquare, X, Plus, Trash2, Loader2, UserCog, ArrowLeft, SpellCheck, Trophy, XCircle, Eye, ChevronDown, ChevronUp, MoreHorizontal, Mail, Building2, Globe, Pencil, MapPin, Key, Shield, Package, PenLine, BarChart3, Music, Workflow, Hourglass, Headphones, Lock } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { FinalizarNegociacaoDialog } from "@/components/leads/FinalizarNegociacaoDialog";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -9284,26 +9284,30 @@ function Conversas() {
           </div>
           
           {/* Filters */}
-          <div className={`grid ${isSuperAdmin ? 'grid-cols-5' : 'grid-cols-4'} gap-0.5 items-start`}>
-            <Button variant={filter === "all" ? "default" : "ghost"} size="sm" onClick={() => setFilter("all")} className="relative flex flex-col items-center gap-0.5 h-auto py-1 px-2">
+          <div className="flex flex-wrap gap-1 items-stretch">
+            <Button variant={filter === "all" ? "default" : "ghost"} size="sm" onClick={() => setFilter("all")} className="relative flex flex-col items-center gap-0.5 h-auto py-1 px-2 min-w-[64px]">
+              <MessageSquare className="h-3.5 w-3.5 opacity-70" />
               <Badge variant="secondary" className="min-w-[20px] h-5 px-1.5 flex items-center justify-center text-xs">
                 {conversations.filter(c => !c.isGroup || !blockedGroups.has(c.phoneNumber || c.id)).length}
               </Badge>
               <span className="text-xs">Todos</span>
             </Button>
-            <Button variant={filter === "waiting" ? "default" : "ghost"} size="sm" onClick={() => setFilter("waiting")} className="relative flex flex-col items-center gap-0.5 h-auto py-1 px-2">
+            <Button variant={filter === "waiting" ? "default" : "ghost"} size="sm" onClick={() => setFilter("waiting")} className="relative flex flex-col items-center gap-0.5 h-auto py-1 px-2 min-w-[64px]">
+              <Hourglass className="h-3.5 w-3.5 opacity-70" />
               <Badge variant="destructive" className="bg-red-500 hover:bg-red-600 text-white min-w-[20px] h-5 px-1.5 flex items-center justify-center text-xs">
                 {waitingCount}
               </Badge>
               <span className="text-xs">Esperando</span>
             </Button>
-            <Button variant={filter === "answered" ? "default" : "ghost"} size="sm" onClick={() => setFilter("answered")} className="relative flex flex-col items-center gap-0.5 h-auto py-1 px-2">
+            <Button variant={filter === "answered" ? "default" : "ghost"} size="sm" onClick={() => setFilter("answered")} className="relative flex flex-col items-center gap-0.5 h-auto py-1 px-2 min-w-[64px]">
+              <Headphones className="h-3.5 w-3.5 opacity-70" />
               <Badge variant="default" className="bg-blue-500 hover:bg-blue-600 text-white min-w-[20px] h-5 px-1.5 flex items-center justify-center text-xs">
                 {answeredCount}
               </Badge>
               <span className="text-xs">Em Atend.</span>
             </Button>
-            <Button variant={filter === "resolved" ? "default" : "ghost"} size="sm" onClick={() => setFilter("resolved")} className="relative flex flex-col items-center gap-0.5 h-auto py-1 px-2">
+            <Button variant={filter === "resolved" ? "default" : "ghost"} size="sm" onClick={() => setFilter("resolved")} className="relative flex flex-col items-center gap-0.5 h-auto py-1 px-2 min-w-[64px]">
+              <Lock className="h-3.5 w-3.5 opacity-70" />
               <Badge variant="secondary" className="min-w-[20px] h-5 px-1.5 flex items-center justify-center text-xs">
                 {conversations.filter(c => !c.isGroup && c.status === 'resolved').length}
               </Badge>
@@ -9311,38 +9315,42 @@ function Conversas() {
             </Button>
             {/* 🔐 Filtro de Grupos - APENAS SUPER ADMIN */}
             {isSuperAdmin && (
-              <Button variant={filter === "group" ? "default" : "ghost"} size="sm" onClick={() => setFilter("group")} className="relative flex flex-col items-center gap-0.5 h-auto py-1 px-2">
+              <Button variant={filter === "group" ? "default" : "ghost"} size="sm" onClick={() => setFilter("group")} className="relative flex flex-col items-center gap-0.5 h-auto py-1 px-2 min-w-[64px]">
+                <Users className="h-3.5 w-3.5 opacity-70" />
                 <Badge variant="secondary" className="min-w-[20px] h-5 px-1.5 flex items-center justify-center text-xs">
                   {conversations.filter(c => c.isGroup === true).length}
                 </Badge>
                 <span className="text-xs">Grupos</span>
               </Button>
             )}
-             <Button variant={filter === "instagram" ? "default" : "ghost"} size="sm" onClick={() => setFilter("instagram")} className="relative flex flex-col items-center gap-0.5 h-auto py-1 px-2">
-               <Badge variant="secondary" className="bg-pink-500 hover:bg-pink-600 text-white min-w-[20px] h-5 px-1.5 flex items-center justify-center text-xs">
-                 {conversations.filter(c => c.channel === 'instagram').length}
-               </Badge>
-               <span className="text-xs flex items-center gap-0.5"><Instagram className="h-3 w-3" />Instagram</span>
-             </Button>
-             <Button variant={filter === "messenger" ? "default" : "ghost"} size="sm" onClick={() => setFilter("messenger")} className="relative flex flex-col items-center gap-0.5 h-auto py-1 px-2">
-               <Badge variant="secondary" className="bg-blue-600 hover:bg-blue-700 text-white min-w-[20px] h-5 px-1.5 flex items-center justify-center text-xs">
-                 {conversations.filter(c => c.channel === 'facebook').length}
-               </Badge>
-               <span className="text-xs flex items-center gap-0.5"><Facebook className="h-3 w-3" />Messenger</span>
-             </Button>
-            <Button variant={filter === "responsible" ? "default" : "ghost"} size="sm" onClick={() => setFilter("responsible")} className="relative flex flex-col items-center gap-0.5 h-auto py-1 px-2">
+            <Button variant={filter === "responsible" ? "default" : "ghost"} size="sm" onClick={() => setFilter("responsible")} className="relative flex flex-col items-center gap-0.5 h-auto py-1 px-2 min-w-[64px]">
+              <User className="h-3.5 w-3.5 opacity-70" />
               <Badge variant="secondary" className="bg-green-500 hover:bg-green-600 text-white min-w-[20px] h-5 px-1.5 flex items-center justify-center text-xs">
                 {responsibleCount}
               </Badge>
               <span className="text-xs">Responsável</span>
             </Button>
-            <Button variant={filter === "transferred" ? "default" : "ghost"} size="sm" onClick={() => setFilter("transferred")} className="relative flex flex-col items-center gap-0.5 h-auto py-1 px-2">
+            <Button variant={filter === "transferred" ? "default" : "ghost"} size="sm" onClick={() => setFilter("transferred")} className="relative flex flex-col items-center gap-0.5 h-auto py-1 px-2 min-w-[64px]">
+              <ArrowRightLeft className="h-3.5 w-3.5 opacity-70" />
               <Badge variant="secondary" className="bg-purple-500 hover:bg-purple-600 text-white min-w-[20px] h-5 px-1.5 flex items-center justify-center text-xs">
                 {conversations.filter(c => !c.isGroup && c.assignedUser?.id === currentUserId).length}
               </Badge>
               <span className="text-xs">Transferidos</span>
             </Button>
-            
+            <Button variant={filter === "instagram" ? "default" : "ghost"} size="sm" onClick={() => setFilter("instagram")} className="relative flex flex-col items-center gap-0.5 h-auto py-1 px-2 min-w-[64px]">
+              <Instagram className="h-3.5 w-3.5 opacity-70" />
+              <Badge variant="secondary" className="bg-pink-500 hover:bg-pink-600 text-white min-w-[20px] h-5 px-1.5 flex items-center justify-center text-xs">
+                {conversations.filter(c => c.channel === 'instagram').length}
+              </Badge>
+              <span className="text-xs">Instagram</span>
+            </Button>
+            <Button variant={filter === "messenger" ? "default" : "ghost"} size="sm" onClick={() => setFilter("messenger")} className="relative flex flex-col items-center gap-0.5 h-auto py-1 px-2 min-w-[64px]">
+              <Facebook className="h-3.5 w-3.5 opacity-70" />
+              <Badge variant="secondary" className="bg-blue-600 hover:bg-blue-700 text-white min-w-[20px] h-5 px-1.5 flex items-center justify-center text-xs">
+                {conversations.filter(c => c.channel === 'facebook').length}
+              </Badge>
+              <span className="text-xs">Messenger</span>
+            </Button>
           </div>
         </div>
 
@@ -9675,6 +9683,28 @@ function Conversas() {
                         </Button>
                       </div>
                     </div>}
+                  {/* Quick preset messages chips */}
+                  {quickMessages.filter(m => (!m.type || m.type === 'text') && m.content?.trim()).length > 0 && (
+                    <div className="mb-2 flex gap-1.5 overflow-x-auto pb-1 scrollbar-thin">
+                      {quickMessages
+                        .filter(m => (!m.type || m.type === 'text') && m.content?.trim())
+                        .slice(0, 8)
+                        .map(qm => (
+                          <button
+                            key={qm.id}
+                            type="button"
+                            onClick={() => {
+                              setMessageInput(qm.content);
+                              messageTextareaRef.current?.focus();
+                            }}
+                            className="flex-shrink-0 px-3 py-1.5 rounded-full bg-muted hover:bg-accent border border-border text-xs font-medium whitespace-nowrap transition-colors"
+                            title={qm.content}
+                          >
+                            {qm.title}
+                          </button>
+                        ))}
+                    </div>
+                  )}
                   <div className="flex items-end gap-1.5 sm:gap-2 flex-wrap sm:flex-nowrap">
                     <MediaUpload onFileSelected={handleSendMedia} />
                     <Textarea ref={messageTextareaRef} placeholder="Escreva sua mensagem..." value={messageInput} onChange={e => {
