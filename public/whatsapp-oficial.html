@@ -387,8 +387,8 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
       <div class="phdr-sub">Performance geral, entregas e conversas ativas</div>
     </div>
     <div class="phdr-actions">
-      <button class="btn btn-ghost" style="font-size:11.5px"><i class="ti ti-download"></i>Exportar</button>
-      <button class="btn btn-primary"><i class="ti ti-refresh"></i>Sincronizar Meta</button>
+      <button class="btn btn-ghost" style="font-size:11.5px" onclick="exportWaAnalytics()"><i class="ti ti-download"></i>Exportar</button>
+      <button class="btn btn-primary" id="waSyncBtn" onclick="syncMetaAnalytics()"><i class="ti ti-refresh"></i>Sincronizar Meta</button>
     </div>
   </div>
   <div class="pbody">
@@ -396,8 +396,8 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
     <div class="meta-status-bar">
       <div class="meta-logo">🟦</div>
       <div class="meta-status-text">
-        <div class="meta-title">Meta Business App: GrowOS CRM — conectado e ativo</div>
-        <div class="meta-sub">Phone Number ID: 595392426979627 · Account: wazesales · Tier: 1.000 conversas/dia · Qualidade do número: <span style="color:var(--green);font-weight:600">ALTA</span></div>
+         <div class="meta-title" id="waConnectionTitle">Conectando aos dados oficiais da Meta...</div>
+         <div class="meta-sub" id="waConnectionSub">Aguardando sessão do GROW OS para sincronizar métricas reais.</div>
       </div>
       <button class="btn btn-ghost" style="font-size:11px"><i class="ti ti-external-link"></i>Meta Business Suite</button>
     </div>
@@ -406,27 +406,27 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
     <div class="grid4" style="margin-bottom:18px">
       <div class="metric m-green">
         <div class="metric-icon mi-g"><i class="ti ti-send"></i></div>
-        <div class="metric-num" style="color:var(--green)">12.4k</div>
+        <div class="metric-num" id="metricSent" style="color:var(--green)">—</div>
         <div class="metric-label">Mensagens enviadas</div>
-        <div class="metric-trend mt-up"><i class="ti ti-trending-up" style="font-size:11px"></i>+23% este mês</div>
+        <div class="metric-trend mt-up" id="metricSentTrend"><i class="ti ti-brand-meta" style="font-size:11px"></i>dados oficiais</div>
       </div>
       <div class="metric m-blue">
         <div class="metric-icon mi-b"><i class="ti ti-eye"></i></div>
-        <div class="metric-num" style="color:var(--blue)">78%</div>
+        <div class="metric-num" id="metricReadRate" style="color:var(--blue)">—</div>
         <div class="metric-label">Taxa de visualização</div>
-        <div class="metric-trend mt-up"><i class="ti ti-trending-up" style="font-size:11px"></i>acima da média</div>
+        <div class="metric-trend mt-up" id="metricReadSub"><i class="ti ti-eye" style="font-size:11px"></i>lidas confirmadas</div>
       </div>
       <div class="metric m-amber">
         <div class="metric-icon mi-a"><i class="ti ti-message-circle"></i></div>
-        <div class="metric-num" style="color:var(--amber)">32%</div>
+        <div class="metric-num" id="metricReplyRate" style="color:var(--amber)">—</div>
         <div class="metric-label">Taxa de resposta</div>
-        <div class="metric-trend mt-up"><i class="ti ti-trending-up" style="font-size:11px"></i>+5% vs mês ant.</div>
+        <div class="metric-trend mt-up" id="metricReplySub"><i class="ti ti-message-circle" style="font-size:11px"></i>respostas recebidas</div>
       </div>
       <div class="metric m-red">
         <div class="metric-icon mi-r"><i class="ti ti-coin"></i></div>
-        <div class="metric-num" style="color:var(--amber)">R$1.2k</div>
+        <div class="metric-num" id="metricCost" style="color:var(--amber)">—</div>
         <div class="metric-label">Custo total</div>
-        <div class="metric-trend mt-n">~R$0,097/msg</div>
+        <div class="metric-trend mt-n" id="metricCostSub">custo oficial/estimado</div>
       </div>
     </div>
 
