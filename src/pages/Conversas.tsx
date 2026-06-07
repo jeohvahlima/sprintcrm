@@ -49,6 +49,7 @@ import { ProductivityPanel } from "@/components/conversas/ProductivityPanel";
 import { PastedImagePreview } from "@/components/conversas/PastedImagePreview";
 import { formatPhoneNumber, safeFormatPhoneNumber, normalizePhoneForComparison, robustFormatPhoneNumber } from "@/utils/phoneFormatter";
 import "@/styles/conversas-redesign.css";
+import "@/styles/lead-info-panel.css";
 import { cleanAllConversationsHistory } from "@/utils/cleanConversationsHistory";
 import { getMediaUrl, MediaExpiredError } from "@/utils/mediaLoader";
 import { throttledProfilePicture } from "@/utils/profilePictureThrottle";
