@@ -1084,6 +1084,7 @@ let waSession = null;
 let waCompanyId = null;
 let waInit = null;
 let waLastAnalytics = null;
+let waInitializing = false;
 
 const waEl = (id) => document.getElementById(id);
 const fmtInt = (value) => new Intl.NumberFormat('pt-BR').format(Number(value || 0));
@@ -1096,10 +1097,11 @@ window.parent.postMessage({ type: 'growos-ready' }, '*');
 
 async function initGrowOSSession(payload) {
   try {
-    if (!payload?.supabaseUrl || !payload?.anonKey || !payload?.accessToken || waSession?.access_token === payload.accessToken) return;
+    if (!payload?.supabaseUrl || !payload?.anonKey || !payload?.accessToken || waInitializing || waSession?.access_token === payload.accessToken) return;
+    waInitializing = true;
     waInit = payload;
     const { createClient } = await import('https://esm.sh/@supabase/supabase-js@2.45.4');
-    waSb = createClient(payload.supabaseUrl, payload.anonKey, { auth: { persistSession: false, autoRefreshToken: false } });
+    waSb = createClient(payload.supabaseUrl, payload.anonKey, { auth: { persistSession: false, autoRefreshToken: false, storageKey: 'growos-wa-official' } });
     await waSb.auth.setSession({ access_token: payload.accessToken, refresh_token: payload.refreshToken });
     waSession = (await waSb.auth.getSession()).data.session;
     const { data: userRole, error } = await waSb.from('user_roles').select('company_id').eq('user_id', waSession.user.id).maybeSingle();
@@ -1111,6 +1113,8 @@ async function initGrowOSSession(payload) {
   } catch (error) {
     console.error('Erro ao iniciar WhatsApp Oficial:', error);
     setConnectionStatus('Não foi possível sincronizar', error?.message || 'Verifique a sessão e a conexão da API oficial.', true);
+  } finally {
+    waInitializing = false;
   }
 }
 
