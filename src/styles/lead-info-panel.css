@@ -1,0 +1,231 @@
+/* ────────────────────────────────────────────────────────────
+   Painel "Informações do Lead" — Redesign visual (dark template)
+   Apenas estilos; nenhuma alteração de estrutura/funcionalidade.
+   ──────────────────────────────────────────────────────────── */
+
+[data-lead-info-panel="true"] {
+  background: #0d0f14 !important;
+  border-left: 1px solid rgba(255, 255, 255, 0.06) !important;
+  color: #f4f6ff !important;
+  font-family: 'Plus Jakarta Sans', ui-sans-serif, system-ui, -apple-system, sans-serif !important;
+}
+
+[data-lead-info-panel="true"] *,
+[data-lead-info-panel="true"] *::before,
+[data-lead-info-panel="true"] *::after {
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+/* Textos */
+[data-lead-info-panel="true"] h1,
+[data-lead-info-panel="true"] h2,
+[data-lead-info-panel="true"] h3,
+[data-lead-info-panel="true"] h4,
+[data-lead-info-panel="true"] h5 {
+  color: #f4f6ff !important;
+  letter-spacing: -0.005em;
+}
+[data-lead-info-panel="true"] p,
+[data-lead-info-panel="true"] span,
+[data-lead-info-panel="true"] label,
+[data-lead-info-panel="true"] div {
+  color: inherit;
+}
+[data-lead-info-panel="true"] .text-muted-foreground {
+  color: #868fa8 !important;
+}
+[data-lead-info-panel="true"] .text-foreground {
+  color: #f4f6ff !important;
+}
+
+/* Section headers (h4) ganham ícone em destaque amarelo/verde via cor de SVG dentro */
+[data-lead-info-panel="true"] h4 {
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #868fa8 !important;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 10px !important;
+}
+[data-lead-info-panel="true"] h4 svg {
+  color: #fbbf24;
+  width: 14px;
+  height: 14px;
+}
+
+/* Card do contato (avatar + nome + telefone) */
+[data-lead-info-panel="true"] > div > div:first-child .text-center,
+[data-lead-info-panel="true"] .text-center:has(.rounded-full) {
+  background: #12151d;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 12px;
+  padding: 18px 14px !important;
+}
+
+/* Avatar circle */
+[data-lead-info-panel="true"] .rounded-full.bg-muted {
+  background: linear-gradient(135deg, #25d366, #128c7e) !important;
+  color: #fff !important;
+}
+[data-lead-info-panel="true"] .rounded-full.bg-muted svg {
+  color: #fff !important;
+}
+
+/* Inputs e textareas */
+[data-lead-info-panel="true"] input,
+[data-lead-info-panel="true"] textarea,
+[data-lead-info-panel="true"] select {
+  background: #181c27 !important;
+  border: 1px solid rgba(255, 255, 255, 0.11) !important;
+  color: #f4f6ff !important;
+  border-radius: 8px !important;
+}
+[data-lead-info-panel="true"] input::placeholder,
+[data-lead-info-panel="true"] textarea::placeholder {
+  color: #4a5168 !important;
+}
+[data-lead-info-panel="true"] input:focus,
+[data-lead-info-panel="true"] textarea:focus,
+[data-lead-info-panel="true"] select:focus {
+  border-color: #25d366 !important;
+  box-shadow: 0 0 0 3px rgba(37, 211, 102, 0.15) !important;
+  outline: none !important;
+}
+
+/* Botões outline => dark card */
+[data-lead-info-panel="true"] button {
+  font-family: inherit;
+}
+[data-lead-info-panel="true"] button[class*="variant"],
+[data-lead-info-panel="true"] .border.border-input,
+[data-lead-info-panel="true"] button.border {
+  background: #181c27 !important;
+  border: 1px solid rgba(255, 255, 255, 0.11) !important;
+  color: #f4f6ff !important;
+  border-radius: 10px !important;
+  transition: all 0.15s ease;
+}
+[data-lead-info-panel="true"] button:hover:not([disabled]) {
+  background: #1e2333 !important;
+  border-color: rgba(255, 255, 255, 0.18) !important;
+}
+
+/* Ações rápidas — botões com ícone à esquerda */
+[data-lead-info-panel="true"] button.w-full.justify-start {
+  background: #181c27 !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  color: #f4f6ff !important;
+  border-radius: 10px !important;
+  padding: 12px 14px !important;
+  height: auto !important;
+  font-weight: 500 !important;
+  justify-content: flex-start !important;
+}
+[data-lead-info-panel="true"] button.w-full.justify-start:hover {
+  background: #1e2333 !important;
+  border-color: rgba(37, 211, 102, 0.30) !important;
+}
+[data-lead-info-panel="true"] button.w-full.justify-start svg {
+  color: #25d366;
+  width: 16px;
+  height: 16px;
+}
+
+/* Badges genéricos viram pill escuro */
+[data-lead-info-panel="true"] [class*="badge"],
+[data-lead-info-panel="true"] .Badge,
+[data-lead-info-panel="true"] [data-slot="badge"] {
+  background: #1e2333 !important;
+  border: 1px solid rgba(255, 255, 255, 0.11) !important;
+  color: #c9cedf !important;
+  border-radius: 999px !important;
+}
+
+/* Badge "Lead vinculado no CRM" / sucessos verdes */
+[data-lead-info-panel="true"] .bg-green-500\/10,
+[data-lead-info-panel="true"] [class*="bg-green-500/10"] {
+  background: rgba(37, 211, 102, 0.12) !important;
+  color: #34d399 !important;
+  border-color: rgba(37, 211, 102, 0.30) !important;
+}
+
+/* Alerta vermelho "Lead não cadastrado" */
+[data-lead-info-panel="true"] .bg-red-500\/10,
+[data-lead-info-panel="true"] [class*="bg-red-500/10"],
+[data-lead-info-panel="true"] [class*="bg-destructive"] {
+  background: rgba(248, 113, 113, 0.10) !important;
+  color: #f87171 !important;
+  border: 1px solid rgba(248, 113, 113, 0.30) !important;
+  border-radius: 10px !important;
+}
+
+/* Tags coloridas (Meta Ads, Click-to-WhatsApp, etc) — manter cores se já tiverem,
+   senão dar default escuro */
+[data-lead-info-panel="true"] [class*="bg-primary"] {
+  background: rgba(37, 211, 102, 0.15) !important;
+  color: #34d399 !important;
+  border-color: rgba(37, 211, 102, 0.30) !important;
+}
+
+/* "+ Criar Lead", "+ Adicionar", "+ Tag" — botões inline pequenos verdes */
+[data-lead-info-panel="true"] button.text-primary,
+[data-lead-info-panel="true"] a.text-primary {
+  color: #25d366 !important;
+  background: transparent !important;
+  border: none !important;
+  padding: 2px 6px !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+}
+[data-lead-info-panel="true"] button.text-primary:hover {
+  background: rgba(37, 211, 102, 0.10) !important;
+  color: #34d399 !important;
+}
+
+/* Scrollbar fina escura */
+[data-lead-info-panel="true"] *::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+[data-lead-info-panel="true"] *::-webkit-scrollbar-track {
+  background: transparent;
+}
+[data-lead-info-panel="true"] *::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.10);
+  border-radius: 4px;
+}
+[data-lead-info-panel="true"] *::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.20);
+}
+
+/* Separadores */
+[data-lead-info-panel="true"] hr,
+[data-lead-info-panel="true"] [role="separator"] {
+  border-color: rgba(255, 255, 255, 0.06) !important;
+  background: rgba(255, 255, 255, 0.06) !important;
+}
+
+/* Header do painel — botão fechar */
+[data-lead-info-panel="true"] button[aria-label*="close" i],
+[data-lead-info-panel="true"] button[title*="Fechar" i] {
+  color: #868fa8 !important;
+  background: transparent !important;
+  border: none !important;
+}
+
+/* Cada "section" (div com h4 dentro) vira um card sutil */
+[data-lead-info-panel="true"] > div > div > div:has(> h4) {
+  background: transparent;
+}
+
+/* Animação suave ao montar */
+[data-lead-info-panel="true"] {
+  animation: leadPanelFadeIn 0.25s ease;
+}
+@keyframes leadPanelFadeIn {
+  from { opacity: 0; transform: translateX(8px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
