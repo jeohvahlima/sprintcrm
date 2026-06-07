@@ -1078,6 +1078,7 @@ async function syncMetaAnalytics() {
     waLastAnalytics = analytics;
 
     await renderTemplatesStatus();
+    await renderTemplatesGrid();
     renderDashboardMetrics(analytics);
     renderRecentActivity(analytics, tplSync.data || {});
     renderCampaignRows(analytics);
