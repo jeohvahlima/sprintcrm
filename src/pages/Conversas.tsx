@@ -9695,8 +9695,19 @@ function Conversas() {
                         ))}
                     </div>
                   )}
-                  <div className="flex items-end gap-1.5 sm:gap-2 flex-wrap sm:flex-nowrap">
+                  <div className="flex items-end gap-1.5 sm:gap-2 flex-nowrap relative">
                     <MediaUpload onFileSelected={handleSendMedia} />
+
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      className="sm:hidden text-muted-foreground border-border flex-shrink-0"
+                      title={showMobileExtras ? "Minimizar opções" : "Mais opções"}
+                      onClick={() => setShowMobileExtras(v => !v)}
+                    >
+                      {showMobileExtras ? <ChevronDown className="h-5 w-5" /> : <ChevronUp className="h-5 w-5" />}
+                    </Button>
+
                     <Textarea ref={messageTextareaRef} placeholder="Escreva sua mensagem..." value={messageInput} onChange={e => {
                   setMessageInput(e.target.value);
                   e.target.style.height = 'auto';
@@ -9722,17 +9733,7 @@ function Conversas() {
                 }} className="flex-1 min-w-[120px] min-h-[40px] max-h-[200px] resize-none overflow-y-auto" rows={1} />
                     <AudioRecorder onSendAudio={handleSendAudio} onTranscribed={(text) => setMessageInput(prev => prev ? `${prev} ${text}` : text)} />
 
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      className="sm:hidden text-muted-foreground border-border flex-shrink-0"
-                      title={showMobileExtras ? "Minimizar opções" : "Mais opções"}
-                      onClick={() => setShowMobileExtras(v => !v)}
-                    >
-                      {showMobileExtras ? <ChevronDown className="h-5 w-5" /> : <MoreHorizontal className="h-5 w-5" />}
-                    </Button>
-
-                    <div className={`${showMobileExtras ? 'flex' : 'hidden'} sm:flex items-end gap-1.5 sm:gap-2 w-full sm:w-auto order-last sm:order-none`}>
+                    <div className={`${showMobileExtras ? 'flex absolute bottom-full left-0 mb-2 bg-popover border border-border rounded-lg p-2 shadow-lg z-50' : 'hidden'} sm:flex sm:static sm:bg-transparent sm:border-0 sm:p-0 sm:shadow-none sm:z-auto items-end gap-1.5 sm:gap-2`}>
                       <Button 
                         variant="outline" 
                         size="icon" 
