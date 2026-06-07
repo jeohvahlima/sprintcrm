@@ -497,10 +497,10 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
     </div>
   </div>
   <div class="inner-tabs" id="tplTabs">
-    <div class="inner-tab active" onclick="switchInnerTab('tplAll',this,'tplTabs')"><i class="ti ti-layout-grid"></i>Todos (8)</div>
-    <div class="inner-tab" onclick="switchInnerTab('tplApproved',this,'tplTabs')"><i class="ti ti-circle-check"></i>Aprovados (6)</div>
-    <div class="inner-tab" onclick="switchInnerTab('tplPending',this,'tplTabs')"><i class="ti ti-clock"></i>Pendentes (1)</div>
-    <div class="inner-tab" onclick="switchInnerTab('tplRejected',this,'tplTabs')"><i class="ti ti-x"></i>Rejeitados (1)</div>
+    <div class="inner-tab active" data-tpl-filter="ALL" onclick="switchTplFilter('ALL',this)"><i class="ti ti-layout-grid"></i>Todos (<span id="tplCountAll">0</span>)</div>
+    <div class="inner-tab" data-tpl-filter="APPROVED" onclick="switchTplFilter('APPROVED',this)"><i class="ti ti-circle-check"></i>Aprovados (<span id="tplCountApproved">0</span>)</div>
+    <div class="inner-tab" data-tpl-filter="PENDING" onclick="switchTplFilter('PENDING',this)"><i class="ti ti-clock"></i>Pendentes (<span id="tplCountPending">0</span>)</div>
+    <div class="inner-tab" data-tpl-filter="REJECTED" onclick="switchTplFilter('REJECTED',this)"><i class="ti ti-x"></i>Rejeitados (<span id="tplCountRejected">0</span>)</div>
   </div>
   <div class="pbody">
     <!-- INFO META -->
@@ -510,137 +510,23 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
       <a href="https://business.facebook.com/wa/manage/message-templates/" target="_blank" class="btn btn-ghost" style="font-size:11px;padding:5px 10px"><i class="ti ti-external-link"></i>Meta Manager</a>
     </div>
 
-    <!-- Templates grid -->
-    <div id="tplAll" class="tpl-grid-panel">
-      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px">
-
-        <!-- APPROVED -->
-        <div class="tpl-card approved">
-          <div class="tpl-header">
-            <div class="tpl-icon" style="background:var(--gd);color:var(--green)"><i class="ti ti-hand-click"></i></div>
-            <div style="flex:1">
-              <div class="tpl-name">boas_vindas</div>
-              <div class="tpl-cat" style="display:flex;gap:4px;margin-top:3px"><span class="badge bg-g" style="font-size:9.5px">APPROVED</span><span class="badge bg-meta" style="font-size:9.5px">MARKETING</span></div>
-            </div>
-          </div>
-          <div class="tpl-body">Olá <span class="var-highlight">{{1}}</span>! 👋<br>Temos uma oferta especial para você...</div>
-          <div class="tpl-footer">
-            <span style="font-size:10px;color:var(--text3)">pt_BR · <span style="font-family:var(--mono)">1.240</span> envios</span>
-            <div class="tpl-actions">
-              <div class="tpl-act" title="Visualizar"><i class="ti ti-eye"></i></div>
-              <div class="tpl-act" title="Duplicar"><i class="ti ti-copy"></i></div>
-              <div class="tpl-act" title="Usar em campanha" style="color:var(--green)"><i class="ti ti-send"></i></div>
-              <div class="tpl-act del" title="Deletar"><i class="ti ti-trash"></i></div>
-            </div>
-          </div>
-        </div>
-
-        <div class="tpl-card approved">
-          <div class="tpl-header">
-            <div class="tpl-icon" style="background:var(--bd);color:var(--blue)"><i class="ti ti-phone-call"></i></div>
-            <div style="flex:1">
-              <div class="tpl-name">ola_tudo_bem</div>
-              <div class="tpl-cat" style="display:flex;gap:4px;margin-top:3px"><span class="badge bg-g" style="font-size:9.5px">APPROVED</span><span class="badge bg-meta" style="font-size:9.5px">MARKETING</span></div>
-            </div>
-          </div>
-          <div class="tpl-body">Olá <span class="var-highlight">{{1}}</span>! Como você está? Aqui é da equipe <span class="var-highlight">{{2}}</span>...</div>
-          <div class="tpl-footer">
-            <span style="font-size:10px;color:var(--text3)">pt_BR · <span style="font-family:var(--mono)">892</span> envios</span>
-            <div class="tpl-actions">
-              <div class="tpl-act"><i class="ti ti-eye"></i></div>
-              <div class="tpl-act"><i class="ti ti-copy"></i></div>
-              <div class="tpl-act" style="color:var(--green)"><i class="ti ti-send"></i></div>
-              <div class="tpl-act del"><i class="ti ti-trash"></i></div>
-            </div>
-          </div>
-        </div>
-
-        <div class="tpl-card approved">
-          <div class="tpl-header">
-            <div class="tpl-icon" style="background:var(--pd);color:var(--purple)"><i class="ti ti-star"></i></div>
-            <div style="flex:1">
-              <div class="tpl-name">pois_ligacao</div>
-              <div class="tpl-cat" style="display:flex;gap:4px;margin-top:3px"><span class="badge bg-g" style="font-size:9.5px">APPROVED</span><span class="badge bg-meta" style="font-size:9.5px">MARKETING</span></div>
-            </div>
-          </div>
-          <div class="tpl-body">Ei <span class="var-highlight">{{1}}</span>! Que tal conversarmos sobre como podemos ajudar <span class="var-highlight">{{2}}</span>?</div>
-          <div class="tpl-footer">
-            <span style="font-size:10px;color:var(--text3)">pt_BR · <span style="font-family:var(--mono)">431</span> envios</span>
-            <div class="tpl-actions">
-              <div class="tpl-act"><i class="ti ti-eye"></i></div>
-              <div class="tpl-act"><i class="ti ti-copy"></i></div>
-              <div class="tpl-act" style="color:var(--green)"><i class="ti ti-send"></i></div>
-              <div class="tpl-act del"><i class="ti ti-trash"></i></div>
-            </div>
-          </div>
-        </div>
-
-        <div class="tpl-card approved">
-          <div class="tpl-header">
-            <div class="tpl-icon" style="background:var(--td);color:var(--teal)"><i class="ti ti-bell"></i></div>
-            <div style="flex:1">
-              <div class="tpl-name">hello_world</div>
-              <div class="tpl-cat" style="display:flex;gap:4px;margin-top:3px"><span class="badge bg-g" style="font-size:9.5px">APPROVED</span><span class="badge bg-t" style="font-size:9.5px">UTILITY</span></div>
-            </div>
-          </div>
-          <div class="tpl-body">Hello! This is a test message. Your code is <span class="var-highlight">{{1}}</span>.</div>
-          <div class="tpl-footer">
-            <span style="font-size:10px;color:var(--text3)">en_US · <span style="font-family:var(--mono)">12</span> envios</span>
-            <div class="tpl-actions">
-              <div class="tpl-act"><i class="ti ti-eye"></i></div>
-              <div class="tpl-act"><i class="ti ti-copy"></i></div>
-              <div class="tpl-act" style="color:var(--green)"><i class="ti ti-send"></i></div>
-              <div class="tpl-act del"><i class="ti ti-trash"></i></div>
-            </div>
-          </div>
-        </div>
-
-        <!-- PENDING -->
-        <div class="tpl-card pending">
-          <div class="tpl-header">
-            <div class="tpl-icon" style="background:var(--ad);color:var(--amber)"><i class="ti ti-clock"></i></div>
-            <div style="flex:1">
-              <div class="tpl-name">promo_verao_25</div>
-              <div class="tpl-cat" style="display:flex;gap:4px;margin-top:3px"><span class="badge bg-a" style="font-size:9.5px">PENDING</span><span class="badge bg-meta" style="font-size:9.5px">MARKETING</span></div>
-            </div>
-          </div>
-          <div class="tpl-body">🌞 Olá <span class="var-highlight">{{1}}</span>! Nossas promoções de verão chegaram! Aproveite <span class="var-highlight">{{2}}</span>% de desconto...</div>
-          <div class="tpl-footer">
-            <span style="font-size:10px;color:var(--amber)"><i class="ti ti-clock" style="font-size:11px"></i>Aguardando aprovação Meta</span>
-            <div class="tpl-actions">
-              <div class="tpl-act"><i class="ti ti-eye"></i></div>
-              <div class="tpl-act del"><i class="ti ti-trash"></i></div>
-            </div>
-          </div>
-        </div>
-
-        <!-- REJECTED -->
-        <div class="tpl-card rejected">
-          <div class="tpl-header">
-            <div class="tpl-icon" style="background:var(--rd);color:var(--red)"><i class="ti ti-x"></i></div>
-            <div style="flex:1">
-              <div class="tpl-name">teste</div>
-              <div class="tpl-cat" style="display:flex;gap:4px;margin-top:3px"><span class="badge bg-r" style="font-size:9.5px">REJECTED</span><span class="badge bg-meta" style="font-size:9.5px">MARKETING</span></div>
-            </div>
-          </div>
-          <div class="tpl-body" style="color:var(--red);opacity:.7">Template rejeitado pela Meta. Verifique as políticas de uso e corrija o conteúdo.</div>
-          <div class="tpl-footer">
-            <span style="font-size:10px;color:var(--red)"><i class="ti ti-alert-circle" style="font-size:11px"></i>Violação de política</span>
-            <div class="tpl-actions">
-              <div class="tpl-act" title="Editar e reenviar" style="color:var(--amber)"><i class="ti ti-edit"></i></div>
-              <div class="tpl-act del"><i class="ti ti-trash"></i></div>
-            </div>
-          </div>
-        </div>
-
-        <!-- ADD NEW CARD -->
-        <div class="tpl-card" style="border-style:dashed;border-color:var(--border2);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:8px;min-height:140px;cursor:pointer" onclick="openNewTemplate()">
-          <div style="width:40px;height:40px;border-radius:50%;background:var(--bg4);border:1.5px dashed var(--border2);display:flex;align-items:center;justify-content:center;color:var(--text3);font-size:20px"><i class="ti ti-plus"></i></div>
-          <div style="font-size:12px;font-weight:600;color:var(--text3)">Criar novo template</div>
-          <div style="font-size:10.5px;color:var(--text3)">Enviar direto para Meta API</div>
-        </div>
+    <div id="tplGridReal" style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px">
+      <div style="grid-column:1/-1;text-align:center;color:var(--text3);padding:30px;font-size:12px">
+        <i class="ti ti-loader-2" style="animation:spin 1s linear infinite;font-size:22px;display:block;margin-bottom:8px"></i>
+        Clique em <strong style="color:var(--green)">Sincronizar Meta</strong> para carregar seus templates reais.
       </div>
     </div>
+  </div>
+</div>
+
+<!-- ═══ MODAL: VISUALIZAR TEMPLATE ═══ -->
+<div class="modal-bg" id="viewTemplateModal" onclick="if(event.target===this)closeModal('viewTemplateModal')">
+  <div class="modal" style="max-width:520px">
+    <div class="modal-header">
+      <div class="modal-title" id="viewTplTitle">Template</div>
+      <div class="modal-close" onclick="closeModal('viewTemplateModal')"><i class="ti ti-x"></i></div>
+    </div>
+    <div class="modal-body" id="viewTplBody" style="padding:16px"></div>
   </div>
 </div>
 
