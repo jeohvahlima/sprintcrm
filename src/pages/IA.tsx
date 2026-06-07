@@ -6,22 +6,41 @@
 // Funcionalidade: o iframe envia postMessage({__growos:true, ...}) e este
 // wrapper roteia para módulos React reais (Fluxos, Base, Diagnóstico) sem
 // alterar o visual fixo.
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { FluxoAutomacaoBuilder } from "@/components/fluxos/FluxoAutomacaoBuilder";
 import { BaseConhecimentoIA } from "@/components/ia/BaseConhecimentoIA";
+import { supabase } from "@/integrations/supabase/client";
 
 type OverlayModule = "fluxos" | "base" | null;
 
 export default function IA() {
   const navigate = useNavigate();
+  const iframeRef = useRef<HTMLIFrameElement>(null);
   const [overlay, setOverlay] = useState<OverlayModule>(null);
 
   useEffect(() => {
+    const sendSession = async () => {
+      const iframe = iframeRef.current;
+      if (!iframe?.contentWindow) return;
+      const { data } = await supabase.auth.getSession();
+      const session = data.session;
+      if (!session) return;
+      iframe.contentWindow.postMessage({
+        type: "growos-init",
+        supabaseUrl: import.meta.env.VITE_SUPABASE_URL,
+        anonKey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+        accessToken: session.access_token,
+        refreshToken: session.refresh_token,
+        userId: session.user.id,
+      }, "*");
+    };
+
     const handler = (event: MessageEvent) => {
       const data = event.data;
+      if (data?.type === "growos-ready") sendSession();
       if (!data || typeof data !== "object" || !data.__growos) return;
       switch (data.type) {
         case "navigate":
@@ -37,13 +56,20 @@ export default function IA() {
           break;
       }
     };
+    const iframe = iframeRef.current;
     window.addEventListener("message", handler);
-    return () => window.removeEventListener("message", handler);
+    iframe?.addEventListener("load", sendSession);
+    sendSession();
+    return () => {
+      window.removeEventListener("message", handler);
+      iframe?.removeEventListener("load", sendSession);
+    };
   }, [navigate]);
 
   return (
     <div className="w-full h-[calc(100vh-7rem)] min-h-[640px] overflow-hidden rounded-lg border border-border bg-background">
       <iframe
+        ref={iframeRef}
         src="/automacao.html"
         title="Automação & IA"
         className="w-full h-full border-0 block"

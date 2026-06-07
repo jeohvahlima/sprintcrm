@@ -1275,6 +1275,22 @@ Att, Rafael</textarea>
 </div><!-- /layout -->
 
 <script>
+let growosSessionPayload = null;
+
+window.parent.postMessage({ type: 'growos-ready' }, '*');
+
+window.addEventListener('message', function (ev) {
+  const data = ev.data;
+  if (!data || data.type !== 'growos-init') return;
+  growosSessionPayload = data;
+  const iframe = document.getElementById('waIframe');
+  if (iframe && iframe.contentWindow) iframe.contentWindow.postMessage(data, '*');
+});
+
+document.getElementById('waIframe')?.addEventListener('load', function () {
+  if (growosSessionPayload && this.contentWindow) this.contentWindow.postMessage(growosSessionPayload, '*');
+});
+
 function switchTab(id, el) {
   document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
