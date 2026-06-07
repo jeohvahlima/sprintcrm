@@ -297,6 +297,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
 .api-live{background:var(--gd);color:var(--green);border:1px solid rgba(0,217,126,.2)}
 .api-live::before{content:'';display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 5px var(--green);animation:apiPulse 1.5s ease-in-out infinite}
 @keyframes apiPulse{0%,100%{opacity:1}50%{opacity:.4}}
+@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
 </style>
 </head>
 <body>
@@ -317,7 +318,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
   </div>
   <div class="topbar-right">
     <div class="api-status api-live">API Conectada</div>
-    <div class="icon-btn" title="Sincronizar"><i class="ti ti-refresh"></i></div>
+    <div class="icon-btn" title="Sincronizar" onclick="syncMetaAnalytics()"><i class="ti ti-refresh"></i></div>
     <div class="icon-btn" title="Notificações"><i class="ti ti-bell"></i></div>
     <div class="user-chip">
       <div class="user-av">RC</div>
@@ -491,7 +492,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
       <div class="phdr-sub">Crie, envie para aprovação e gerencie templates da Meta Business API</div>
     </div>
     <div class="phdr-actions">
-      <button class="btn btn-ghost" style="font-size:11.5px"><i class="ti ti-refresh"></i>Sincronizar Meta</button>
+      <button class="btn btn-ghost" style="font-size:11.5px" onclick="syncMetaAnalytics()"><i class="ti ti-refresh"></i>Sincronizar Meta</button>
       <button class="btn btn-green" onclick="openNewTemplate()"><i class="ti ti-plus"></i>Novo Template</button>
     </div>
   </div>
