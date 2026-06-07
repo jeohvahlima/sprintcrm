@@ -9701,7 +9701,7 @@ function Conversas() {
                     <Button
                       variant="outline"
                       size="icon"
-                      className="sm:hidden text-muted-foreground border-border flex-shrink-0"
+                      className="text-muted-foreground border-border flex-shrink-0"
                       title={showMobileExtras ? "Minimizar opções" : "Mais opções"}
                       onClick={() => setShowMobileExtras(v => !v)}
                     >
@@ -9733,7 +9733,7 @@ function Conversas() {
                 }} className="flex-1 min-w-[120px] min-h-[40px] max-h-[200px] resize-none overflow-y-auto" rows={1} />
                     <AudioRecorder onSendAudio={handleSendAudio} onTranscribed={(text) => setMessageInput(prev => prev ? `${prev} ${text}` : text)} />
 
-                    <div className={`${showMobileExtras ? 'flex absolute bottom-full left-0 mb-2 bg-popover border border-border rounded-lg p-2 shadow-lg z-50' : 'hidden'} sm:flex sm:static sm:bg-transparent sm:border-0 sm:p-0 sm:shadow-none sm:z-auto items-end gap-1.5 sm:gap-2`}>
+                    <div className={`${showMobileExtras ? 'flex absolute bottom-full left-0 mb-2 bg-popover border border-border rounded-lg p-2 shadow-lg z-50' : 'hidden'} items-end gap-1.5 sm:gap-2`}>
                       <Button 
                         variant="outline" 
                         size="icon" 
