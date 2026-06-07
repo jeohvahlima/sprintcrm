@@ -1079,6 +1079,248 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
 </div>
 
 <script>
+let waSb = null;
+let waSession = null;
+let waCompanyId = null;
+let waInit = null;
+let waLastAnalytics = null;
+
+const waEl = (id) => document.getElementById(id);
+const fmtInt = (value) => new Intl.NumberFormat('pt-BR').format(Number(value || 0));
+const fmtPct = (value) => `${Math.round(Number(value || 0))}%`;
+const fmtBRL = (value) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(Number(value || 0));
+const fmtUSD = (value) => `US$ ${Number(value || 0).toFixed(2)}`;
+const shortId = (value) => value ? `${String(value).slice(0, 8)}...` : 'não informado';
+
+window.parent.postMessage({ type: 'growos-ready' }, '*');
+
+async function initGrowOSSession(payload) {
+  try {
+    if (!payload?.supabaseUrl || !payload?.anonKey || !payload?.accessToken || waSession?.access_token === payload.accessToken) return;
+    waInit = payload;
+    const { createClient } = await import('https://esm.sh/@supabase/supabase-js@2.45.4');
+    waSb = createClient(payload.supabaseUrl, payload.anonKey, { auth: { persistSession: false, autoRefreshToken: false } });
+    await waSb.auth.setSession({ access_token: payload.accessToken, refresh_token: payload.refreshToken });
+    waSession = (await waSb.auth.getSession()).data.session;
+    const { data: userRole, error } = await waSb.from('user_roles').select('company_id').eq('user_id', waSession.user.id).maybeSingle();
+    if (error) throw error;
+    waCompanyId = userRole?.company_id;
+    if (!waCompanyId) throw new Error('Empresa não encontrada para o usuário atual');
+    await loadMetaConnectionInfo();
+    await syncMetaAnalytics();
+  } catch (error) {
+    console.error('Erro ao iniciar WhatsApp Oficial:', error);
+    setConnectionStatus('Não foi possível sincronizar', error?.message || 'Verifique a sessão e a conexão da API oficial.', true);
+  }
+}
+
+async function loadMetaConnectionInfo() {
+  if (!waSb || !waCompanyId) return;
+  const { data } = await waSb
+    .from('whatsapp_connections')
+    .select('api_provider,status,whatsapp_number,meta_phone_number_id,meta_business_account_id')
+    .eq('company_id', waCompanyId)
+    .in('api_provider', ['meta', 'both'])
+    .maybeSingle();
+
+  if (!data) {
+    setConnectionStatus('API oficial não configurada', 'Configure a conexão oficial no módulo Configuração.', true);
+    return;
+  }
+
+  setConnectionStatus(
+    'Meta Business API conectada ao GROW OS',
+    `Phone Number ID: ${shortId(data.meta_phone_number_id)} · WABA: ${shortId(data.meta_business_account_id)} · Número: ${data.whatsapp_number || 'não informado'} · Status: ${data.status || 'ativo'}`
+  );
+}
+
+function setConnectionStatus(title, subtitle, error = false) {
+  const titleEl = waEl('waConnectionTitle');
+  const subEl = waEl('waConnectionSub');
+  if (titleEl) {
+    titleEl.textContent = title;
+    titleEl.style.color = error ? 'var(--red)' : '#4a9ef7';
+  }
+  if (subEl) subEl.textContent = subtitle;
+}
+
+async function fetchPagedTable(table, select, apply, pageSize = 1000) {
+  const rows = [];
+  let page = 0;
+  while (true) {
+    let query = waSb.from(table).select(select).range(page * pageSize, page * pageSize + pageSize - 1);
+    query = apply(query);
+    const { data, error } = await query;
+    if (error) throw error;
+    if (!data?.length) break;
+    rows.push(...data);
+    if (data.length < pageSize) break;
+    page++;
+  }
+  return rows;
+}
+
+async function syncMetaAnalytics() {
+  const btn = waEl('waSyncBtn');
+  const oldHtml = btn?.innerHTML;
+  try {
+    if (!waSb || !waSession || !waCompanyId) {
+      window.parent.postMessage({ type: 'growos-ready' }, '*');
+      throw new Error('Sessão ainda não carregada. Aguarde alguns segundos e tente novamente.');
+    }
+    if (btn) {
+      btn.disabled = true;
+      btn.innerHTML = '<i class="ti ti-loader-2" style="animation:spin .8s linear infinite"></i>Sincronizando...';
+    }
+
+    const tplSync = await waSb.functions.invoke('whatsapp-templates', { body: { action: 'list', company_id: waCompanyId, sync: true } });
+    if (tplSync.error || tplSync.data?.error) console.warn('Sincronização de templates retornou aviso:', tplSync.error || tplSync.data?.error);
+
+    const response = await fetch(`${waInit.supabaseUrl}/functions/v1/whatsapp-analytics?company_id=${encodeURIComponent(waCompanyId)}&period=month`, {
+      headers: {
+        Authorization: `Bearer ${waSession.access_token}`,
+        apikey: waInit.anonKey,
+        'Content-Type': 'application/json',
+      },
+    });
+    const analytics = await response.json();
+    if (!response.ok || analytics.error) throw new Error(analytics.error || 'Erro ao buscar analytics oficiais');
+    waLastAnalytics = analytics;
+
+    await renderTemplatesStatus();
+    renderDashboardMetrics(analytics);
+    renderRecentActivity(analytics, tplSync.data || {});
+    renderCampaignRows(analytics);
+    showToast('✅ Dados reais da API oficial sincronizados');
+  } catch (error) {
+    console.error('Erro ao sincronizar Meta:', error);
+    showToast('⚠️ ' + (error?.message || 'Falha ao sincronizar dados reais'));
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = oldHtml || '<i class="ti ti-refresh"></i>Sincronizar Meta';
+    }
+  }
+}
+
+async function renderTemplatesStatus() {
+  const templates = await fetchPagedTable('whatsapp_templates', 'status', (q) => q.eq('company_id', waCompanyId));
+  const counts = templates.reduce((acc, tpl) => {
+    const status = String(tpl.status || 'PENDING').toUpperCase();
+    acc[status] = (acc[status] || 0) + 1;
+    return acc;
+  }, {});
+  const total = Math.max(templates.length, 1);
+  const update = (countId, barId, value) => {
+    if (waEl(countId)) waEl(countId).textContent = fmtInt(value);
+    if (waEl(barId)) waEl(barId).style.width = `${Math.round((Number(value || 0) / total) * 100)}%`;
+  };
+  update('tplApprovedCount', 'tplApprovedBar', counts.APPROVED || 0);
+  update('tplPendingCount', 'tplPendingBar', counts.PENDING || 0);
+  update('tplRejectedCount', 'tplRejectedBar', counts.REJECTED || 0);
+}
+
+function renderDashboardMetrics(analytics) {
+  const metrics = analytics.metrics || {};
+  const official = analytics.meta_official || {};
+  const sent = official.messages_sent || metrics.total_sent || 0;
+  const delivered = official.messages_delivered || metrics.total_delivered || 0;
+  const read = official.messages_read || metrics.total_read || 0;
+  const replied = metrics.total_replied || 0;
+  const readRate = sent > 0 ? Math.round((read / sent) * 100) : 0;
+  const replyRate = sent > 0 ? Math.round((replied / sent) * 100) : 0;
+  const officialCost = Number(official.total_cost || 0);
+  const estimatedCost = Number(metrics.estimated_cost || 0);
+
+  if (waEl('metricSent')) waEl('metricSent').textContent = fmtInt(sent);
+  if (waEl('metricSentTrend')) waEl('metricSentTrend').innerHTML = `<i class="ti ti-checks" style="font-size:11px"></i>${fmtInt(delivered)} entregues`;
+  if (waEl('metricReadRate')) waEl('metricReadRate').textContent = fmtPct(readRate);
+  if (waEl('metricReadSub')) waEl('metricReadSub').innerHTML = `<i class="ti ti-eye" style="font-size:11px"></i>${fmtInt(read)} lidas`;
+  if (waEl('metricReplyRate')) waEl('metricReplyRate').textContent = fmtPct(replyRate);
+  if (waEl('metricReplySub')) waEl('metricReplySub').innerHTML = `<i class="ti ti-message-circle" style="font-size:11px"></i>${fmtInt(replied)} respostas recebidas`;
+  if (waEl('metricCost')) waEl('metricCost').textContent = officialCost > 0 ? fmtUSD(officialCost) : fmtBRL(estimatedCost);
+  if (waEl('metricCostSub')) waEl('metricCostSub').textContent = officialCost > 0 ? 'cobrança oficial Meta' : 'estimativa por logs reais';
+}
+
+function renderRecentActivity(analytics, tplSync) {
+  const metrics = analytics.metrics || {};
+  const official = analytics.meta_official || {};
+  const items = [
+    { color: 'var(--green)', text: `${fmtInt(official.messages_delivered || metrics.total_delivered || 0)} mensagens entregues pela API oficial`, time: 'período atual' },
+    { color: 'var(--blue)', text: `${fmtInt(official.messages_read || metrics.total_read || 0)} mensagens lidas/visualizadas`, time: 'dados Meta + logs' },
+    { color: 'var(--amber)', text: `${fmtInt(tplSync.synced || 0)} templates sincronizados com a Meta`, time: tplSync.removed ? `${tplSync.removed} removidos da base local` : 'catálogo atualizado' },
+    { color: metrics.total_failed ? 'var(--red)' : 'var(--green)', text: `${fmtInt(metrics.total_failed || 0)} falhas registradas no período`, time: 'monitoramento real' },
+  ];
+  const list = waEl('recentActivityList');
+  if (!list) return;
+  list.innerHTML = items.map((item) => `
+    <div style="display:flex;gap:9px;align-items:flex-start">
+      <div style="width:7px;height:7px;border-radius:50%;background:${item.color};margin-top:5px;flex-shrink:0"></div>
+      <div><div style="font-size:12px;color:var(--text)">${item.text}</div><div style="font-size:10.5px;color:var(--text3)">${item.time}</div></div>
+    </div>`).join('');
+}
+
+function renderCampaignRows(analytics) {
+  const rowsEl = waEl('campaignRows');
+  if (!rowsEl) return;
+  const campaigns = analytics.campaigns || [];
+  const templateRows = Object.entries(analytics.meta_official?.by_template || {}).map(([name, v]) => ({
+    id: `template-${name}`,
+    campaign_name: `Template oficial: ${name}`,
+    template_name: name,
+    total_sent: v.sent || 0,
+    total_delivered: v.delivered || 0,
+    total_read: v.read || 0,
+    total_replied: 0,
+    estimated_cost: v.cost || 0,
+    status: 'Meta oficial',
+  }));
+  const realRows = campaigns.length ? campaigns : templateRows;
+  if (!realRows.length) {
+    rowsEl.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--text3);padding:18px">Nenhuma campanha real encontrada no período sincronizado.</td></tr>';
+    return;
+  }
+  rowsEl.innerHTML = realRows.slice(0, 10).map((campaign) => {
+    const sent = Number(campaign.total_sent || 0);
+    const delivered = Number(campaign.total_delivered || 0);
+    const read = Number(campaign.total_read || 0);
+    const replied = Number(campaign.total_replied || 0);
+    const viewRate = sent > 0 ? Math.round((read / sent) * 100) : 0;
+    const replyRate = sent > 0 ? Math.round((replied / sent) * 100) : 0;
+    const failed = Number(campaign.total_failed || 0);
+    const statusClass = failed > 0 ? 'bg-a' : 'bg-g';
+    const status = campaign.status || (campaign.completed_at ? 'concluída' : 'registrada');
+    return `<tr>
+      <td style="font-weight:600">${campaign.campaign_name || 'Campanha oficial'}</td>
+      <td><span class="mono">${campaign.template_name || '—'}</span></td>
+      <td><span class="mono">${fmtInt(sent)}</span></td>
+      <td><span style="color:var(--teal)">${fmtPct(viewRate)}</span></td>
+      <td><span style="color:var(--purple)">${fmtPct(replyRate)}</span></td>
+      <td><span class="mono" style="color:var(--amber)">${Number(campaign.estimated_cost || 0) > 0 ? fmtBRL(campaign.estimated_cost) : '—'}</span></td>
+      <td><span class="badge ${statusClass}">${status}</span></td>
+    </tr>`;
+  }).join('');
+}
+
+function exportWaAnalytics() {
+  if (!waLastAnalytics) {
+    showToast('Sincronize os dados antes de exportar.');
+    return;
+  }
+  const blob = new Blob([JSON.stringify(waLastAnalytics, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `whatsapp-oficial-analytics-${new Date().toISOString().slice(0, 10)}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+window.addEventListener('message', (e) => {
+  const d = e.data;
+  if (d && d.type === 'growos-init') initGrowOSSession(d);
+});
+
 // ─── NAVIGATION ───────────────────────────────────────────────
 function switchPanel(id, el) {
   document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
