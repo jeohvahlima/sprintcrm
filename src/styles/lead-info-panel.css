@@ -229,3 +229,80 @@
   from { opacity: 0; transform: translateX(8px); }
   to   { opacity: 1; transform: translateX(0); }
 }
+
+/* ────────────────────────────────────────────────────────────
+   Header da Conversa — Botões de ação (dark template)
+   ──────────────────────────────────────────────────────────── */
+[data-conv-header-actions="true"] {
+  background: transparent;
+  padding: 4px 6px;
+  border-radius: 12px;
+  gap: 6px !important;
+}
+
+/* Botões de ícone do header (size="icon") */
+[data-conv-header-actions="true"] button {
+  background: #181c27 !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  color: #c9cedf !important;
+  border-radius: 10px !important;
+  height: 34px !important;
+  width: 34px !important;
+  min-width: 34px !important;
+  transition: all 0.15s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+[data-conv-header-actions="true"] button:hover:not([disabled]) {
+  background: #1e2333 !important;
+  border-color: rgba(37, 211, 102, 0.30) !important;
+  color: #f4f6ff !important;
+  transform: translateY(-1px);
+}
+[data-conv-header-actions="true"] button svg {
+  width: 16px !important;
+  height: 16px !important;
+}
+
+/* Botão ativo (Info Panel aberto) */
+[data-conv-header-actions="true"] button.bg-primary\/10,
+[data-conv-header-actions="true"] button[class*="bg-primary/10"] {
+  background: rgba(37, 211, 102, 0.15) !important;
+  border-color: rgba(37, 211, 102, 0.45) !important;
+  color: #34d399 !important;
+}
+
+/* Seletor de API "Oficial / Não Oficial" — botão com texto, mais largo */
+[data-conv-header-actions="true"] button:has(> span),
+[data-conv-header-actions="true"] [role="combobox"],
+[data-conv-header-actions="true"] button[aria-haspopup] {
+  width: auto !important;
+  min-width: auto !important;
+  padding: 0 10px !important;
+  gap: 6px !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+}
+
+/* Pílula verde do "Oficial" (estado conectado) */
+[data-conv-header-actions="true"] button:has(.bg-green-500),
+[data-conv-header-actions="true"] button[class*="bg-green"] {
+  background: rgba(37, 211, 102, 0.15) !important;
+  border-color: rgba(37, 211, 102, 0.40) !important;
+  color: #34d399 !important;
+}
+
+/* Wrapper de Tooltip (div) que envolve o botão Enviar Protocolo */
+[data-conv-header-actions="true"] > div > div > button,
+[data-conv-header-actions="true"] > div > button {
+  background: #181c27 !important;
+}
+
+/* Versão mobile (ghost) — manter sutil mas no estilo */
+[data-conv-header-actions="true"].md\:hidden button {
+  height: 32px !important;
+  width: 32px !important;
+  min-width: 32px !important;
+  border-radius: 8px !important;
+}

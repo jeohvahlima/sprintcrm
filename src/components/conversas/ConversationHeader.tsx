@@ -227,7 +227,7 @@ import { toast } from "sonner";
          </div>
             {/* Ações - Versão Desktop (apenas ícones com tooltip) */}
               <TooltipProvider delayDuration={0}>
-              <div className="hidden md:flex items-center gap-1">
+              <div data-conv-header-actions="true" className="hidden md:flex items-center gap-1">
                 {/* Botão Enviar Protocolo */}
                 <Tooltip>
                   <TooltipTrigger asChild>
@@ -316,7 +316,7 @@ import { toast } from "sonner";
             </TooltipProvider>
 
             {/* Ações - Versão Mobile (apenas ícones) */}
-            <div className="flex md:hidden items-center gap-0.5">
+            <div data-conv-header-actions="true" className="flex md:hidden items-center gap-0.5">
               {/* Botão IA - Dropdown Mobile */}
               {onChangeAIMode && (
                 <AIModeSelectorDropdown
