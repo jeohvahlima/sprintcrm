@@ -316,7 +316,7 @@ import { toast } from "sonner";
             </TooltipProvider>
 
             {/* Ações - Versão Mobile (apenas ícones) */}
-            <div className="flex md:hidden items-center gap-0.5">
+            <div data-conv-header-actions="true" className="flex md:hidden items-center gap-0.5">
               {/* Botão IA - Dropdown Mobile */}
               {onChangeAIMode && (
                 <AIModeSelectorDropdown
