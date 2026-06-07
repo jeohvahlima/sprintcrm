@@ -1,15 +1,11 @@
 import { useState, useEffect, useMemo } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { Calendar, Bell, CheckSquare, FileText, Clock, User, BarChart3, Loader2, ChevronDown, Users } from "lucide-react";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useTeamMembers } from "@/hooks/useTeamMembers";
-import { startOfDay, endOfDay, startOfWeek, endOfWeek, startOfMonth, endOfMonth, format } from "date-fns";
+import { startOfDay, endOfDay, startOfWeek, endOfWeek, startOfMonth, endOfMonth } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import "@/styles/productivity-panel.css";
 
 interface ProductivityPanelProps {
   open: boolean;
@@ -38,22 +34,35 @@ interface ProductivityData {
 interface UserProductivity {
   userId: string;
   userName: string;
+  email?: string;
   data: ProductivityData;
   leadsWorked: LeadActivity[];
 }
 
 type PeriodType = "today" | "week" | "month";
+type TabType = "resumo" | "ranking";
+
+const initials = (name: string) =>
+  (name || "?")
+    .split(" ")
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((p) => p[0]?.toUpperCase())
+    .join("");
+
+const computeScore = (d: ProductivityData, oport: number) =>
+  oport * 5 + d.compromissos * 3 + d.prontuarios * 2 + d.tarefas * 2 + d.mensagensAgendadas * 1 + d.lembretes * 1;
+
+const scorePillClass = (s: number) => (s >= 70 ? "high" : s >= 40 ? "mid" : "low");
 
 export function ProductivityPanel({ open, onOpenChange, companyId }: ProductivityPanelProps) {
   const [period, setPeriod] = useState<PeriodType>("today");
   const [selectedUserId, setSelectedUserId] = useState<string>("all");
+  const [tab, setTab] = useState<TabType>("resumo");
   const [loading, setLoading] = useState(false);
+  const [openCards, setOpenCards] = useState<Set<string>>(new Set());
   const [totals, setTotals] = useState<ProductivityData>({
-    compromissos: 0,
-    lembretes: 0,
-    tarefas: 0,
-    prontuarios: 0,
-    mensagensAgendadas: 0,
+    compromissos: 0, lembretes: 0, tarefas: 0, prontuarios: 0, mensagensAgendadas: 0,
   });
   const [userProductivity, setUserProductivity] = useState<UserProductivity[]>([]);
 
@@ -62,34 +71,17 @@ export function ProductivityPanel({ open, onOpenChange, companyId }: Productivit
   const dateRange = useMemo(() => {
     const now = new Date();
     switch (period) {
-      case "today":
-        return { start: startOfDay(now), end: endOfDay(now) };
-      case "week":
-        return { start: startOfWeek(now, { locale: ptBR }), end: endOfWeek(now, { locale: ptBR }) };
-      case "month":
-        return { start: startOfMonth(now), end: endOfMonth(now) };
-      default:
-        return { start: startOfDay(now), end: endOfDay(now) };
+      case "today": return { start: startOfDay(now), end: endOfDay(now) };
+      case "week": return { start: startOfWeek(now, { locale: ptBR }), end: endOfWeek(now, { locale: ptBR }) };
+      case "month": return { start: startOfMonth(now), end: endOfMonth(now) };
     }
   }, [period]);
 
-  const periodLabel = useMemo(() => {
-    switch (period) {
-      case "today":
-        return "Hoje";
-      case "week":
-        return "Esta Semana";
-      case "month":
-        return "Este Mês";
-      default:
-        return "";
-    }
-  }, [period]);
+  const periodLabel = period === "today" ? "Hoje" : period === "week" ? "Esta Semana" : "Este Mês";
 
   useEffect(() => {
-    if (open && companyId) {
-      fetchProductivityData();
-    }
+    if (open && companyId) fetchProductivityData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, companyId, dateRange, selectedUserId]);
 
   const fetchProductivityData = async () => {
@@ -97,43 +89,13 @@ export function ProductivityPanel({ open, onOpenChange, companyId }: Productivit
     try {
       const startDate = dateRange.start.toISOString();
       const endDate = dateRange.end.toISOString();
-
-      // Fetch all data in parallel - now including lead info
       const [compromissosRes, lembretesRes, tarefasRes, prontuariosRes, mensagensRes, leadsRes] = await Promise.all([
-        supabase
-          .from("compromissos")
-          .select("id, owner_id, lead_id")
-          .eq("company_id", companyId)
-          .gte("created_at", startDate)
-          .lte("created_at", endDate),
-        supabase
-          .from("lembretes")
-          .select("id, created_by")
-          .eq("company_id", companyId)
-          .gte("created_at", startDate)
-          .lte("created_at", endDate),
-        supabase
-          .from("tasks")
-          .select("id, owner_id, lead_id")
-          .eq("company_id", companyId)
-          .gte("created_at", startDate)
-          .lte("created_at", endDate),
-        supabase
-          .from("lead_attachments")
-          .select("id, uploaded_by, lead_id")
-          .eq("company_id", companyId)
-          .gte("created_at", startDate)
-          .lte("created_at", endDate),
-        supabase
-          .from("scheduled_whatsapp_messages")
-          .select("id, owner_id")
-          .eq("company_id", companyId)
-          .gte("created_at", startDate)
-          .lte("created_at", endDate),
-        supabase
-          .from("leads")
-          .select("id, name")
-          .eq("company_id", companyId),
+        supabase.from("compromissos").select("id, owner_id, lead_id").eq("company_id", companyId).gte("created_at", startDate).lte("created_at", endDate),
+        supabase.from("lembretes").select("id, created_by").eq("company_id", companyId).gte("created_at", startDate).lte("created_at", endDate),
+        supabase.from("tasks").select("id, owner_id, lead_id").eq("company_id", companyId).gte("created_at", startDate).lte("created_at", endDate),
+        supabase.from("lead_attachments").select("id, uploaded_by, lead_id").eq("company_id", companyId).gte("created_at", startDate).lte("created_at", endDate),
+        supabase.from("scheduled_whatsapp_messages").select("id, owner_id").eq("company_id", companyId).gte("created_at", startDate).lte("created_at", endDate),
+        supabase.from("leads").select("id, name").eq("company_id", companyId),
       ]);
 
       const compromissos = compromissosRes.data || [];
@@ -143,407 +105,336 @@ export function ProductivityPanel({ open, onOpenChange, companyId }: Productivit
       const mensagens = mensagensRes.data || [];
       const leads = leadsRes.data || [];
 
-      // Create lead name lookup
       const leadNameMap = new Map<string, string>();
-      leads.forEach(lead => {
-        leadNameMap.set(lead.id, lead.name || "Lead sem nome");
-      });
+      leads.forEach((l) => leadNameMap.set(l.id, l.name || "Lead sem nome"));
 
-      // Filter by selected user if not "all"
-      const filterByUser = (items: any[], userField: string) => {
-        if (selectedUserId === "all") return items;
-        return items.filter(item => item[userField] === selectedUserId);
-      };
+      const filterByUser = (items: any[], userField: string) =>
+        selectedUserId === "all" ? items : items.filter((i) => i[userField] === selectedUserId);
 
-      const filteredCompromissos = filterByUser(compromissos, "owner_id");
-      const filteredLembretes = filterByUser(lembretes, "created_by");
-      const filteredTarefas = filterByUser(tarefas, "owner_id");
-      const filteredProntuarios = filterByUser(prontuarios, "uploaded_by");
-      const filteredMensagens = filterByUser(mensagens, "owner_id");
+      const fComp = filterByUser(compromissos, "owner_id");
+      const fLem = filterByUser(lembretes, "created_by");
+      const fTar = filterByUser(tarefas, "owner_id");
+      const fPro = filterByUser(prontuarios, "uploaded_by");
+      const fMsg = filterByUser(mensagens, "owner_id");
 
-      // Calculate totals
       setTotals({
-        compromissos: filteredCompromissos.length,
-        lembretes: filteredLembretes.length,
-        tarefas: filteredTarefas.length,
-        prontuarios: filteredProntuarios.length,
-        mensagensAgendadas: filteredMensagens.length,
+        compromissos: fComp.length,
+        lembretes: fLem.length,
+        tarefas: fTar.length,
+        prontuarios: fPro.length,
+        mensagensAgendadas: fMsg.length,
       });
 
-      // Calculate per-user productivity with lead tracking
       const userMap = new Map<string, { data: ProductivityData; leadActivities: Map<string, LeadActivity> }>();
-      
-      // Initialize map with all team members
-      members.forEach(member => {
-        userMap.set(member.id, {
-          data: {
-            compromissos: 0,
-            lembretes: 0,
-            tarefas: 0,
-            prontuarios: 0,
-            mensagensAgendadas: 0,
-          },
+      members.forEach((m) => {
+        userMap.set(m.id, {
+          data: { compromissos: 0, lembretes: 0, tarefas: 0, prontuarios: 0, mensagensAgendadas: 0 },
           leadActivities: new Map(),
         });
       });
 
-      // Helper to track lead activity
-      const trackLeadActivity = (userId: string, leadId: string | null, activityType: keyof ProductivityData) => {
+      const track = (userId: string | null, leadId: string | null, k: keyof ProductivityData) => {
         if (!userId || !userMap.has(userId)) return;
-        
-        const userData = userMap.get(userId)!;
-        userData.data[activityType]++;
-        
+        const u = userMap.get(userId)!;
+        u.data[k]++;
         if (leadId) {
-          if (!userData.leadActivities.has(leadId)) {
-            userData.leadActivities.set(leadId, {
-              leadId,
-              leadName: leadNameMap.get(leadId) || "Lead desconhecido",
-              compromissos: 0,
-              lembretes: 0,
-              tarefas: 0,
-              prontuarios: 0,
-              mensagensAgendadas: 0,
+          if (!u.leadActivities.has(leadId)) {
+            u.leadActivities.set(leadId, {
+              leadId, leadName: leadNameMap.get(leadId) || "Lead desconhecido",
+              compromissos: 0, lembretes: 0, tarefas: 0, prontuarios: 0, mensagensAgendadas: 0,
             });
           }
-          userData.leadActivities.get(leadId)![activityType]++;
+          u.leadActivities.get(leadId)![k]++;
         }
       };
 
-      // Count per user with lead tracking
-      compromissos.forEach(item => {
-        trackLeadActivity(item.owner_id, item.lead_id, "compromissos");
-      });
-      lembretes.forEach(item => {
-        // Lembretes não tem lead_id, apenas contabilizar
-        if (item.created_by && userMap.has(item.created_by)) {
-          userMap.get(item.created_by)!.data.lembretes++;
-        }
-      });
-      tarefas.forEach(item => {
-        trackLeadActivity(item.owner_id, item.lead_id, "tarefas");
-      });
-      prontuarios.forEach(item => {
-        trackLeadActivity(item.uploaded_by, item.lead_id, "prontuarios");
-      });
-      mensagens.forEach(item => {
-        // Mensagens agendadas não tem lead_id, apenas contabilizar
-        if (item.owner_id && userMap.has(item.owner_id)) {
-          userMap.get(item.owner_id)!.data.mensagensAgendadas++;
-        }
+      compromissos.forEach((i) => track(i.owner_id, i.lead_id, "compromissos"));
+      lembretes.forEach((i) => track(i.created_by, null, "lembretes"));
+      tarefas.forEach((i) => track(i.owner_id, i.lead_id, "tarefas"));
+      prontuarios.forEach((i) => track(i.uploaded_by, i.lead_id, "prontuarios"));
+      mensagens.forEach((i) => track(i.owner_id, null, "mensagensAgendadas"));
+
+      const list: UserProductivity[] = [];
+      userMap.forEach((u, userId) => {
+        const m = members.find((mm) => mm.id === userId);
+        if (!m) return;
+        const leadsWorked = Array.from(u.leadActivities.values()).sort((a, b) => {
+          const ta = a.compromissos + a.lembretes + a.tarefas + a.prontuarios + a.mensagensAgendadas;
+          const tb = b.compromissos + b.lembretes + b.tarefas + b.prontuarios + b.mensagensAgendadas;
+          return tb - ta;
+        });
+        list.push({
+          userId,
+          userName: m.full_name || m.email || "Usuário",
+          email: m.email,
+          data: u.data,
+          leadsWorked,
+        });
       });
 
-      // Convert to array and sort by total activity
-      const userProductivityArray: UserProductivity[] = [];
-      userMap.forEach((userData, userId) => {
-        const member = members.find(m => m.id === userId);
-        if (member) {
-          // Convert lead activities map to array and sort by total
-          const leadsWorked = Array.from(userData.leadActivities.values()).sort((a, b) => {
-            const totalA = a.compromissos + a.lembretes + a.tarefas + a.prontuarios + a.mensagensAgendadas;
-            const totalB = b.compromissos + b.lembretes + b.tarefas + b.prontuarios + b.mensagensAgendadas;
-            return totalB - totalA;
-          });
-
-          userProductivityArray.push({
-            userId,
-            userName: member.full_name || member.email,
-            data: userData.data,
-            leadsWorked,
-          });
-        }
+      list.sort((a, b) => {
+        const sa = computeScore(a.data, a.leadsWorked.length);
+        const sb = computeScore(b.data, b.leadsWorked.length);
+        return sb - sa;
       });
 
-      // Sort by total productivity descending
-      userProductivityArray.sort((a, b) => {
-        const totalA = a.data.compromissos + a.data.lembretes + a.data.tarefas + a.data.prontuarios + a.data.mensagensAgendadas;
-        const totalB = b.data.compromissos + b.data.lembretes + b.data.tarefas + b.data.prontuarios + b.data.mensagensAgendadas;
-        return totalB - totalA;
-      });
-      // Filter if specific user selected
-      if (selectedUserId !== "all") {
-        setUserProductivity(userProductivityArray.filter(u => u.userId === selectedUserId));
-      } else {
-        setUserProductivity(userProductivityArray);
-      }
-    } catch (error) {
-      console.error("Erro ao carregar dados de produtividade:", error);
+      setUserProductivity(selectedUserId !== "all" ? list.filter((u) => u.userId === selectedUserId) : list);
+    } catch (e) {
+      console.error("Erro ao carregar dados de produtividade:", e);
     } finally {
       setLoading(false);
     }
   };
 
+  const toggleCard = (id: string) => {
+    setOpenCards((prev) => {
+      const n = new Set(prev);
+      n.has(id) ? n.delete(id) : n.add(id);
+      return n;
+    });
+  };
+
   const totalActivities = totals.compromissos + totals.lembretes + totals.tarefas + totals.prontuarios + totals.mensagensAgendadas;
+  const totalLeadsWorked = userProductivity.reduce((s, u) => s + u.leadsWorked.length, 0);
+  const totalScore = userProductivity.reduce((s, u) => s + computeScore(u.data, u.leadsWorked.length), 0);
+  const activeUsers = userProductivity.filter((u) => computeScore(u.data, u.leadsWorked.length) > 0).length;
+
+  const ranked = useMemo(
+    () => [...userProductivity].sort((a, b) => computeScore(b.data, b.leadsWorked.length) - computeScore(a.data, a.leadsWorked.length)),
+    [userProductivity]
+  );
+  const maxScore = ranked.length ? Math.max(1, computeScore(ranked[0].data, ranked[0].leadsWorked.length)) : 1;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <BarChart3 className="h-5 w-5" />
-            Relatório de Produtividade
-          </DialogTitle>
-        </DialogHeader>
-
-        {/* Filters */}
-        <div className="flex flex-wrap gap-4 mb-6">
-          <div className="flex items-center gap-2">
-            <span className="text-sm font-medium text-muted-foreground">Período:</span>
-            <div className="flex gap-1">
-              <Button
-                variant={period === "today" ? "default" : "outline"}
-                size="sm"
-                onClick={() => setPeriod("today")}
-              >
-                Hoje
-              </Button>
-              <Button
-                variant={period === "week" ? "default" : "outline"}
-                size="sm"
-                onClick={() => setPeriod("week")}
-              >
-                Esta Semana
-              </Button>
-              <Button
-                variant={period === "month" ? "default" : "outline"}
-                size="sm"
-                onClick={() => setPeriod("month")}
-              >
-                Este Mês
-              </Button>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <span className="text-sm font-medium text-muted-foreground">Usuário:</span>
-            <Select value={selectedUserId} onValueChange={setSelectedUserId}>
-              <SelectTrigger className="w-[200px]">
-                <SelectValue placeholder="Todos os usuários" />
-              </SelectTrigger>
-              <SelectContent className="bg-background border shadow-lg z-50">
-                <SelectItem value="all">Todos os usuários</SelectItem>
-                {members.map(member => (
-                  <SelectItem key={member.id} value={member.id}>
-                    {member.full_name || member.email}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-
-        {loading ? (
-          <div className="flex items-center justify-center py-12">
-            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-          </div>
-        ) : (
-          <>
-            {/* KPI Cards */}
-            <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium flex items-center gap-2">
-                    <Calendar className="h-4 w-4 text-primary" />
-                    Compromissos
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-2xl font-bold">{totals.compromissos}</p>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium flex items-center gap-2">
-                    <Bell className="h-4 w-4 text-primary" />
-                    Lembretes
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-2xl font-bold">{totals.lembretes}</p>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium flex items-center gap-2">
-                    <CheckSquare className="h-4 w-4 text-primary" />
-                    Tarefas
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-2xl font-bold">{totals.tarefas}</p>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium flex items-center gap-2">
-                    <FileText className="h-4 w-4 text-primary" />
-                    Prontuários
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-2xl font-bold">{totals.prontuarios}</p>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium flex items-center gap-2">
-                    <Clock className="h-4 w-4 text-primary" />
-                    Msg Agendadas
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-2xl font-bold">{totals.mensagensAgendadas}</p>
-                </CardContent>
-              </Card>
-            </div>
-
-            {/* Total Summary */}
-            <div className="bg-muted/50 rounded-lg p-4 mb-6">
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-medium text-muted-foreground">
-                  Total de atividades ({periodLabel})
-                </span>
-                <span className="text-xl font-bold">{totalActivities}</span>
+      <DialogContent className="gos-productivity-dialog max-w-[1100px] max-h-[92vh] overflow-y-auto p-0 border">
+        <div className="gos-productivity">
+          {/* HEADER */}
+          <div className="header">
+            <div className="header-left">
+              <div className="logo-icon">📊</div>
+              <div className="title-block">
+                <h1>Visão Geral — Time Comercial</h1>
+                <p>Acompanhe em tempo real o desempenho de cada vendedor</p>
               </div>
+              <div className="live-badge"><span className="live-dot"></span>AO VIVO</div>
             </div>
+            <div className="header-right">
+              <button className="gbtn gbtn-icon" title="Atualizar" onClick={fetchProductivityData}>⟳</button>
+            </div>
+          </div>
 
-            {/* User Breakdown */}
-            <div className="space-y-2">
-              <h3 className="text-sm font-medium text-muted-foreground mb-3">
-                Detalhamento por Usuário
-              </h3>
-              
-              {userProductivity.length === 0 ? (
-                <div className="text-center py-8 text-muted-foreground">
-                  Nenhuma atividade registrada no período selecionado.
+          {/* FILTERS */}
+          <div className="filters">
+            <span className="filter-label">Período:</span>
+            <div className="period-group">
+              <button className={`period-btn ${period === "today" ? "active" : ""}`} onClick={() => setPeriod("today")}>Hoje</button>
+              <button className={`period-btn ${period === "week" ? "active" : ""}`} onClick={() => setPeriod("week")}>Esta Semana</button>
+              <button className={`period-btn ${period === "month" ? "active" : ""}`} onClick={() => setPeriod("month")}>Este Mês</button>
+            </div>
+            <div className="filter-sep"></div>
+            <span className="filter-label">Usuário:</span>
+            <select className="user-select" value={selectedUserId} onChange={(e) => setSelectedUserId(e.target.value)}>
+              <option value="all">Todos os usuários</option>
+              {members.map((m) => (
+                <option key={m.id} value={m.id}>{m.full_name || m.email}</option>
+              ))}
+            </select>
+          </div>
+
+          {loading ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="h-8 w-8 animate-spin" style={{ color: "#5a7190" }} />
+            </div>
+          ) : (
+            <>
+              {/* KPI PRINCIPAL */}
+              <div className="kpi-grid">
+                <div className="kpi-card green" style={{ animationDelay: ".05s" }}>
+                  <div className="kpi-icon">📈</div>
+                  <div className="kpi-val">{totalLeadsWorked}</div>
+                  <div className="kpi-label">Oportunidades Trabalhadas</div>
+                  <div className="kpi-sub">{periodLabel}</div>
                 </div>
-              ) : (
-                <div className="space-y-2">
-                  {userProductivity.map((user) => {
-                    const userTotal = user.data.compromissos + user.data.lembretes + user.data.tarefas + user.data.prontuarios + user.data.mensagensAgendadas;
-                    if (userTotal === 0) return null;
-                    
-                    return (
-                      <Collapsible key={user.userId}>
-                        <Card className="p-4">
-                          <div className="flex items-center gap-3">
-                            <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
-                              <User className="h-5 w-5 text-primary" />
-                            </div>
-                            <div className="flex-1">
-                              <p className="font-medium">{user.userName}</p>
-                              <div className="flex flex-wrap gap-3 text-sm text-muted-foreground mt-1">
-                                {user.data.compromissos > 0 && (
-                                  <span className="flex items-center gap-1">
-                                    <Calendar className="h-3 w-3 text-primary" />
-                                    {user.data.compromissos}
-                                  </span>
-                                )}
-                                {user.data.lembretes > 0 && (
-                                  <span className="flex items-center gap-1">
-                                    <Bell className="h-3 w-3 text-primary" />
-                                    {user.data.lembretes}
-                                  </span>
-                                )}
-                                {user.data.tarefas > 0 && (
-                                  <span className="flex items-center gap-1">
-                                    <CheckSquare className="h-3 w-3 text-primary" />
-                                    {user.data.tarefas}
-                                  </span>
-                                )}
-                                {user.data.prontuarios > 0 && (
-                                  <span className="flex items-center gap-1">
-                                    <FileText className="h-3 w-3 text-primary" />
-                                    {user.data.prontuarios}
-                                  </span>
-                                )}
-                                {user.data.mensagensAgendadas > 0 && (
-                                  <span className="flex items-center gap-1">
-                                    <Clock className="h-3 w-3 text-primary" />
-                                    {user.data.mensagensAgendadas}
-                                  </span>
-                                )}
+                <div className="kpi-card blue" style={{ animationDelay: ".1s" }}>
+                  <div className="kpi-icon">💬</div>
+                  <div className="kpi-val">{totalActivities}</div>
+                  <div className="kpi-label">Atividades Totais</div>
+                  <div className="kpi-sub">Período atual</div>
+                </div>
+                <div className="kpi-card amber" style={{ animationDelay: ".15s" }}>
+                  <div className="kpi-icon">👥</div>
+                  <div className="kpi-val">
+                    {activeUsers}<span style={{ fontSize: ".9rem", fontWeight: 400, color: "#5a7190" }}>/{members.length}</span>
+                  </div>
+                  <div className="kpi-label">Usuários Ativos</div>
+                  <div className="kpi-sub">{members.length - activeUsers} sem atividade</div>
+                </div>
+                <div className="kpi-card purple" style={{ animationDelay: ".2s" }}>
+                  <div className="kpi-icon">⚡</div>
+                  <div className="kpi-val">{totalScore}</div>
+                  <div className="kpi-label">Score Total do Time</div>
+                  <div className="kpi-sub">Pontuação acumulada</div>
+                </div>
+              </div>
+
+              {/* SECONDARY KPI */}
+              <div className="sec-grid">
+                <div className="sec-card" style={{ animationDelay: ".25s" }}>
+                  <span className="sec-icon">📅</span>
+                  <div><div className="sec-val">{totals.compromissos}</div><div className="sec-label">Compromissos</div></div>
+                </div>
+                <div className="sec-card" style={{ animationDelay: ".28s" }}>
+                  <span className="sec-icon">🔔</span>
+                  <div><div className="sec-val">{totals.lembretes}</div><div className="sec-label">Lembretes</div></div>
+                </div>
+                <div className="sec-card" style={{ animationDelay: ".31s" }}>
+                  <span className="sec-icon">✅</span>
+                  <div><div className="sec-val">{totals.tarefas}</div><div className="sec-label">Tarefas</div></div>
+                </div>
+                <div className="sec-card" style={{ animationDelay: ".34s" }}>
+                  <span className="sec-icon">📋</span>
+                  <div><div className="sec-val">{totals.prontuarios}</div><div className="sec-label">Prontuários</div></div>
+                </div>
+                <div className="sec-card" style={{ animationDelay: ".37s" }}>
+                  <span className="sec-icon">📤</span>
+                  <div><div className="sec-val">{totals.mensagensAgendadas}</div><div className="sec-label">Msgs Agendadas</div></div>
+                </div>
+              </div>
+
+              {/* TABS */}
+              <div className="tabs-nav">
+                <button className={`tab-btn ${tab === "resumo" ? "active" : ""}`} onClick={() => setTab("resumo")}>📊 Resumo</button>
+                <button className={`tab-btn ${tab === "ranking" ? "active" : ""}`} onClick={() => setTab("ranking")}>🏆 Ranking</button>
+              </div>
+
+              {tab === "resumo" && (
+                <div className="tab-pane">
+                  <div className="sec-hdr">
+                    <h2>DETALHAMENTO POR USUÁRIO</h2>
+                    <span>{userProductivity.filter((u) => computeScore(u.data, u.leadsWorked.length) > 0).length} ativos</span>
+                  </div>
+                  {userProductivity.length === 0 || activeUsers === 0 ? (
+                    <div className="empty">
+                      <div className="ico">📭</div>
+                      Nenhuma atividade registrada no período selecionado.
+                    </div>
+                  ) : (
+                    <div className="user-list">
+                      {userProductivity.map((u) => {
+                        const score = computeScore(u.data, u.leadsWorked.length);
+                        if (score === 0) return null;
+                        const isOpen = openCards.has(u.userId);
+                        return (
+                          <div key={u.userId} className={`user-card ${isOpen ? "open" : ""}`}>
+                            <div className="user-header" onClick={() => toggleCard(u.userId)}>
+                              <div className="avatar">
+                                <span>{initials(u.userName)}</span>
+                                <span className="online-dot on"></span>
+                              </div>
+                              <div className="user-info">
+                                <div className="user-name">
+                                  {u.userName}
+                                  {u.leadsWorked.length > 0 && (
+                                    <span className="atend-badge">{u.leadsWorked.length} leads</span>
+                                  )}
+                                </div>
+                                <div className="user-metrics">
+                                  <span className="metric green">📈 <span className="val">{u.leadsWorked.length}</span> oport.</span>
+                                  <span className="metric">📅 <span className="val">{u.data.compromissos}</span> comp.</span>
+                                  <span className="metric">✅ <span className="val">{u.data.tarefas}</span> tarefas</span>
+                                  <span className="metric">📋 <span className="val">{u.data.prontuarios}</span> pront.</span>
+                                  <span className="metric">📤 <span className="val">{u.data.mensagensAgendadas}</span> msgs</span>
+                                  <span className="metric">🔔 <span className="val">{u.data.lembretes}</span> lemb.</span>
+                                </div>
+                              </div>
+                              <div className="user-right">
+                                <div className={`score-pill ${scorePillClass(score)}`}>⚡ {score} pts</div>
+                                <span className="chevron">▾</span>
                               </div>
                             </div>
-                            <div className="text-right flex items-center gap-2">
-                              <div>
-                                <p className="text-lg font-bold">{userTotal}</p>
-                                <p className="text-xs text-muted-foreground">atividades</p>
-                              </div>
-                              {user.leadsWorked.length > 0 && (
-                                <CollapsibleTrigger asChild>
-                                  <Button variant="ghost" size="icon" className="h-8 w-8">
-                                    <ChevronDown className="h-4 w-4" />
-                                  </Button>
-                                </CollapsibleTrigger>
+                            <div className="leads-expand">
+                              <div className="leads-title">👥 Leads Trabalhados ({u.leadsWorked.length})</div>
+                              {u.leadsWorked.length === 0 ? (
+                                <div style={{ fontSize: ".75rem", color: "#5a7190" }}>Nenhum lead vinculado a estas atividades.</div>
+                              ) : (
+                                <div className="leads-grid">
+                                  {u.leadsWorked.map((l) => (
+                                    <div key={l.leadId} className="lead-row">
+                                      <span className="lead-name">{l.leadName}</span>
+                                      <div className="lead-acts">
+                                        {l.compromissos > 0 && <span className="act-chip c">📅 {l.compromissos}</span>}
+                                        {l.tarefas > 0 && <span className="act-chip t">✅ {l.tarefas}</span>}
+                                        {l.prontuarios > 0 && <span className="act-chip p">📋 {l.prontuarios}</span>}
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
                               )}
                             </div>
                           </div>
-                          
-                          {/* Leads trabalhados - Expandível */}
-                          {user.leadsWorked.length > 0 && (
-                            <CollapsibleContent className="mt-4 pt-4 border-t">
-                              <div className="space-y-2">
-                                <p className="text-xs font-medium text-muted-foreground flex items-center gap-1">
-                                  <Users className="h-3 w-3" />
-                                  Leads Trabalhados ({user.leadsWorked.length})
-                                </p>
-                                <div className="grid gap-2 max-h-48 overflow-y-auto">
-                                  {user.leadsWorked.slice(0, 10).map((lead) => {
-                                    const leadTotal = lead.compromissos + lead.tarefas + lead.prontuarios;
-                                    return (
-                                      <div key={lead.leadId} className="flex items-center justify-between bg-muted/30 rounded-md px-3 py-2">
-                                        <span className="text-sm font-medium truncate max-w-[200px]">
-                                          {lead.leadName}
-                                        </span>
-                                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                                          {lead.compromissos > 0 && (
-                                            <span className="flex items-center gap-0.5">
-                                              <Calendar className="h-3 w-3" />
-                                              {lead.compromissos}
-                                            </span>
-                                          )}
-                                          {lead.tarefas > 0 && (
-                                            <span className="flex items-center gap-0.5">
-                                              <CheckSquare className="h-3 w-3" />
-                                              {lead.tarefas}
-                                            </span>
-                                          )}
-                                          {lead.prontuarios > 0 && (
-                                            <span className="flex items-center gap-0.5">
-                                              <FileText className="h-3 w-3" />
-                                              {lead.prontuarios}
-                                            </span>
-                                          )}
-                                          <Badge variant="secondary" className="text-xs">
-                                            {leadTotal}
-                                          </Badge>
-                                        </div>
-                                      </div>
-                                    );
-                                  })}
-                                  {user.leadsWorked.length > 10 && (
-                                    <p className="text-xs text-muted-foreground text-center">
-                                      +{user.leadsWorked.length - 10} leads adicionais
-                                    </p>
-                                  )}
-                                </div>
-                              </div>
-                            </CollapsibleContent>
-                          )}
-                        </Card>
-                      </Collapsible>
-                    );
-                  })}
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
               )}
-            </div>
-          </>
-        )}
+
+              {tab === "ranking" && (
+                <div className="tab-pane">
+                  <div className="formula-note">
+                    📐 Score = Oportunidades×5 + Compromissos×3 + Prontuários×2 + Tarefas×2 + Msgs×1 + Lembretes×1
+                  </div>
+                  {ranked.filter((u) => computeScore(u.data, u.leadsWorked.length) > 0).length === 0 ? (
+                    <div className="empty">
+                      <div className="ico">🏆</div>
+                      Sem dados para ranquear neste período.
+                    </div>
+                  ) : (
+                    <div className="rank-list">
+                      {ranked.map((u, idx) => {
+                        const score = computeScore(u.data, u.leadsWorked.length);
+                        if (score === 0) return null;
+                        const pct = Math.max(8, Math.round((score / maxScore) * 100));
+                        const medalCls = idx === 0 ? "gold" : idx === 1 ? "silver" : idx === 2 ? "bronze" : "";
+                        const medal = idx === 0 ? "🥇" : idx === 1 ? "🥈" : idx === 2 ? "🥉" : "";
+                        return (
+                          <div key={u.userId} className={`rank-card ${medalCls}`}>
+                            <div className="rank-top">
+                              {medal ? <span className="medal">{medal}</span> : <span className="rank-pos">{idx + 1}º</span>}
+                              <div className="rank-info">
+                                <div className="rank-name">{u.userName}</div>
+                                <div className="rank-email">{u.email || ""}</div>
+                              </div>
+                              <div className={`rank-score-big ${medalCls}`}>
+                                {score}
+                                <div className="pts">pontos</div>
+                              </div>
+                            </div>
+                            <div className="progress-wrap">
+                              <div className="progress-track"><div className="progress-fill" style={{ width: `${pct}%` }}></div></div>
+                            </div>
+                            <div className="rank-breakdown">
+                              <div className="breakdown-cell"><div className="bc-val g">{u.leadsWorked.length}</div><div className="bc-lbl">Oport.</div></div>
+                              <div className="breakdown-cell"><div className="bc-val b">{u.data.compromissos}</div><div className="bc-lbl">Comp.</div></div>
+                              <div className="breakdown-cell"><div className="bc-val">{u.data.tarefas}</div><div className="bc-lbl">Tarefas</div></div>
+                              <div className="breakdown-cell"><div className="bc-val">{u.data.prontuarios}</div><div className="bc-lbl">Pront.</div></div>
+                              <div className="breakdown-cell"><div className="bc-val a">{u.data.mensagensAgendadas}</div><div className="bc-lbl">Msgs</div></div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              <div className="bottom-bar">
+                <p>Atualizado agora · {periodLabel}</p>
+              </div>
+            </>
+          )}
+        </div>
       </DialogContent>
     </Dialog>
   );
