@@ -666,18 +666,51 @@ export function EditarLeadDialog({
           </div>
           </form>
         )}
-      </DialogContent>
+    </>
+  );
 
-      {/* Lead Attachments Modal */}
-      {userCompanyId && (
-        <LeadAttachments
-          open={attachmentsOpen}
-          onOpenChange={setAttachmentsOpen}
-          leadId={lead.id}
-          companyId={userCompanyId}
-          leadName={lead.nome}
-        />
+  const attachmentsModal = userCompanyId && (
+    <LeadAttachments
+      open={attachmentsOpen}
+      onOpenChange={setAttachmentsOpen}
+      leadId={lead.id}
+      companyId={userCompanyId}
+      leadName={lead.nome}
+    />
+  );
+
+  if (inline) {
+    if (!open) {
+      return <>{triggerButton}{attachmentsModal}</>;
+    }
+    return (
+      <div className="mt-3 space-y-3 p-3 border border-border rounded-lg bg-muted/30">
+        <div className="flex items-center justify-between">
+          <h4 className="font-medium text-sm">Editar Lead</h4>
+          <Button type="button" variant="ghost" size="icon" className="h-6 w-6" onClick={() => setOpen(false)}>
+            <X className="h-4 w-4" />
+          </Button>
+        </div>
+        {bodyContent}
+        {attachmentsModal}
+      </div>
+    );
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      {triggerButton && (
+        <DialogTrigger asChild>
+          {triggerButton}
+        </DialogTrigger>
       )}
+      <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>Editar Lead</DialogTitle>
+        </DialogHeader>
+        {bodyContent}
+      </DialogContent>
+      {attachmentsModal}
     </Dialog>
   );
 }
