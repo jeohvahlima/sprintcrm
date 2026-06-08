@@ -11758,21 +11758,21 @@ function Conversas() {
                           </DialogContent>
                         </Dialog>
 
-                        {/* Prontuário / Ficha Técnica */}
+                        {/* Banco de Dado do Contato */}
                         <Button 
                           variant="outline" 
                           className="w-full justify-start gap-2 relative"
-                          title="Prontuário / Ficha Técnica"
+                          title="Banco de Dado do Contato"
                           onClick={() => {
                             if (leadVinculado?.id) {
                               setAttachmentsOpen(true);
                             } else {
-                              toast.info('Salve o lead primeiro para acessar o prontuário');
+                              toast.info('Salve o lead primeiro para acessar o banco de dados');
                             }
                           }}
                         >
                           <Paperclip className="h-4 w-4" />
-                          <span>Prontuário / Ficha Técnica</span>
+                          <span>Banco de Dado do Contato</span>
                           {attachmentsCount > 0 && (
                             <Badge variant="secondary" className="ml-auto h-5 min-w-5 px-1.5 text-[10px]">
                               {attachmentsCount}
@@ -11861,7 +11861,7 @@ function Conversas() {
         toast.success('Tarefa criada e vinculada ao lead!');
       }} />
 
-          {/* Modal de Prontuário / Ficha Técnica */}
+          {/* Modal de Banco de Dado do Contato */}
           <LeadAttachments
             open={attachmentsOpen}
             onOpenChange={(o) => {
