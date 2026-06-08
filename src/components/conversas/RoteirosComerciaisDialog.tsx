@@ -53,20 +53,26 @@ export function RoteirosComerciaisDialog({ open, onOpenChange, conversationConte
     onOpenChange(false);
   };
 
+  const Wrapper: any = inline ? InlineDialog : Dialog;
+  const WrapperContent: any = inline ? InlineDialogContent : DialogContent;
+  const WrapperHeader: any = inline ? InlineDialogHeader : DialogHeader;
+  const WrapperTitle: any = inline ? InlineDialogTitle : DialogTitle;
+
   return (
     <>
-      <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
+      <Wrapper open={open} onOpenChange={onOpenChange}>
+        <WrapperContent className={inline ? "" : "max-w-3xl max-h-[85vh] overflow-y-auto"}>
+          <WrapperHeader>
+            <WrapperTitle className="flex items-center gap-2">
               <Workflow className="h-5 w-5 text-primary" /> Roteiros Comerciais
-            </DialogTitle>
+            </WrapperTitle>
             <p className="text-sm text-muted-foreground">
               Crie sequências de mensagens com gatilhos, condições e ações automáticas
             </p>
-          </DialogHeader>
+          </WrapperHeader>
 
           <div className="space-y-3">
+
             {!showNew ? (
               <Button onClick={() => setShowNew(true)} className="w-full">
                 <Plus className="h-4 w-4 mr-2" /> Novo Roteiro
