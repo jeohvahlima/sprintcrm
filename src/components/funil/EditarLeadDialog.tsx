@@ -331,14 +331,7 @@ export function EditarLeadDialog({
 
   const bodyContent = (
     <>
-        {initialLoading ? (
-          <div className="flex items-center justify-center py-8">
-            <div className="text-center">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mb-4"></div>
-              <p className="text-muted-foreground">Carregando dados...</p>
-            </div>
-          </div>
-        ) : (
+
 
         {initialLoading ? (
           <div className="flex items-center justify-center py-8">
