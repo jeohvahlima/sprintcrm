@@ -761,7 +761,18 @@
       let selectedDate = new Date(viewDate);
       let editingId = null;
 
-      function load(){ try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; } catch { return []; } }
+      function isUuidLike(s){ return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(String(s||'').trim()); }
+      function load(){
+        try {
+          const arr = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+          // sanitiza: remove UUIDs salvos antigamente em agenda/prof
+          return arr.map(it => ({
+            ...it,
+            agenda: isUuidLike(it.agenda) ? '' : it.agenda,
+            prof: isUuidLike(it.prof) ? '' : it.prof,
+          }));
+        } catch { return []; }
+      }
       function save(list){ localStorage.setItem(STORAGE_KEY, JSON.stringify(list)); }
       function toast(msg){ const t=document.getElementById('toast'); t.textContent=msg; t.style.display='block'; clearTimeout(t._h); t._h=setTimeout(()=>t.style.display='none',2500); }
       function pad(n){ return String(n).padStart(2,'0'); }
@@ -921,8 +932,14 @@
         document.getElementById('f_start').value = ev?.start || prefill?.start || '09:00';
         document.getElementById('f_end').value = ev?.end || '09:30';
         document.getElementById('f_type').value = ev?.type || 'Consulta';
-        const fa = document.getElementById('f_agenda'); fa.value = ev?.agenda || (fa.options[0] && fa.options[0].value) || '';
-        const fp = document.getElementById('f_prof'); fp.value = ev?.prof || (fp.options[0] && fp.options[0].value) || '';
+        const fa = document.getElementById('f_agenda');
+        const fp = document.getElementById('f_prof');
+        function setSelectByLabel(sel, label){
+          if(!label){ if(sel.options[0]) sel.value = sel.options[0].value; return; }
+          for(const o of sel.options){ if((o.textContent||'').trim() === label){ sel.value = o.value; return; } }
+        }
+        setSelectByLabel(fa, ev?.agenda);
+        setSelectByLabel(fp, ev?.prof);
         document.getElementById('f_value').value = ev?.value ?? '';
         document.getElementById('f_phone').value = ev?.phone || '';
         document.getElementById('f_email').value = ev?.email || '';
@@ -953,8 +970,8 @@
           name, date, start,
           end: document.getElementById('f_end').value,
           type: document.getElementById('f_type').value,
-          agenda: document.getElementById('f_agenda').value,
-          prof: document.getElementById('f_prof').value.trim(),
+          agenda: (document.getElementById('f_agenda').selectedOptions[0]?.textContent || '').trim(),
+          prof: (document.getElementById('f_prof').selectedOptions[0]?.textContent || '').trim(),
           value: parseFloat(document.getElementById('f_value').value) || 0,
           phone: document.getElementById('f_phone').value.trim(),
           email: document.getElementById('f_email').value.trim(),
