@@ -1,0 +1,1 @@
+ALTER TABLE public.system_updates ADD COLUMN IF NOT EXISTS module text;
