@@ -11880,20 +11880,8 @@ function Conversas() {
         toast.success('Tarefa criada e vinculada ao lead!');
       }} />
 
-          {/* Modal de Banco de Dado do Contato */}
-          <LeadAttachments
-            open={attachmentsOpen}
-            onOpenChange={(o) => {
-              setAttachmentsOpen(o);
-              if (!o && leadVinculado?.id) {
-                carregarAttachmentsCount(leadVinculado.id);
-              }
-            }}
-            leadId={leadVinculado.id}
-            companyId={userCompanyId || ''}
-            leadName={leadVinculado.name || selectedConv.contactName}
-          />
         </>}
+
 
 
       {/* Dialog: Valor da Venda Rápido */}
