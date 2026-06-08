@@ -106,8 +106,8 @@ const App = () => (
             <Route path="/c/:token" element={<ConfirmarCompromisso />} />
             <Route path="/confirmar/:token" element={<ConfirmarCompromisso />} />
             <Route path="/" element={<WebphoneProvider><MainLayout /></WebphoneProvider>}>
-              <Route index element={<Navigate to="/analytics" replace />} />
-              <Route path="dashboard" element={<Navigate to="/analytics" replace />} />
+              <Route index element={<Navigate to="/relatorios" replace />} />
+              <Route path="dashboard" element={<Navigate to="/relatorios" replace />} />
               <Route path="leads" element={<Leads />} />
               <Route path="kanban" element={<Kanban />} />
               <Route path="tarefas" element={<Tarefas />} />
