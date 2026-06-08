@@ -19,6 +19,7 @@ import { ScriptBuilderDialog } from "./ScriptBuilderDialog";
 interface Props {
   open: boolean;
   onOpenChange: (v: boolean) => void;
+  inline?: boolean;
   conversationContext?: {
     conversation_id?: string;
     lead_id?: string;
