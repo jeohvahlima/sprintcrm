@@ -378,90 +378,62 @@ export function ResponsaveisManager({
         )}
       </div>
 
-      <Dialog open={open} onOpenChange={setOpen}>
-        <DialogTrigger asChild>
-          <Button size="sm" variant="outline" className="w-full">
-            <UserPlus className="h-3 w-3 mr-2" /> 
-            Adicionar Responsável
-          </Button>
-        </DialogTrigger>
-        <DialogContent className="max-w-sm">
-          <DialogHeader>
-            <DialogTitle>Adicionar Responsável</DialogTitle>
-            <p className="text-sm text-muted-foreground">
-              Responsáveis podem visualizar e responder a conversa
-            </p>
-          </DialogHeader>
-          
-          <div className="space-y-4">
-            <div>
-              <Select 
-                value={novoResponsavel} 
-                onValueChange={setNovoResponsavel}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione um usuário" />
-                </SelectTrigger>
-                <SelectContent>
-                  {usuarios.map((usuario) => (
-                    <SelectItem key={usuario.id} value={usuario.id}>
-                      <div className="flex items-center gap-2">
-                        <Avatar className="h-6 w-6">
-                          <AvatarFallback className="text-xs bg-primary/10 text-primary">
-                            {(usuario.full_name || usuario.email).charAt(0).toUpperCase()}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div>
-                          <p className="text-sm font-medium">{usuario.full_name || usuario.email}</p>
-                          {usuario.full_name && (
-                            <p className="text-xs text-muted-foreground">{usuario.email}</p>
-                          )}
-                        </div>
-                      </div>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+      <Button
+        size="sm"
+        variant="outline"
+        className="w-full"
+        onClick={() => setOpen(v => !v)}
+      >
+        <UserPlus className="h-3 w-3 mr-2" />
+        {open ? "Fechar" : "Adicionar Responsável"}
+      </Button>
 
-            <div className="flex gap-2">
-              <Button 
-                variant="outline" 
-                onClick={() => setOpen(false)}
-                className="flex-1"
-              >
-                Cancelar
-              </Button>
-              <Button 
-                onClick={adicionarResponsavel}
-                disabled={loading || !novoResponsavel}
-                className="flex-1"
-              >
-                {loading ? "Adicionando..." : "Adicionar"}
-              </Button>
-            </div>
+      {open && (
+        <div className="mt-3 space-y-3 p-3 border border-border rounded-lg bg-muted/30">
+          <p className="text-xs text-muted-foreground">
+            Responsáveis podem visualizar e responder a conversa
+          </p>
+          <Select value={novoResponsavel} onValueChange={setNovoResponsavel}>
+            <SelectTrigger className="h-9">
+              <SelectValue placeholder="Selecione um usuário" />
+            </SelectTrigger>
+            <SelectContent>
+              {usuarios.map((usuario) => (
+                <SelectItem key={usuario.id} value={usuario.id}>
+                  <div className="flex items-center gap-2">
+                    <Avatar className="h-6 w-6">
+                      <AvatarFallback className="text-xs bg-primary/10 text-primary">
+                        {(usuario.full_name || usuario.email).charAt(0).toUpperCase()}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <p className="text-sm font-medium">{usuario.full_name || usuario.email}</p>
+                      {usuario.full_name && (
+                        <p className="text-xs text-muted-foreground">{usuario.email}</p>
+                      )}
+                    </div>
+                  </div>
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          <div className="flex gap-2">
+            <Button variant="outline" size="sm" onClick={() => setOpen(false)} className="flex-1">
+              Cancelar
+            </Button>
+            <Button
+              size="sm"
+              onClick={adicionarResponsavel}
+              disabled={loading || !novoResponsavel}
+              className="flex-1"
+            >
+              {loading ? "Adicionando..." : "Adicionar"}
+            </Button>
           </div>
+        </div>
+      )}
 
-          {responsaveis.length > 0 && (
-            <div className="border-t pt-4">
-              <p className="text-xs font-medium text-muted-foreground mb-2">
-                Responsáveis atuais:
-              </p>
-              <div className="flex flex-wrap gap-2">
-                {responsaveis.map((nome, index) => (
-                  <Badge 
-                    key={`current-${nome}-${index}`} 
-                    variant="outline" 
-                    className="text-xs"
-                  >
-                    {nome}
-                  </Badge>
-                ))}
-              </div>
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
 
       {responsaveis.length > 0 && (
         <p className="text-xs text-muted-foreground mt-2">
