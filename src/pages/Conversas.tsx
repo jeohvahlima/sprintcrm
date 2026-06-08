@@ -11768,20 +11768,36 @@ function Conversas() {
                           title="Banco de Dado do Contato"
                           onClick={() => {
                             if (leadVinculado?.id) {
-                              setAttachmentsOpen(true);
+                              setAttachmentsOpen(v => !v);
                             } else {
                               toast.info('Salve o lead primeiro para acessar o banco de dados');
                             }
                           }}
                         >
                           <Paperclip className="h-4 w-4" />
-                          <span>Banco de Dado do Contato</span>
-                          {attachmentsCount > 0 && (
+                          <span>{attachmentsOpen ? 'Fechar' : 'Banco de Dado do Contato'}</span>
+                          {attachmentsCount > 0 && !attachmentsOpen && (
                             <Badge variant="secondary" className="ml-auto h-5 min-w-5 px-1.5 text-[10px]">
                               {attachmentsCount}
                             </Badge>
                           )}
                         </Button>
+                        {leadVinculado?.id && (
+                          <LeadAttachments
+                            open={attachmentsOpen}
+                            onOpenChange={(o) => {
+                              setAttachmentsOpen(o);
+                              if (!o && leadVinculado?.id) {
+                                carregarAttachmentsCount(leadVinculado.id);
+                              }
+                            }}
+                            leadId={leadVinculado.id}
+                            companyId={userCompanyId || ''}
+                            leadName={leadVinculado.name || selectedConv?.contactName}
+                            inline
+                          />
+                        )}
+
 
 
                       </div>
