@@ -815,6 +815,38 @@
   <script>
     (function(){
       const STORAGE_KEY = 'agenda_appointments_v1';
+
+      // Recebe agendas/profissionais reais do CRM via postMessage do React wrapper
+      function populateSelect(id, items, placeholder){
+        const el = document.getElementById(id);
+        if(!el) return;
+        const current = el.value;
+        el.innerHTML = '';
+        if(!items || items.length === 0){
+          const opt = document.createElement('option');
+          opt.value = '';
+          opt.textContent = placeholder;
+          el.appendChild(opt);
+          return;
+        }
+        items.forEach(it => {
+          const opt = document.createElement('option');
+          opt.value = it.id || it.label;
+          opt.textContent = it.label;
+          el.appendChild(opt);
+        });
+        if(current) el.value = current;
+      }
+      window.addEventListener('message', (e) => {
+        const d = e.data || {};
+        if(d.type === 'agenda:data'){
+          populateSelect('f_agenda', d.agendas, 'Nenhuma agenda cadastrada');
+          populateSelect('f_prof', d.profissionais, 'Nenhum profissional cadastrado');
+        }
+      });
+      // Avisa o parent que está pronto
+      try { window.parent.postMessage({ type: 'agenda:ready' }, '*'); } catch(_) {}
+
       const monthNames = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
       const dowShort = ['DOM','SEG','TER','QUA','QUI','SEX','SÁB'];
 
