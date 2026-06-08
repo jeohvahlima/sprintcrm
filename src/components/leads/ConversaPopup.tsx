@@ -1697,7 +1697,7 @@ export function ConversaPopup({
                         onClick={() => setAttachmentsOpen(true)}
                       >
                         <Paperclip className="h-4 w-4 text-indigo-500" />
-                        Prontuário / Ficha Técnica
+                        Banco de Dado do Contato
                         {attachmentsCount > 0 && (
                           <Badge variant="secondary" className="ml-auto text-xs">
                             {attachmentsCount}
