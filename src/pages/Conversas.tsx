@@ -10294,67 +10294,80 @@ function Conversas() {
                           </Badge>)}
                         {(!(selectedConv.tags?.length) && !(leadVinculado?.tags?.length)) && <p className="text-sm text-muted-foreground">Nenhuma tag adicionada</p>}
                       </div>
-                      <Dialog onOpenChange={open => {
-                  if (open) {
-                    refreshTags(); // Atualizar tags quando abrir o dialog
-                  }
-                }}>
-                        <DialogTrigger asChild>
-                          <Button size="sm" variant="outline" className="w-full">
-                            <Tag className="h-3 w-3 mr-2" /> Adicionar Tag
-                          </Button>
-                        </DialogTrigger>
-                        <DialogContent className="max-w-md">
-                          <DialogHeader>
-                            <DialogTitle>Gerenciar Tags</DialogTitle>
-                          </DialogHeader>
-                          <div className="space-y-4">
-                            {/* Campo para criar nova tag */}
-                            <div className="space-y-2">
-                              <Label>Criar Nova Tag</Label>
-                              <div className="flex gap-2">
-                                <Input placeholder="Nome da tag" value={newTag} onChange={e => setNewTag(e.target.value)} onKeyDown={e => {
-                            if (e.key === "Enter" && newTag.trim()) {
-                              e.preventDefault();
-                              addTag();
-                            }
-                          }} />
-                                <Button onClick={addTag} disabled={!newTag.trim()}>
-                                  Adicionar
-                                </Button>
-                              </div>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="w-full"
+                        onClick={() => {
+                          setShowTagsInline(v => {
+                            if (!v) refreshTags();
+                            return !v;
+                          });
+                        }}
+                      >
+                        <Tag className="h-3 w-3 mr-2" />
+                        {showTagsInline ? "Fechar" : "Gerenciar Tags"}
+                      </Button>
+
+                      {showTagsInline && (
+                        <div className="mt-3 space-y-3 p-3 border border-border rounded-lg bg-muted/30">
+                          <div className="space-y-2">
+                            <Label className="text-xs">Criar Nova Tag</Label>
+                            <div className="flex gap-2">
+                              <Input
+                                placeholder="Nome da tag"
+                                value={newTag}
+                                onChange={e => setNewTag(e.target.value)}
+                                onKeyDown={e => {
+                                  if (e.key === "Enter" && newTag.trim()) {
+                                    e.preventDefault();
+                                    addTag();
+                                  }
+                                }}
+                                className="h-9"
+                              />
+                              <Button size="sm" onClick={addTag} disabled={!newTag.trim()}>
+                                Adicionar
+                              </Button>
                             </div>
-                            
-                            {/* Lista de tags disponíveis para seleção */}
-                            {allTags.length > 0 && <div className="space-y-2">
-                                <Label>Tags Disponíveis</Label>
-                                <ScrollArea className="h-[200px] border rounded-md p-2">
-                                  <div className="flex flex-wrap gap-2">
-                                    {allTags.map(tag => {
-                              const isSelected = (selectedConv.tags?.includes(tag) || leadVinculado?.tags?.includes(tag) || false);
-                              return <Badge key={tag} variant={isSelected ? "default" : "outline"} className="cursor-pointer hover:bg-primary/80" onClick={() => {
-                                if (isSelected) {
-                                  // Remover tag
-                                  removeTag(tag);
-                                } else {
-                                  // Adicionar tag
-                                  addExistingTag(tag);
-                                }
-                              }}>
-                                          {tag}
-                                          {isSelected && <X className="h-3 w-3 ml-1" />}
-                                        </Badge>;
-                            })}
-                                  </div>
-                                </ScrollArea>
-                              </div>}
-                            
-                            {allTags.length === 0 && <p className="text-sm text-muted-foreground text-center py-4">
-                                Nenhuma tag disponível. Crie uma nova tag acima.
-                              </p>}
                           </div>
-                        </DialogContent>
-                      </Dialog>
+
+                          {allTags.length > 0 ? (
+                            <div className="space-y-2">
+                              <Label className="text-xs">Tags Disponíveis</Label>
+                              <ScrollArea className="h-[180px] border rounded-md p-2">
+                                <div className="flex flex-wrap gap-2">
+                                  {allTags.map(tag => {
+                                    const isSelected = (selectedConv.tags?.includes(tag) || leadVinculado?.tags?.includes(tag) || false);
+                                    return (
+                                      <Badge
+                                        key={tag}
+                                        variant={isSelected ? "default" : "outline"}
+                                        className="cursor-pointer hover:bg-primary/80"
+                                        onClick={() => {
+                                          if (isSelected) {
+                                            removeTag(tag);
+                                          } else {
+                                            addExistingTag(tag);
+                                          }
+                                        }}
+                                      >
+                                        {tag}
+                                        {isSelected && <X className="h-3 w-3 ml-1" />}
+                                      </Badge>
+                                    );
+                                  })}
+                                </div>
+                              </ScrollArea>
+                            </div>
+                          ) : (
+                            <p className="text-xs text-muted-foreground text-center py-2">
+                              Nenhuma tag disponível. Crie uma nova acima.
+                            </p>
+                          )}
+                        </div>
+                      )}
+
                     </div>
 
                     {/* Funnel Stage */}
