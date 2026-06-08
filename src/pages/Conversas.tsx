@@ -10510,12 +10510,14 @@ function Conversas() {
                           <RoteirosComerciaisDialog
                             open={roteirosDialogOpen}
                             onOpenChange={setRoteirosDialogOpen}
+                            inline
                             conversationContext={{
                               conversation_id: selectedConv.id,
                               lead_id: (selectedConv as any).leadId || undefined,
                               telefone_formatado: (selectedConv.phoneNumber || selectedConv.id || "").replace(/[^0-9]/g, ""),
                             }}
                           />
+
                         )}
                         {/* Quick Messages */}
                         <InlineDialog>
