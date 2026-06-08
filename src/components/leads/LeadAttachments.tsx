@@ -339,8 +339,8 @@ export function LeadAttachments({ leadId, companyId, leadName, open, onOpenChang
               <span>{attachments.filter(a => a.category === 'depois').length} depois</span>
             </div>
           </div>
-        </DialogContent>
-      </Dialog>
+        </WrapperContent>
+      </Wrapper>
 
       <UploadAttachmentDialog
         open={uploadDialogOpen}
