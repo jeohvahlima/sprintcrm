@@ -16,6 +16,7 @@ export interface SystemUpdate {
   description: string | null;
   changes: SystemUpdateChange[];
   tipo: 'feature' | 'fix' | 'improvement';
+  module: string | null;
   published_at: string;
   created_by: string | null;
   created_at: string;
