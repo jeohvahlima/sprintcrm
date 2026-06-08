@@ -921,8 +921,14 @@
         document.getElementById('f_start').value = ev?.start || prefill?.start || '09:00';
         document.getElementById('f_end').value = ev?.end || '09:30';
         document.getElementById('f_type').value = ev?.type || 'Consulta';
-        const fa = document.getElementById('f_agenda'); fa.value = ev?.agenda || (fa.options[0] && fa.options[0].value) || '';
-        const fp = document.getElementById('f_prof'); fp.value = ev?.prof || (fp.options[0] && fp.options[0].value) || '';
+        const fa = document.getElementById('f_agenda');
+        const fp = document.getElementById('f_prof');
+        function setSelectByLabel(sel, label){
+          if(!label){ if(sel.options[0]) sel.value = sel.options[0].value; return; }
+          for(const o of sel.options){ if((o.textContent||'').trim() === label){ sel.value = o.value; return; } }
+        }
+        setSelectByLabel(fa, ev?.agenda);
+        setSelectByLabel(fp, ev?.prof);
         document.getElementById('f_value').value = ev?.value ?? '';
         document.getElementById('f_phone').value = ev?.phone || '';
         document.getElementById('f_email').value = ev?.email || '';
