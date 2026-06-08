@@ -1124,6 +1124,16 @@
         if(!confirm('Excluir este compromisso?')) return;
         save(load().filter(i=>i.id!==editingId)); closeModal(); renderAll(); toast('Compromisso excluído');
       });
+      document.getElementById('apptReschedule').addEventListener('click', () => {
+        if(!editingId) return;
+        const fd = document.getElementById('f_date');
+        const fs = document.getElementById('f_start');
+        const fe = document.getElementById('f_end');
+        fd.value = ''; fs.value = ''; fe.value = '';
+        document.getElementById('apptTitle').textContent = 'Remarcar compromisso';
+        toast('Escolha a nova data e horário, depois clique em Salvar');
+        setTimeout(() => fd.focus(), 50);
+      });
 
       // ---------- Top buttons ----------
       document.getElementById('btnCriar').addEventListener('click', () => openModal(null));
