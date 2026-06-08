@@ -233,7 +233,7 @@ export function AttachmentsManager({ onLeadSelected }: AttachmentsManagerProps) 
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Paperclip className="h-5 w-5" />
-              Gerenciador de Prontuários
+              Gerenciador de Banco de Dado do Contato
               <Badge variant="secondary" className="ml-2">
                 {totalAttachments} arquivo(s)
               </Badge>
