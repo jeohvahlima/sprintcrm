@@ -20,6 +20,24 @@ const CHANGE_TYPES = [
   { value: 'fix', label: 'Correção', icon: Wrench, color: 'text-orange-500' },
 ] as const;
 
+const MODULES = [
+  { value: '__all__', label: 'Todos os módulos (geral)' },
+  { value: 'Conversas', label: 'Conversas / Bate-papo' },
+  { value: 'Funil', label: 'Funil de Vendas' },
+  { value: 'Leads', label: 'Leads' },
+  { value: 'Agenda', label: 'Agenda' },
+  { value: 'Tarefas', label: 'Tarefas' },
+  { value: 'Automacoes', label: 'Automações / Fluxos' },
+  { value: 'IA', label: 'Inteligência Artificial' },
+  { value: 'Campanhas', label: 'Campanhas / Disparos' },
+  { value: 'Financeiro', label: 'Financeiro' },
+  { value: 'Relatorios', label: 'Relatórios' },
+  { value: 'Configuracoes', label: 'Configurações' },
+  { value: 'Treinamento', label: 'Treinamento' },
+  { value: 'Reunioes', label: 'Reuniões' },
+  { value: 'Discador', label: 'Discador / Call Center' },
+] as const;
+
 export function NovaAtualizacaoDialog({ open, onOpenChange }: NovaAtualizacaoDialogProps) {
   const { createUpdate } = useSystemUpdates();
   const [loading, setLoading] = useState(false);
@@ -28,6 +46,7 @@ export function NovaAtualizacaoDialog({ open, onOpenChange }: NovaAtualizacaoDia
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [tipo, setTipo] = useState<'feature' | 'fix' | 'improvement'>('feature');
+  const [module, setModule] = useState<string>('__all__');
   const [changes, setChanges] = useState<SystemUpdateChange[]>([]);
   const [newChangeText, setNewChangeText] = useState("");
   const [newChangeType, setNewChangeType] = useState<'feature' | 'improvement' | 'fix'>('feature');
@@ -37,6 +56,7 @@ export function NovaAtualizacaoDialog({ open, onOpenChange }: NovaAtualizacaoDia
     setTitle("");
     setDescription("");
     setTipo('feature');
+    setModule('__all__');
     setChanges([]);
     setNewChangeText("");
     setNewChangeType('feature');
@@ -83,6 +103,7 @@ export function NovaAtualizacaoDialog({ open, onOpenChange }: NovaAtualizacaoDia
         description: description.trim() || undefined,
         changes,
         tipo,
+        module: module === '__all__' ? null : module,
       });
 
       if (success) {
@@ -138,6 +159,27 @@ export function NovaAtualizacaoDialog({ open, onOpenChange }: NovaAtualizacaoDia
               </Select>
             </div>
           </div>
+
+          {/* Módulo */}
+          <div className="space-y-2">
+            <Label htmlFor="module">Módulo específico *</Label>
+            <Select value={module} onValueChange={setModule}>
+              <SelectTrigger id="module">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {MODULES.map(m => (
+                  <SelectItem key={m.value} value={m.value}>
+                    {m.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <p className="text-xs text-muted-foreground">
+              Selecione o módulo ao qual esta atualização se refere. Apenas as melhorias deste módulo serão divulgadas — os ajustes em outros módulos permanecem ocultos.
+            </p>
+          </div>
+
 
           {/* Título */}
           <div className="space-y-2">

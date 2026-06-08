@@ -9815,6 +9815,7 @@ export type Database = {
           description: string | null
           id: string
           master_company_id: string
+          module: string | null
           published_at: string | null
           tipo: string | null
           title: string
@@ -9827,6 +9828,7 @@ export type Database = {
           description?: string | null
           id?: string
           master_company_id: string
+          module?: string | null
           published_at?: string | null
           tipo?: string | null
           title: string
@@ -9839,6 +9841,7 @@ export type Database = {
           description?: string | null
           id?: string
           master_company_id?: string
+          module?: string | null
           published_at?: string | null
           tipo?: string | null
           title?: string

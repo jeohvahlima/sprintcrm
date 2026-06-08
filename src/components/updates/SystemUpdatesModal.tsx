@@ -122,8 +122,13 @@ export function SystemUpdatesModal({ open, onOpenChange }: SystemUpdatesModalPro
               </DialogTitle>
             </div>
           </div>
-          <DialogDescription className="flex items-center gap-2">
+          <DialogDescription className="flex items-center gap-2 flex-wrap">
             <Badge variant="secondary">{getTypeLabel(currentUpdate.tipo)}</Badge>
+            {currentUpdate.module && (
+              <Badge variant="outline" className="border-primary/40 text-primary">
+                📦 {currentUpdate.module}
+              </Badge>
+            )}
             <span className="text-xs">
               {format(new Date(currentUpdate.published_at), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
             </span>

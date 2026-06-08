@@ -16,6 +16,7 @@ export interface SystemUpdate {
   description: string | null;
   changes: SystemUpdateChange[];
   tipo: 'feature' | 'fix' | 'improvement';
+  module: string | null;
   published_at: string;
   created_by: string | null;
   created_at: string;
@@ -85,6 +86,7 @@ export function useSystemUpdates() {
         description: update.description,
         changes: (Array.isArray(update.changes) ? update.changes : []) as unknown as SystemUpdateChange[],
         tipo: update.tipo as 'feature' | 'fix' | 'improvement',
+        module: (update as any).module ?? null,
         published_at: update.published_at,
         created_by: update.created_by,
         created_at: update.created_at,
@@ -173,6 +175,7 @@ export function useSystemUpdates() {
     description?: string;
     changes: SystemUpdateChange[];
     tipo: 'feature' | 'fix' | 'improvement';
+    module?: string | null;
   }) => {
     try {
       if (!masterCompanyId) {
@@ -182,13 +185,14 @@ export function useSystemUpdates() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Usuário não autenticado');
 
-      const insertData = {
+      const insertData: any = {
         master_company_id: masterCompanyId,
         version: data.version,
         title: data.title,
         description: data.description || null,
         changes: data.changes as any,
         tipo: data.tipo,
+        module: data.module || null,
         created_by: user.id,
       };
 
