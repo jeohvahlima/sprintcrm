@@ -474,72 +474,50 @@
           <!-- Week view -->
           <div class="panel">
             <div class="panel-head week-toolbar">
-              <div class="panel-title"><i class="ti ti-calendar-week"></i> Visão semanal — 2 a 8 jun</div>
+              <div class="panel-title"><i class="ti ti-calendar-week"></i> <span id="week_title">Visão semanal</span></div>
               <div class="view-toggle">
                 <button>Dia</button>
                 <button class="active">Semana</button>
               </div>
             </div>
-            <div class="week-grid">
-              <div class="wh-head"></div>
-              <div class="wh-head"><span>DOM</span><span class="num">1</span></div>
-              <div class="wh-head"><span>SEG</span><span class="num">2</span></div>
-              <div class="wh-head today"><span>TER</span><span class="num">3</span></div>
-              <div class="wh-head"><span>QUA</span><span class="num">4</span></div>
-              <div class="wh-head"><span>QUI</span><span class="num">5</span></div>
-              <div class="wh-head"><span>SEX</span><span class="num">6</span></div>
-              <div class="wh-head"><span>SÁB</span><span class="num">7</span></div>
-
-              <!-- 08:00 -->
-              <div class="wh-time">08:00</div>
-              <div class="wh-slot wh-cell"></div>
-              <div class="wh-slot wh-cell"></div>
-              <div class="wh-slot wh-cell today-col"></div>
-              <div class="wh-slot wh-cell"></div>
-              <div class="wh-slot wh-cell"></div>
-              <div class="wh-slot wh-cell"></div>
-              <div class="wh-slot wh-cell"></div>
-
-              <!-- 09:00 -->
-              <div class="wh-time">09:00</div>
-              <div class="wh-slot wh-cell"></div>
-              <div class="wh-slot wh-cell"><div class="ev blue"><div class="nm">Maria Silva</div><div class="tm">09:00 – 09:30</div></div></div>
-              <div class="wh-slot wh-cell today-col"><div class="ev orange"><div class="nm">João Pereira</div><div class="tm">09:30 – 10:00</div></div></div>
-              <div class="wh-slot wh-cell"></div>
-              <div class="wh-slot wh-cell"></div>
-              <div class="wh-slot wh-cell"><div class="ev green"><div class="nm">Ricardo Lima</div><div class="tm">09:00 – 10:00</div></div></div>
-              <div class="wh-slot wh-cell"></div>
-
-              <!-- 10:00 -->
-              <div class="wh-time">10:00</div>
-              <div class="wh-slot wh-cell"></div>
-              <div class="wh-slot wh-cell"></div>
-              <div class="wh-slot wh-cell today-col"></div>
-              <div class="wh-slot wh-cell"><div class="ev purple"><div class="nm">Ana Rodrigues</div><div class="tm">10:00 – 10:30</div></div></div>
-              <div class="wh-slot wh-cell"></div>
-              <div class="wh-slot wh-cell"></div>
-              <div class="wh-slot wh-cell"></div>
-
-              <!-- 11:00 -->
-              <div class="wh-time">11:00</div>
-              <div class="wh-slot wh-cell"></div>
-              <div class="wh-slot wh-cell"><div class="ev green"><div class="nm">Carlos Mendes</div><div class="tm">11:00 – 11:30</div></div></div>
-              <div class="wh-slot wh-cell today-col"></div>
-              <div class="wh-slot wh-cell"></div>
-              <div class="wh-slot wh-cell"><div class="ev blue"><div class="nm">Fernanda Costa</div><div class="tm">11:00 – 11:30</div></div></div>
-              <div class="wh-slot wh-cell"></div>
-              <div class="wh-slot wh-cell"></div>
-
-              <!-- 12:00 -->
-              <div class="wh-time">12:00</div>
-              <div class="wh-slot wh-cell"></div>
-              <div class="wh-slot wh-cell"></div>
-              <div class="wh-slot wh-cell today-col"></div>
-              <div class="wh-slot wh-cell"></div>
-              <div class="wh-slot wh-cell"></div>
-              <div class="wh-slot wh-cell"></div>
-              <div class="wh-slot wh-cell"></div>
-            </div>
+            <div class="week-grid" id="week_grid"></div>
+            <script>
+              (function(){
+                const DOW = ['DOM','SEG','TER','QUA','QUI','SEX','SÁB'];
+                const MES_ABREV = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+                const HOURS = [8,9,10,11,12];
+                function render(){
+                  const grid = document.getElementById('week_grid');
+                  const title = document.getElementById('week_title');
+                  if(!grid || !title) return;
+                  const today = new Date();
+                  const start = new Date(today);
+                  start.setDate(today.getDate() - today.getDay());
+                  const end = new Date(start);
+                  end.setDate(start.getDate() + 6);
+                  title.textContent = `Visão semanal — ${start.getDate()} a ${end.getDate()} ${MES_ABREV[end.getMonth()]}`;
+                  let html = '<div class="wh-head"></div>';
+                  const days = [];
+                  for(let i=0;i<7;i++){
+                    const d = new Date(start); d.setDate(start.getDate()+i);
+                    days.push(d);
+                    const isToday = d.toDateString() === today.toDateString();
+                    html += `<div class="wh-head${isToday?' today':''}"><span>${DOW[i]}</span><span class="num">${d.getDate()}</span></div>`;
+                  }
+                  for(const h of HOURS){
+                    html += `<div class="wh-time">${String(h).padStart(2,'0')}:00</div>`;
+                    for(let i=0;i<7;i++){
+                      const isToday = days[i].toDateString() === today.toDateString();
+                      html += `<div class="wh-slot wh-cell${isToday?' today-col':''}"></div>`;
+                    }
+                  }
+                  grid.innerHTML = html;
+                }
+                document.addEventListener('DOMContentLoaded', render);
+                render();
+                window.__renderAgendaWeek = render;
+              })();
+            </script>
           </div>
 
           <!-- Tabs + list -->
