@@ -485,7 +485,8 @@
               (function(){
                 const DOW = ['DOM','SEG','TER','QUA','QUI','SEX','SÁB'];
                 const MES_ABREV = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
-                const HOURS = [8,9,10,11,12];
+                const BH = (function(){ try { return JSON.parse(localStorage.getItem('agenda_business_hours')) || {start:7,end:21}; } catch(_) { return {start:7,end:21}; } })();
+                const HOURS = []; for(let h=BH.start; h<=BH.end; h++) HOURS.push(h);
                 function render(){
                   const grid = document.getElementById('week_grid');
                   const title = document.getElementById('week_title');
@@ -854,7 +855,8 @@
         }
         const items = load();
         const colorOf = t => ({Consulta:'blue', Retorno:'green', Procedimento:'orange', 'Reunião':'purple'}[t] || 'blue');
-        for(let h=8; h<=12; h++){
+        const _bh = (function(){ try { return JSON.parse(localStorage.getItem('agenda_business_hours')) || {start:7,end:21}; } catch(_) { return {start:7,end:21}; } })();
+        for(let h=_bh.start; h<=_bh.end; h++){
           const time = document.createElement('div'); time.className='wh-time'; time.textContent = pad(h)+':00'; wg.appendChild(time);
           for(let i=0;i<7;i++){
             const d = new Date(start); d.setDate(start.getDate()+i);
@@ -989,7 +991,8 @@
         const now = new Date();
         const isToday = date === fmtDateISO(now);
         const nowMin = now.getHours()*60 + now.getMinutes();
-        const START_MIN = 8*60, END_MIN = 18*60, STEP = 30;
+        const _bh2 = (function(){ try { return JSON.parse(localStorage.getItem('agenda_business_hours')) || {start:7,end:21}; } catch(_) { return {start:7,end:21}; } })();
+        const START_MIN = _bh2.start*60, END_MIN = (_bh2.end+1)*60, STEP = 30;
         let free = 0, busy = 0;
         let html = '';
         for(let t = START_MIN; t + dur <= END_MIN; t += STEP){
