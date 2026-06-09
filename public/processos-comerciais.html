@@ -760,9 +760,13 @@ html, body { height: 100%; background: var(--bg0); color: var(--text0); font-siz
       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
       <input placeholder="Filtrar..." />
     </div>
-    <button class="sidebar-new" onclick="setTab('workspace')">
+    <button class="sidebar-new" onclick="createNewPage()">
       <span>📄</span> Nova página
     </button>
+    <div class="nav-section" id="nav-custom-pages" style="display:none;">
+      <div class="nav-section-title">📝 Minhas páginas</div>
+      <div id="custom-pages-list"></div>
+    </div>
   </div>
   <div class="sidebar-nav">
     <div class="nav-section">
