@@ -9733,7 +9733,17 @@ function Conversas() {
                     }
                   }
                 }} className="flex-1 min-w-[120px] min-h-[40px] max-h-[200px] resize-none overflow-y-auto" rows={1} />
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      className="text-amber-600 hover:text-amber-700 hover:bg-amber-50 border-amber-300 flex-shrink-0"
+                      title="Respostas Rápidas"
+                      onClick={() => setShowQuickRepliesPopup(true)}
+                    >
+                      <Zap className="h-5 w-5" />
+                    </Button>
                     <AudioRecorder onSendAudio={handleSendAudio} onTranscribed={(text) => setMessageInput(prev => prev ? `${prev} ${text}` : text)} />
+
 
                     <div className={`${showMobileExtras ? 'flex absolute bottom-full left-0 mb-2 bg-popover border border-border rounded-lg p-2 shadow-lg z-50' : 'hidden'} items-end gap-1.5 sm:gap-2`}>
                       <Button 
@@ -9794,12 +9804,8 @@ function Conversas() {
                         />
                       )}
                       <Dialog open={showQuickRepliesPopup} onOpenChange={setShowQuickRepliesPopup}>
-                        <DialogTrigger asChild>
-                          <Button variant="outline" size="icon" className="text-amber-600 hover:text-amber-700 hover:bg-amber-50 border-amber-300" title="Respostas Rápidas">
-                            <Zap className="h-5 w-5" />
-                          </Button>
-                        </DialogTrigger>
                         <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
+
                           <DialogHeader>
                             <DialogTitle className="flex items-center gap-2">
                               <Zap className="h-5 w-5 text-amber-500" />
