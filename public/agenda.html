@@ -855,7 +855,8 @@
         }
         const items = load();
         const colorOf = t => ({Consulta:'blue', Retorno:'green', Procedimento:'orange', 'Reunião':'purple'}[t] || 'blue');
-        for(let h=8; h<=12; h++){
+        const _bh = (function(){ try { return JSON.parse(localStorage.getItem('agenda_business_hours')) || {start:7,end:21}; } catch(_) { return {start:7,end:21}; } })();
+        for(let h=_bh.start; h<=_bh.end; h++){
           const time = document.createElement('div'); time.className='wh-time'; time.textContent = pad(h)+':00'; wg.appendChild(time);
           for(let i=0;i<7;i++){
             const d = new Date(start); d.setDate(start.getDate()+i);
