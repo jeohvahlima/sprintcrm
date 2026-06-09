@@ -507,6 +507,9 @@ function Conversas() {
   const [quickMessages, setQuickMessages] = useState<QuickMessage[]>([]);
   const [quickCategories, setQuickCategories] = useState<QuickMessageCategory[]>([]);
   const [showQuickRepliesPopup, setShowQuickRepliesPopup] = useState(false); // Estado para popup de respostas rápidas
+  const [chipEditor, setChipEditor] = useState<{ open: boolean; mode: 'create' | 'edit'; id?: string; title: string; content: string; category: string }>({ open: false, mode: 'create', title: '', content: '', category: '' });
+  const [savingChip, setSavingChip] = useState(false);
+
   const [reminders, setReminders] = useState<Reminder[]>([]);
   const [scheduledMessages, setScheduledMessages] = useState<any[]>([]);
   const [meetings, setMeetings] = useState<Meeting[]>([]);
