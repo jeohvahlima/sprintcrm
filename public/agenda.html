@@ -1071,13 +1071,15 @@
         const now = new Date();
         const isToday = date === fmtDateISO(now);
         const nowMin = now.getHours()*60 + now.getMinutes();
-        const _bh2 = (function(){ try { return JSON.parse(localStorage.getItem('agenda_business_hours')) || {start:7,end:21}; } catch(_) { return {start:7,end:21}; } })();
-        const START_MIN = _bh2.start*60, END_MIN = (_bh2.end+1)*60, STEP = 30;
+        const _cfg = (typeof getCfg==='function') ? getCfg() : null;
+        const _r = (typeof cfgHourRange==='function') ? cfgHourRange() : { start:7, end:21 };
+        const START_MIN = _r.start*60, END_MIN = (_r.end+1)*60, STEP = (_cfg?.slot) || 30;
         let free = 0, busy = 0;
         let html = '';
         for(let t = START_MIN; t + dur <= END_MIN; t += STEP){
           const slotStart = t, slotEnd = t + dur;
           const past = isToday && slotEnd <= nowMin;
+          const blocked = (typeof cfgIsBlocked==='function') ? cfgIsBlocked(date, slotStart, slotEnd) : false;
           const occupied = items.some(i => {
             const s = hhmmToMin(i.start), e = hhmmToMin(i.end || minToHHMM(s+30));
             return slotStart < e && slotEnd > s;
@@ -1085,11 +1087,12 @@
           const selected = selectedStart && hhmmToMin(selectedStart) === slotStart;
           let bg = 'hsl(var(--surface))', color = 'hsl(var(--text))', dot = 'hsl(var(--success))', cursor='pointer', border='hsl(var(--border))';
           if(past){ color='hsl(var(--text-muted))'; dot='hsl(var(--text-muted))'; cursor='not-allowed'; }
+          else if(blocked){ color='hsl(var(--text-muted))'; dot='hsl(var(--text-muted))'; cursor='not-allowed'; bg='hsl(var(--surface-soft) / 0.5)'; }
           else if(occupied){ color='hsl(var(--danger))'; dot='hsl(var(--danger))'; cursor='not-allowed'; }
           else free++;
-          if(occupied && !past) busy++;
+          if(occupied && !past && !blocked) busy++;
           if(selected){ bg='hsl(var(--info) / 0.12)'; border='hsl(var(--info))'; }
-          const disabled = past || occupied;
+          const disabled = past || occupied || blocked;
           html += '<button type="button" data-slot="'+minToHHMM(slotStart)+'" data-end="'+minToHHMM(slotEnd)+'" '+(disabled?'disabled':'')
             + ' style="padding:8px 6px; border:1px solid '+border+'; border-radius:8px; background:'+bg+'; color:'+color
             + '; font-size:12px; font-weight:600; cursor:'+cursor+'; display:flex; flex-direction:column; align-items:center; gap:2px;'
