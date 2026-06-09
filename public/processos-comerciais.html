@@ -760,9 +760,13 @@ html, body { height: 100%; background: var(--bg0); color: var(--text0); font-siz
       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
       <input placeholder="Filtrar..." />
     </div>
-    <button class="sidebar-new" onclick="setTab('workspace')">
+    <button class="sidebar-new" onclick="createNewPage()">
       <span>📄</span> Nova página
     </button>
+    <div class="nav-section" id="nav-custom-pages" style="display:none;">
+      <div class="nav-section-title">📝 Minhas páginas</div>
+      <div id="custom-pages-list"></div>
+    </div>
   </div>
   <div class="sidebar-nav">
     <div class="nav-section">
@@ -1906,6 +1910,197 @@ function setTab(tab) {
   const tabEl = document.getElementById('tab-' + tab);
   if (tabEl) tabEl.classList.add('active');
 }
+
+// ===== Document (page) management =====
+const DOC_STORE_KEY = 'proc_docs_v2';
+const DOC_CUSTOM_KEY = 'proc_custom_pages_v2';
+const DOC_CURRENT_KEY = 'proc_current_doc_v2';
+
+const DOC_DEFAULTS = {
+  'playbook-vendas':  { icon: '📖', title: 'Playbook de Vendas — Clínicas' },
+  'metodologia':      { icon: '🎯', title: 'Metodologia de Vendas' },
+  'script-objecoes':  { icon: '💬', title: 'Scripts de Objeções' },
+  'cold-call':        { icon: '📞', title: 'Cold Call' },
+  'proposta':         { icon: '📋', title: 'Proposta Comercial' },
+  'followup':         { icon: '🔄', title: 'Follow-up' },
+  'icp':              { icon: '🎯', title: 'ICP e Personas' },
+  'onboarding':       { icon: '🚀', title: 'Onboarding de Vendedor' },
+  'objecoes':         { icon: '🛡️', title: 'Mapa de Objeções' },
+};
+
+let __originalEditorHTML = '';
+let __currentDocId = 'playbook-vendas';
+
+function _loadDocs() {
+  try { return JSON.parse(localStorage.getItem(DOC_STORE_KEY) || '{}'); } catch(e) { return {}; }
+}
+function _saveDocs(d) { localStorage.setItem(DOC_STORE_KEY, JSON.stringify(d)); }
+function _loadCustom() {
+  try { return JSON.parse(localStorage.getItem(DOC_CUSTOM_KEY) || '[]'); } catch(e) { return []; }
+}
+function _saveCustom(list) { localStorage.setItem(DOC_CUSTOM_KEY, JSON.stringify(list)); }
+
+function _getEditorEl()  { return document.querySelector('#view-workspace .block-editor'); }
+function _getTitleEl()   { return document.querySelector('#view-workspace .page-title'); }
+function _getIconEl()    { return document.querySelector('#view-workspace .page-icon'); }
+
+function _captureCurrentDoc() {
+  const docs = _loadDocs();
+  const editor = _getEditorEl();
+  const titleEl = _getTitleEl();
+  const iconEl  = _getIconEl();
+  if (!editor) return;
+  docs[__currentDocId] = {
+    title: titleEl ? titleEl.value : '',
+    icon:  iconEl ? iconEl.textContent : '📄',
+    html:  editor.innerHTML,
+  };
+  _saveDocs(docs);
+}
+
+function setDoc(id) {
+  // Save current page before switching
+  _captureCurrentDoc();
+
+  setTab('workspace');
+
+  const docs = _loadDocs();
+  const editor = _getEditorEl();
+  const titleEl = _getTitleEl();
+  const iconEl  = _getIconEl();
+  if (!editor || !titleEl) return;
+
+  // Highlight active item
+  document.querySelectorAll('.sidebar .nav-item').forEach(n => n.classList.remove('active'));
+  const navEl = document.querySelector('.sidebar .nav-item[data-doc-id="' + id + '"]')
+              || Array.from(document.querySelectorAll('.sidebar .nav-item'))
+                   .find(n => (n.getAttribute('onclick')||'').includes("setDoc('" + id + "')"));
+  if (navEl) navEl.classList.add('active');
+
+  const saved = docs[id];
+  const meta = DOC_DEFAULTS[id] || _loadCustom().find(p => p.id === id) || { icon: '📄', title: 'Sem título' };
+
+  if (saved) {
+    titleEl.value = saved.title || meta.title;
+    if (iconEl) iconEl.textContent = saved.icon || meta.icon;
+    editor.innerHTML = saved.html || _emptyDocHTML(meta.title);
+  } else {
+    titleEl.value = meta.title;
+    if (iconEl) iconEl.textContent = meta.icon;
+    editor.innerHTML = (id === 'playbook-vendas' && __originalEditorHTML)
+      ? __originalEditorHTML
+      : _emptyDocHTML(meta.title);
+  }
+
+  __currentDocId = id;
+  localStorage.setItem(DOC_CURRENT_KEY, id);
+  _bindEditableHandlers();
+}
+
+function _emptyDocHTML(title) {
+  return `
+    <div class="block"><div class="block-handle">⠿</div>
+      <div class="block-content block-h1" contenteditable="true">${(title||'Nova página').replace(/</g,'&lt;')}</div>
+    </div>
+    <div class="block"><div class="block-handle">⠿</div>
+      <div class="block-content block-p" contenteditable="true">Comece a escrever... Pressione <strong>/</strong> para inserir blocos.</div>
+    </div>`;
+}
+
+function createNewPage() {
+  const name = prompt('Nome da nova página:', 'Nova página');
+  if (!name) return;
+  const icon = prompt('Ícone (emoji):', '📄') || '📄';
+  const id = 'custom-' + Date.now();
+  const list = _loadCustom();
+  list.push({ id, title: name, icon });
+  _saveCustom(list);
+  _renderCustomPages();
+  setDoc(id);
+}
+
+function showNewMenu() { createNewPage(); }
+
+function renameCurrentPage() {
+  const name = prompt('Renomear página:', _getTitleEl()?.value || '');
+  if (!name) return;
+  _getTitleEl().value = name;
+  _captureCurrentDoc();
+  _renderCustomPages();
+  // update sidebar label for built-ins too
+  const navEl = Array.from(document.querySelectorAll('.sidebar .nav-item'))
+    .find(n => (n.getAttribute('onclick')||'').includes("setDoc('" + __currentDocId + "')"));
+  if (navEl) {
+    const iconSpan = navEl.querySelector('.icon');
+    navEl.innerHTML = '';
+    if (iconSpan) navEl.appendChild(iconSpan);
+    navEl.appendChild(document.createTextNode(' ' + name));
+  }
+}
+
+function deleteCustomPage(id, ev) {
+  if (ev) ev.stopPropagation();
+  if (!confirm('Excluir esta página?')) return;
+  let list = _loadCustom().filter(p => p.id !== id);
+  _saveCustom(list);
+  const docs = _loadDocs();
+  delete docs[id];
+  _saveDocs(docs);
+  _renderCustomPages();
+  if (__currentDocId === id) setDoc('playbook-vendas');
+}
+
+function _renderCustomPages() {
+  const list = _loadCustom();
+  const wrap = document.getElementById('nav-custom-pages');
+  const ul   = document.getElementById('custom-pages-list');
+  if (!wrap || !ul) return;
+  ul.innerHTML = '';
+  if (list.length === 0) { wrap.style.display = 'none'; return; }
+  wrap.style.display = '';
+  list.forEach(p => {
+    const div = document.createElement('div');
+    div.className = 'nav-item';
+    div.setAttribute('data-doc-id', p.id);
+    div.onclick = () => setDoc(p.id);
+    div.innerHTML = `<span class="icon">${p.icon||'📄'}</span> ${p.title}
+      <span style="margin-left:auto;display:flex;gap:4px;">
+        <span title="Renomear" onclick="event.stopPropagation();__currentDocId='${p.id}';renameCurrentPage();" style="cursor:pointer;opacity:.6;">✏️</span>
+        <span title="Excluir" onclick="deleteCustomPage('${p.id}',event)" style="cursor:pointer;opacity:.6;">🗑️</span>
+      </span>`;
+    ul.appendChild(div);
+  });
+}
+
+function _bindEditableHandlers() {
+  const editor = _getEditorEl();
+  const titleEl = _getTitleEl();
+  if (editor && !editor.dataset.bound) {
+    editor.dataset.bound = '1';
+    editor.addEventListener('input', () => _captureCurrentDoc());
+  }
+  if (titleEl && !titleEl.dataset.bound) {
+    titleEl.dataset.bound = '1';
+    titleEl.addEventListener('input', () => _captureCurrentDoc());
+  }
+  const iconEl = _getIconEl();
+  if (iconEl && !iconEl.dataset.bound) {
+    iconEl.dataset.bound = '1';
+    iconEl.setAttribute('contenteditable', 'true');
+    iconEl.title = 'Clique para editar o ícone';
+    iconEl.addEventListener('input', () => _captureCurrentDoc());
+  }
+}
+
+// Initialize on load
+window.addEventListener('DOMContentLoaded', () => {
+  const editor = _getEditorEl();
+  if (editor) __originalEditorHTML = editor.innerHTML;
+  _renderCustomPages();
+  _bindEditableHandlers();
+  const last = localStorage.getItem(DOC_CURRENT_KEY);
+  if (last && last !== 'playbook-vendas') setDoc(last);
+});
 
 function toggleCheck(el) {
   const cb = el.querySelector('input[type=checkbox]');
