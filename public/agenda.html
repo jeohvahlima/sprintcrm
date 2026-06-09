@@ -1130,7 +1130,24 @@
         renderAll();
         toast('Dados locais removidos');
       });
-      document.getElementById('btnConfig').addEventListener('click', () => toast('Abrindo configurações...'));
+      function getBH(){ try { return JSON.parse(localStorage.getItem('agenda_business_hours')) || {start:7,end:21}; } catch(_) { return {start:7,end:21}; } }
+      function openCfg(){
+        const bh = getBH();
+        document.getElementById('cfg_bh_start').value = bh.start;
+        document.getElementById('cfg_bh_end').value = bh.end;
+        document.getElementById('cfgModal').style.display = 'flex';
+      }
+      function closeCfg(){ document.getElementById('cfgModal').style.display = 'none'; }
+      document.getElementById('btnConfig').addEventListener('click', openCfg);
+      document.getElementById('cfgClose').addEventListener('click', closeCfg);
+      document.getElementById('cfgCancel').addEventListener('click', closeCfg);
+      document.getElementById('cfgModal').addEventListener('click', (e)=>{ if(e.target.id==='cfgModal') closeCfg(); });
+      document.getElementById('cfgSave').addEventListener('click', () => {
+        const s = Math.max(0, Math.min(23, parseInt(document.getElementById('cfg_bh_start').value) || 7));
+        const e = Math.max(s+1, Math.min(23, parseInt(document.getElementById('cfg_bh_end').value) || 21));
+        localStorage.setItem('agenda_business_hours', JSON.stringify({start:s, end:e}));
+        closeCfg(); toast('Horário comercial atualizado'); renderAll();
+      });
 
       // calendar nav
       const navBtns = document.querySelectorAll('.cal-nav button');
