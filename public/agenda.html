@@ -676,24 +676,78 @@
 
   <!-- Config Modal -->
   <div id="cfgModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:9999; align-items:center; justify-content:center;">
-    <div style="background:hsl(var(--surface)); border-radius:12px; width:min(440px, 92vw); max-height:90vh; overflow:auto; box-shadow:0 20px 60px rgba(0,0,0,0.3);">
-      <div style="padding:16px 20px; border-bottom:1px solid hsl(var(--border)); display:flex; justify-content:space-between; align-items:center;">
+    <div style="background:hsl(var(--surface)); border-radius:12px; width:min(560px, 94vw); max-height:90vh; overflow:auto; box-shadow:0 20px 60px rgba(0,0,0,0.3);">
+      <div style="padding:16px 20px; border-bottom:1px solid hsl(var(--border)); display:flex; justify-content:space-between; align-items:center; position:sticky; top:0; background:hsl(var(--surface)); z-index:2;">
         <div style="font-size:15px; font-weight:700; display:flex; align-items:center; gap:8px;"><i class="ti ti-settings"></i> Configurações da Agenda</div>
         <button id="cfgClose" style="background:none; border:none; cursor:pointer; font-size:18px; color:hsl(var(--text-muted));"><i class="ti ti-x"></i></button>
       </div>
       <div style="padding:18px 20px; display:flex; flex-direction:column; gap:14px;">
-        <div style="font-size:12px; font-weight:700; color:hsl(var(--text)); display:flex; align-items:center; gap:6px;"><i class="ti ti-clock"></i> Horário comercial</div>
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
-          <label style="display:flex; flex-direction:column; gap:6px; font-size:12px; color:hsl(var(--text-muted)); font-weight:600;">Início
-            <input id="cfg_bh_start" type="number" min="0" max="23" style="padding:9px 12px; border:1px solid hsl(var(--border)); border-radius:8px; font-size:13px;"/>
+        <div>
+          <div style="font-size:12px; font-weight:700; color:hsl(var(--text)); display:flex; align-items:center; gap:6px; margin-bottom:8px;"><i class="ti ti-calendar-week"></i> Dias de atendimento</div>
+          <div id="cfg_days" style="display:flex; gap:6px; flex-wrap:wrap;"></div>
+        </div>
+        <div style="border:1px solid hsl(var(--border)); border-radius:10px; padding:12px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+            <div style="font-size:13px; font-weight:700; display:flex; align-items:center; gap:6px;"><i class="ti ti-sun" style="color:#f59e0b;"></i> Manhã</div>
+            <label style="display:inline-flex; align-items:center; gap:6px; font-size:11px; cursor:pointer;"><input type="checkbox" id="cfg_manha_on" style="accent-color:hsl(var(--primary));"/> Ativo</label>
+          </div>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+            <label style="font-size:11px; color:hsl(var(--text-muted)); font-weight:600;">Início<input id="cfg_manha_ini" type="time" style="display:block; width:100%; margin-top:4px; padding:8px 10px; border:1px solid hsl(var(--border)); border-radius:8px; font-size:13px;"/></label>
+            <label style="font-size:11px; color:hsl(var(--text-muted)); font-weight:600;">Fim<input id="cfg_manha_fim" type="time" style="display:block; width:100%; margin-top:4px; padding:8px 10px; border:1px solid hsl(var(--border)); border-radius:8px; font-size:13px;"/></label>
+          </div>
+        </div>
+        <div style="border:1px solid hsl(var(--border)); border-radius:10px; padding:12px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+            <div style="font-size:13px; font-weight:700; display:flex; align-items:center; gap:6px;"><i class="ti ti-coffee" style="color:#ea580c;"></i> Intervalo de Almoço</div>
+            <label style="display:inline-flex; align-items:center; gap:6px; font-size:11px; cursor:pointer;"><input type="checkbox" id="cfg_lunch_on" style="accent-color:hsl(var(--primary));"/> Ativo</label>
+          </div>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+            <label style="font-size:11px; color:hsl(var(--text-muted)); font-weight:600;">Início<input id="cfg_lunch_ini" type="time" style="display:block; width:100%; margin-top:4px; padding:8px 10px; border:1px solid hsl(var(--border)); border-radius:8px; font-size:13px;"/></label>
+            <label style="font-size:11px; color:hsl(var(--text-muted)); font-weight:600;">Fim<input id="cfg_lunch_fim" type="time" style="display:block; width:100%; margin-top:4px; padding:8px 10px; border:1px solid hsl(var(--border)); border-radius:8px; font-size:13px;"/></label>
+          </div>
+        </div>
+        <div style="border:1px solid hsl(var(--border)); border-radius:10px; padding:12px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+            <div style="font-size:13px; font-weight:700; display:flex; align-items:center; gap:6px;"><i class="ti ti-clock" style="color:#3b82f6;"></i> Tarde</div>
+            <label style="display:inline-flex; align-items:center; gap:6px; font-size:11px; cursor:pointer;"><input type="checkbox" id="cfg_tarde_on" style="accent-color:hsl(var(--primary));"/> Ativo</label>
+          </div>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+            <label style="font-size:11px; color:hsl(var(--text-muted)); font-weight:600;">Início<input id="cfg_tarde_ini" type="time" style="display:block; width:100%; margin-top:4px; padding:8px 10px; border:1px solid hsl(var(--border)); border-radius:8px; font-size:13px;"/></label>
+            <label style="font-size:11px; color:hsl(var(--text-muted)); font-weight:600;">Fim<input id="cfg_tarde_fim" type="time" style="display:block; width:100%; margin-top:4px; padding:8px 10px; border:1px solid hsl(var(--border)); border-radius:8px; font-size:13px;"/></label>
+          </div>
+        </div>
+        <div style="border:1px solid hsl(var(--border)); border-radius:10px; padding:12px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+            <div style="font-size:13px; font-weight:700; display:flex; align-items:center; gap:6px;"><i class="ti ti-moon" style="color:#6366f1;"></i> Noite (Opcional)</div>
+            <label style="display:inline-flex; align-items:center; gap:6px; font-size:11px; cursor:pointer;"><input type="checkbox" id="cfg_noite_on" style="accent-color:hsl(var(--primary));"/> Ativo</label>
+          </div>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+            <label style="font-size:11px; color:hsl(var(--text-muted)); font-weight:600;">Início<input id="cfg_noite_ini" type="time" style="display:block; width:100%; margin-top:4px; padding:8px 10px; border:1px solid hsl(var(--border)); border-radius:8px; font-size:13px;"/></label>
+            <label style="font-size:11px; color:hsl(var(--text-muted)); font-weight:600;">Fim<input id="cfg_noite_fim" type="time" style="display:block; width:100%; margin-top:4px; padding:8px 10px; border:1px solid hsl(var(--border)); border-radius:8px; font-size:13px;"/></label>
+          </div>
+        </div>
+        <div style="border:1px solid hsl(var(--border)); border-radius:10px; padding:12px; display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+          <label style="font-size:11px; color:hsl(var(--text-muted)); font-weight:600;">Duração padrão do slot
+            <select id="cfg_slot" style="display:block; width:100%; margin-top:4px; padding:8px 10px; border:1px solid hsl(var(--border)); border-radius:8px; font-size:13px; background:hsl(var(--surface));">
+              <option value="15">15 minutos</option>
+              <option value="30">30 minutos</option>
+              <option value="45">45 minutos</option>
+              <option value="60">60 minutos</option>
+            </select>
           </label>
-          <label style="display:flex; flex-direction:column; gap:6px; font-size:12px; color:hsl(var(--text-muted)); font-weight:600;">Fim
-            <input id="cfg_bh_end" type="number" min="1" max="23" style="padding:9px 12px; border:1px solid hsl(var(--border)); border-radius:8px; font-size:13px;"/>
+          <label style="font-size:11px; color:hsl(var(--text-muted)); font-weight:600;">Antecedência mínima
+            <select id="cfg_minLead" style="display:block; width:100%; margin-top:4px; padding:8px 10px; border:1px solid hsl(var(--border)); border-radius:8px; font-size:13px; background:hsl(var(--surface));">
+              <option value="0">Sem mínimo</option>
+              <option value="30">30 minutos</option>
+              <option value="60">1 hora</option>
+              <option value="180">3 horas</option>
+              <option value="1440">1 dia</option>
+            </select>
           </label>
         </div>
-        <div style="font-size:11px; color:hsl(var(--text-muted));">Define a faixa de horas exibida na visão semanal, diária e no seletor de horários.</div>
+        <div style="font-size:11px; color:hsl(var(--text-muted));">Aplicado à visão semanal, diária e seletor de horários. O intervalo de almoço bloqueia novos agendamentos nesse período.</div>
       </div>
-      <div style="padding:14px 20px; border-top:1px solid hsl(var(--border)); display:flex; gap:8px; justify-content:flex-end;">
+      <div style="padding:14px 20px; border-top:1px solid hsl(var(--border)); display:flex; gap:8px; justify-content:flex-end; position:sticky; bottom:0; background:hsl(var(--surface));">
         <button id="cfgCancel" class="btn">Cancelar</button>
         <button id="cfgSave" class="btn primary"><i class="ti ti-check"></i> Salvar</button>
       </div>
