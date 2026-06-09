@@ -538,11 +538,11 @@
                 }
                 function renderMonth(){
                   const mg = document.getElementById('month_grid');
-                  const title = document.getElementById('week_title');
-                  if(!mg || !title) return;
+                  const titleEl = document.querySelector('.week-toolbar .panel-title');
+                  if(!mg) { console.warn('[agenda] month_grid not found'); return; }
                   const today = new Date();
                   const y = today.getFullYear(), m = today.getMonth();
-                  title.textContent = `Visão mensal — ${MES_FULL[m]} ${y}`;
+                  if(titleEl) titleEl.innerHTML = `<i class="ti ti-calendar-month"></i> Visão mensal — ${MES_FULL[m]} ${y}`;
                   // load appointments
                   let items = [];
                   try { items = JSON.parse(localStorage.getItem('agenda_appointments_v1')) || []; } catch(_){ items = []; }
