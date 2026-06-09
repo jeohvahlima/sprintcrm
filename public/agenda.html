@@ -1184,11 +1184,93 @@
         renderAll();
         toast('Dados locais removidos');
       });
-      function getBH(){ try { return JSON.parse(localStorage.getItem('agenda_business_hours')) || {start:7,end:21}; } catch(_) { return {start:7,end:21}; } }
+      // ---------- Agenda config (periods, lunch, days, slot) ----------
+      const DEFAULT_CFG = {
+        days: [false,true,true,true,true,true,false], // dom..sáb
+        manha: { ativo:true, ini:'07:00', fim:'12:00' },
+        lunch: { ativo:true, ini:'12:00', fim:'14:00' },
+        tarde: { ativo:true, ini:'14:00', fim:'18:00' },
+        noite: { ativo:false, ini:'19:00', fim:'23:00' },
+        slot: 30,
+        minLead: 60
+      };
+      function getCfg(){
+        try {
+          const raw = JSON.parse(localStorage.getItem('agenda_config'));
+          if(raw && raw.manha) return { ...DEFAULT_CFG, ...raw };
+        } catch(_) {}
+        // migra do formato antigo
+        try {
+          const bh = JSON.parse(localStorage.getItem('agenda_business_hours'));
+          if(bh) return { ...DEFAULT_CFG, manha:{...DEFAULT_CFG.manha, ini:String(bh.start).padStart(2,'0')+':00'}, noite:{...DEFAULT_CFG.noite, fim:String(bh.end).padStart(2,'0')+':00'} };
+        } catch(_) {}
+        return DEFAULT_CFG;
+      }
+      window.getAgendaCfg = getCfg;
+      function cfgHourRange(){
+        const c = getCfg();
+        const all = [c.manha, c.tarde, c.noite].filter(p => p.ativo);
+        if(!all.length) return { start:7, end:21 };
+        const mins = Math.min(...all.map(p => parseInt(p.ini)));
+        const maxs = Math.max(...all.map(p => parseInt(p.fim)));
+        return { start: mins, end: Math.max(mins+1, maxs) };
+      }
+      window.cfgHourRange = cfgHourRange;
+      function cfgIsBlocked(date, slotStartMin, slotEndMin){
+        const c = getCfg();
+        const d = (typeof date === 'string') ? parseISO(date) : date;
+        if(!c.days[d.getDay()]) return true;
+        const inAny = [c.manha, c.tarde, c.noite].some(p => {
+          if(!p.ativo) return false;
+          const a = hhmmToMin(p.ini), b = hhmmToMin(p.fim);
+          return slotStartMin >= a && slotEndMin <= b;
+        });
+        if(!inAny) return true;
+        if(c.lunch.ativo){
+          const a = hhmmToMin(c.lunch.ini), b = hhmmToMin(c.lunch.fim);
+          if(slotStartMin < b && slotEndMin > a) return true;
+        }
+        return false;
+      }
+      window.cfgIsBlocked = cfgIsBlocked;
+
+      function renderCfgDays(active){
+        const labels = ['D','S','T','Q','Q','S','S'];
+        const box = document.getElementById('cfg_days'); if(!box) return;
+        box.innerHTML = '';
+        labels.forEach((l, i) => {
+          const b = document.createElement('button');
+          b.type = 'button';
+          b.textContent = l;
+          b.dataset.idx = i;
+          b.style.cssText = 'width:36px; height:36px; border-radius:999px; border:1px solid hsl(var(--border)); font-weight:700; font-size:12px; cursor:pointer; '
+            + (active[i] ? 'background:hsl(var(--primary)); color:white; border-color:hsl(var(--primary));' : 'background:hsl(var(--surface)); color:hsl(var(--text-muted));');
+          b.addEventListener('click', () => {
+            active[i] = !active[i];
+            renderCfgDays(active);
+          });
+          box.appendChild(b);
+        });
+      }
+      let _cfgDays = [];
       function openCfg(){
-        const bh = getBH();
-        document.getElementById('cfg_bh_start').value = bh.start;
-        document.getElementById('cfg_bh_end').value = bh.end;
+        const c = getCfg();
+        _cfgDays = [...c.days];
+        renderCfgDays(_cfgDays);
+        document.getElementById('cfg_manha_on').checked = c.manha.ativo;
+        document.getElementById('cfg_manha_ini').value = c.manha.ini;
+        document.getElementById('cfg_manha_fim').value = c.manha.fim;
+        document.getElementById('cfg_lunch_on').checked = c.lunch.ativo;
+        document.getElementById('cfg_lunch_ini').value = c.lunch.ini;
+        document.getElementById('cfg_lunch_fim').value = c.lunch.fim;
+        document.getElementById('cfg_tarde_on').checked = c.tarde.ativo;
+        document.getElementById('cfg_tarde_ini').value = c.tarde.ini;
+        document.getElementById('cfg_tarde_fim').value = c.tarde.fim;
+        document.getElementById('cfg_noite_on').checked = c.noite.ativo;
+        document.getElementById('cfg_noite_ini').value = c.noite.ini;
+        document.getElementById('cfg_noite_fim').value = c.noite.fim;
+        document.getElementById('cfg_slot').value = String(c.slot);
+        document.getElementById('cfg_minLead').value = String(c.minLead);
         document.getElementById('cfgModal').style.display = 'flex';
       }
       function closeCfg(){ document.getElementById('cfgModal').style.display = 'none'; }
@@ -1197,10 +1279,20 @@
       document.getElementById('cfgCancel').addEventListener('click', closeCfg);
       document.getElementById('cfgModal').addEventListener('click', (e)=>{ if(e.target.id==='cfgModal') closeCfg(); });
       document.getElementById('cfgSave').addEventListener('click', () => {
-        const s = Math.max(0, Math.min(23, parseInt(document.getElementById('cfg_bh_start').value) || 7));
-        const e = Math.max(s+1, Math.min(23, parseInt(document.getElementById('cfg_bh_end').value) || 21));
-        localStorage.setItem('agenda_business_hours', JSON.stringify({start:s, end:e}));
-        closeCfg(); toast('Horário comercial atualizado'); renderAll();
+        const cfg = {
+          days: _cfgDays,
+          manha: { ativo: document.getElementById('cfg_manha_on').checked, ini: document.getElementById('cfg_manha_ini').value || '07:00', fim: document.getElementById('cfg_manha_fim').value || '12:00' },
+          lunch: { ativo: document.getElementById('cfg_lunch_on').checked, ini: document.getElementById('cfg_lunch_ini').value || '12:00', fim: document.getElementById('cfg_lunch_fim').value || '14:00' },
+          tarde: { ativo: document.getElementById('cfg_tarde_on').checked, ini: document.getElementById('cfg_tarde_ini').value || '14:00', fim: document.getElementById('cfg_tarde_fim').value || '18:00' },
+          noite: { ativo: document.getElementById('cfg_noite_on').checked, ini: document.getElementById('cfg_noite_ini').value || '19:00', fim: document.getElementById('cfg_noite_fim').value || '23:00' },
+          slot: parseInt(document.getElementById('cfg_slot').value) || 30,
+          minLead: parseInt(document.getElementById('cfg_minLead').value) || 0
+        };
+        localStorage.setItem('agenda_config', JSON.stringify(cfg));
+        // mantém compat
+        const r = cfgHourRange();
+        localStorage.setItem('agenda_business_hours', JSON.stringify({start:r.start, end:r.end}));
+        closeCfg(); toast('Configurações salvas'); renderAll();
       });
 
       // calendar nav
