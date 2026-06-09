@@ -674,6 +674,32 @@
     </div>
   </div>
 
+  <!-- Config Modal -->
+  <div id="cfgModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:9999; align-items:center; justify-content:center;">
+    <div style="background:hsl(var(--surface)); border-radius:12px; width:min(440px, 92vw); max-height:90vh; overflow:auto; box-shadow:0 20px 60px rgba(0,0,0,0.3);">
+      <div style="padding:16px 20px; border-bottom:1px solid hsl(var(--border)); display:flex; justify-content:space-between; align-items:center;">
+        <div style="font-size:15px; font-weight:700; display:flex; align-items:center; gap:8px;"><i class="ti ti-settings"></i> Configurações da Agenda</div>
+        <button id="cfgClose" style="background:none; border:none; cursor:pointer; font-size:18px; color:hsl(var(--text-muted));"><i class="ti ti-x"></i></button>
+      </div>
+      <div style="padding:18px 20px; display:flex; flex-direction:column; gap:14px;">
+        <div style="font-size:12px; font-weight:700; color:hsl(var(--text)); display:flex; align-items:center; gap:6px;"><i class="ti ti-clock"></i> Horário comercial</div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+          <label style="display:flex; flex-direction:column; gap:6px; font-size:12px; color:hsl(var(--text-muted)); font-weight:600;">Início
+            <input id="cfg_bh_start" type="number" min="0" max="23" style="padding:9px 12px; border:1px solid hsl(var(--border)); border-radius:8px; font-size:13px;"/>
+          </label>
+          <label style="display:flex; flex-direction:column; gap:6px; font-size:12px; color:hsl(var(--text-muted)); font-weight:600;">Fim
+            <input id="cfg_bh_end" type="number" min="1" max="23" style="padding:9px 12px; border:1px solid hsl(var(--border)); border-radius:8px; font-size:13px;"/>
+          </label>
+        </div>
+        <div style="font-size:11px; color:hsl(var(--text-muted));">Define a faixa de horas exibida na visão semanal, diária e no seletor de horários.</div>
+      </div>
+      <div style="padding:14px 20px; border-top:1px solid hsl(var(--border)); display:flex; gap:8px; justify-content:flex-end;">
+        <button id="cfgCancel" class="btn">Cancelar</button>
+        <button id="cfgSave" class="btn primary"><i class="ti ti-check"></i> Salvar</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Toast -->
   <div id="toast" style="display:none; position:fixed; bottom:20px; right:20px; background:hsl(var(--text)); color:hsl(var(--surface)); padding:10px 16px; border-radius:8px; font-size:13px; z-index:10000; box-shadow:0 10px 30px rgba(0,0,0,0.25);"></div>
 
