@@ -400,41 +400,39 @@
               </div>
             </div>
             <div class="panel-body">
-              <div class="cal-head"><span>Junho 2026</span></div>
-              <div class="cal-grid">
-                <div class="cal-dow">D</div><div class="cal-dow">S</div><div class="cal-dow">T</div>
-                <div class="cal-dow">Q</div><div class="cal-dow">Q</div><div class="cal-dow">S</div><div class="cal-dow">S</div>
-                <!-- Week 1 -->
-                <div class="cal-day muted">31</div><div class="cal-day">1</div><div class="cal-day">2</div>
-                <div class="cal-day today">3</div><div class="cal-day">4</div><div class="cal-day">5</div><div class="cal-day">6</div>
-                <!-- Week 2 -->
-                <div class="cal-day">7</div><div class="cal-day">8</div><div class="cal-day">9</div>
-                <div class="cal-day has-completed">10<span class="ev-dot"></span></div>
-                <div class="cal-day">11</div><div class="cal-day">12</div>
-                <div class="cal-day has-completed">13<span class="ev-dot"></span></div>
-                <!-- Week 3 -->
-                <div class="cal-day">14</div><div class="cal-day">15</div><div class="cal-day">16</div>
-                <div class="cal-day">17</div>
-                <div class="cal-day has-completed">18<span class="ev-dot"></span></div>
-                <div class="cal-day">19</div>
-                <div class="cal-day">20<span class="ev-dot"></span></div>
-                <!-- Week 4 -->
-                <div class="cal-day">21</div>
-                <div class="cal-day">22<span class="ev-dot"></span></div>
-                <div class="cal-day">23</div><div class="cal-day">24</div>
-                <div class="cal-day has-cancel">25<span class="ev-dot"></span></div>
-                <div class="cal-day">26</div><div class="cal-day">27</div>
-                <!-- Week 5 -->
-                <div class="cal-day">28<span class="ev-dot"></span></div>
-                <div class="cal-day">29</div>
-                <div class="cal-day has-completed">30<span class="ev-dot"></span></div>
-                <div class="cal-day muted">1</div><div class="cal-day muted">2</div>
-                <div class="cal-day muted">3</div><div class="cal-day muted">4</div>
-                <!-- Week 6 -->
-                <div class="cal-day muted">5</div><div class="cal-day muted">6</div><div class="cal-day muted">7</div>
-                <div class="cal-day muted">8</div><div class="cal-day muted">9</div>
-                <div class="cal-day muted">10</div><div class="cal-day muted">11</div>
-              </div>
+              <div class="cal-head"><span id="cal_title">—</span></div>
+              <div class="cal-grid" id="cal_grid"></div>
+              <script>
+                (function(){
+                  const MES = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+                  const today = new Date();
+                  let view = new Date(today.getFullYear(), today.getMonth(), 1);
+                  function render(){
+                    const grid = document.getElementById('cal_grid');
+                    const title = document.getElementById('cal_title');
+                    if(!grid || !title) return;
+                    title.textContent = MES[view.getMonth()] + ' ' + view.getFullYear();
+                    const y = view.getFullYear(), m = view.getMonth();
+                    const first = new Date(y, m, 1);
+                    const startDow = first.getDay();
+                    const daysInMonth = new Date(y, m+1, 0).getDate();
+                    const daysPrev = new Date(y, m, 0).getDate();
+                    let html = '<div class="cal-dow">D</div><div class="cal-dow">S</div><div class="cal-dow">T</div><div class="cal-dow">Q</div><div class="cal-dow">Q</div><div class="cal-dow">S</div><div class="cal-dow">S</div>';
+                    for(let i=startDow-1;i>=0;i--) html += '<div class="cal-day muted">'+(daysPrev-i)+'</div>';
+                    for(let d=1; d<=daysInMonth; d++){
+                      const isToday = d===today.getDate() && m===today.getMonth() && y===today.getFullYear();
+                      html += '<div class="cal-day'+(isToday?' today':'')+'">'+d+'</div>';
+                    }
+                    const total = startDow + daysInMonth;
+                    const trail = (7 - (total % 7)) % 7;
+                    for(let d=1; d<=trail; d++) html += '<div class="cal-day muted">'+d+'</div>';
+                    grid.innerHTML = html;
+                  }
+                  document.addEventListener('DOMContentLoaded', render);
+                  render();
+                  window.__renderAgendaCal = render;
+                })();
+              </script>
               <div class="cal-legend">
                 <span><i class="leg-blue"></i> Agendado</span>
                 <span><i class="leg-green"></i> Concluído</span>
