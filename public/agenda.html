@@ -733,8 +733,8 @@
       const monthNames = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
       const dowShort = ['DOM','SEG','TER','QUA','QUI','SEX','SÁB'];
 
-      let viewDate = new Date(2026, 5, 3); // Junho 2026 selecionado dia 3
-      let selectedDate = new Date(viewDate);
+      let viewDate = new Date();
+      let selectedDate = new Date();
       let editingId = null;
 
       function isUuidLike(s){ return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(String(s||'').trim()); }
