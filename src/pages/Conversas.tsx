@@ -9742,7 +9742,83 @@ function Conversas() {
                     </button>
                   </div>
 
+                  <Dialog open={chipEditor.open} onOpenChange={(o) => setChipEditor(s => ({ ...s, open: o }))}>
+                    <DialogContent className="max-w-md">
+                      <DialogHeader>
+                        <DialogTitle>{chipEditor.mode === 'create' ? 'Nova mensagem rápida' : 'Editar mensagem rápida'}</DialogTitle>
+                      </DialogHeader>
+                      <div className="space-y-3">
+                        <div>
+                          <label className="text-sm font-medium mb-1 block">Título</label>
+                          <Input value={chipEditor.title} onChange={e => setChipEditor(s => ({ ...s, title: e.target.value }))} placeholder="Ex: Saudação" />
+                        </div>
+                        <div>
+                          <label className="text-sm font-medium mb-1 block">Mensagem</label>
+                          <Textarea value={chipEditor.content} onChange={e => setChipEditor(s => ({ ...s, content: e.target.value }))} placeholder="Digite a mensagem..." rows={4} />
+                        </div>
+                        <div>
+                          <label className="text-sm font-medium mb-1 block">Categoria</label>
+                          <Select value={chipEditor.category} onValueChange={(v) => setChipEditor(s => ({ ...s, category: v }))}>
+                            <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
+                            <SelectContent>
+                              {quickCategories.map(c => (
+                                <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          {quickCategories.length === 0 && (
+                            <p className="text-xs text-muted-foreground mt-1">Crie uma categoria no painel "Respostas Rápidas".</p>
+                          )}
+                        </div>
+                        <div className="flex justify-end gap-2 pt-2">
+                          <Button variant="outline" onClick={() => setChipEditor(s => ({ ...s, open: false }))} disabled={savingChip}>Cancelar</Button>
+                          <Button
+                            disabled={savingChip || !chipEditor.title.trim() || !chipEditor.content.trim() || !chipEditor.category}
+                            onClick={async () => {
+                              setSavingChip(true);
+                              try {
+                                if (chipEditor.mode === 'create') {
+                                  const { data: { user } } = await supabase.auth.getUser();
+                                  const { data: companyData } = await supabase.rpc('get_my_company_id');
+                                  if (!user || !companyData) throw new Error('Sem autenticação');
+                                  const { error } = await supabase.from('quick_messages').insert({
+                                    company_id: companyData,
+                                    owner_id: user.id,
+                                    title: chipEditor.title.trim(),
+                                    content: chipEditor.content.trim(),
+                                    category_id: chipEditor.category,
+                                    message_type: 'text',
+                                  });
+                                  if (error) throw error;
+                                  toast.success('Mensagem rápida criada!');
+                                } else if (chipEditor.id) {
+                                  const { error } = await supabase.from('quick_messages').update({
+                                    title: chipEditor.title.trim(),
+                                    content: chipEditor.content.trim(),
+                                    category_id: chipEditor.category,
+                                  }).eq('id', chipEditor.id);
+                                  if (error) throw error;
+                                  toast.success('Mensagem rápida atualizada!');
+                                }
+                                await loadQuickMessages();
+                                setChipEditor({ open: false, mode: 'create', title: '', content: '', category: '' });
+                              } catch (err: any) {
+                                console.error(err);
+                                toast.error('Erro ao salvar mensagem rápida');
+                              } finally {
+                                setSavingChip(false);
+                              }
+                            }}
+                          >
+                            {savingChip ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Salvar'}
+                          </Button>
+                        </div>
+                      </div>
+                    </DialogContent>
+                  </Dialog>
+
                   <div className="flex items-end gap-1.5 sm:gap-2 flex-nowrap relative">
+
                     <MediaUpload onFileSelected={handleSendMedia} />
 
                     <Button
