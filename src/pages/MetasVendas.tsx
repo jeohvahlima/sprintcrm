@@ -116,6 +116,7 @@ function Maquina() {
   const [offers, setOffers] = useState<Array<{ nome: string; ticket: number; qtd: number }>>([]);
   const [newOffer, setNewOffer] = useState<{ nome: string; ticket: number; qtd: number } | null>(null);
   const [progressoSemana, setProgressoSemana] = useState(0);
+  const [realizadoMes, setRealizadoMes] = useState<Record<number, number>>({});
   const [checkin, setCheckin] = useState<Record<CheckinKey, number> & { obs: string; script: string }>({ leads: 0, respostas: 0, oportunidades: 0, reuAg: 0, reuNoShow: 0, reuReal: 0, negociacoes: 0, vendasPerdidas: 0, vendas: 0, fupRecuperadas: 0, fupOportunidade: 0, followups: 0, ticket: 0, fat: 0, obs: "", script: "" });
 
   useEffect(() => {
