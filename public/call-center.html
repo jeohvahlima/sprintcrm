@@ -1186,8 +1186,51 @@ function showTab(name, el) {
   el.classList.add('active');
 }
 
+// Conteúdo padrão completo do menu "Registrar tentativa" (alinhado com os filtros)
+var REG_MENU_HTML = ''
+  + '<div class="reg-section">Primeira abordagem</div>'
+  + '<div class="reg-item"><div class="reg-dot" style="background:var(--blue)"></div>Primeiro contato</div>'
+  + '<div class="reg-item"><div class="reg-dot" style="background:var(--red)"></div>Não atendeu</div>'
+  + '<div class="reg-item"><div class="reg-dot" style="background:var(--amber)"></div>Caixa postal</div>'
+  + '<div class="reg-item"><div class="reg-dot" style="background:var(--amber)"></div>Ocupado</div>'
+  + '<div class="reg-item"><div class="reg-dot" style="background:var(--text3)"></div>Número inválido</div>'
+  + '<div class="reg-item"><div class="reg-dot" style="background:var(--blue)"></div>Follow-up</div>'
+  + '<div class="reg-item"><div class="reg-dot" style="background:var(--green)"></div>WhatsApp enviado</div>'
+  + '<div class="reg-item"><div class="reg-dot" style="background:var(--purple)"></div>Retornar depois</div>'
+  + '<div class="reg-section" style="margin-top:4px">Resultado</div>'
+  + '<div class="reg-item"><div class="reg-dot" style="background:var(--text3)"></div>Pendente</div>'
+  + '<div class="reg-item"><div class="reg-dot" style="background:var(--teal)"></div>Prospectado</div>'
+  + '<div class="reg-item"><div class="reg-dot" style="background:var(--text3)"></div>Sem resposta</div>'
+  + '<div class="reg-item"><div class="reg-dot" style="background:var(--amber)"></div>Oportunidade</div>'
+  + '<div class="reg-item"><div class="reg-dot" style="background:var(--purple)"></div>Retornar / Responsável</div>'
+  + '<div class="reg-item"><div class="reg-dot" style="background:var(--blue)"></div>Follow-up</div>'
+  + '<div class="reg-item"><div class="reg-dot" style="background:var(--green)"></div>Ganho</div>'
+  + '<div class="reg-item"><div class="reg-dot" style="background:var(--red)"></div>Descartado</div>';
+
+function ensureRegMenu(card) {
+  var actions = card.querySelector('.lead-actions');
+  if (!actions) return;
+  var drop = actions.querySelector('.rel-drop');
+  if (!drop) {
+    drop = document.createElement('div');
+    drop.className = 'rel-drop';
+    drop.innerHTML = '<button class="btn-action" onclick="toggleReg(this)" title="Registrar tentativa">'
+      + '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>'
+      + '</button><div class="reg-menu" style="display:none"></div>';
+    var firstBtn = actions.querySelector('.btn-call');
+    if (firstBtn && firstBtn.nextSibling) actions.insertBefore(drop, firstBtn.nextSibling);
+    else actions.appendChild(drop);
+  }
+  var menu = drop.querySelector('.reg-menu');
+  if (menu) menu.innerHTML = REG_MENU_HTML;
+}
+function normalizeAllRegMenus() {
+  document.querySelectorAll('#tab-lista .lead-card').forEach(ensureRegMenu);
+}
+
 // Register dropdown toggle
 function toggleReg(btn) {
+  normalizeAllRegMenus();
   const menu = btn.parentElement.querySelector('.reg-menu');
   document.querySelectorAll('.reg-menu').forEach(m => { if(m !== menu) m.style.display='none'; });
   menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
@@ -1197,6 +1240,9 @@ document.addEventListener('click', function(e) {
     document.querySelectorAll('.reg-menu').forEach(m => m.style.display='none');
   }
 });
+// Aplica o menu completo a todos os cards no carregamento
+document.addEventListener('DOMContentLoaded', normalizeAllRegMenus);
+setTimeout(normalizeAllRegMenus, 0);
 
 // Live call demo
 let callTimer;
