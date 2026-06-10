@@ -162,3 +162,54 @@
 /* Override shadcn DialogContent when wrapping our panel */
 .gos-productivity-dialog{background:#0b0f14 !important;border-color:#1e2a38 !important;color:#e2eaf4 !important;padding:0 !important;max-width:1100px !important}
 .gos-productivity-dialog > button[type="button"]{color:#e2eaf4}
+
+/* ── AO VIVO tab ── */
+.gos-productivity .live-grid{display:flex;flex-direction:column;gap:10px}
+.gos-productivity .live-card{
+  background:var(--card);border:1px solid var(--green-b);
+  border-radius:var(--radius);padding:16px;
+  position:relative;overflow:hidden;
+  animation:fadeUp .3s ease both;
+}
+.gos-productivity .live-card::before{
+  content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--green);
+}
+.gos-productivity .live-top{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+.gos-productivity .live-avatar{
+  width:40px;height:40px;border-radius:50%;
+  background:linear-gradient(135deg,var(--green-bg),#0b2018);
+  border:1px solid var(--green-b);
+  display:flex;align-items:center;justify-content:center;
+  font-size:.85rem;font-weight:700;color:var(--green);flex-shrink:0;position:relative;
+}
+.gos-productivity .pulse-ring{
+  position:absolute;inset:-4px;border-radius:50%;
+  border:2px solid var(--green);
+  animation:ring 1.5s ease-in-out infinite;opacity:0;
+}
+@keyframes ring{0%{transform:scale(.9);opacity:.7}100%{transform:scale(1.25);opacity:0}}
+.gos-productivity .live-name{font-weight:600;font-size:.9rem}
+.gos-productivity .live-since{font-size:.7rem;color:var(--muted);margin-top:3px}
+.gos-productivity .live-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.gos-productivity .live-stat{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--radius-sm);padding:8px 10px;text-align:center;
+}
+.gos-productivity .live-stat-val{font-size:1rem;font-weight:700}
+.gos-productivity .live-stat-lbl{font-size:.62rem;color:var(--muted);margin-top:2px}
+.gos-productivity .live-stat-val.green{color:var(--green)}
+.gos-productivity .live-stat-val.amber{color:var(--amber)}
+.gos-productivity .live-stat-val.blue{color:var(--blue)}
+.gos-productivity .lead-attending{margin-top:12px;padding-top:12px;border-top:1px solid var(--border)}
+.gos-productivity .lead-atend-title{font-size:.68rem;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px}
+.gos-productivity .lead-atend-list{display:flex;flex-wrap:wrap;gap:6px}
+.gos-productivity .lead-pill{
+  display:flex;align-items:center;gap:5px;
+  background:var(--blue-bg);border:1px solid var(--blue-b);
+  color:var(--blue);font-size:.7rem;font-weight:500;
+  padding:4px 10px;border-radius:99px;
+}
+.gos-productivity .online-badge{
+  font-size:.62rem;padding:2px 7px;border-radius:99px;font-weight:600;
+  background:var(--green-bg);border:1px solid var(--green-b);color:var(--green);
+}
