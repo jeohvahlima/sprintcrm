@@ -9530,6 +9530,17 @@ function Conversas() {
             <div className="flex-shrink-0 bg-background border-b z-10">
               <ConversationHeader contactName={selectedConv.contactName} channel={selectedConv.channel} avatarUrl={selectedConv.avatarUrl} produto={selectedConv.produto} valor={selectedConv.valor || (leadVinculado?.value && leadVinculado.value > 0 ? `R$ ${Number(leadVinculado.value).toLocaleString('pt-BR')}` : undefined)} responsavel={selectedConv.responsavel || leadExtraInfo.responsavelNome} tags={(selectedConv.tags && selectedConv.tags.length > 0) ? selectedConv.tags : leadVinculado?.tags} funnelStage={selectedConv.funnelStage || (leadExtraInfo.etapaNome ? (leadExtraInfo.funilNome ? `${leadExtraInfo.funilNome} → ${leadExtraInfo.etapaNome}` : leadExtraInfo.etapaNome) : undefined)} showInfoPanel={showInfoPanel} onToggleInfoPanel={() => setShowInfoPanel(!showInfoPanel)} syncStatus={syncStatus} leadVinculado={leadVinculado} mostrarBotaoCriarLead={mostrarBotaoCriarLead} onCriarLead={criarLeadManualmente} onFinalizeAtendimento={finalizarAtendimento} onFinalizeAtendimentoSilent={finalizarAtendimentoSilent} onTransferAtendimento={() => setTransferDialogOpen(true)} onChangeAIMode={(mode) => setConversationAIMode(selectedConv.id, mode)} currentAIMode={(aiMode[selectedConv.id] || aiMode[(selectedConv.phoneNumber || selectedConv.id).replace(/[^0-9]/g, '')] || 'off') as any} onlineStatus={onlineStatus[selectedConv.id] || 'unknown'} isContactInactive={isContactInactive} onRestoreConversation={handleRestoreConversation} restoringConversation={restoringConversation} restoreProgress={restoreProgress} showBackButton={isMobile} onBack={() => setSelectedConv(null)} protocolNumber={activeProtocol?.protocol_number} protocolStatus={activeProtocol?.status} contactPhone={(selectedConv.phoneNumber || selectedConv.id).replace(/[^0-9]/g, '')} companyId={userCompanyId} currentApi={(apiOverrides[selectedConv.id] || selectedConv.origemApi) as any} availableApis={availableApis} onChangeApi={(api) => setApiOverride(selectedConv.id, api)} />
             </div>
+
+            {/* 🪄 Coach IA — botão flutuante dentro da conversa aberta */}
+            <CoachIAFloatingButton
+              contactPhone={(selectedConv.phoneNumber || selectedConv.id).replace(/[^0-9]/g, '')}
+              companyId={userCompanyId}
+              leadId={leadVinculado?.id}
+              contactName={selectedConv.contactName}
+              leadName={leadVinculado?.name}
+            />
+            
+
             
             {/* Dialog de Transferir Atendimento */}
             <Dialog open={transferDialogOpen} onOpenChange={setTransferDialogOpen}>
