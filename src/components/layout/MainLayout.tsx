@@ -244,14 +244,10 @@ export function MainLayout() {
         onOpenChange={setShowUpdatesModal} 
       />
       
-      {/* Botão flutuante do chat interno */}
-      {chatVisible && !hideFloatingButtons && <FloatingChatButton />}
-      
-      {/* Botão flutuante do discador */}
-      {dialerVisible && !hideFloatingButtons && <FloatingDialerButton />}
-      
-      {/* Botão flutuante do suporte técnico */}
-      {supportVisible && !hideFloatingButtons && <FloatingSupportButton />}
+      {/* Botões flutuantes desativados temporariamente a pedido do usuário */}
+      {false && chatVisible && !hideFloatingButtons && <FloatingChatButton />}
+      {false && dialerVisible && !hideFloatingButtons && <FloatingDialerButton />}
+      {false && supportVisible && !hideFloatingButtons && <FloatingSupportButton />}
     </div>
   );
 }
