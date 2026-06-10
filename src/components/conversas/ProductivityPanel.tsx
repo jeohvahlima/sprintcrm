@@ -40,7 +40,15 @@ interface UserProductivity {
 }
 
 type PeriodType = "today" | "week" | "month";
-type TabType = "resumo" | "ranking";
+type TabType = "resumo" | "aovivo" | "ranking";
+
+interface LiveAttendance {
+  userId: string;
+  userName: string;
+  startedAt: string;
+  lastActivityAt: string;
+  phones: string[];
+}
 
 const initials = (name: string) =>
   (name || "?")
