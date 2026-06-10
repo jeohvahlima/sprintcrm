@@ -108,14 +108,14 @@ serve(async (req) => {
       .select('id, phone, telefone, name, profile_picture_url')
       .eq('company_id', company_id)
       .is('profile_picture_url', null)
-      .limit(100);
+      .limit(25);
 
     const { data: leadsWithPhoto, error: leadsError2 } = await supabase
       .from('leads')
       .select('id, phone, telefone, name, profile_picture_url')
       .eq('company_id', company_id)
       .not('profile_picture_url', 'is', null)
-      .limit(200);
+      .limit(50);
 
     if (leadsError1 || leadsError2) {
       return new Response(JSON.stringify({ error: 'Erro ao buscar leads', details: leadsError1 || leadsError2 }),
