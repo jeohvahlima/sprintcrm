@@ -778,7 +778,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
 
 <!-- ═══ NEW CAMPAIGN MODAL ═══ -->
 <div class="modal-bg" id="newCampaignModal" onclick="if(event.target===this)closeModal('newCampaignModal')">
-  <div class="modal" style="max-width:640px;width:640px">
+  <div class="modal" style="max-width:880px;width:880px">
     <div class="modal-left" style="border-right:none">
       <div class="modal-header">
         <div class="phdr-icon" style="background:var(--gd);color:var(--green);width:32px;height:32px;font-size:16px"><i class="ti ti-send"></i></div>
@@ -831,12 +831,75 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
           <textarea id="cmpFreeText" rows="4" placeholder="Digite a mensagem que será enviada para todos os leads selecionados... Use {{nome}} para personalizar." style="width:100%;margin-top:6px;background:var(--bg3);border:1px solid var(--border2);border-radius:var(--r-sm);padding:9px 12px;color:var(--text);font-size:13px;font-family:var(--font);resize:vertical"></textarea>
           <div style="font-size:10.5px;color:var(--amber);margin-top:5px">⚠️ Envio fora do template só funciona para leads com janela de 24h aberta (conversa recente).</div>
         </div>
+        <div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--r-sm);padding:12px">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+            <i class="ti ti-filter" style="color:var(--green)"></i>
+            <div style="font-size:12px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.06em">Filtros de seleção</div>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px">
+            <div>
+              <label style="font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase">Buscar</label>
+              <input id="cmpFltSearch" oninput="onCampaignFilterChange()" placeholder="Nome, email, telefone..." style="width:100%;margin-top:4px;background:var(--bg4);border:1px solid var(--border2);border-radius:var(--r-sm);padding:7px 9px;color:var(--text);font-size:12px;font-family:var(--font)" />
+            </div>
+            <div>
+              <label style="font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase">Status</label>
+              <select id="cmpFltStatus" onchange="onCampaignFilterChange()" style="width:100%;margin-top:4px;background:var(--bg4);border:1px solid var(--border2);border-radius:var(--r-sm);padding:7px 9px;color:var(--text);font-size:12px;font-family:var(--font)">
+                <option value="">Todos</option>
+                <option value="novo">novo</option>
+                <option value="ativo">ativo</option>
+                <option value="qualificado">qualificado</option>
+                <option value="cliente">cliente</option>
+                <option value="perdido">perdido</option>
+              </select>
+            </div>
+            <div>
+              <label style="font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase">Tag</label>
+              <select id="cmpTagFilter" onchange="onCampaignFilterChange()" style="width:100%;margin-top:4px;background:var(--bg4);border:1px solid var(--border2);border-radius:var(--r-sm);padding:7px 9px;color:var(--text);font-size:12px;font-family:var(--font)">
+                <option value="">Todas</option>
+              </select>
+            </div>
+            <div>
+              <label style="font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase">Segmentação</label>
+              <select id="cmpFltSegmento" onchange="onCampaignFilterChange()" style="width:100%;margin-top:4px;background:var(--bg4);border:1px solid var(--border2);border-radius:var(--r-sm);padding:7px 9px;color:var(--text);font-size:12px;font-family:var(--font)">
+                <option value="">Todas</option>
+              </select>
+            </div>
+            <div>
+              <label style="font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase">Histórico de disparo</label>
+              <select id="cmpFltDisparo" onchange="onCampaignFilterChange()" style="width:100%;margin-top:4px;background:var(--bg4);border:1px solid var(--border2);border-radius:var(--r-sm);padding:7px 9px;color:var(--text);font-size:12px;font-family:var(--font)">
+                <option value="">Todos</option>
+                <option value="nunca">Nunca recebeu disparo</option>
+                <option value="ja">Já recebeu disparo</option>
+              </select>
+            </div>
+            <div>
+              <label style="font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase">Entrou no CRM de</label>
+              <input id="cmpFltDateFrom" type="date" onchange="onCampaignFilterChange()" style="width:100%;margin-top:4px;background:var(--bg4);border:1px solid var(--border2);border-radius:var(--r-sm);padding:7px 9px;color:var(--text);font-size:12px;font-family:var(--font)" />
+            </div>
+            <div>
+              <label style="font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase">Até</label>
+              <input id="cmpFltDateTo" type="date" onchange="onCampaignFilterChange()" style="width:100%;margin-top:4px;background:var(--bg4);border:1px solid var(--border2);border-radius:var(--r-sm);padding:7px 9px;color:var(--text);font-size:12px;font-family:var(--font)" />
+            </div>
+            <div>
+              <label style="font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase">Tags</label>
+              <select id="cmpFltHasTags" onchange="onCampaignFilterChange()" style="width:100%;margin-top:4px;background:var(--bg4);border:1px solid var(--border2);border-radius:var(--r-sm);padding:7px 9px;color:var(--text);font-size:12px;font-family:var(--font)">
+                <option value="">Com e sem tags</option>
+                <option value="com">Apenas com tags</option>
+                <option value="sem">Apenas sem tags</option>
+              </select>
+            </div>
+          </div>
+          <div id="cmpLeadsCount" style="font-size:12px;color:var(--green);margin-top:10px;font-weight:600">Carregando leads...</div>
+        </div>
         <div>
-          <label style="font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.06em">Filtrar leads (tag opcional)</label>
-          <select id="cmpTagFilter" onchange="updateCampaignLeadsCount()" style="width:100%;margin-top:6px;background:var(--bg3);border:1px solid var(--border2);border-radius:var(--r-sm);padding:9px 12px;color:var(--text);font-size:13px;font-family:var(--font)">
-            <option value="">Todos os leads com telefone</option>
-          </select>
-          <div id="cmpLeadsCount" style="font-size:12px;color:var(--green);margin-top:6px;font-weight:600">Carregando leads...</div>
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+            <div style="font-size:12px;font-weight:700;color:var(--text)">Selecionar Leads</div>
+            <div style="display:flex;gap:6px">
+              <button type="button" onclick="toggleSelectAllCampaignLeads(true)" style="background:var(--bg3);border:1px solid var(--border2);color:var(--text2);padding:5px 10px;border-radius:var(--r-sm);font-size:11px;font-weight:600;cursor:pointer">Selecionar todos</button>
+              <button type="button" onclick="toggleSelectAllCampaignLeads(false)" style="background:var(--bg3);border:1px solid var(--border2);color:var(--text2);padding:5px 10px;border-radius:var(--r-sm);font-size:11px;font-weight:600;cursor:pointer">Limpar</button>
+            </div>
+          </div>
+          <div id="cmpLeadsList" style="max-height:280px;overflow-y:auto;background:var(--bg3);border:1px solid var(--border);border-radius:var(--r-sm)"></div>
         </div>
         <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">
           <div>
