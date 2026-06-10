@@ -790,7 +790,23 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
           <label style="font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.06em">Nome da campanha</label>
           <input id="cmpName" placeholder="Ex: Black Friday 2026" style="width:100%;margin-top:6px;background:var(--bg3);border:1px solid var(--border2);border-radius:var(--r-sm);padding:9px 12px;color:var(--text);font-size:13px;font-family:var(--font)" />
         </div>
+        <label style="display:flex;align-items:flex-start;gap:10px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--r-sm);padding:10px 12px;cursor:pointer">
+          <input id="cmpProspeccao" type="checkbox" style="margin-top:3px;accent-color:var(--green)" />
+          <div>
+            <div style="font-size:13px;font-weight:600;color:var(--text)">🎯 Marcar leads selecionados para prospecção</div>
+            <div style="font-size:11px;color:var(--text3);margin-top:2px">Adiciona automaticamente os leads desta campanha à fila de prospecção (canal WhatsApp).</div>
+          </div>
+        </label>
         <div>
+          <label style="font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.06em">Tipo de mensagem</label>
+          <div id="cmpMsgTypeTabs" style="display:flex;gap:6px;margin-top:6px">
+            <button type="button" data-type="template" onclick="setCampaignMsgType('template')" class="cmp-tab cmp-tab-active" style="flex:1;background:var(--gd);border:1px solid var(--green);color:var(--green);padding:8px 10px;border-radius:var(--r-sm);font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px"><i class="ti ti-template"></i>Template <span style="background:var(--text);color:var(--bg);padding:1px 5px;border-radius:8px;font-size:9.5px">Meta</span></button>
+            <button type="button" data-type="text" onclick="setCampaignMsgType('text')" class="cmp-tab" style="flex:1;background:var(--bg3);border:1px solid var(--border2);color:var(--text2);padding:8px 10px;border-radius:var(--r-sm);font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px"><i class="ti ti-file-text"></i>Texto</button>
+            <button type="button" data-type="image" onclick="setCampaignMsgType('image')" class="cmp-tab" style="flex:1;background:var(--bg3);border:1px solid var(--border2);color:var(--text2);padding:8px 10px;border-radius:var(--r-sm);font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px"><i class="ti ti-photo"></i>Imagem</button>
+            <button type="button" data-type="video" onclick="setCampaignMsgType('video')" class="cmp-tab" style="flex:1;background:var(--bg3);border:1px solid var(--border2);color:var(--text2);padding:8px 10px;border-radius:var(--r-sm);font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px"><i class="ti ti-video"></i>Vídeo</button>
+          </div>
+        </div>
+        <div id="cmpTemplateBlock">
           <label style="font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.06em">Template aprovado</label>
           <select id="cmpTemplate" onchange="onCampaignTemplateChange()" style="width:100%;margin-top:6px;background:var(--bg3);border:1px solid var(--border2);border-radius:var(--r-sm);padding:9px 12px;color:var(--text);font-size:13px;font-family:var(--font)">
             <option value="">Selecione...</option>
@@ -805,6 +821,15 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
         <div id="cmpMediaWrap" style="display:none">
           <label style="font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.06em">URL da mídia do cabeçalho</label>
           <input id="cmpMediaUrl" placeholder="https://..." style="width:100%;margin-top:6px;background:var(--bg3);border:1px solid var(--border2);border-radius:var(--r-sm);padding:9px 12px;color:var(--text);font-size:13px;font-family:var(--font)" />
+        </div>
+        <div id="cmpFreeMediaWrap" style="display:none">
+          <label style="font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.06em"><span id="cmpFreeMediaLabel">URL da mídia</span></label>
+          <input id="cmpFreeMediaUrl" placeholder="https://..." style="width:100%;margin-top:6px;background:var(--bg3);border:1px solid var(--border2);border-radius:var(--r-sm);padding:9px 12px;color:var(--text);font-size:13px;font-family:var(--font)" />
+        </div>
+        <div id="cmpFreeTextWrap" style="display:none">
+          <label style="font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.06em"><span id="cmpFreeTextLabel">Mensagem</span></label>
+          <textarea id="cmpFreeText" rows="4" placeholder="Digite a mensagem que será enviada para todos os leads selecionados... Use {{nome}} para personalizar." style="width:100%;margin-top:6px;background:var(--bg3);border:1px solid var(--border2);border-radius:var(--r-sm);padding:9px 12px;color:var(--text);font-size:13px;font-family:var(--font);resize:vertical"></textarea>
+          <div style="font-size:10.5px;color:var(--amber);margin-top:5px">⚠️ Envio fora do template só funciona para leads com janela de 24h aberta (conversa recente).</div>
         </div>
         <div>
           <label style="font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.06em">Filtrar leads (tag opcional)</label>
