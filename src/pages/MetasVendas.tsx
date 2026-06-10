@@ -112,6 +112,10 @@ function Maquina() {
   const [acts, setActs] = useState<number[]>([0, 3, 7]);
   const [diag, setDiag] = useState<Record<DiagKey, number>>({ fat: 3000, meses: 6, sdrs: 2, closers: 1, ticket: 3999, lead2reu: 30, showup: 30, winrate: 38 });
   const [meta, setMeta] = useState({ metaFat: 60000, prazo: 1, manterEstrutura: true });
+  const [plano, setPlano] = useState({ modelo: "B2B Consultivo (SDR + Closer)" });
+  const [offers, setOffers] = useState<Array<{ nome: string; ticket: number; qtd: number }>>([]);
+  const [newOffer, setNewOffer] = useState<{ nome: string; ticket: number; qtd: number } | null>(null);
+  const [progressoSemana, setProgressoSemana] = useState(0);
   const [checkin, setCheckin] = useState<Record<CheckinKey, number> & { obs: string; script: string }>({ leads: 0, respostas: 0, oportunidades: 0, reuAg: 0, reuNoShow: 0, reuReal: 0, negociacoes: 0, vendasPerdidas: 0, vendas: 0, fupRecuperadas: 0, fupOportunidade: 0, followups: 0, ticket: 0, fat: 0, obs: "", script: "" });
 
   useEffect(() => {
@@ -204,18 +208,14 @@ function Maquina() {
     ["Faturamento bruto (R$)", "fat"],
   ];
 
-  const planFields: Array<{ lbl: string; val?: number; opts?: string[] }> = [
-    { lbl: "Modelo de negócio", opts: ["B2B Consultivo (SDR + Closer)", "B2C Direto", "SaaS Self-serve"] },
-    { lbl: "Meta de receita mensal (R$)", val: meta.metaFat },
-    { lbl: "SDRs no time", val: diag.sdrs },
-    { lbl: "Closers / Vendedores", val: diag.closers },
-  ];
-
   const summaryCards = [
     { label: "Gap a fechar", value: fmtR(gap), sub: "por mês", color: C.red },
     { label: "Crescimento total", value: cresc + "%", sub: "sobre o atual", color: C.green },
     { label: "Crescimento mensal médio", value: crescMes + "%", sub: "ao mês", color: C.purple },
   ];
+
+
+
 
   const teamStats: Array<[string, number]> = [["Leads", 100], ["Ligações", 80], ["Reuniões ag.", 4], ["Vendas", 1]];
 
@@ -342,14 +342,62 @@ function Maquina() {
               ))}
             </div>
 
-            <div style={{ display: "flex", alignItems: "center", gap: 14, padding: "14px 16px", background: C.grayBg, border: `1.5px solid ${C.border}`, borderRadius: 12, marginBottom: 20 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 14, padding: "14px 16px", background: C.grayBg, border: `1.5px solid ${C.border}`, borderRadius: 12, marginBottom: 14 }}>
               <input type="checkbox" checked={meta.manterEstrutura} onChange={(e) => setMeta({ ...meta, manterEstrutura: e.target.checked })}
                 style={{ width: 40, height: 22, accentColor: C.green, cursor: "pointer" }} />
-              <div>
+              <div style={{ flex: 1 }}>
                 <div style={{ fontSize: 13, fontWeight: 700, color: C.text }}>Manter a mesma estrutura comercial atual?</div>
-                <div style={{ fontSize: 12, color: C.textSub }}>Operação fica com {diag.sdrs} SDR(s) e {diag.closers} Closer(s).</div>
+                <div style={{ fontSize: 12, color: C.textSub }}>
+                  {meta.manterEstrutura
+                    ? `Operação fica com ${diag.sdrs} SDR(s) e ${diag.closers} Closer(s).`
+                    : "Estrutura liberada para edição abaixo — redimensione o time."}
+                </div>
               </div>
             </div>
+
+            {!meta.manterEstrutura && (
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 14, padding: 14, border: `1.5px dashed ${C.green}`, borderRadius: 12, background: C.greenBg }}>
+                <div>
+                  <label style={labelStyle}>Novos SDRs / Atendentes</label>
+                  <input style={inputStyle} type="number" min={0} value={diag.sdrs} onChange={(e) => setDiag({ ...diag, sdrs: +e.target.value })} />
+                </div>
+                <div>
+                  <label style={labelStyle}>Novos Closers / Vendedores</label>
+                  <input style={inputStyle} type="number" min={0} value={diag.closers} onChange={(e) => setDiag({ ...diag, closers: +e.target.value })} />
+                </div>
+              </div>
+            )}
+
+            {/* Detalhamento da meta + evolução */}
+            {meta.metaFat > 0 && (
+              <div style={{ border: `1.5px solid ${C.greenBorder}`, background: C.greenBg, borderRadius: 14, padding: 16, marginBottom: 20 }}>
+                <div style={{ fontSize: 13, fontWeight: 800, color: C.greenDark, marginBottom: 10 }}>📈 Detalhamento da meta e evolução</div>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 10, marginBottom: 14 }}>
+                  {[
+                    ["Meta total no prazo", fmtR(meta.metaFat * meta.prazo)],
+                    ["Meta mensal", fmtR(meta.metaFat)],
+                    ["Meta semanal", fmtR(meta.metaFat / 4.33)],
+                    ["Meta diária (22 dias úteis)", fmtR(meta.metaFat / 22)],
+                  ].map(([lbl, val]) => (
+                    <div key={lbl} style={{ background: C.white, borderRadius: 10, padding: "10px 12px", border: `1px solid ${C.greenBorder}` }}>
+                      <div style={{ fontSize: 10, color: C.textSub, fontWeight: 700, textTransform: "uppercase", letterSpacing: ".4px" }}>{lbl}</div>
+                      <div style={{ fontSize: 16, fontWeight: 800, color: C.greenDark, marginTop: 2 }}>{val}</div>
+                    </div>
+                  ))}
+                </div>
+                <div style={{ fontSize: 12, color: C.textSub, marginBottom: 6, display: "flex", justifyContent: "space-between" }}>
+                  <span>Progresso da semana</span>
+                  <span style={{ fontWeight: 700, color: C.greenDark }}>{fmtR(progressoSemana)} / {fmtR(meta.metaFat / 4.33)}</span>
+                </div>
+                <div style={{ background: C.greenBorder, borderRadius: 99, height: 10, overflow: "hidden", marginBottom: 8 }}>
+                  <div style={{ width: `${Math.min(100, (progressoSemana / (meta.metaFat / 4.33 || 1)) * 100)}%`, height: "100%", background: `linear-gradient(90deg, ${C.green}, ${C.greenDark})`, transition: "width .4s" }} />
+                </div>
+                <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                  <input type="number" min={0} value={progressoSemana} onChange={(e) => setProgressoSemana(+e.target.value)} style={{ ...inputStyle, maxWidth: 200 }} placeholder="Faturamento já realizado na semana" />
+                  <span style={{ fontSize: 11, color: C.textSub }}>Atualize conforme as vendas forem entrando.</span>
+                </div>
+              </div>
+            )}
 
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12 }}>
               <button onClick={() => setStep(1)} style={{ background: "none", border: `1.5px solid ${C.border}`, borderRadius: 12, padding: "11px 20px", fontWeight: 600, fontSize: 13, cursor: "pointer", color: C.textSub, fontFamily: "inherit" }}>← Voltar</button>
@@ -378,26 +426,78 @@ function Maquina() {
             </div>
 
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 16 }}>
-              {planFields.map((f, i) => (
-                <div key={i}>
-                  <label style={labelStyle}>{f.lbl}</label>
-                  {f.opts ? (
-                    <select style={{ ...inputStyle }}>{f.opts.map((o) => <option key={o}>{o}</option>)}</select>
-                  ) : (
-                    <input style={inputStyle} defaultValue={f.val} />
-                  )}
-                </div>
-              ))}
-            </div>
-
-            <div style={{ fontSize: 13, fontWeight: 700, color: C.text, marginBottom: 10 }}>📦 Portfólio de Ofertas</div>
-            <div style={{ border: `2px dashed ${C.border}`, borderRadius: 14, padding: "28px 20px", textAlign: "center", color: C.textSub, fontSize: 13, marginBottom: 20 }}>
-              <div style={{ fontSize: 32, marginBottom: 8 }}>📦</div>
-              Nenhuma oferta cadastrada.
-              <div style={{ marginTop: 10 }}>
-                <button style={{ background: C.green, color: "#fff", border: "none", borderRadius: 10, padding: "8px 20px", fontWeight: 700, fontSize: 13, cursor: "pointer", fontFamily: "inherit" }}>+ Adicionar Oferta</button>
+              <div>
+                <label style={labelStyle}>Modelo de negócio</label>
+                <select style={inputStyle} value={plano.modelo} onChange={(e) => setPlano({ ...plano, modelo: e.target.value })}>
+                  {["B2B Consultivo (SDR + Closer)", "B2C Direto", "SaaS Self-serve"].map((o) => <option key={o}>{o}</option>)}
+                </select>
+              </div>
+              <div>
+                <label style={labelStyle}>Meta de receita mensal (R$)</label>
+                <input style={inputStyle} type="number" value={meta.metaFat} onChange={(e) => setMeta({ ...meta, metaFat: +e.target.value })} />
+              </div>
+              <div>
+                <label style={labelStyle}>SDRs no time</label>
+                <input style={inputStyle} type="number" min={0} value={diag.sdrs} onChange={(e) => setDiag({ ...diag, sdrs: +e.target.value })} />
+              </div>
+              <div>
+                <label style={labelStyle}>Closers / Vendedores</label>
+                <input style={inputStyle} type="number" min={0} value={diag.closers} onChange={(e) => setDiag({ ...diag, closers: +e.target.value })} />
               </div>
             </div>
+
+            <div style={{ fontSize: 13, fontWeight: 700, color: C.text, marginBottom: 10, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <span>📦 Portfólio de Ofertas</span>
+              {offers.length > 0 && (
+                <span style={{ fontSize: 11, color: C.textSub, fontWeight: 600 }}>
+                  Receita potencial: <b style={{ color: C.greenDark }}>{fmtR(offers.reduce((s, o) => s + o.ticket * o.qtd, 0))}</b>
+                </span>
+              )}
+            </div>
+
+            {offers.length > 0 && (
+              <div style={{ border: `1.5px solid ${C.border}`, borderRadius: 12, marginBottom: 12, overflow: "hidden" }}>
+                <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr 40px", gap: 8, padding: "10px 14px", background: C.grayBg, fontSize: 11, fontWeight: 700, color: C.textSub, textTransform: "uppercase", letterSpacing: ".4px" }}>
+                  <span>Oferta</span><span>Ticket</span><span>Qtd/mês</span><span>Receita</span><span></span>
+                </div>
+                {offers.map((o, i) => (
+                  <div key={i} style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr 40px", gap: 8, padding: "10px 14px", borderTop: `1px solid ${C.border}`, fontSize: 13, alignItems: "center" }}>
+                    <span style={{ fontWeight: 600, color: C.text }}>{o.nome}</span>
+                    <span>{fmtR(o.ticket)}</span>
+                    <span>{o.qtd}</span>
+                    <span style={{ fontWeight: 700, color: C.greenDark }}>{fmtR(o.ticket * o.qtd)}</span>
+                    <button onClick={() => setOffers(offers.filter((_, idx) => idx !== i))} style={{ background: "none", border: "none", color: C.red, cursor: "pointer", fontSize: 16 }}>×</button>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {newOffer ? (
+              <div style={{ border: `2px solid ${C.green}`, borderRadius: 14, padding: 14, marginBottom: 20, background: C.greenBg }}>
+                <div style={{ fontSize: 12, fontWeight: 700, color: C.greenDark, marginBottom: 10 }}>Nova oferta</div>
+                <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr", gap: 10, marginBottom: 10 }}>
+                  <div><label style={labelStyle}>Nome</label><input style={inputStyle} value={newOffer.nome} onChange={(e) => setNewOffer({ ...newOffer, nome: e.target.value })} placeholder="Ex: Consultoria mensal" /></div>
+                  <div><label style={labelStyle}>Ticket (R$)</label><input style={inputStyle} type="number" min={0} value={newOffer.ticket} onChange={(e) => setNewOffer({ ...newOffer, ticket: +e.target.value })} /></div>
+                  <div><label style={labelStyle}>Qtd/mês</label><input style={inputStyle} type="number" min={0} value={newOffer.qtd} onChange={(e) => setNewOffer({ ...newOffer, qtd: +e.target.value })} /></div>
+                </div>
+                <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
+                  <button onClick={() => setNewOffer(null)} style={{ background: C.white, color: C.textSub, border: `1.5px solid ${C.border}`, borderRadius: 10, padding: "7px 16px", fontWeight: 600, fontSize: 12, cursor: "pointer", fontFamily: "inherit" }}>Cancelar</button>
+                  <button
+                    onClick={() => {
+                      if (!newOffer.nome.trim()) { toast.error("Informe o nome da oferta"); return; }
+                      setOffers([...offers, newOffer]);
+                      setNewOffer(null);
+                    }}
+                    style={{ background: C.green, color: "#fff", border: "none", borderRadius: 10, padding: "7px 18px", fontWeight: 700, fontSize: 12, cursor: "pointer", fontFamily: "inherit" }}
+                  >Salvar oferta</button>
+                </div>
+              </div>
+            ) : (
+              <div style={{ border: `2px dashed ${C.border}`, borderRadius: 14, padding: offers.length > 0 ? "16px 20px" : "28px 20px", textAlign: "center", color: C.textSub, fontSize: 13, marginBottom: 20 }}>
+                {offers.length === 0 && (<><div style={{ fontSize: 32, marginBottom: 8 }}>📦</div>Nenhuma oferta cadastrada.<div style={{ height: 10 }} /></>)}
+                <button onClick={() => setNewOffer({ nome: "", ticket: 0, qtd: 0 })} style={{ background: C.green, color: "#fff", border: "none", borderRadius: 10, padding: "8px 20px", fontWeight: 700, fontSize: 13, cursor: "pointer", fontFamily: "inherit" }}>+ Adicionar Oferta</button>
+              </div>
+            )}
 
             <div style={{ display: "flex", justifyContent: "space-between" }}>
               <button onClick={() => setStep(2)} style={{ background: "none", border: `1.5px solid ${C.border}`, borderRadius: 12, padding: "11px 20px", fontWeight: 600, fontSize: 13, cursor: "pointer", color: C.textSub, fontFamily: "inherit" }}>← Voltar</button>
