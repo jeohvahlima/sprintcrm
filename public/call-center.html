@@ -95,13 +95,16 @@ code { font-family: 'JetBrains Mono', monospace; font-size: 11px; }
 /* ─── FILTER BAR ─── */
 .filter-bar { display: flex; gap: 6px; padding: 10px 16px; border-bottom: 1px solid var(--border); flex-wrap: wrap; background: var(--bg2); flex-shrink: 0; }
 .fchip { padding: 4px 10px; border-radius: 20px; font-size: 11px; cursor: pointer; border: 1px solid var(--border); color: var(--text2); background: transparent; white-space: nowrap; transition: all 0.12s; }
-.fchip.active { border-color: var(--green); color: var(--green); background: var(--green-dim); font-weight: 500; }
-.fchip.c-amber { border-color: var(--amber); color: var(--amber); background: var(--amber-dim); }
-.fchip.c-blue { border-color: var(--blue); color: var(--blue); background: var(--blue-dim); }
-.fchip.c-red { border-color: var(--red); color: var(--red); background: var(--red-dim); }
-.fchip.c-purple { border-color: var(--purple); color: var(--purple); background: var(--purple-dim); }
-.fchip.c-teal { border-color: var(--teal); color: var(--teal); background: var(--teal-dim); }
-.fchip.c-text2 { color: var(--text2); }
+.fchip:hover { border-color: var(--border2); color: var(--text); }
+.fchip.active { border-color: var(--green) !important; color: var(--green) !important; background: var(--green-dim) !important; font-weight: 600; box-shadow: 0 0 0 1px var(--green-dim); }
+/* Cores apenas no texto quando inativo — destaque só no .active */
+.fchip.c-amber  { color: var(--amber); }
+.fchip.c-blue   { color: var(--blue); }
+.fchip.c-red    { color: var(--red); }
+.fchip.c-purple { color: var(--purple); }
+.fchip.c-teal   { color: var(--teal); }
+.fchip.c-green  { color: var(--green); }
+.fchip.c-text2  { color: var(--text2); }
 
 /* ─── SESSION HUD ─── */
 .session-hud { background: var(--bg3); border: 1px solid var(--border2); border-radius: var(--radius); padding: 12px 16px; display: flex; align-items: center; gap: 16px; }
@@ -470,7 +473,7 @@ code { font-family: 'JetBrains Mono', monospace; font-size: 11px; }
     <div class="fchip c-blue" data-filter="oportunidade">Oportunidade (8)</div>
     <div class="fchip c-purple" data-filter="retornar">Retornar Call (7)</div>
     <div class="fchip c-text2" data-filter="follow_up">Follow-up (6)</div>
-    <div class="fchip c-green" data-filter="ganho" style="color:var(--green);border-color:var(--green);background:var(--green-dim)">Ganho (1)</div>
+    <div class="fchip c-green" data-filter="ganho">Ganho (1)</div>
     <div class="fchip c-red" data-filter="descartado">Descartado (47)</div>
     <div style="margin-left:auto;display:flex;gap:5px">
       <div class="fchip" style="color:var(--amber);border-color:var(--amber);background:var(--amber-dim)">
