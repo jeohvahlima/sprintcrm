@@ -1289,27 +1289,12 @@ var CHANNEL_META = {
 })();
 
 function updateBadges() {
-  var cards = Array.from(document.querySelectorAll('#tab-lista .lead-card'));
-  // Badges por canal (sidebar)
-  document.querySelectorAll('.nav-item[data-channel]').forEach(function(n){
-    var ch = n.getAttribute('data-channel');
-    var count = cards.filter(function(c){ return (c.getAttribute('data-channel')||'coldcall')===ch; }).length;
-    var b = n.querySelector('.nav-badge');
-    if (b) b.textContent = count;
-  });
-  // Badges por chip de filtro (no canal atual)
-  var inChannel = cards.filter(function(c){ return (c.getAttribute('data-channel')||'coldcall')===currentChannel; });
-  // Badges fixos (números reais do banco) — não recalcular a partir dos cards de demo
-  // Subtítulo mantém o texto do canal atual
+  // Badges fixos (números reais do banco) — preservados no HTML.
+  // Apenas mantém o subtítulo do canal atual.
   var s = document.querySelector('.title-sub');
   if (s) {
     var meta = CHANNEL_META[currentChannel] || CHANNEL_META.coldcall;
     s.textContent = meta.sub;
-  }
-}
-  if (s) {
-    var meta = CHANNEL_META[currentChannel] || CHANNEL_META.coldcall;
-    s.textContent = inChannel.length + ' contatos · ' + (meta.sub.split('·')[1] ? meta.sub.split('·')[1].trim() : 'prospecção ativa');
   }
 }
 
