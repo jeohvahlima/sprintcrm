@@ -131,6 +131,8 @@ export function LeadActivityTimeline({ leadId, leadCreatedAt, leadName, contactP
       toast.error("Não foi possível copiar.");
     }
   };
+
+  const load = async () => {
     if (!leadId) return;
     setLoading(true);
     try {
