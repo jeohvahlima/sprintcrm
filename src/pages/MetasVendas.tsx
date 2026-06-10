@@ -116,6 +116,7 @@ function Maquina() {
   const [offers, setOffers] = useState<Array<{ nome: string; ticket: number; qtd: number }>>([]);
   const [newOffer, setNewOffer] = useState<{ nome: string; ticket: number; qtd: number } | null>(null);
   const [progressoSemana, setProgressoSemana] = useState(0);
+  const [realizadoMes, setRealizadoMes] = useState<Record<number, number>>({});
   const [checkin, setCheckin] = useState<Record<CheckinKey, number> & { obs: string; script: string }>({ leads: 0, respostas: 0, oportunidades: 0, reuAg: 0, reuNoShow: 0, reuReal: 0, negociacoes: 0, vendasPerdidas: 0, vendas: 0, fupRecuperadas: 0, fupOportunidade: 0, followups: 0, ticket: 0, fat: 0, obs: "", script: "" });
 
   useEffect(() => {
@@ -398,6 +399,76 @@ function Maquina() {
                 </div>
               </div>
             )}
+
+            {/* Plano mensal de crescimento — mês a mês até atingir a meta */}
+            {meta.metaFat > 0 && meta.prazo > 0 && diag.fat >= 0 && (() => {
+              const meses = Math.max(1, Math.min(60, meta.prazo));
+              const inicio = diag.fat;
+              const fim = meta.metaFat;
+              // crescimento linear mês a mês entre faturamento atual e meta
+              const linhas = Array.from({ length: meses }, (_, i) => {
+                const metaMes = meses === 1 ? fim : Math.round(inicio + ((fim - inicio) * (i + 1)) / meses);
+                const realizado = realizadoMes[i] ?? 0;
+                const atingPct = metaMes > 0 ? (realizado / metaMes) * 100 : 0;
+                const anterior = i === 0 ? inicio : (realizadoMes[i - 1] ?? 0);
+                const variacao = anterior > 0 ? ((realizado - anterior) / anterior) * 100 : (realizado > 0 ? 100 : 0);
+                let status: { txt: string; bg: string; cor: string };
+                if (realizado === 0) status = { txt: "—", bg: C.grayBg, cor: C.textSub };
+                else if (variacao > 5) status = { txt: "📈 Escalando", bg: C.greenBg, cor: C.greenDark };
+                else if (variacao < -5) status = { txt: "📉 Caindo", bg: C.redBg, cor: C.red };
+                else status = { txt: "➖ Estagnado", bg: C.amberBg, cor: "#92400E" };
+                return { i, metaMes, realizado, atingPct, variacao, status };
+              });
+              const totalEsperado = linhas.reduce((s, l) => s + l.metaMes, 0);
+              const totalRealizado = linhas.reduce((s, l) => s + l.realizado, 0);
+              return (
+                <div style={{ border: `1.5px solid ${C.purple}`, background: C.purpleBg, borderRadius: 14, padding: 16, marginBottom: 20 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12, flexWrap: "wrap", gap: 8 }}>
+                    <div>
+                      <div style={{ fontSize: 13, fontWeight: 800, color: C.purple }}>📅 Plano mensal de crescimento</div>
+                      <div style={{ fontSize: 11, color: C.textSub, marginTop: 2 }}>
+                        Meta destrinchada mês a mês. Preencha o realizado para ver se está escalando ou estagnado.
+                      </div>
+                    </div>
+                    <div style={{ fontSize: 11, color: C.textSub, textAlign: "right" }}>
+                      Acumulado esperado: <b style={{ color: C.purple }}>{fmtR(totalEsperado)}</b><br/>
+                      Acumulado realizado: <b style={{ color: C.greenDark }}>{fmtR(totalRealizado)}</b>
+                    </div>
+                  </div>
+                  <div style={{ border: `1px solid ${C.border}`, borderRadius: 10, overflow: "hidden", background: C.white }}>
+                    <div style={{ display: "grid", gridTemplateColumns: "60px 1fr 1fr 1fr 1fr 130px", padding: "8px 12px", background: C.grayBg, fontSize: 10, fontWeight: 700, color: C.textSub, textTransform: "uppercase", letterSpacing: ".4px", gap: 8 }}>
+                      <span>Mês</span><span>Meta esperada</span><span>Realizado</span><span>Atingimento</span><span>Variação</span><span>Status</span>
+                    </div>
+                    {linhas.map((l) => (
+                      <div key={l.i} style={{ display: "grid", gridTemplateColumns: "60px 1fr 1fr 1fr 1fr 130px", padding: "8px 12px", borderTop: `1px solid ${C.border}`, gap: 8, alignItems: "center", fontSize: 12 }}>
+                        <span style={{ fontWeight: 700, color: C.purple }}>M{l.i + 1}</span>
+                        <span style={{ fontWeight: 600, color: C.text }}>{fmtR(l.metaMes)}</span>
+                        <input
+                          type="number"
+                          min={0}
+                          value={l.realizado}
+                          onChange={(e) => setRealizadoMes({ ...realizadoMes, [l.i]: +e.target.value })}
+                          style={{ width: "100%", border: `1px solid ${C.border}`, borderRadius: 6, padding: "5px 8px", fontSize: 12, fontFamily: "inherit", background: C.white, outline: "none" }}
+                          placeholder="0"
+                        />
+                        <div>
+                          <div style={{ fontSize: 11, color: l.atingPct >= 100 ? C.greenDark : l.atingPct >= 70 ? "#92400E" : C.red, fontWeight: 700 }}>{Math.round(l.atingPct)}%</div>
+                          <div style={{ background: C.border, borderRadius: 99, height: 4, marginTop: 2 }}>
+                            <div style={{ width: `${Math.min(100, l.atingPct)}%`, height: "100%", background: l.atingPct >= 100 ? C.green : l.atingPct >= 70 ? C.amber : C.red, borderRadius: 99 }} />
+                          </div>
+                        </div>
+                        <span style={{ fontSize: 11, fontWeight: 700, color: l.variacao > 0 ? C.greenDark : l.variacao < 0 ? C.red : C.textSub }}>
+                          {l.realizado === 0 ? "—" : `${l.variacao > 0 ? "+" : ""}${Math.round(l.variacao)}%`}
+                        </span>
+                        <span style={{ fontSize: 11, fontWeight: 700, color: l.status.cor, background: l.status.bg, padding: "3px 8px", borderRadius: 99, textAlign: "center" }}>
+                          {l.status.txt}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              );
+            })()}
 
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12 }}>
               <button onClick={() => setStep(1)} style={{ background: "none", border: `1.5px solid ${C.border}`, borderRadius: 12, padding: "11px 20px", fontWeight: 600, fontSize: 13, cursor: "pointer", color: C.textSub, fontFamily: "inherit" }}>← Voltar</button>
