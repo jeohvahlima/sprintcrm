@@ -1249,6 +1249,73 @@ var CHANNEL_META = {
   instagram: { title: 'Instagram',  sub: '— prospecção via DM' }
 };
 
+// Gera leads de demonstração para popular a lista (mantém os cards estáticos existentes)
+(function seedDemoLeads(){
+  var list = document.querySelector('#tab-lista .lead-list');
+  if (!list) return;
+  var anchor = document.getElementById('leadEmpty');
+  var nomes = [
+    ['Metalúrgica Vale Aço','(31) 3344-8800','coldcall','pendente minha_fila','Indústria · MG'],
+    ['Studio Odonto Premium','(11) 95541-2210','whatsapp','pendente minha_fila','Saúde · SP'],
+    ['Auto Center Diamante','(47) 3422-7711','coldcall','retornar abordados','Automotivo · SC'],
+    ['Imobiliária Horizonte','(85) 99812-3344','whatsapp','follow_up abordados contactados_hoje','Imóveis · CE'],
+    ['Logística Cargo Express','(81) 3127-5500','email','prospectado abordados','Logística · PE'],
+    ['Clínica Vida Plena','(62) 99880-1122','coldcall','pendente','Saúde · GO'],
+    ['@boutique.luxo.sp','22.1k seguidores','instagram','pendente minha_fila','Moda · SP'],
+    ['Padaria Forno Real','(19) 3251-9090','coldcall','abordados sem_resposta retornar','Alimentos · SP'],
+    ['Escola Saber+','(48) 3025-1414','email','pendente minha_fila','Educação · SC'],
+    ['Construtora Líder Sul','(51) 3221-7788','coldcall','oportunidade abordados contactados_hoje','Construção · RS'],
+    ['Pet Shop Amigo Fiel','(11) 4422-9091','whatsapp','ganho abordados','Pet · SP'],
+    ['Tech Solutions BR','(11) 3344-1010','email','descartado abordados','Tecnologia · SP'],
+    ['@cafe.aroma.rj','8.7k seguidores','instagram','follow_up abordados','Gastronomia · RJ'],
+    ['Distribuidora Norte+','(91) 3211-4040','coldcall','pendente','Atacado · PA'],
+    ['Academia Movimento','(31) 99777-2020','whatsapp','pendente minha_fila','Fitness · MG']
+  ];
+  var html = nomes.map(function(n){
+    var score = 40 + Math.floor(Math.random()*55);
+    var btn = n[2]==='instagram' ? 'Conversar' : (n[2]==='email' ? 'E-mail' : (n[2]==='whatsapp' ? 'WhatsApp' : 'Ligar'));
+    return '<div class="lead-card" data-channel="'+n[2]+'" data-status="'+n[3]+'">'
+      + '<svg style="width:13px;height:13px;color:var(--text3);flex-shrink:0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>'
+      + '<div class="lead-score '+(score>=70?'score-high':'score-med')+'">'+score+'</div>'
+      + '<div class="lead-info"><div class="lead-name">'+n[0]+'</div>'
+      + '<div class="lead-meta"><span class="lead-meta-item">'+n[1]+'</span><span class="lead-meta-item">'+n[4]+'</span></div>'
+      + '<div class="lead-tags">'+ n[3].split(/\s+/).map(function(t){return '<span class="tag tag-gray">'+t+'</span>';}).join('') +'</div>'
+      + '</div>'
+      + '<div class="lead-actions"><button class="btn-call">'+btn+'</button></div>'
+      + '</div>';
+  }).join('');
+  if (anchor) anchor.insertAdjacentHTML('beforebegin', html);
+  else list.insertAdjacentHTML('beforeend', html);
+})();
+
+function updateBadges() {
+  var cards = Array.from(document.querySelectorAll('#tab-lista .lead-card'));
+  // Badges por canal (sidebar)
+  document.querySelectorAll('.nav-item[data-channel]').forEach(function(n){
+    var ch = n.getAttribute('data-channel');
+    var count = cards.filter(function(c){ return (c.getAttribute('data-channel')||'coldcall')===ch; }).length;
+    var b = n.querySelector('.nav-badge');
+    if (b) b.textContent = count;
+  });
+  // Badges por chip de filtro (no canal atual)
+  var inChannel = cards.filter(function(c){ return (c.getAttribute('data-channel')||'coldcall')===currentChannel; });
+  document.querySelectorAll('.fchip[data-filter]').forEach(function(chip){
+    var f = chip.getAttribute('data-filter');
+    var count = (f==='all') ? inChannel.length : inChannel.filter(function(c){
+      return ((c.getAttribute('data-status')||'').split(/\s+/)).indexOf(f) !== -1;
+    }).length;
+    // Atualiza o número entre parênteses preservando o rótulo
+    var txt = chip.textContent.replace(/\s*\(\d+\)\s*$/,'');
+    chip.textContent = txt + ' (' + count + ')';
+  });
+  // Subtítulo
+  var s = document.querySelector('.title-sub');
+  if (s) {
+    var meta = CHANNEL_META[currentChannel] || CHANNEL_META.coldcall;
+    s.textContent = inChannel.length + ' contatos · ' + (meta.sub.split('·')[1] ? meta.sub.split('·')[1].trim() : 'prospecção ativa');
+  }
+}
+
 function applyLeadFilters() {
   var cards = document.querySelectorAll('#tab-lista .lead-card');
   var visible = 0;
@@ -1263,6 +1330,7 @@ function applyLeadFilters() {
   });
   var empty = document.getElementById('leadEmpty');
   if (empty) empty.style.display = visible === 0 ? '' : 'none';
+  updateBadges();
 }
 
 function selectChannel(el) {
@@ -1271,10 +1339,12 @@ function selectChannel(el) {
   currentChannel = el.getAttribute('data-channel') || 'coldcall';
   var meta = CHANNEL_META[currentChannel] || CHANNEL_META.coldcall;
   var t = document.querySelector('.title-text');
-  var s = document.querySelector('.title-sub');
   if (t) t.textContent = meta.title;
-  if (s) s.textContent = meta.sub;
-  // forçar Lista quando trocar canal
+  // ao trocar canal, reseta filtro para "Todos"
+  currentFilter = 'all';
+  document.querySelectorAll('.fchip[data-filter]').forEach(function(c){
+    c.classList.toggle('active', c.getAttribute('data-filter')==='all');
+  });
   var listaTab = document.querySelector('.ttab');
   if (listaTab && typeof showTab === 'function') showTab('lista', listaTab);
   applyLeadFilters();
