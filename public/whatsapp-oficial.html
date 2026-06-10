@@ -1854,20 +1854,28 @@ async function submitCampaign() {
   const pauseAfter = parseInt(document.getElementById('cmpPauseAfter').value, 10) || 15;
   const pauseDur = parseInt(document.getElementById('cmpPauseDur').value, 10) || 120;
   const mediaUrl = document.getElementById('cmpMediaUrl').value.trim();
+  const freeText = document.getElementById('cmpFreeText').value.trim();
+  const freeMedia = document.getElementById('cmpFreeMediaUrl').value.trim();
+  const prospeccao = document.getElementById('cmpProspeccao').checked;
 
   if (!name) { showToast('Informe o nome da campanha'); return; }
-  if (!tplId || !cmpSelectedTpl) { showToast('Selecione um template'); return; }
+  if (cmpMsgType === 'template' && (!tplId || !cmpSelectedTpl)) { showToast('Selecione um template'); return; }
+  if (cmpMsgType === 'text' && !freeText) { showToast('Digite a mensagem'); return; }
+  if ((cmpMsgType === 'image' || cmpMsgType === 'video') && !freeMedia) { showToast('Informe a URL da mídia'); return; }
   const leads = getFilteredCampaignLeads();
   if (!leads.length) { showToast('Nenhum lead selecionado'); return; }
 
-  const header = (cmpSelectedTpl.components || []).find(c => (c.type || '').toUpperCase() === 'HEADER');
-  if (header && header.format && header.format !== 'TEXT') {
-    const hasHandle = !!(header.example && header.example.header_handle && header.example.header_handle[0]);
-    if (!hasHandle && !mediaUrl) { showToast(`Informe a URL da mídia (${header.format})`); return; }
+  let tplComps = null;
+  if (cmpMsgType === 'template') {
+    const header = (cmpSelectedTpl.components || []).find(c => (c.type || '').toUpperCase() === 'HEADER');
+    if (header && header.format && header.format !== 'TEXT') {
+      const hasHandle = !!(header.example && header.example.header_handle && header.example.header_handle[0]);
+      if (!hasHandle && !mediaUrl) { showToast(`Informe a URL da mídia (${header.format})`); return; }
+    }
+    const vars = collectCampaignVars();
+    tplComps = buildTplComponentsForCampaign(cmpSelectedTpl, vars, mediaUrl);
   }
 
-  const vars = collectCampaignVars();
-  const tplComps = buildTplComponentsForCampaign(cmpSelectedTpl, vars, mediaUrl);
   const campaignId = `campanha_${Date.now()}_${Math.random().toString(36).slice(2, 11)}`;
   const btn = document.getElementById('cmpSubmitBtn');
   btn.disabled = true;
@@ -1880,19 +1888,34 @@ async function submitCampaign() {
       campaign_name: name,
       status: 'pending',
       total_leads: leads.length,
-      message_type: 'template',
-      message_content: null,
-      template_name: cmpSelectedTpl.name,
-      template_language: cmpSelectedTpl.language || 'pt_BR',
+      message_type: cmpMsgType,
+      message_content: cmpMsgType === 'template' ? null : freeText,
+      template_name: cmpMsgType === 'template' ? cmpSelectedTpl.name : null,
+      template_language: cmpMsgType === 'template' ? (cmpSelectedTpl.language || 'pt_BR') : null,
       template_components: tplComps,
-      template_media_url: mediaUrl || null,
-      media_storage_url: null,
+      template_media_url: cmpMsgType === 'template' ? (mediaUrl || null) : null,
+      media_storage_url: (cmpMsgType === 'image' || cmpMsgType === 'video') ? freeMedia : null,
       delay_between_messages: delay,
       pause_after_messages: pauseAfter,
       pause_duration: pauseDur,
       leads_data: leads.map(l => ({ id: l.id, name: l.name, telefone: l.telefone, phone: l.phone })),
     });
     if (insErr) throw insErr;
+
+    if (prospeccao) {
+      try {
+        const { data: queues } = await waSb.from('prospecting_queues').select('id').eq('company_id', waCompanyId).eq('channel', 'whatsapp').limit(1);
+        let queueId = queues && queues[0] && queues[0].id;
+        if (!queueId) {
+          const { data: newQ } = await waSb.from('prospecting_queues').insert({ company_id: waCompanyId, name: 'WhatsApp', channel: 'whatsapp' }).select('id').single();
+          queueId = newQ && newQ.id;
+        }
+        if (queueId) {
+          const rows = leads.filter(l => l.id).map(l => ({ queue_id: queueId, lead_id: l.id, company_id: waCompanyId, status: 'pending' }));
+          if (rows.length) await waSb.from('prospecting_queue_leads').insert(rows);
+        }
+      } catch (pErr) { console.warn('Prospecção opcional falhou', pErr); }
+    }
 
     waSb.functions.invoke('disparo-em-massa', { body: { campaign_id: campaignId } }).catch(err => {
       console.error('Erro ao acionar disparo-em-massa', err);
