@@ -9519,7 +9519,7 @@ function Conversas() {
 
       {/* Chat Area - Estrutura com header e input fixos */}
       {/* No mobile: mostrar apenas quando uma conversa está selecionada */}
-      <div className={`${isMobile && !selectedConv ? 'hidden' : 'flex-1'} flex flex-col min-w-0`} style={{
+      <div className={`${isMobile && !selectedConv ? 'hidden' : 'flex-1'} flex flex-col min-w-0 relative`} style={{
         height: '100%',
         maxHeight: '100vh',
         overflow: 'hidden'
