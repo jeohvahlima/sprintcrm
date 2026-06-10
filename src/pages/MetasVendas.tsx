@@ -214,11 +214,8 @@ function Maquina() {
     { label: "Crescimento mensal médio", value: crescMes + "%", sub: "ao mês", color: C.purple },
   ];
 
-  const summaryCards = [
-    { label: "Gap a fechar", value: fmtR(gap), sub: "por mês", color: C.red },
-    { label: "Crescimento total", value: cresc + "%", sub: "sobre o atual", color: C.green },
-    { label: "Crescimento mensal médio", value: crescMes + "%", sub: "ao mês", color: C.purple },
-  ];
+
+
 
   const teamStats: Array<[string, number]> = [["Leads", 100], ["Ligações", 80], ["Reuniões ag.", 4], ["Vendas", 1]];
 
