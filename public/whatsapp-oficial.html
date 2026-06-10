@@ -1679,11 +1679,47 @@ async function openNewCampaign() {
   document.getElementById('cmpMediaWrap').style.display = 'none';
   document.getElementById('cmpTplHint').textContent = '';
   document.getElementById('cmpLeadsCount').textContent = 'Carregando leads...';
+  document.getElementById('cmpProspeccao').checked = false;
+  document.getElementById('cmpFreeText').value = '';
+  document.getElementById('cmpFreeMediaUrl').value = '';
   cmpSelectedTpl = null;
+  setCampaignMsgType('template');
   await Promise.all([ensureCampaignLeadsLoaded(), ensureCampaignTemplatesLoaded()]);
   populateCampaignTemplates();
   populateCampaignTagFilter();
   updateCampaignLeadsCount();
+}
+
+let cmpMsgType = 'template';
+function setCampaignMsgType(type) {
+  cmpMsgType = type;
+  document.querySelectorAll('#cmpMsgTypeTabs .cmp-tab').forEach(b => {
+    const active = b.dataset.type === type;
+    b.style.background = active ? 'var(--gd)' : 'var(--bg3)';
+    b.style.border = active ? '1px solid var(--green)' : '1px solid var(--border2)';
+    b.style.color = active ? 'var(--green)' : 'var(--text2)';
+  });
+  document.getElementById('cmpTemplateBlock').style.display = type === 'template' ? '' : 'none';
+  if (type !== 'template') {
+    document.getElementById('cmpVarsWrap').style.display = 'none';
+    document.getElementById('cmpMediaWrap').style.display = 'none';
+  } else {
+    onCampaignTemplateChange();
+  }
+  const freeText = document.getElementById('cmpFreeTextWrap');
+  const freeMedia = document.getElementById('cmpFreeMediaWrap');
+  const textLabel = document.getElementById('cmpFreeTextLabel');
+  const mediaLabel = document.getElementById('cmpFreeMediaLabel');
+  if (type === 'text') {
+    freeText.style.display = ''; freeMedia.style.display = 'none';
+    textLabel.textContent = 'Mensagem';
+  } else if (type === 'image' || type === 'video') {
+    freeText.style.display = ''; freeMedia.style.display = '';
+    textLabel.textContent = 'Legenda (opcional)';
+    mediaLabel.textContent = type === 'image' ? 'URL da imagem' : 'URL do vídeo';
+  } else {
+    freeText.style.display = 'none'; freeMedia.style.display = 'none';
+  }
 }
 
 function populateCampaignTemplates() {
