@@ -1289,30 +1289,12 @@ var CHANNEL_META = {
 })();
 
 function updateBadges() {
-  var cards = Array.from(document.querySelectorAll('#tab-lista .lead-card'));
-  // Badges por canal (sidebar)
-  document.querySelectorAll('.nav-item[data-channel]').forEach(function(n){
-    var ch = n.getAttribute('data-channel');
-    var count = cards.filter(function(c){ return (c.getAttribute('data-channel')||'coldcall')===ch; }).length;
-    var b = n.querySelector('.nav-badge');
-    if (b) b.textContent = count;
-  });
-  // Badges por chip de filtro (no canal atual)
-  var inChannel = cards.filter(function(c){ return (c.getAttribute('data-channel')||'coldcall')===currentChannel; });
-  document.querySelectorAll('.fchip[data-filter]').forEach(function(chip){
-    var f = chip.getAttribute('data-filter');
-    var count = (f==='all') ? inChannel.length : inChannel.filter(function(c){
-      return ((c.getAttribute('data-status')||'').split(/\s+/)).indexOf(f) !== -1;
-    }).length;
-    // Atualiza o número entre parênteses preservando o rótulo
-    var txt = chip.textContent.replace(/\s*\(\d+\)\s*$/,'');
-    chip.textContent = txt + ' (' + count + ')';
-  });
-  // Subtítulo
+  // Badges fixos (números reais do banco) — preservados no HTML.
+  // Apenas mantém o subtítulo do canal atual.
   var s = document.querySelector('.title-sub');
   if (s) {
     var meta = CHANNEL_META[currentChannel] || CHANNEL_META.coldcall;
-    s.textContent = inChannel.length + ' contatos · ' + (meta.sub.split('·')[1] ? meta.sub.split('·')[1].trim() : 'prospecção ativa');
+    s.textContent = meta.sub;
   }
 }
 
