@@ -9175,14 +9175,29 @@ function Conversas() {
               )}
               <Button size="icon" variant="outline" onClick={async () => {
                 console.log('📸 Botão Atualizar Fotos clicado');
-                toast.info('Buscando fotos de perfil em massa...');
                 try {
+                  let companyId = userCompanyId || userCompanyIdRef.current;
+                  if (!companyId) {
+                    const { data: { user } } = await supabase.auth.getUser();
+                    if (user) {
+                      const { data: profile } = await supabase
+                        .from('profiles')
+                        .select('company_id')
+                        .eq('id', user.id)
+                        .maybeSingle();
+                      companyId = profile?.company_id || null;
+                    }
+                  }
+                  if (!companyId) {
+                    toast.error('Empresa do usuário não identificada. Recarregue a página.');
+                    return;
+                  }
+                  toast.info('Buscando fotos de perfil em massa...');
                   const { data, error } = await supabase.functions.invoke('batch-profile-pictures', {
-                    body: { company_id: userCompanyId }
+                    body: { company_id: companyId }
                   });
                   if (error) throw error;
                   toast.success(`Fotos atualizadas: ${data?.updated || 0} de ${data?.total || 0}`);
-                  // Recarregar conversas para mostrar novas fotos
                   if (data?.updated > 0) {
                     avatarCacheRef.current.clear();
                     loadSupabaseConversations();
