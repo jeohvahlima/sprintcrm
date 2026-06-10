@@ -154,52 +154,44 @@ serve(async (req) => {
     let updated = 0;
     let failed = 0;
 
-    for (const lead of leads) {
-      const phone = lead.phone || lead.telefone;
-      if (!phone) { failed++; continue; }
+    // Processar em paralelo em batches de 5 para evitar timeout de 150s
+    const BATCH_SIZE = 5;
+    for (let i = 0; i < leads.length; i += BATCH_SIZE) {
+      const batch = leads.slice(i, i + BATCH_SIZE);
+      await Promise.all(batch.map(async (lead) => {
+        const phone = lead.phone || lead.telefone;
+        if (!phone) { failed++; return; }
 
-      let pictureUrl: string | null = null;
+        let pictureUrl: string | null = null;
 
-      // Tentar Evolution diretamente
-      if (hasEvolution) {
-        pictureUrl = await fetchProfilePicViaEvolution(
-          conn!.evolution_api_url.replace(/\/$/, ''),
-          conn!.instance_name,
-          conn!.evolution_api_key,
-          phone
-        );
-      }
-
-      // Fallback Meta
-      if (!pictureUrl && hasMeta) {
-        pictureUrl = await fetchProfilePicViaMeta(
-          conn!.meta_access_token,
-          conn!.meta_phone_number_id,
-          phone
-        );
-      }
-
-      if (pictureUrl) {
-        await supabase
-          .from('leads')
-          .update({ profile_picture_url: pictureUrl })
-          .eq('id', lead.id);
-        updated++;
-        console.log(`✅ [BATCH] Foto atualizada: ${lead.name || phone}`);
-      } else {
-        // Se tinha URL expirada e não encontrou nova, limpar
-        if (lead.profile_picture_url) {
-          await supabase
-            .from('leads')
-            .update({ profile_picture_url: null })
-            .eq('id', lead.id);
-          console.log(`🗑️ [BATCH] URL expirada removida: ${lead.name || phone}`);
+        if (hasEvolution) {
+          pictureUrl = await fetchProfilePicViaEvolution(
+            conn!.evolution_api_url.replace(/\/$/, ''),
+            conn!.instance_name,
+            conn!.evolution_api_key,
+            phone
+          );
         }
-        failed++;
-      }
 
-      // Throttle: 500ms entre cada busca
-      await delay(500);
+        if (!pictureUrl && hasMeta) {
+          pictureUrl = await fetchProfilePicViaMeta(
+            conn!.meta_access_token,
+            conn!.meta_phone_number_id,
+            phone
+          );
+        }
+
+        if (pictureUrl) {
+          await supabase.from('leads').update({ profile_picture_url: pictureUrl }).eq('id', lead.id);
+          updated++;
+        } else {
+          if (lead.profile_picture_url) {
+            await supabase.from('leads').update({ profile_picture_url: null }).eq('id', lead.id);
+          }
+          failed++;
+        }
+      }));
+      await delay(150);
     }
 
     console.log(`📊 [BATCH] Resultado: ${updated} atualizados, ${failed} sem foto, ${leads.length} total`);
