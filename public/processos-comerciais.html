@@ -2216,6 +2216,28 @@ function slashAI() {
   toggleAI();
 }
 
+function _showSlashFor(ce) {
+  __slashEl = ce;
+  setTimeout(() => {
+    const rect = ce.getBoundingClientRect();
+    const menu = document.getElementById('slash-menu');
+    menu.style.display = 'block';
+    const mh = Math.min(420, window.innerHeight - 24);
+    let top = rect.bottom + 8;
+    if (top + mh > window.innerHeight) top = Math.max(8, window.innerHeight - mh - 8);
+    menu.style.top = top + 'px';
+    menu.style.left = Math.min(rect.left, Math.max(8, window.innerWidth - 256)) + 'px';
+  }, 10);
+}
+
+// Fallback: detect "/" typed via input events (mobile keyboards / IME)
+document.addEventListener('input', e => {
+  const t = e.target;
+  const ce = t && t.closest ? t.closest('[contenteditable="true"]') : null;
+  if (!ce || !_inEditor(ce)) return;
+  if (e.data === '/' || (e.data && e.data.endsWith('/'))) _showSlashFor(ce);
+});
+
 // Delegated keyboard handling — works for blocks created dynamically too
 document.addEventListener('keydown', e => {
   const t = e.target;
@@ -2223,19 +2245,10 @@ document.addEventListener('keydown', e => {
   if (!ce || !_inEditor(ce)) return;
 
   if (e.key === '/') {
-    __slashEl = ce;
-    setTimeout(() => {
-      const rect = ce.getBoundingClientRect();
-      const menu = document.getElementById('slash-menu');
-      menu.style.display = 'block';
-      const mh = Math.min(420, window.innerHeight - 24);
-      let top = rect.bottom + 8;
-      if (top + mh > window.innerHeight) top = Math.max(8, window.innerHeight - mh - 8);
-      menu.style.top = top + 'px';
-      menu.style.left = Math.min(rect.left, Math.max(8, window.innerWidth - 256)) + 'px';
-    }, 10);
+    _showSlashFor(ce);
     return;
   }
+
 
   if (e.key === 'Enter' && !e.shiftKey && !ce.closest('.block-code') && !ce.closest('td') && !ce.closest('th')) {
     e.preventDefault();
