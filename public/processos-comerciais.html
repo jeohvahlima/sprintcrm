@@ -1879,6 +1879,66 @@ Posso te mostrar em 10 minutos como funciona?
 </div>
 
 <!-- SLASH MENU -->
+<!-- NEW PAGE MODAL -->
+<style>
+#newpage-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.6); z-index:500; align-items:center; justify-content:center; }
+.np-modal { width:580px; max-width:94vw; max-height:88vh; overflow-y:auto; background:var(--bg2); border:1px solid var(--border); border-radius:12px; padding:20px; box-shadow:0 20px 60px rgba(0,0,0,.5); }
+.np-label { font-size:11px; font-weight:600; color:var(--text2); text-transform:uppercase; letter-spacing:.05em; margin:12px 0 5px; display:block; }
+.np-input { width:100%; background:var(--bg3); border:1px solid var(--border); border-radius:8px; padding:8px 10px; font-size:13px; color:var(--text0); outline:none; }
+.np-input:focus { border-color:var(--accent, #22c55e); }
+.np-tabs { display:flex; gap:6px; margin-top:14px; }
+.np-tab { flex:1; text-align:center; padding:10px 8px; border:1px solid var(--border); border-radius:8px; background:var(--bg3); color:var(--text2); font-size:12px; cursor:pointer; user-select:none; transition:all .15s; }
+.np-tab:hover { color:var(--text0); border-color:var(--text3); }
+.np-tab.np-tab-active { border-color:#22c55e; color:var(--text0); background:rgba(34,197,94,.08); }
+.np-tab .np-tab-icon { font-size:18px; display:block; margin-bottom:4px; }
+#np-paste { width:100%; min-height:160px; resize:vertical; background:var(--bg3); border:1px solid var(--border); border-radius:8px; padding:10px; font-size:13px; color:var(--text0); outline:none; font-family:inherit; }
+.np-hint { font-size:11px; color:var(--text3); margin-top:6px; }
+.np-footer { display:flex; justify-content:flex-end; gap:8px; margin-top:18px; }
+</style>
+<div id="newpage-overlay" onclick="if(event.target===this)closeNewPageModal()">
+  <div class="np-modal">
+    <div style="display:flex;align-items:center;justify-content:space-between;">
+      <div style="font-size:15px;font-weight:700;color:var(--text0);">📄 Criar nova página</div>
+      <button class="btn btn-ghost btn-sm" onclick="closeNewPageModal()">✕</button>
+    </div>
+
+    <div style="display:flex;gap:10px;">
+      <div style="flex:1;">
+        <label class="np-label">Nome da página</label>
+        <input id="np-name" class="np-input" placeholder="Ex.: Playbook de Prospecção" />
+      </div>
+      <div style="width:90px;">
+        <label class="np-label">Ícone</label>
+        <input id="np-icon" class="np-input" value="📄" maxlength="4" style="text-align:center;" />
+      </div>
+    </div>
+
+    <label class="np-label">Como deseja criar?</label>
+    <div class="np-tabs">
+      <div class="np-tab np-tab-active" data-mode="blank" onclick="_npSetMode('blank')"><span class="np-tab-icon">✏️</span>Página em branco</div>
+      <div class="np-tab" data-mode="paste" onclick="_npSetMode('paste')"><span class="np-tab-icon">📋</span>Colar texto</div>
+      <div class="np-tab" data-mode="file" onclick="_npSetMode('file')"><span class="np-tab-icon">📎</span>Anexar documento</div>
+    </div>
+
+    <div id="np-paste-wrap" style="display:none;">
+      <label class="np-label">Cole o conteúdo do documento</label>
+      <textarea id="np-paste" placeholder="Cole aqui todo o texto. Dicas: use # ou ## para títulos, - para listas, [ ] para checklist."></textarea>
+      <div class="np-hint">O texto será convertido automaticamente em blocos (títulos, parágrafos, listas e checklists).</div>
+    </div>
+
+    <div id="np-file-wrap" style="display:none;">
+      <label class="np-label">Selecione um arquivo (PDF, DOCX, TXT, MD)</label>
+      <input id="np-file" class="np-input" type="file" accept=".pdf,.docx,.txt,.md" style="padding:7px;" />
+      <div class="np-hint">O conteúdo do documento será extraído e convertido em blocos editáveis.</div>
+    </div>
+
+    <div class="np-footer">
+      <button class="btn btn-ghost btn-sm" onclick="closeNewPageModal()">Cancelar</button>
+      <button class="btn btn-primary btn-sm" id="np-create-btn" onclick="_npCreate()">Criar página</button>
+    </div>
+  </div>
+</div>
+
 <div class="slash-menu" id="slash-menu" style="display:none;top:300px;left:300px;">
   <div class="slash-menu-header">
     <div class="slash-menu-search">Blocos básicos</div>
@@ -2011,16 +2071,195 @@ function _emptyDocHTML(title) {
     </div>`;
 }
 
+let __npMode = 'blank';
+
 function createNewPage() {
-  const name = prompt('Nome da nova página:', 'Nova página');
-  if (!name) return;
-  const icon = prompt('Ícone (emoji):', '📄') || '📄';
-  const id = 'custom-' + Date.now();
-  const list = _loadCustom();
-  list.push({ id, title: name, icon });
-  _saveCustom(list);
-  _renderCustomPages();
-  setDoc(id);
+  const ov = document.getElementById('newpage-overlay');
+  if (!ov) return;
+  document.getElementById('np-name').value = '';
+  document.getElementById('np-icon').value = '📄';
+  document.getElementById('np-paste').value = '';
+  document.getElementById('np-file').value = '';
+  _npSetMode('blank');
+  ov.style.display = 'flex';
+  setTimeout(() => document.getElementById('np-name').focus(), 50);
+}
+
+function closeNewPageModal() {
+  const ov = document.getElementById('newpage-overlay');
+  if (ov) ov.style.display = 'none';
+}
+
+function _npSetMode(m) {
+  __npMode = m;
+  document.querySelectorAll('#newpage-overlay .np-tab').forEach(t =>
+    t.classList.toggle('np-tab-active', t.dataset.mode === m));
+  document.getElementById('np-paste-wrap').style.display = m === 'paste' ? '' : 'none';
+  document.getElementById('np-file-wrap').style.display = m === 'file' ? '' : 'none';
+}
+
+function _npEscape(s) {
+  return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+// Converts plain text into editor blocks (headings, paragraphs, lists, checklists)
+function _textToBlocksHTML(text) {
+  const handle = '<div class="block-handle">⠿</div>';
+  const lines = text.split(/\r?\n/);
+  const out = [];
+  let buf = [];
+  const flush = () => {
+    if (!buf.length) return;
+    const t = buf.join(' ').trim();
+    if (t) out.push(`<div class="block">${handle}<div class="block-content block-p" contenteditable="true">${_npEscape(t)}</div></div>`);
+    buf = [];
+  };
+  for (const raw of lines) {
+    const line = raw.trim();
+    if (!line) { flush(); continue; }
+    const mdH = line.match(/^(#{1,3})\s+(.*)$/);
+    if (mdH) {
+      flush();
+      const cls = mdH[1].length === 1 ? 'block-h1' : mdH[1].length === 2 ? 'block-h2' : 'block-h3';
+      out.push(`<div class="block">${handle}<div class="block-content ${cls}" contenteditable="true">${_npEscape(mdH[2])}</div></div>`);
+      continue;
+    }
+    if (/^\[[ xX]\]\s+/.test(line)) {
+      flush();
+      const checked = /^\[[xX]\]/.test(line);
+      out.push(`<div class="block">${handle}<div class="block-checklist${checked ? ' checked' : ''}"><input type="checkbox"${checked ? ' checked' : ''} /><span class="check-text" contenteditable="true">${_npEscape(line.replace(/^\[[ xX]\]\s+/, ''))}</span></div></div>`);
+      continue;
+    }
+    if (/^[-*•]\s+/.test(line)) {
+      flush();
+      out.push(`<div class="block">${handle}<div class="block-content block-p" contenteditable="true">• ${_npEscape(line.replace(/^[-*•]\s+/, ''))}</div></div>`);
+      continue;
+    }
+    // Heuristic: short ALL-CAPS line = section heading
+    if (line.length < 80 && line === line.toUpperCase() && /[A-ZÀ-Ú]/.test(line) && !/[.!?]$/.test(line)) {
+      flush();
+      out.push(`<div class="block">${handle}<div class="block-content block-h2" contenteditable="true">${_npEscape(line)}</div></div>`);
+      continue;
+    }
+    buf.push(line);
+  }
+  flush();
+  return out.join('');
+}
+
+// Loads an external script trying multiple CDNs (resilience fallback)
+function _npLoadScript(urls) {
+  return new Promise((resolve, reject) => {
+    const tryNext = (i) => {
+      if (i >= urls.length) return reject(new Error('Não foi possível carregar a biblioteca de leitura do arquivo. Verifique sua conexão.'));
+      const s = document.createElement('script');
+      s.src = urls[i];
+      s.onload = () => resolve();
+      s.onerror = () => { s.remove(); tryNext(i + 1); };
+      document.head.appendChild(s);
+    };
+    tryNext(0);
+  });
+}
+
+async function _npExtractPdf(file) {
+  if (!window.pdfjsLib) {
+    await _npLoadScript([
+      'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js',
+      'https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.min.js'
+    ]);
+  }
+  window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+  const buf = await file.arrayBuffer();
+  const pdf = await window.pdfjsLib.getDocument({ data: buf }).promise;
+  let out = '';
+  for (let i = 1; i <= pdf.numPages; i++) {
+    const page = await pdf.getPage(i);
+    const content = await page.getTextContent();
+    let lastY = null;
+    for (const item of content.items) {
+      const y = item.transform && item.transform[5];
+      if (lastY !== null && Math.abs(y - lastY) > 2) out += '\n';
+      out += item.str + ' ';
+      lastY = y;
+    }
+    out += '\n\n';
+  }
+  return out;
+}
+
+async function _npExtractDocx(file) {
+  if (!window.mammoth) {
+    await _npLoadScript([
+      'https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js',
+      'https://unpkg.com/mammoth@1.6.0/mammoth.browser.min.js'
+    ]);
+  }
+  const buf = await file.arrayBuffer();
+  const result = await window.mammoth.extractRawText({ arrayBuffer: buf });
+  return result.value;
+}
+
+async function _npCreate() {
+  const btn = document.getElementById('np-create-btn');
+  try {
+    btn.disabled = true;
+    btn.textContent = 'Criando...';
+    let text = '';
+    if (__npMode === 'paste') {
+      text = (document.getElementById('np-paste').value || '').trim();
+      if (!text) { alert('Cole o texto do documento.'); return; }
+    } else if (__npMode === 'file') {
+      const f = document.getElementById('np-file').files[0];
+      if (!f) { alert('Selecione um arquivo.'); return; }
+      btn.textContent = 'Lendo arquivo...';
+      const ext = (f.name.split('.').pop() || '').toLowerCase();
+      if (ext === 'pdf') text = await _npExtractPdf(f);
+      else if (ext === 'docx') text = await _npExtractDocx(f);
+      else if (ext === 'txt' || ext === 'md') text = await f.text();
+      else { alert('Formato não suportado. Use PDF, DOCX, TXT ou MD.'); return; }
+      if (!text.trim()) { alert('Não foi possível extrair texto deste arquivo.'); return; }
+    }
+
+    // Page title: input > first line of the text > default
+    let title = (document.getElementById('np-name').value || '').trim();
+    if (!title && text) {
+      const firstLine = text.split(/\r?\n/).map(l => l.trim()).find(l => l);
+      title = (firstLine || 'Nova página').replace(/^#+\s*/, '').slice(0, 120);
+    }
+    if (!title) title = 'Nova página';
+    const icon = (document.getElementById('np-icon').value || '📄').trim() || '📄';
+
+    const id = 'custom-' + Date.now();
+    const list = _loadCustom();
+    list.push({ id, title, icon });
+    _saveCustom(list);
+
+    const handle = '<div class="block-handle">⠿</div>';
+    let html = `<div class="block">${handle}<div class="block-content block-h1" contenteditable="true">${_npEscape(title)}</div></div>`;
+    if (text) {
+      const lines = text.split(/\r?\n/);
+      while (lines.length && !lines[0].trim()) lines.shift();
+      if (lines.length && lines[0].trim().replace(/^#+\s*/, '') === title) lines.shift();
+      html += _textToBlocksHTML(lines.join('\n'));
+    } else {
+      html += `<div class="block">${handle}<div class="block-content block-p" contenteditable="true">Comece a escrever... Pressione <strong>/</strong> para inserir blocos.</div></div>`;
+    }
+
+    const docs = _loadDocs();
+    docs[id] = { title, icon, html };
+    _saveDocs(docs);
+
+    _renderCustomPages();
+    closeNewPageModal();
+    setDoc(id);
+  } catch (e) {
+    console.error(e);
+    alert('Erro ao criar a página: ' + (e && e.message ? e.message : e));
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Criar página';
+  }
 }
 
 function showNewMenu() { createNewPage(); }
@@ -2152,7 +2391,7 @@ document.addEventListener('wheel', function (e) {
   const t = e.target;
   // Let dedicated scrollable UI handle its own wheel (slash menu, search, tables, code)
   if (t && t.closest) {
-    if (t.closest('.slash-menu, .search-results, .modal, #view-mindmap, .mm-canvas')) return;
+    if (t.closest('.slash-menu, .search-results, .modal, #view-mindmap, .mm-canvas, #newpage-overlay')) return;
     // any intermediate element that can itself scroll vertically
     let el = t.nodeType === 1 ? t : t.parentElement;
     while (el && el !== pa && el !== document.body) {
