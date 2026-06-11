@@ -150,7 +150,7 @@ html, body { height: 100%; background: var(--bg0); color: var(--text0); font-siz
 
 /* ── WORKSPACE VIEW ── */
 .workspace { display: flex; flex: 1; overflow: hidden; }
-.page-area { flex: 1; overflow-y: auto; padding: 32px 48px 64px; max-width: 860px; margin: 0 auto; width: 100%; }
+.page-area { flex: 1; overflow-y: auto; padding: 32px max(48px, calc((100% - 764px) / 2)) 64px; width: 100%; }
 .page-area::-webkit-scrollbar { width: 4px; }
 .page-area::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 4px; }
 
@@ -1882,17 +1882,19 @@ Posso te mostrar em 10 minutos como funciona?
     <div class="slash-menu-search">Blocos básicos</div>
   </div>
   <div class="slash-section-title">Texto</div>
-  <div class="slash-item focused" onclick="hideSlash()"><div class="slash-item-icon">📝</div><div class="slash-item-text"><div class="name">Parágrafo</div><div class="desc">Texto simples</div></div></div>
-  <div class="slash-item" onclick="hideSlash()"><div class="slash-item-icon">H1</div><div class="slash-item-text"><div class="name">Título Grande</div><div class="desc">Seção principal</div></div></div>
-  <div class="slash-item" onclick="hideSlash()"><div class="slash-item-icon">H2</div><div class="slash-item-text"><div class="name">Título Médio</div><div class="desc">Subseção</div></div></div>
+  <div class="slash-item focused" onclick="insertBlock('p')"><div class="slash-item-icon">📝</div><div class="slash-item-text"><div class="name">Parágrafo</div><div class="desc">Texto simples</div></div></div>
+  <div class="slash-item" onclick="insertBlock('h1')"><div class="slash-item-icon">H1</div><div class="slash-item-text"><div class="name">Título Grande</div><div class="desc">Seção principal</div></div></div>
+  <div class="slash-item" onclick="insertBlock('h2')"><div class="slash-item-icon">H2</div><div class="slash-item-text"><div class="name">Título Médio</div><div class="desc">Subseção</div></div></div>
+  <div class="slash-item" onclick="insertBlock('divider')"><div class="slash-item-icon">—</div><div class="slash-item-text"><div class="name">Divisor</div><div class="desc">Linha separadora</div></div></div>
   <div class="slash-section-title">IA</div>
-  <div class="slash-item" onclick="hideSlash();toggleAI()"><div class="slash-item-icon" style="background:var(--purple-bg);border-color:#2a1a50;">✦</div><div class="slash-item-text"><div class="name" style="color:var(--purple);">Gerar com IA</div><div class="desc">Criar conteúdo automaticamente</div></div></div>
-  <div class="slash-item" onclick="hideSlash()"><div class="slash-item-icon" style="background:var(--purple-bg);border-color:#2a1a50;">📋</div><div class="slash-item-text"><div class="name" style="color:var(--purple);">Resumir com IA</div><div class="desc">Resumir seção selecionada</div></div></div>
+  <div class="slash-item" onclick="slashAI()"><div class="slash-item-icon" style="background:var(--purple-bg);border-color:#2a1a50;">✦</div><div class="slash-item-text"><div class="name" style="color:var(--purple);">Gerar com IA</div><div class="desc">Criar conteúdo automaticamente</div></div></div>
+  <div class="slash-item" onclick="slashAI()"><div class="slash-item-icon" style="background:var(--purple-bg);border-color:#2a1a50;">📋</div><div class="slash-item-text"><div class="name" style="color:var(--purple);">Resumir com IA</div><div class="desc">Resumir seção selecionada</div></div></div>
   <div class="slash-section-title">Dados</div>
-  <div class="slash-item" onclick="hideSlash()"><div class="slash-item-icon">📋</div><div class="slash-item-text"><div class="name">Tabela</div><div class="desc">Grade de dados</div></div></div>
-  <div class="slash-item" onclick="hideSlash()"><div class="slash-item-icon">✅</div><div class="slash-item-text"><div class="name">Checklist</div><div class="desc">Lista de tarefas</div></div></div>
-  <div class="slash-item" onclick="hideSlash()"><div class="slash-item-icon">📌</div><div class="slash-item-text"><div class="name">Kanban inline</div><div class="desc">Mini-quadro embutido</div></div></div>
-  <div class="slash-item" onclick="hideSlash()"><div class="slash-item-icon">💡</div><div class="slash-item-text"><div class="name">Callout</div><div class="desc">Destaque colorido</div></div></div>
+  <div class="slash-item" onclick="insertBlock('table')"><div class="slash-item-icon">📋</div><div class="slash-item-text"><div class="name">Tabela</div><div class="desc">Grade de dados</div></div></div>
+  <div class="slash-item" onclick="insertBlock('checklist')"><div class="slash-item-icon">✅</div><div class="slash-item-text"><div class="name">Checklist</div><div class="desc">Lista de tarefas</div></div></div>
+  <div class="slash-item" onclick="insertBlock('code')"><div class="slash-item-icon">⌨️</div><div class="slash-item-text"><div class="name">Código</div><div class="desc">Bloco de código</div></div></div>
+  <div class="slash-item" onclick="insertBlock('kanban')"><div class="slash-item-icon">📌</div><div class="slash-item-text"><div class="name">Kanban inline</div><div class="desc">Mini-quadro embutido</div></div></div>
+  <div class="slash-item" onclick="insertBlock('callout')"><div class="slash-item-icon">💡</div><div class="slash-item-text"><div class="name">Callout</div><div class="desc">Destaque colorido</div></div></div>
 </div>
 
 <script>
