@@ -2128,7 +2128,9 @@ function closeSearch(e) {
 }
 function updateSearch(v) { /* live filter would go here */ }
 
-// Slash menu
+// ===== Block editor engine =====
+let __slashEl = null;
+
 document.addEventListener('keydown', e => {
   if (e.key === 'Escape') {
     closeSearch(); hideSlash();
@@ -2138,21 +2140,163 @@ document.addEventListener('keydown', e => {
 
 function hideSlash() { document.getElementById('slash-menu').style.display = 'none'; }
 
-// Show slash menu on / in contenteditable
-document.querySelectorAll('[contenteditable]').forEach(el => {
-  el.addEventListener('keydown', e => {
-    if (e.key === '/') {
-      setTimeout(() => {
-        const rect = el.getBoundingClientRect();
-        const menu = document.getElementById('slash-menu');
-        menu.style.display = 'block';
-        menu.style.top = (rect.bottom + 8) + 'px';
-        menu.style.left = rect.left + 'px';
-      }, 10);
-    } else {
-      hideSlash();
+function _inEditor(el) { return !!(el && el.closest && el.closest('.block-editor')); }
+
+function _placeCaretEnd(el) {
+  if (!el) return;
+  el.focus();
+  try {
+    const r = document.createRange();
+    r.selectNodeContents(el); r.collapse(false);
+    const s = window.getSelection(); s.removeAllRanges(); s.addRange(r);
+  } catch(err) {}
+}
+
+function _stripSlash(el) {
+  if (!el) return;
+  const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+  let last = null, n;
+  while ((n = walker.nextNode())) { if (n.textContent.includes('/')) last = n; }
+  if (last) {
+    const i = last.textContent.lastIndexOf('/');
+    last.textContent = last.textContent.slice(0, i) + last.textContent.slice(i + 1);
+  }
+}
+
+function _blockHTML(type) {
+  const handle = '<div class="block-handle">⠿</div>';
+  switch (type) {
+    case 'h1': return `<div class="block">${handle}<div class="block-content block-h1" contenteditable="true" data-placeholder="Título grande"></div></div>`;
+    case 'h2': return `<div class="block">${handle}<div class="block-content block-h2" contenteditable="true" data-placeholder="Título médio"></div></div>`;
+    case 'divider': return `<div class="block">${handle}<hr class="block-divider" /></div>`;
+    case 'callout': return `<div class="block">${handle}<div class="block-callout"><span class="callout-icon">💡</span><div class="block-content" contenteditable="true" data-placeholder="Escreva o destaque..." style="flex:1;color:var(--text1);"></div></div></div>`;
+    case 'checklist': return `<div class="block">${handle}<div class="block-checklist"><input type="checkbox" /><span class="check-text" contenteditable="true" data-placeholder="Nova tarefa"></span></div></div>`;
+    case 'code': return `<div class="block">${handle}<div class="block-code"><div class="code-lang">código</div><div contenteditable="true" data-placeholder="Cole ou digite o código..." style="outline:none;white-space:pre-wrap;"></div></div></div>`;
+    case 'table': return `<div class="block">${handle}<div class="block-table-wrap"><table class="block-table"><thead><tr><th contenteditable="true">Coluna 1</th><th contenteditable="true">Coluna 2</th><th contenteditable="true">Coluna 3</th></tr></thead><tbody>${'<tr><td contenteditable="true">&nbsp;</td><td contenteditable="true">&nbsp;</td><td contenteditable="true">&nbsp;</td></tr>'.repeat(3)}</tbody></table></div></div>`;
+    case 'kanban': {
+      const col = (name) => `<div style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:8px;"><div contenteditable="true" style="font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.05em;padding:2px 4px;outline:none;">${name}</div><div contenteditable="true" data-placeholder="Novo cartão..." style="background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:6px 8px;font-size:12.5px;color:var(--text1);margin-top:6px;outline:none;min-height:24px;"></div></div>`;
+      return `<div class="block">${handle}<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:4px 0;">${col('A Fazer')}${col('Em Andamento')}${col('Concluído')}</div></div>`;
     }
-  });
+    default: return `<div class="block">${handle}<div class="block-content block-p" contenteditable="true" data-placeholder="Digite o texto ou pressione / para blocos..."></div></div>`;
+  }
+}
+
+function _insertBlockAfter(refCe, type) {
+  const editor = _getEditorEl();
+  if (!editor) return;
+  // climb to the direct child .block of the editor
+  let refBlock = null;
+  if (refCe) {
+    let b = refCe;
+    while (b && b.parentElement && b.parentElement !== editor) b = b.parentElement;
+    if (b && b.parentElement === editor) refBlock = b;
+  }
+  const wrap = document.createElement('div');
+  wrap.innerHTML = _blockHTML(type);
+  const newBlock = wrap.firstElementChild;
+  if (refBlock) refBlock.after(newBlock); else editor.appendChild(newBlock);
+  const focusable = newBlock.querySelector('[contenteditable]');
+  if (focusable) setTimeout(() => _placeCaretEnd(focusable), 0);
+  newBlock.scrollIntoView({ block: 'nearest' });
+  _captureCurrentDoc();
+}
+
+function insertBlock(type) {
+  const el = __slashEl; __slashEl = null;
+  hideSlash();
+  if (el) _stripSlash(el);
+  _insertBlockAfter(el, type);
+}
+
+function slashAI() {
+  const el = __slashEl; __slashEl = null;
+  hideSlash();
+  if (el) _stripSlash(el);
+  _captureCurrentDoc();
+  toggleAI();
+}
+
+// Delegated keyboard handling — works for blocks created dynamically too
+document.addEventListener('keydown', e => {
+  const t = e.target;
+  const ce = t && t.closest ? t.closest('[contenteditable="true"]') : null;
+  if (!ce || !_inEditor(ce)) return;
+
+  if (e.key === '/') {
+    __slashEl = ce;
+    setTimeout(() => {
+      const rect = ce.getBoundingClientRect();
+      const menu = document.getElementById('slash-menu');
+      menu.style.display = 'block';
+      const mh = Math.min(420, window.innerHeight - 24);
+      let top = rect.bottom + 8;
+      if (top + mh > window.innerHeight) top = Math.max(8, window.innerHeight - mh - 8);
+      menu.style.top = top + 'px';
+      menu.style.left = Math.min(rect.left, Math.max(8, window.innerWidth - 256)) + 'px';
+    }, 10);
+    return;
+  }
+
+  if (e.key === 'Enter' && !e.shiftKey && !ce.closest('.block-code') && !ce.closest('td') && !ce.closest('th')) {
+    e.preventDefault();
+    hideSlash(); __slashEl = null;
+    _insertBlockAfter(ce, ce.classList.contains('check-text') ? 'checklist' : 'p');
+    return;
+  }
+
+  if (e.key === 'Backspace') {
+    const txt = (ce.textContent || '').trim();
+    if (txt === '' && !ce.closest('td') && !ce.closest('th')) {
+      const editor = _getEditorEl();
+      let b = ce;
+      while (b && b.parentElement && b.parentElement !== editor) b = b.parentElement;
+      if (b && b.parentElement === editor && b.previousElementSibling) {
+        e.preventDefault();
+        const prev = b.previousElementSibling;
+        b.remove();
+        const prevCes = prev.querySelectorAll('[contenteditable]');
+        _placeCaretEnd(prevCes[prevCes.length - 1]);
+        _captureCurrentDoc();
+        hideSlash();
+        return;
+      }
+    }
+  }
+
+  if (e.key !== 'Escape' && e.key !== '/') hideSlash();
+});
+
+// Hide slash menu when clicking outside of it
+document.addEventListener('click', e => {
+  const menu = document.getElementById('slash-menu');
+  if (menu && menu.style.display !== 'none' && !menu.contains(e.target)) hideSlash();
+});
+
+// Checklist toggling + persistence (delegated, works for new blocks)
+document.addEventListener('change', e => {
+  const cb = e.target;
+  if (cb && cb.matches && cb.matches('.block-checklist input[type=checkbox]') && _inEditor(cb)) {
+    cb.closest('.block-checklist').classList.toggle('checked', cb.checked);
+    _captureCurrentDoc();
+  }
+});
+
+// "+ Adicionar bloco" button below the editor
+window.addEventListener('DOMContentLoaded', () => {
+  const editor = _getEditorEl();
+  if (!editor || document.getElementById('add-block-btn')) return;
+  const btn = document.createElement('button');
+  btn.id = 'add-block-btn';
+  btn.className = 'btn btn-sm btn-ghost';
+  btn.textContent = '+ Adicionar bloco';
+  btn.style.cssText = 'margin-top:14px;opacity:.65;font-size:12px;';
+  btn.onclick = () => {
+    const blocks = editor.querySelectorAll(':scope > .block');
+    const lastBlock = blocks.length ? blocks[blocks.length - 1] : null;
+    const lastCe = lastBlock ? lastBlock.querySelector('[contenteditable]') : null;
+    _insertBlockAfter(lastCe, 'p');
+  };
+  editor.after(btn);
 });
 
 // Toggle blocks
