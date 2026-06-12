@@ -72,7 +72,7 @@ const navigation: NavEntry[] = [
       { name: "Rotina Inteligente", href: "/rotina", icon: Brain, menuKey: "prospeccao", clinicaLabel: "Rotina Clínica" },
       // "Gestão de Processos" é exclusivamente comercial — oculto para clínicas
       // Módulo "Máquina de Vendas" removido — substituído pelo Call Center
-      { name: "Maturidade Comercial", href: "/maturidade", icon: Activity, menuKey: "maturidade", hideForClinica: true } as any,
+      { name: "Diagnóstico Comercial", href: "/maturidade", icon: Activity, menuKey: "maturidade", hideForClinica: true } as any,
       { name: "Gestão de Processos", href: "/processos", icon: Target, menuKey: "processos", showAIBadge: true, hideForClinica: true } as any,
       { name: "Call Center", href: "/discador", icon: PhoneCall, menuKey: "discador" },
       { name: "Business Intelligence (BI)", href: "/financeiro", icon: DollarSign, menuKey: "financeiro", clinicaLabel: "BI Clínico", clinicaHref: "/bi-clinico", clinicaIcon: Stethoscope },
