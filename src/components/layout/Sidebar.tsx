@@ -65,7 +65,7 @@ const navigation: NavEntry[] = [
   {
     type: "group",
     key: "grow",
-    label: "Gestão de Processos",
+    label: "BPO Comercial",
     icon: Rocket,
     items: [
       { name: "Planejamento de Faturamento", href: "/metas-vendas", icon: DollarSign, menuKey: "prospeccao", clinicaLabel: "Metas da Clínica" },
