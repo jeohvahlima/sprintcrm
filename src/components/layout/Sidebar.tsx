@@ -268,8 +268,8 @@ export function Sidebar({ collapsed = false, onNavigate }: SidebarProps) {
                   )}
                 </div>
                 {!effectiveCollapsed && (
-                  <span className="flex-1 flex items-center justify-between">
-                    {item.name}
+                  <span className={`flex-1 flex ${item.name === "Gestão de Processos" ? "flex-col items-start gap-0" : "items-center justify-between"}`}>
+                    <span className="leading-tight">{item.name}</span>
                     {isLocked && <Lock className="h-3 w-3 text-muted-foreground" />}
                     {item.showConversasBadge && conversasUnread > 0 && !isLocked && (
                       <Badge className="ml-2 text-xs bg-green-500 hover:bg-green-600 text-white">
@@ -287,8 +287,8 @@ export function Sidebar({ collapsed = false, onNavigate }: SidebarProps) {
                       </Badge>
                     )}
                     {item.showAIBadge && aiInsightsCount > 0 && !isLocked && (
-                      <Badge className="ml-2 text-xs bg-orange-500 hover:bg-orange-600 text-white gap-1">
-                        <Brain className="h-3 w-3" />
+                      <Badge className={`${item.name === "Gestão de Processos" ? "mt-1" : "ml-2"} text-[10px] bg-orange-500 hover:bg-orange-600 text-white gap-1 px-1.5 h-4`}>
+                        <Brain className="h-2.5 w-2.5" />
                         {aiInsightsCount}
                       </Badge>
                     )}
