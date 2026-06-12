@@ -4,6 +4,7 @@ import { useToast } from '@/hooks/use-toast';
 
 export type TrainingScope = 'global' | 'company';
 export type VideoType = 'youtube' | 'upload';
+export type TrainingTrack = 'onboarding' | 'sdr' | 'closer' | 'gestao' | 'plataforma';
 
 export interface TrainingModule {
   id: string;
@@ -14,6 +15,7 @@ export interface TrainingModule {
   order_index: number;
   is_active: boolean;
   scope: TrainingScope;
+  track: TrainingTrack;
   created_by: string | null;
   created_at: string;
   updated_at: string;
