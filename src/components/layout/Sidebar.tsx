@@ -68,7 +68,7 @@ const navigation: NavEntry[] = [
     label: "Gestão de Processos",
     icon: Rocket,
     items: [
-      { name: "Metas & Vendas", href: "/metas-vendas", icon: DollarSign, menuKey: "prospeccao", clinicaLabel: "Metas da Clínica" },
+      { name: "Planejamento de Faturamento", href: "/metas-vendas", icon: DollarSign, menuKey: "prospeccao", clinicaLabel: "Metas da Clínica" },
       { name: "Rotina Inteligente", href: "/rotina", icon: Brain, menuKey: "prospeccao", clinicaLabel: "Rotina Clínica" },
       // "Gestão de Processos" é exclusivamente comercial — oculto para clínicas
       // Módulo "Máquina de Vendas" removido — substituído pelo Call Center
