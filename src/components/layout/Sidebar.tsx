@@ -76,7 +76,7 @@ const navigation: NavEntry[] = [
       { name: "Gestão de Processos", href: "/processos", icon: Target, menuKey: "processos", showAIBadge: true, hideForClinica: true } as any,
       { name: "Call Center", href: "/discador", icon: PhoneCall, menuKey: "discador" },
       { name: "Business Intelligence (BI)", href: "/financeiro", icon: DollarSign, menuKey: "financeiro", clinicaLabel: "BI Clínico", clinicaHref: "/bi-clinico", clinicaIcon: Stethoscope },
-      { name: "Treinamento Comerciais", href: "/treinamento", icon: GraduationCap, menuKey: "treinamento", clinicaLabel: "Treinamentos" },
+      { name: "Capacitação Comercial", href: "/treinamento", icon: GraduationCap, menuKey: "treinamento", clinicaLabel: "Treinamentos" },
     ],
   },
   { name: "Configurações", href: "/configuracoes", icon: Settings, menuKey: "configuracoes" },
