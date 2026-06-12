@@ -136,7 +136,6 @@ export default function Leads() {
           notes: lead.notes,
           status: "novo",
           company_id: userRole.company_id,
-          created_by: user.id,
         } as any);
         if (error) throw error;
 
