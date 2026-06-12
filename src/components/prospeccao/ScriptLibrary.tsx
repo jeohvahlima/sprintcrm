@@ -12,9 +12,9 @@ interface Props {
 /**
  * Biblioteca de Scripts da Prospecção.
  *
- * Vinculada ao módulo "Processos Comerciais" — a fonte única dos scripts
- * de vendas e atendimento da empresa (tabela `ia_scripts`). Assim, qualquer
- * script criado/editado em Processos Comerciais aparece automaticamente aqui
+  * Vinculada ao módulo "BPO Comercial" — a fonte única dos scripts
+  * de vendas e atendimento da empresa (tabela `ia_scripts`). Assim, qualquer
+  * script criado/editado em BPO Comercial aparece automaticamente aqui
  * e vice-versa, mantendo a cultura comercial sincronizada.
  */
 export function ScriptLibrary({ open, onOpenChange }: Props) {
@@ -31,7 +31,7 @@ export function ScriptLibrary({ open, onOpenChange }: Props) {
           <DialogDescription className="flex items-center justify-between gap-2 flex-wrap">
             <span className="flex items-center gap-1.5 text-xs">
               <Target className="h-3.5 w-3.5" />
-              Sincronizado com o módulo <strong>Processos Comerciais</strong>
+              Sincronizado com o módulo <strong>BPO Comercial</strong>
             </span>
             <Button
               variant="outline"
@@ -42,7 +42,7 @@ export function ScriptLibrary({ open, onOpenChange }: Props) {
               }}
             >
               <ExternalLink className="h-3.5 w-3.5 mr-1.5" />
-              Abrir Processos Comerciais
+              Abrir BPO Comercial
             </Button>
           </DialogDescription>
         </DialogHeader>

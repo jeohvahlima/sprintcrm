@@ -394,7 +394,7 @@ export function EditarSubcontaDialog({ company, open, onOpenChange, onSuccess }:
                 />
                 <label htmlFor="edit_allow_processos" className="text-sm flex items-center gap-1.5 cursor-pointer">
                   <Target className="h-3.5 w-3.5 text-muted-foreground" />
-                  Processos Comerciais
+                  BPO Comercial
                 </label>
               </div>
               <div className="flex items-center space-x-2">

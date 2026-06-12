@@ -52,7 +52,7 @@ const moduleLabels: Record<string, string> = {
   chat_equipe: "Chat da Equipe",
   reunioes: "Reuniões",
   discador: "Call Center",
-  processos: "Processos Comerciais",
+  processos: "BPO Comercial",
 };
 
 // Mapeamento de ações para labels amigáveis

@@ -81,7 +81,7 @@ export function ScriptViewerDialog({ open, onOpenChange, contactName }: Props) {
           <DialogDescription>
             {selectedId
               ? (contactName ? `Consulta rápida para ${contactName}` : "Consulta rápida")
-              : "Selecione um script criado em Processos Comerciais para usar durante a ligação."}
+              : "Selecione um script criado em BPO Comercial para usar durante a ligação."}
           </DialogDescription>
         </DialogHeader>
 
@@ -103,7 +103,7 @@ export function ScriptViewerDialog({ open, onOpenChange, contactName }: Props) {
                 </div>
               ) : filtered.length === 0 ? (
                 <p className="text-sm text-muted-foreground text-center py-10">
-                  Nenhuma página encontrada. Crie scripts em Processos Comerciais → Workspace.
+                  Nenhuma página encontrada. Crie scripts em BPO Comercial → Workspace.
                 </p>
               ) : (
                 <div className="space-y-1">
