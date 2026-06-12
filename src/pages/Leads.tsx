@@ -1,10 +1,13 @@
 // 🔒 LOCKED: Render the official GROW OS Contatos mockup inside the app layout.
 // Visual changes must be made in public/contatos.html — do NOT replace with old React components.
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { AniversariantesManager } from "@/components/leads/AniversariantesManager";
 
 export default function Leads() {
   const iframeRef = useRef<HTMLIFrameElement>(null);
+  const [anivOpen, setAnivOpen] = useState(false);
 
   useEffect(() => {
     let mounted = true;
