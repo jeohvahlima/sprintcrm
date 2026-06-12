@@ -65,7 +65,7 @@ const navigation: NavEntry[] = [
   {
     type: "group",
     key: "grow",
-    label: "Estruturação Comercial",
+    label: "BPO Comercial",
     icon: Rocket,
     items: [
       { name: "Metas & Vendas", href: "/metas-vendas", icon: DollarSign, menuKey: "prospeccao", clinicaLabel: "Metas da Clínica" },
