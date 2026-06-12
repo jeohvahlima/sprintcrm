@@ -58,7 +58,7 @@ export function ProductLadderBuilder() {
                 Estruture sua oferta em 3 níveis (Front / Back / High End) — base da metodologia GROW Sales Intelligence.
               </CardDescription>
             </div>
-            <Badge variant="outline" className="text-xs">Estruturação Comercial</Badge>
+            <Badge variant="outline" className="text-xs">BPO Comercial</Badge>
           </div>
         </CardHeader>
       </Card>
