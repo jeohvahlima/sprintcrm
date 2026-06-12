@@ -637,8 +637,12 @@
 
     function renderLeadTags(lead) {
       if (!leadTagsSection) return;
+      if (!lead) {
+        leadTagsSection.innerHTML = '';
+        return;
+      }
       const tags = normalizeTags(lead.tags);
-      if (!lead || tags.length === 0) {
+      if (tags.length === 0) {
         leadTagsSection.innerHTML = '<p class="lead-tags-title">Nenhuma tag registrada para este lead.</p>';
         return;
       }
