@@ -4,6 +4,7 @@ import { useToast } from '@/hooks/use-toast';
 
 export type TrainingScope = 'global' | 'company';
 export type VideoType = 'youtube' | 'upload';
+export type TrainingTrack = 'onboarding' | 'sdr' | 'closer' | 'gestao' | 'plataforma';
 
 export interface TrainingModule {
   id: string;
@@ -14,6 +15,7 @@ export interface TrainingModule {
   order_index: number;
   is_active: boolean;
   scope: TrainingScope;
+  track: TrainingTrack;
   created_by: string | null;
   created_at: string;
   updated_at: string;
@@ -126,7 +128,7 @@ export function useTraining() {
       }
       
       // Combine data
-      const modulesWithLessons = (modulesData || []).map((module: TrainingModule) => {
+      const modulesWithLessons: TrainingModule[] = (modulesData || []).map((module: any) => {
         const moduleLessons = (lessonsData || []).filter(
           (lesson: TrainingLesson) => lesson.module_id === module.id
         ).map((lesson: TrainingLesson) => ({
@@ -138,10 +140,11 @@ export function useTraining() {
         
         return {
           ...module,
+          track: (module.track || 'plataforma') as TrainingTrack,
           lessons: moduleLessons,
           lessonsCount: moduleLessons.length,
           completedCount: moduleLessons.filter((l: TrainingLesson) => l.completed).length
-        };
+        } as TrainingModule;
       });
       
       setModules(modulesWithLessons);
@@ -157,7 +160,7 @@ export function useTraining() {
     }
   };
 
-  const createModule = async (data: { title: string; description?: string; icon?: string; scope?: TrainingScope }) => {
+  const createModule = async (data: { title: string; description?: string; icon?: string; scope?: TrainingScope; track?: TrainingTrack }) => {
     try {
       if (!companyId) throw new Error('Company ID not found');
       
@@ -176,6 +179,7 @@ export function useTraining() {
           icon: data.icon || 'book',
           order_index: maxOrder,
           scope: data.scope || 'company',
+          track: data.track || 'plataforma',
           created_by: user?.id
         } as any);
       
@@ -189,7 +193,7 @@ export function useTraining() {
     }
   };
 
-  const updateModule = async (id: string, data: { title?: string; description?: string; icon?: string }) => {
+  const updateModule = async (id: string, data: { title?: string; description?: string; icon?: string; track?: TrainingTrack }) => {
     try {
       const { error } = await supabase
         .from('training_modules')

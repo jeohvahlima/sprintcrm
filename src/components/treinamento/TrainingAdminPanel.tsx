@@ -11,16 +11,24 @@ import {
   Book, GripVertical, Youtube, Globe, Building2
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { TrainingModule, TrainingLesson, TrainingScope, VideoType } from "@/hooks/useTraining";
+import { TrainingModule, TrainingLesson, TrainingScope, TrainingTrack, VideoType } from "@/hooks/useTraining";
 import { CreateModuleDialog } from "./CreateModuleDialog";
 import { CreateLessonDialog } from "./CreateLessonDialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 
+const TRACK_LABEL: Record<TrainingTrack, string> = {
+  onboarding: '🚀 Onboarding',
+  sdr: '📞 SDR',
+  closer: '🎯 Closer',
+  gestao: '👔 Gestão',
+  plataforma: '⚙️ Plataforma',
+};
+
 interface TrainingAdminPanelProps {
   modules: TrainingModule[];
   canCreateGlobal?: boolean;
-  onCreateModule: (data: { title: string; description?: string; icon?: string; scope?: TrainingScope }) => Promise<void>;
-  onUpdateModule: (id: string, data: { title?: string; description?: string; icon?: string }) => Promise<void>;
+  onCreateModule: (data: { title: string; description?: string; icon?: string; scope?: TrainingScope; track?: TrainingTrack }) => Promise<void>;
+  onUpdateModule: (id: string, data: { title?: string; description?: string; icon?: string; track?: TrainingTrack }) => Promise<void>;
   onDeleteModule: (id: string) => Promise<void>;
   onCreateLesson: (moduleId: string, data: { title: string; description?: string; youtube_url?: string; video_url?: string; video_type?: VideoType; duration_minutes?: number }) => Promise<void>;
   onUpdateLesson: (id: string, data: { title?: string; description?: string; youtube_url?: string; duration_minutes?: number }) => Promise<void>;
@@ -124,6 +132,9 @@ export function TrainingAdminPanel({
                       )}
                       <CardTitle className="text-base flex-1 flex items-center gap-2 flex-wrap">
                         <span>{module.title}</span>
+                        <Badge variant="default" className="bg-primary/15 text-primary border-primary/30">
+                          {TRACK_LABEL[module.track] || TRACK_LABEL.plataforma}
+                        </Badge>
                         {module.scope === 'global' ? (
                           <Badge variant="secondary" className="gap-1"><Globe className="h-3 w-3" />Global</Badge>
                         ) : (
