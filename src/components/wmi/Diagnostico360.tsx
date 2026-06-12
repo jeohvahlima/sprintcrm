@@ -1028,7 +1028,7 @@ function ResultadoDiagnostico({
 // ============================================================
 const MODULOS_LINK: Record<string, { label: string; route: string }> = {
   prospeccao: { label: "Ir para Prospecção", route: "/prospeccao" },
-  processos:  { label: "Ir para Processos Comerciais", route: "/processos" },
+  processos:  { label: "Ir para BPO Comercial", route: "/processos" },
   gestao:     { label: "Ir para Analytics", route: "/analytics" },
   automacao:  { label: "Ir para IA & Automações", route: "/ia" },
   pessoas:    { label: "Ir para Gamificação", route: "/configuracoes/gamificacao" },
