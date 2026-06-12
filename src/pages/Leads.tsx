@@ -1,10 +1,13 @@
 // 🔒 LOCKED: Render the official GROW OS Contatos mockup inside the app layout.
 // Visual changes must be made in public/contatos.html — do NOT replace with old React components.
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { AniversariantesManager } from "@/components/leads/AniversariantesManager";
 
 export default function Leads() {
   const iframeRef = useRef<HTMLIFrameElement>(null);
+  const [anivOpen, setAnivOpen] = useState(false);
 
   useEffect(() => {
     let mounted = true;
@@ -160,6 +163,9 @@ export default function Leads() {
       if (ev.data?.type === "contatos-create-lead") {
         createLead(ev.data.lead);
       }
+      if (ev.data?.type === "contatos-open-aniversariantes") {
+        setAnivOpen(true);
+      }
     };
     window.addEventListener("message", onMessage);
 
@@ -202,6 +208,14 @@ export default function Leads() {
         title="Contatos do CRM"
         className="w-full h-full border-0 block"
       />
+      <Dialog open={anivOpen} onOpenChange={setAnivOpen}>
+        <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Aniversariantes</DialogTitle>
+          </DialogHeader>
+          <AniversariantesManager />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
