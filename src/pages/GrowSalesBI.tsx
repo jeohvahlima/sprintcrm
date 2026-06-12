@@ -71,7 +71,7 @@ export default function GrowSalesBI() {
       alert: summary.concentracaoTop3 > 65 ? "Alta dependência em 3 canais — diversifique para reduzir risco." : null,
     },
     {
-      name: "Processos Comerciais",
+      name: "BPO Comercial",
       icon: "⚙️",
       score: Math.min(100, Math.round(summary.winRate * 1.5)),
       color: "#6366f1",
