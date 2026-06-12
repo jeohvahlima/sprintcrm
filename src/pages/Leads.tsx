@@ -163,6 +163,9 @@ export default function Leads() {
       if (ev.data?.type === "contatos-create-lead") {
         createLead(ev.data.lead);
       }
+      if (ev.data?.type === "contatos-open-aniversariantes") {
+        setAnivOpen(true);
+      }
     };
     window.addEventListener("message", onMessage);
 
