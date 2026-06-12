@@ -208,6 +208,14 @@ export default function Leads() {
         title="Contatos do CRM"
         className="w-full h-full border-0 block"
       />
+      <Dialog open={anivOpen} onOpenChange={setAnivOpen}>
+        <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Aniversariantes</DialogTitle>
+          </DialogHeader>
+          <AniversariantesManager />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
