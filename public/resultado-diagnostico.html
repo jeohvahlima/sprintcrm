@@ -1,0 +1,962 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Resultado do Diagnóstico — GROW Sales Group</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #14161b;
+    --bg-soft: #1c1f26;
+    --card: #21242c;
+    --line: #2e323d;
+    --text: #eef0f3;
+    --text-dim: #9aa0ad;
+    --accent: #e8a33d;
+    --accent-soft: rgba(232,163,61,.12);
+    --danger: #e8543d;
+    --danger-soft: rgba(232,84,61,.12);
+    --good: #5fbf8f;
+    --good-soft: rgba(95,191,143,.12);
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  html,body{height:100%;}
+  body{
+    font-family:'Inter',sans-serif;
+    background:var(--bg);
+    color:var(--text);
+    -webkit-font-smoothing:antialiased;
+    min-height:100vh;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+  }
+  .app{
+    width:100%;
+    max-width:680px;
+    padding:32px 24px 60px;
+  }
+
+  /* ===== HEADER ===== */
+  .header{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:28px;
+  }
+  .brand{
+    font-family:'Archivo',sans-serif;
+    font-weight:800;
+    font-size:14px;
+    letter-spacing:.14em;
+    color:var(--text-dim);
+    text-transform:uppercase;
+  }
+  .brand b{color:var(--accent);}
+  .header-actions{
+    display:flex; gap:8px;
+  }
+  .icon-btn{
+    width:38px; height:38px;
+    border-radius:10px;
+    border:1px solid var(--line);
+    background:var(--card);
+    color:var(--text-dim);
+    display:flex; align-items:center; justify-content:center;
+    cursor:pointer;
+    transition:all .15s;
+  }
+  .icon-btn:hover{color:var(--text); border-color:var(--text-dim);}
+
+  /* ===== CLIENT INFO BAR ===== */
+  .client-bar{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:16px 18px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:28px;
+    flex-wrap:wrap;
+    gap:10px;
+  }
+  .client-info{display:flex; flex-direction:column; gap:3px;}
+  .client-name{font-weight:700; font-size:15px;}
+  .client-meta{font-size:12.5px; color:var(--text-dim);}
+  .client-date{
+    font-size:12px;
+    color:var(--text-dim);
+    text-align:right;
+  }
+  .client-date b{color:var(--accent); display:block; font-size:13px; margin-bottom:2px;}
+
+  /* ===== RESULT HEADER ===== */
+  .result-header{
+    text-align:center;
+    margin-bottom:32px;
+    padding-bottom:32px;
+    border-bottom:1px solid var(--line);
+  }
+  .result-eyebrow{
+    font-size:12px;
+    font-weight:700;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    color:var(--text-dim);
+    margin-bottom:18px;
+  }
+  .score-ring-wrap{
+    position:relative;
+    width:200px; height:200px;
+    margin:0 auto 18px;
+  }
+  .score-ring{transform:rotate(-90deg);}
+  .score-ring-bg{fill:none; stroke:var(--bg-soft); stroke-width:12;}
+  .score-ring-fill{
+    fill:none; stroke:var(--accent); stroke-width:12;
+    stroke-linecap:round;
+    stroke-dasharray:565;
+    stroke-dashoffset:130;
+    transition:stroke-dashoffset 1.4s cubic-bezier(.16,1,.3,1) .3s;
+  }
+  .score-center{
+    position:absolute; inset:0;
+    display:flex; flex-direction:column;
+    align-items:center; justify-content:center;
+  }
+  .score-num{
+    font-family:'Archivo',sans-serif;
+    font-weight:900;
+    font-size:56px;
+    line-height:1;
+  }
+  .score-max{font-size:14px; color:var(--text-dim); margin-top:2px;}
+  .result-class{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    font-family:'Archivo',sans-serif;
+    font-weight:800;
+    font-size:15px;
+    padding:10px 20px;
+    border-radius:99px;
+    margin-top:10px;
+  }
+  .class-A{background:var(--good-soft); color:var(--good);}
+  .class-B{background:var(--accent-soft); color:var(--accent);}
+  .class-C{background:rgba(232,163,61,.15); color:#f0b864;}
+  .class-D{background:var(--danger-soft); color:var(--danger);}
+
+  /* ===== LEAK CARD ===== */
+  .leak-card{
+    background:linear-gradient(155deg, rgba(232,84,61,.14), rgba(232,84,61,.02));
+    border:1px solid rgba(232,84,61,.35);
+    border-radius:20px;
+    padding:32px 28px;
+    text-align:center;
+    margin-bottom:28px;
+  }
+  .leak-label{
+    font-size:13px;
+    font-weight:700;
+    text-transform:uppercase;
+    letter-spacing:.1em;
+    color:#f0a394;
+    margin-bottom:10px;
+  }
+  .leak-num{
+    font-family:'Archivo',sans-serif;
+    font-weight:900;
+    font-size:clamp(34px,8vw,52px);
+    color:var(--danger);
+    line-height:1.1;
+    letter-spacing:-.01em;
+  }
+  .leak-range{
+    font-size:13px;
+    color:var(--text-dim);
+    margin-top:6px;
+  }
+  .leak-sub{
+    font-size:14px;
+    color:var(--text-dim);
+    margin-top:14px;
+    line-height:1.6;
+    max-width:46ch;
+    margin-left:auto;
+    margin-right:auto;
+  }
+  .leak-anual{
+    margin-top:18px;
+    padding-top:18px;
+    border-top:1px solid rgba(232,84,61,.25);
+    font-size:13px;
+    color:var(--text-dim);
+  }
+  .leak-anual b{
+    color:var(--text);
+    font-family:'Archivo',sans-serif;
+    font-size:18px;
+    font-weight:800;
+    display:block;
+    margin-top:4px;
+  }
+
+  /* ===== SECTION TITLES ===== */
+  .section-title{
+    font-family:'Archivo',sans-serif;
+    font-weight:800;
+    font-size:18px;
+    margin-bottom:14px;
+    display:flex;
+    align-items:center;
+    gap:10px;
+  }
+  .section-title .num{
+    width:26px; height:26px;
+    border-radius:7px;
+    background:var(--accent-soft);
+    color:var(--accent);
+    display:flex; align-items:center; justify-content:center;
+    font-size:13px; font-weight:800;
+    flex-shrink:0;
+  }
+  .section-sub{
+    font-size:13.5px;
+    color:var(--text-dim);
+    margin:-6px 0 16px 36px;
+    line-height:1.5;
+  }
+  section{margin-bottom:32px;}
+
+  /* ===== PILLARS ===== */
+  .pillars-list{
+    display:flex;
+    flex-direction:column;
+    gap:14px;
+  }
+  .pillar-row{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:16px 18px;
+  }
+  .pillar-row-top{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:10px;
+  }
+  .pillar-name{font-weight:700; font-size:14.5px;}
+  .pillar-score{
+    font-family:'Archivo',sans-serif;
+    font-weight:800;
+    font-size:14px;
+    color:var(--text-dim);
+    font-variant-numeric: tabular-nums;
+  }
+  .pillar-bar-track{
+    height:8px;
+    background:var(--bg-soft);
+    border-radius:99px;
+    overflow:hidden;
+  }
+  .pillar-bar-fill{
+    height:100%;
+    border-radius:99px;
+    transition:width 1.2s cubic-bezier(.16,1,.3,1);
+  }
+  .pillar-footer{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-top:10px;
+    gap:10px;
+  }
+  .pillar-tag-sev{
+    display:inline-block;
+    font-size:11px;
+    font-weight:700;
+    text-transform:uppercase;
+    letter-spacing:.06em;
+    padding:3px 9px;
+    border-radius:6px;
+  }
+  .sev-alta{background:var(--danger-soft); color:var(--danger);}
+  .sev-media{background:var(--accent-soft); color:var(--accent);}
+  .sev-ok{background:var(--good-soft); color:var(--good);}
+  .pillar-note{
+    font-size:12.5px;
+    color:var(--text-dim);
+    text-align:right;
+  }
+
+  /* ===== DOR CARD ===== */
+  .dor-card{
+    background:var(--card);
+    border-left:3px solid var(--accent);
+    border-radius:0 14px 14px 0;
+    padding:18px 20px;
+    font-size:14.5px;
+    line-height:1.6;
+    color:var(--text);
+  }
+  .dor-card .label{
+    color:var(--text-dim);
+    font-size:12.5px;
+    display:block;
+    margin-bottom:8px;
+    text-transform:uppercase;
+    letter-spacing:.08em;
+    font-weight:700;
+  }
+
+  /* ===== PLAN ===== */
+  .plan-list{
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+  }
+  .plan-item{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:18px;
+    transition:border-color .15s;
+  }
+  .plan-item:hover{border-color:rgba(232,163,61,.4);}
+  .plan-head{
+    display:flex;
+    align-items:flex-start;
+    gap:14px;
+    margin-bottom:10px;
+  }
+  .plan-num{
+    flex:0 0 30px; height:30px;
+    border-radius:8px;
+    background:var(--accent);
+    color:#1c1408;
+    font-family:'Archivo',sans-serif;
+    font-weight:800;
+    font-size:14px;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .plan-head-text{flex:1;}
+  .plan-title{
+    font-weight:700;
+    font-size:15px;
+    margin-bottom:3px;
+  }
+  .plan-pillar-tag{
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+    font-size:11.5px;
+    color:var(--text-dim);
+    text-transform:uppercase;
+    letter-spacing:.06em;
+    font-weight:700;
+  }
+  .plan-pillar-tag .dot{
+    width:6px; height:6px; border-radius:50%;
+  }
+  .plan-desc{
+    font-size:14px;
+    color:var(--text-dim);
+    line-height:1.6;
+    margin-left:44px;
+    margin-bottom:12px;
+  }
+  .plan-impact{
+    margin-left:44px;
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    background:var(--good-soft);
+    color:var(--good);
+    font-size:12.5px;
+    font-weight:700;
+    padding:6px 12px;
+    border-radius:8px;
+  }
+  .plan-product{
+    margin-left:44px;
+    margin-top:8px;
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    background:var(--accent-soft);
+    color:var(--accent);
+    font-size:12.5px;
+    font-weight:700;
+    padding:6px 12px;
+    border-radius:8px;
+  }
+
+  /* ===== RECOMMENDED PRODUCT ===== */
+  .product-card{
+    background:linear-gradient(155deg, var(--accent-soft), transparent);
+    border:1px solid rgba(232,163,61,.35);
+    border-radius:18px;
+    padding:24px;
+  }
+  .product-eyebrow{
+    font-size:12px;
+    font-weight:700;
+    text-transform:uppercase;
+    letter-spacing:.1em;
+    color:var(--accent);
+    margin-bottom:10px;
+  }
+  .product-name{
+    font-family:'Archivo',sans-serif;
+    font-weight:800;
+    font-size:22px;
+    margin-bottom:8px;
+  }
+  .product-desc{
+    font-size:14px;
+    color:var(--text-dim);
+    line-height:1.6;
+    margin-bottom:16px;
+  }
+  .product-includes{
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+    margin-bottom:18px;
+  }
+  .product-includes div{
+    display:flex;
+    align-items:flex-start;
+    gap:10px;
+    font-size:13.5px;
+    color:var(--text);
+  }
+  .product-includes div::before{
+    content:'✓';
+    color:var(--good);
+    font-weight:800;
+    flex-shrink:0;
+  }
+  .product-price{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding-top:16px;
+    border-top:1px solid rgba(232,163,61,.25);
+  }
+  .product-price-num{
+    font-family:'Archivo',sans-serif;
+    font-weight:800;
+    font-size:20px;
+    color:var(--accent);
+  }
+  .product-price-label{
+    font-size:12px;
+    color:var(--text-dim);
+  }
+
+  /* ===== TIMELINE 90 DIAS ===== */
+  .timeline{
+    display:flex;
+    flex-direction:column;
+    gap:0;
+  }
+  .timeline-item{
+    display:flex;
+    gap:16px;
+    position:relative;
+    padding-bottom:24px;
+  }
+  .timeline-item:last-child{padding-bottom:0;}
+  .timeline-marker{
+    flex:0 0 36px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+  }
+  .timeline-dot{
+    width:36px; height:36px;
+    border-radius:10px;
+    background:var(--card);
+    border:1px solid var(--line);
+    display:flex; align-items:center; justify-content:center;
+    font-family:'Archivo',sans-serif;
+    font-weight:800;
+    font-size:11px;
+    color:var(--accent);
+    flex-shrink:0;
+  }
+  .timeline-line{
+    width:1px;
+    flex:1;
+    background:var(--line);
+    margin-top:6px;
+  }
+  .timeline-content{flex:1; padding-top:4px;}
+  .timeline-period{
+    font-size:11px;
+    font-weight:700;
+    text-transform:uppercase;
+    letter-spacing:.08em;
+    color:var(--text-dim);
+    margin-bottom:4px;
+  }
+  .timeline-title{
+    font-weight:700;
+    font-size:15px;
+    margin-bottom:6px;
+  }
+  .timeline-desc{
+    font-size:13.5px;
+    color:var(--text-dim);
+    line-height:1.6;
+  }
+
+  /* ===== CTA ===== */
+  .cta-card{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:20px;
+    padding:32px 28px;
+    text-align:center;
+  }
+  .cta-card h3{
+    font-family:'Archivo',sans-serif;
+    font-size:22px;
+    font-weight:800;
+    margin-bottom:10px;
+  }
+  .cta-card p{
+    font-size:14.5px;
+    color:var(--text-dim);
+    line-height:1.6;
+    margin-bottom:22px;
+    max-width:46ch;
+    margin-left:auto;
+    margin-right:auto;
+  }
+  .btn{
+    font-family:'Inter',sans-serif;
+    font-weight:700;
+    font-size:15px;
+    border:none;
+    border-radius:11px;
+    padding:16px 32px;
+    cursor:pointer;
+    transition:all .18s;
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+  }
+  .btn-primary{
+    background:var(--accent);
+    color:#1c1408;
+  }
+  .btn-primary:hover{background:#f4c373;}
+  .btn-secondary{
+    background:transparent;
+    color:var(--text);
+    border:1px solid var(--line);
+    margin-top:10px;
+  }
+  .btn-secondary:hover{border-color:var(--text-dim);}
+
+  /* ===== FOOTER ===== */
+  .footer-note{
+    text-align:center;
+    font-size:12px;
+    color:var(--text-dim);
+    margin-top:40px;
+    line-height:1.6;
+  }
+  .footer-note b{color:var(--accent);}
+
+  /* ===== PRINT ===== */
+  @media print{
+    body{background:#fff; color:#1a1a1a;}
+    .header-actions, .cta-card .btn-secondary{display:none;}
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- ===== HEADER ===== -->
+  <div class="header">
+    <div class="brand">GROW <b>Diagnóstico</b></div>
+    <div class="header-actions">
+      <button class="icon-btn" onclick="window.print()" title="Imprimir / Salvar PDF">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- ===== CLIENT INFO ===== -->
+  <div class="client-bar">
+    <div class="client-info">
+      <div class="client-name" id="clientName">Empresa Diagnosticada</div>
+      <div class="client-meta" id="clientSegment">Segmento · Analista responsável</div>
+    </div>
+    <div class="client-date">
+      <b id="diagDate">--/--/----</b>
+      Válido por 30 dias
+    </div>
+  </div>
+
+  <!-- ===== RESULT HEADER ===== -->
+  <div class="result-header">
+    <div class="result-eyebrow">Resultado do Diagnóstico Comercial</div>
+    <div class="score-ring-wrap">
+      <svg class="score-ring" width="200" height="200" viewBox="0 0 200 200">
+        <circle class="score-ring-bg" cx="100" cy="100" r="90"/>
+        <circle class="score-ring-fill" id="scoreRingFill" cx="100" cy="100" r="90"/>
+      </svg>
+      <div class="score-center">
+        <div class="score-num" id="scoreNum">24.5</div>
+        <div class="score-max">de 50 pontos</div>
+      </div>
+    </div>
+    <div class="result-class class-C" id="resultClass">⚠️ Ativa, mas sem previsibilidade</div>
+  </div>
+
+  <!-- ===== REVENUE LEAK ===== -->
+  <section>
+    <div class="leak-card">
+      <div class="leak-label">💸 Estimativa de receita perdida por mês</div>
+      <div class="leak-num" id="leakNum">35% a 50%</div>
+      <div class="leak-range" id="leakRangeReal">aproximadamente R$ 7.000 a R$ 10.000 / mês</div>
+      <div class="leak-sub">
+        Com base nas respostas, esse é o tamanho estimado de receita que está se perdendo todo mês
+        por falta de processo, follow-up e rotina comercial — antes mesmo de pensar em gerar mais leads.
+      </div>
+      <div class="leak-anual">
+        Em 12 meses, isso representa
+        <b id="leakAnual">R$ 84.000 a R$ 120.000</b>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== PILARES ===== -->
+  <section>
+    <div class="section-title"><span class="num">1</span> Seus 5 pilares comerciais</div>
+    <div class="section-sub">Cada pilar vale até 10 pontos. Quanto menor o número, maior a oportunidade de melhoria.</div>
+    <div class="pillars-list" id="pillarsList"></div>
+  </section>
+
+  <!-- ===== DOR REPORTADA ===== -->
+  <section>
+    <div class="section-title"><span class="num">2</span> O que você nos contou</div>
+    <div class="dor-card">
+      <span class="label">Sua maior dor agora</span>
+      <span id="dorTextOut">"Meu time não faz follow-up e a gente perde cliente que já tinha quase fechado."</span>
+    </div>
+  </section>
+
+  <!-- ===== PLANO DE AÇÃO ===== -->
+  <section>
+    <div class="section-title"><span class="num">3</span> Seu plano de ação imediato</div>
+    <div class="section-sub">As 3 áreas que, se destravadas primeiro, trazem o maior retorno mais rápido.</div>
+    <div class="plan-list" id="planList"></div>
+  </section>
+
+  <!-- ===== ROADMAP 90 DIAS ===== -->
+  <section>
+    <div class="section-title"><span class="num">4</span> Roadmap dos próximos 90 dias</div>
+    <div class="section-sub">Como essas melhorias entram em prática, mês a mês.</div>
+    <div class="timeline" id="timelineList"></div>
+  </section>
+
+  <!-- ===== PRODUTO RECOMENDADO ===== -->
+  <section>
+    <div class="section-title"><span class="num">5</span> Caminho recomendado</div>
+    <div class="product-card" id="productCard">
+      <!-- preenchido via JS -->
+    </div>
+  </section>
+
+  <!-- ===== CTA ===== -->
+  <section>
+    <div class="cta-card">
+      <h3>Vamos destravar isso juntos?</h3>
+      <p>
+        Esse diagnóstico é só o ponto de partida. A GROW Sales Group estrutura, treina e — se fizer
+        sentido — opera o seu comercial até esses números mudarem de verdade.
+      </p>
+      <button class="btn btn-primary" onclick="alert('Em produção: aqui abre o agendamento da reunião de devolutiva com a Grow Sales Group.')">
+        Quero falar com a Grow →
+      </button>
+      <br>
+      <button class="btn btn-secondary" onclick="window.print()">Salvar este relatório em PDF</button>
+    </div>
+  </section>
+
+  <div class="footer-note">
+    Diagnóstico gerado pela <b>Metodologia GROW</b> · Grow Sales Group — BPO Comercial<br>
+    Resultado baseado nas respostas fornecidas · válido como retrato do momento atual da operação
+  </div>
+
+</div>
+
+<script>
+/* ============================================================
+   DADOS DE EXEMPLO
+   Em produção: substituir por dados reais vindos do diagnóstico
+   (via querystring, localStorage, API, etc.)
+   ============================================================ */
+
+const DADOS_EXEMPLO = {
+  cliente: {
+    nome: "Gráfica Sinal Forte Ltda.",
+    segmento: "Gráfica & Comunicação Visual",
+    analista: "Jeohvah Lima",
+  },
+  data: new Date(),
+  scoreTotal: 24.5,  // de 0 a 50
+  faturamentoMensal: 22000, // usado para calcular o leak em R$
+
+  pilares: [
+    { key: "captacao",    label: "Geração de Clientes",        score: 3.3 },
+    { key: "conversao",   label: "Conversão & Processo",        score: 2.5 },
+    { key: "fidelizacao", label: "Retenção & Recompra",          score: 5.0 },
+    { key: "equipe",      label: "Time & Rotina",                 score: 6.7 },
+    { key: "crescimento", label: "Gestão & Previsibilidade",      score: 6.9 },
+  ],
+
+  dor: "Meu time não faz follow-up e a gente perde cliente que já tinha quase fechado. Várias vezes o cliente pediu orçamento, sumiu, e ninguém retomou contato.",
+
+  // Produto recomendado com base no score geral e no pilar mais fraco
+  produtoRecomendado: {
+    nome: "Grow Implantação",
+    eyebrow: "Caminho recomendado para sua empresa",
+    descricao: "Com base no seu resultado, o ponto de maior retorno agora não é gerar mais leads — é parar de perder os que você já tem. A Implantação estrutura seu funil, cria o processo de follow-up e organiza a rotina do time em 30 dias.",
+    inclui: [
+      "Diagnóstico aprofundado da operação atual",
+      "Configuração completa do funil de vendas com etapas e automações",
+      "Criação do playbook: scripts de abordagem, qualificação e follow-up",
+      "Definição de metas e rotina semanal do time",
+      "Capacitação do time para uso da plataforma",
+      "30 dias de acompanhamento pós-implantação",
+    ],
+    preco: "R$ 3.500 a R$ 8.000",
+    precoLabel: "investimento único + mensalidade a partir do mês 2",
+  },
+};
+
+/* ============================================================
+   PILAR -> AÇÃO / PRODUTO COMPLEMENTAR
+   ============================================================ */
+const ACTIONS = {
+  captacao: {
+    title: "Estruturar geração ativa de clientes",
+    desc: "Montar uma rotina de prospecção (ligação, WhatsApp, redes) que não dependa só de indicação.",
+    impact: "Reduz dependência de indicação",
+    product: "Grow Implantação + Grow Leads",
+  },
+  conversao: {
+    title: "Criar processo de follow-up e resposta rápida",
+    desc: "Definir cadência de retomada de contato e tempo máximo de resposta para não perder oportunidade já gerada.",
+    impact: "Recupera vendas que já estavam quase fechadas",
+    product: "Grow Implantação",
+  },
+  fidelizacao: {
+    title: "Ativar a base de clientes existente",
+    desc: "Criar rotina de reativação e upsell para quem já comprou — receita mais barata e mais rápida que cliente novo.",
+    impact: "Aumenta receita sem gastar com aquisição",
+    product: "Grow Capacitação",
+  },
+  equipe: {
+    title: "Estruturar rotina e onboarding do time",
+    desc: "Criar checklist diário/semanal e processo de integração para reduzir dependência de uma única pessoa.",
+    impact: "Time performa mesmo sem supervisão constante",
+    product: "Grow Capacitação + Grow BPO",
+  },
+  crescimento: {
+    title: "Implantar painel de indicadores e metas",
+    desc: "Ter visibilidade de número, meta e gap em tempo real para parar de operar no improviso.",
+    impact: "Decisões com dados, não com achismo",
+    product: "Grow Implantação",
+  },
+};
+
+const PILLAR_COLORS = {
+  captacao: "var(--danger)",
+  conversao: "var(--danger)",
+  fidelizacao: "var(--accent)",
+  equipe: "var(--good)",
+  crescimento: "var(--good)",
+};
+
+/* ============================================================
+   RENDER
+   ============================================================ */
+function severityFor(score){
+  if(score < 4) return { cls: "sev-alta", label: "🔴 Gargalo crítico", color: "var(--danger)" };
+  if(score < 7) return { cls: "sev-media", label: "🟡 Precisa de atenção", color: "var(--accent)" };
+  return { cls: "sev-ok", label: "🟢 Ponto forte", color: "var(--good)" };
+}
+
+function classify(scoreTotal){
+  const pct = (scoreTotal/50)*100;
+  if(pct >= 90) return { label: "🚀 Empresa estruturada — fase de escala", cls: "class-A", ring: "var(--good)" };
+  if(pct >= 70) return { label: "🏗️ Estrutura funcional, com gargalos", cls: "class-B", ring: "var(--accent)" };
+  if(pct >= 50) return { label: "⚠️ Ativa, mas sem previsibilidade", cls: "class-C", ring: "var(--accent)" };
+  return { label: "🚨 Operação desorganizada — \"balde furado\"", cls: "class-D", ring: "var(--danger)" };
+}
+
+function formatBRL(num){
+  return "R$ " + Math.round(num).toLocaleString("pt-BR");
+}
+
+function render(data){
+  // Header / client info
+  document.getElementById("clientName").textContent = data.cliente.nome;
+  document.getElementById("clientSegment").textContent = `${data.cliente.segmento} · Analista: ${data.cliente.analista}`;
+  document.getElementById("diagDate").textContent = data.data.toLocaleDateString("pt-BR");
+
+  // Score ring + classification
+  const pct = (data.scoreTotal/50)*100;
+  const circumference = 565;
+  const offset = circumference - (pct/100)*circumference;
+  const cls = classify(data.scoreTotal);
+  document.getElementById("scoreRingFill").style.strokeDashoffset = offset;
+  document.getElementById("scoreRingFill").style.stroke = cls.ring;
+  document.getElementById("scoreNum").textContent = data.scoreTotal;
+  const classEl = document.getElementById("resultClass");
+  classEl.textContent = cls.label;
+  classEl.className = "result-class " + cls.cls;
+
+  // Revenue leak
+  let weakCount = data.pilares.filter(p => p.score <= (10 * 0.83/2.5)).length; // heuristic from low scores
+  const leakPctLow = Math.min(45, Math.round(((50 - data.scoreTotal)/50) * 60));
+  const leakPctHigh = Math.min(60, leakPctLow + 15);
+  document.getElementById("leakNum").textContent = `${leakPctLow}% a ${leakPctHigh}%`;
+
+  if(data.faturamentoMensal){
+    const low = data.faturamentoMensal * (leakPctLow/100);
+    const high = data.faturamentoMensal * (leakPctHigh/100);
+    document.getElementById("leakRangeReal").textContent = `aproximadamente ${formatBRL(low)} a ${formatBRL(high)} / mês`;
+    document.getElementById("leakAnual").textContent = `${formatBRL(low*12)} a ${formatBRL(high*12)}`;
+  } else {
+    document.getElementById("leakRangeReal").textContent = "do seu faturamento mensal";
+    document.getElementById("leakAnual").textContent = "12x o valor mensal estimado";
+  }
+
+  // Pillars
+  const pillarsListEl = document.getElementById("pillarsList");
+  pillarsListEl.innerHTML = "";
+  data.pilares.forEach(p => {
+    const sev = severityFor(p.score);
+    const pPct = (p.score/10)*100;
+    const row = document.createElement("div");
+    row.className = "pillar-row";
+    row.innerHTML = `
+      <div class="pillar-row-top">
+        <div class="pillar-name">${p.label}</div>
+        <div class="pillar-score">${p.score} / 10</div>
+      </div>
+      <div class="pillar-bar-track"><div class="pillar-bar-fill" data-target="${pPct}" style="width:0%; background:${sev.color};"></div></div>
+      <div class="pillar-footer">
+        <span class="pillar-tag-sev ${sev.cls}">${sev.label}</span>
+      </div>
+    `;
+    pillarsListEl.appendChild(row);
+  });
+
+  // Dor
+  document.getElementById("dorTextOut").textContent = `"${data.dor}"`;
+
+  // Plan — top 3 weakest pillars
+  const sorted = [...data.pilares].sort((a,b) => a.score - b.score);
+  const planListEl = document.getElementById("planList");
+  planListEl.innerHTML = "";
+  sorted.slice(0,3).forEach((p, i) => {
+    const action = ACTIONS[p.key];
+    const item = document.createElement("div");
+    item.className = "plan-item";
+    item.innerHTML = `
+      <div class="plan-head">
+        <div class="plan-num">${i+1}</div>
+        <div class="plan-head-text">
+          <div class="plan-title">${action.title}</div>
+          <span class="plan-pillar-tag"><span class="dot" style="background:${PILLAR_COLORS[p.key]}"></span>${p.label} · ${p.score}/10</span>
+        </div>
+      </div>
+      <div class="plan-desc">${action.desc}</div>
+      <div class="plan-impact">📈 ${action.impact}</div>
+      <div class="plan-product">🔧 ${action.product}</div>
+    `;
+    planListEl.appendChild(item);
+  });
+
+  // Timeline 90 dias — generated from top 3 weak pillars
+  const timelineEl = document.getElementById("timelineList");
+  timelineEl.innerHTML = "";
+  const periods = [
+    { period: "Mês 1 · Dias 1-30", titlePrefix: "Diagnóstico e estruturação" },
+    { period: "Mês 2 · Dias 31-60", titlePrefix: "Implantação e treinamento" },
+    { period: "Mês 3 · Dias 61-90", titlePrefix: "Operação e ajuste fino" },
+  ];
+  const timelineDescs = [
+    `Mapeamento completo da operação, configuração do funil de vendas e criação dos primeiros processos focados em <b>${sorted[0].label}</b> e <b>${sorted[1].label}</b> — suas duas maiores oportunidades.`,
+    `Time treinado para usar os novos processos, scripts e cadências de follow-up implantados. Metas e rotina semanal começam a rodar dentro do CRM.`,
+    `Acompanhamento dos primeiros resultados, ajuste de scripts e processo com base em dados reais, e revisão de <b>${sorted[2].label}</b> para consolidar a operação.`,
+  ];
+  periods.forEach((p, i) => {
+    const item = document.createElement("div");
+    item.className = "timeline-item";
+    item.innerHTML = `
+      <div class="timeline-marker">
+        <div class="timeline-dot">${i+1}</div>
+        ${i < periods.length-1 ? '<div class="timeline-line"></div>' : ''}
+      </div>
+      <div class="timeline-content">
+        <div class="timeline-period">${p.period}</div>
+        <div class="timeline-title">${p.titlePrefix}</div>
+        <div class="timeline-desc">${timelineDescs[i]}</div>
+      </div>
+    `;
+    timelineEl.appendChild(item);
+  });
+
+  // Recommended product
+  const prod = data.produtoRecomendado;
+  const productCardEl = document.getElementById("productCard");
+  productCardEl.innerHTML = `
+    <div class="product-eyebrow">${prod.eyebrow}</div>
+    <div class="product-name">${prod.nome}</div>
+    <div class="product-desc">${prod.descricao}</div>
+    <div class="product-includes">
+      ${prod.inclui.map(item => `<div>${item}</div>`).join("")}
+    </div>
+    <div class="product-price">
+      <div>
+        <div class="product-price-num">${prod.preco}</div>
+        <div class="product-price-label">${prod.precoLabel}</div>
+      </div>
+    </div>
+  `;
+
+  // Animate bars
+  setTimeout(() => {
+    document.querySelectorAll(".pillar-bar-fill").forEach(el => {
+      const target = el.getAttribute("data-target");
+      requestAnimationFrame(() => { el.style.width = target + "%"; });
+    });
+  }, 200);
+}
+
+/* ============================================================
+   ENTRYPOINT
+   Em produção, troque DADOS_EXEMPLO por dados reais recebidos
+   da página de diagnóstico (ex: via localStorage ou querystring)
+   ============================================================ */
+render(DADOS_EXEMPLO);
+</script>
+</body>
+</html>
