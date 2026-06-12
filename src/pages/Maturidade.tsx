@@ -38,7 +38,7 @@ const CLASS_STYLE: Record<string, { color: string; emoji: string; desc: string }
 };
 
 const PILLAR_META: Record<string, { label: string; icon: any; color: string; route: string }> = {
-  processos: { label: "Processos Comerciais", icon: FileText, color: "from-purple-500 to-fuchsia-400", route: "/processos" },
+  processos: { label: "BPO Comercial", icon: FileText, color: "from-purple-500 to-fuchsia-400", route: "/processos" },
   prospeccao: { label: "Prospecção", icon: Target, color: "from-blue-500 to-cyan-400", route: "/prospeccao" },
   gestao: { label: "Gestão Comercial", icon: BarChart3, color: "from-emerald-500 to-green-400", route: "/analytics" },
   automacao: { label: "Automação & Resposta", icon: Bot, color: "from-amber-500 to-orange-400", route: "/ia" },
