@@ -560,14 +560,14 @@ export function SubcontasManager() {
                         />
                       </div>
                       
-                      {/* Processos Comerciais */}
+                      {/* BPO Comercial */}
                       <div className="flex items-center gap-1.5 bg-secondary/50 rounded px-2 py-1">
                         <Target className="h-3.5 w-3.5 text-muted-foreground" />
-                        <span className="text-xs text-muted-foreground">Processos</span>
+                        <span className="text-xs text-muted-foreground">BPO</span>
                         <Switch
                           className="scale-75"
                           checked={subconta.allow_processos_comerciais || false}
-                          onCheckedChange={() => toggleModuloPremium(subconta.id, 'allow_processos_comerciais', subconta.allow_processos_comerciais || false, 'Processos Comerciais')}
+                          onCheckedChange={() => toggleModuloPremium(subconta.id, 'allow_processos_comerciais', subconta.allow_processos_comerciais || false, 'BPO Comercial')}
                         />
                       </div>
                       
