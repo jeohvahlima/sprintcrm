@@ -1873,12 +1873,27 @@ function openTaskPanel(t) {
           <button class="btn btn-ghost" style="font-size:11px;padding:5px 10px" onclick="document.getElementById('taskAttachInput').click()"><i class="ti ti-paperclip" style="color:var(--blue)"></i>Anexar arquivo</button>
           <input type="file" id="taskAttachInput" style="display:none" accept="image/*,application/pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,.zip" onchange="onTaskAttachPicked(this)">
         </div>
-        <div id="taskAttachList" style="margin-top:8px;display:flex;flex-direction:column;gap:6px">
-          ${(t.attachments || []).map(a => `
-            <a href="${a.url}" target="_blank" style="display:flex;align-items:center;gap:6px;padding:6px 10px;background:var(--bg3);border-radius:6px;color:var(--text2);font-size:11px;text-decoration:none">
-              <i class="ti ti-file"></i><span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${a.name || 'Arquivo'}</span>
-            </a>
-          `).join('')}
+      </div>
+      <div class="panel-section">
+        <div class="panel-label">Anexos (${(t.attachments || []).length})</div>
+        <div id="taskAttachList" style="margin-top:6px;display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px">
+          ${(t.attachments || []).length === 0 ? '<div style="font-size:11px;color:var(--text3);grid-column:1/-1">Nenhum arquivo anexado</div>' : (t.attachments || []).map((a, idx) => {
+            const url = a.url || '';
+            const name = a.name || 'Arquivo';
+            const isImg = /\.(png|jpe?g|gif|webp|bmp|svg)$/i.test(name);
+            const isPdf = /\.pdf$/i.test(name);
+            return `
+              <div style="position:relative;background:var(--bg3);border:1px solid var(--border);border-radius:8px;overflow:hidden">
+                <a href="${escapeHtml(url)}" target="_blank" rel="noopener" style="display:flex;height:80px;align-items:center;justify-content:center;background:#000;text-decoration:none">
+                  ${isImg
+                    ? `<img src="${escapeHtml(url)}" style="width:100%;height:100%;object-fit:cover" onerror="this.outerHTML='<i class=&quot;ti ti-photo&quot; style=&quot;font-size:28px;color:#888&quot;></i>'">`
+                    : `<i class="ti ${isPdf ? 'ti-file-type-pdf' : 'ti-file'}" style="font-size:32px;color:var(--text2)"></i>`}
+                </a>
+                <div style="padding:5px 6px;font-size:10.5px;color:var(--text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${escapeHtml(name)}">${escapeHtml(name)}</div>
+                <button onclick="removeTaskAttachment(${idx})" title="Remover" style="position:absolute;top:4px;right:4px;background:rgba(0,0,0,.65);border:0;color:#fff;width:20px;height:20px;border-radius:50%;cursor:pointer;font-size:12px;line-height:1">×</button>
+              </div>
+            `;
+          }).join('')}
         </div>
       </div>
     `;
@@ -2029,27 +2044,49 @@ window.concluirCurrentTask = async function () {
 
 window.onTaskAttachPicked = async function (input) {
   const file = input.files?.[0]; if (!file) { return; }
-  const t = window._currentTask; if (!t || !sb) return;
+  const t = window._currentTask; if (!t || !sb) { alert('Tarefa não disponível'); return; }
   const list = document.getElementById('taskAttachList');
   const loadingEl = document.createElement('div');
-  loadingEl.style.cssText = 'font-size:11px;color:var(--text3);padding:6px 10px';
-  loadingEl.innerHTML = `<i class="ti ti-loader"></i> Enviando ${file.name}...`;
+  loadingEl.style.cssText = 'grid-column:1/-1;font-size:11px;color:var(--text3);padding:6px 10px;background:var(--bg3);border-radius:6px';
+  loadingEl.innerHTML = `<i class="ti ti-loader"></i> Enviando ${escapeHtml(file.name)}...`;
   list?.appendChild(loadingEl);
   try {
-    const path = `tarefas/${t.id}/${Date.now()}-${file.name.replace(/[^\w.\-]/g,'_')}`;
-    const { error } = await sb.storage.from('lead-attachments').upload(path, file, { upsert: false });
-    if (error) throw error;
+    const safeName = file.name.replace(/[^\w.\-]/g,'_');
+    const path = `tarefas/${t.id}/${Date.now()}-${safeName}`;
+    const { error: upErr } = await sb.storage.from('lead-attachments').upload(path, file, { upsert: false, contentType: file.type || undefined });
+    if (upErr) throw upErr;
     const { data: pub } = sb.storage.from('lead-attachments').getPublicUrl(path);
-    const att = { name: file.name, url: pub.publicUrl };
-    t.attachments = Array.isArray(t.attachments) ? [...t.attachments, att] : [att];
-    await callApi('editar_tarefa', { task_id: t.id, attachments: t.attachments });
+    const att = { name: file.name, url: pub.publicUrl, mime: file.type || '', size: file.size || 0 };
+    const newList = Array.isArray(t.attachments) ? [...t.attachments, att] : [att];
+    const res = await callApi('editar_tarefa', { task_id: t.id, attachments: newList.map(a => ({ name: a.name, url: a.url })) });
+    if (res?.error) throw new Error(res.error);
+    t.attachments = newList;
+    // sync in main tasks array
+    const idx = tasks.findIndex(x => x.id === t.id);
+    if (idx >= 0) tasks[idx].attachments = newList;
     openTaskPanel(t);
   } catch (e) {
     console.error('[task attach]', e);
-    alert('Erro ao anexar: ' + (e.message || e));
+    alert('Erro ao anexar arquivo: ' + (e.message || e));
     loadingEl.remove();
   }
   input.value = '';
+};
+
+window.removeTaskAttachment = async function (idx) {
+  const t = window._currentTask; if (!t) return;
+  if (!confirm('Remover este anexo?')) return;
+  const list = Array.isArray(t.attachments) ? [...t.attachments] : [];
+  list.splice(idx, 1);
+  try {
+    await callApi('editar_tarefa', { task_id: t.id, attachments: list });
+    t.attachments = list;
+    const i = tasks.findIndex(x => x.id === t.id);
+    if (i >= 0) tasks[i].attachments = list;
+    openTaskPanel(t);
+  } catch (e) {
+    alert('Erro ao remover: ' + (e.message || e));
+  }
 };
 
 window.duplicateCurrentTask = async function () {
