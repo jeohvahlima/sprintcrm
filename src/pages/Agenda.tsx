@@ -37,8 +37,47 @@ export default function Agenda() {
       iframeRef.current?.contentWindow?.postMessage(payload, "*");
     }
 
+    async function createAgenda(data: any) {
+      try {
+        const { data: userData } = await supabase.auth.getUser();
+        const user = userData?.user;
+        if (!user) throw new Error("Usuário não autenticado");
+        const { data: role } = await supabase
+          .from("user_roles")
+          .select("company_id")
+          .eq("user_id", user.id)
+          .maybeSingle();
+        const company_id = role?.company_id;
+        if (!company_id) throw new Error("Empresa não encontrada");
+
+        const { error } = await supabase.from("agendas").insert({
+          nome: data.nome,
+          tipo: data.tipo || "colaborador",
+          tempo_medio_servico: data.tempo_medio_servico || 30,
+          capacidade_simultanea: data.capacidade_simultanea || 1,
+          owner_id: user.id,
+          company_id,
+          status: "ativo",
+        });
+        if (error) throw error;
+
+        iframeRef.current?.contentWindow?.postMessage(
+          { type: "agenda:create-agenda-result", ok: true },
+          "*"
+        );
+        await loadAndSend();
+      } catch (e: any) {
+        iframeRef.current?.contentWindow?.postMessage(
+          { type: "agenda:create-agenda-result", ok: false, error: e?.message || "Erro" },
+          "*"
+        );
+      }
+    }
+
     function onMessage(e: MessageEvent) {
-      if (e.data?.type === "agenda:ready") loadAndSend();
+      const d: any = e.data || {};
+      if (d?.type === "agenda:ready") loadAndSend();
+      if (d?.type === "agenda:create-agenda") createAgenda(d);
     }
     window.addEventListener("message", onMessage);
     // tenta também após load do iframe

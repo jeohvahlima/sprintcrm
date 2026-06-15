@@ -334,6 +334,7 @@
       <div class="title-row">
         <h1 class="page-title">Agenda</h1>
         <span class="chip-pill"><i class="ti ti-calendar-event"></i> Multi-agendas</span>
+        <button class="btn" id="btnNovaAgenda" title="Criar nova agenda"><i class="ti ti-calendar-plus"></i> Nova agenda</button>
       </div>
       <div class="actions">
         <span class="status-chip"><span class="dot"></span> <strong>Google Calendar</strong> <span class="conn">conectado</span></span>
@@ -867,6 +868,41 @@
   </div>
 
   <!-- Toast -->
+  <!-- Modal Nova Agenda -->
+  <div id="novaAgendaModal" style="display:none; position:fixed; inset:0; background:rgba(15,23,42,0.55); z-index:9999; align-items:center; justify-content:center; padding:20px;">
+    <div style="background:hsl(var(--surface)); border-radius:14px; width:100%; max-width:480px; box-shadow:0 20px 60px rgba(0,0,0,0.25);">
+      <div style="display:flex; align-items:center; justify-content:space-between; padding:16px 20px; border-bottom:1px solid hsl(var(--border));">
+        <h3 style="margin:0; font-size:16px; font-weight:700;">Nova agenda</h3>
+        <button id="naClose" class="iconbtn" title="Fechar"><i class="ti ti-x"></i></button>
+      </div>
+      <div style="padding:18px 20px; display:flex; flex-direction:column; gap:12px;">
+        <label style="display:flex; flex-direction:column; gap:6px; font-size:12px; color:hsl(var(--text-muted)); font-weight:600;">Nome da agenda
+          <input id="na_nome" type="text" placeholder="Ex.: Dr. João, Sala 2, Clínica Centro..." style="padding:9px 12px; border:1px solid hsl(var(--border)); border-radius:8px; font-size:13px;"/>
+        </label>
+        <label style="display:flex; flex-direction:column; gap:6px; font-size:12px; color:hsl(var(--text-muted)); font-weight:600;">Tipo
+          <select id="na_tipo" style="padding:9px 12px; border:1px solid hsl(var(--border)); border-radius:8px; font-size:13px; background:hsl(var(--surface));">
+            <option value="colaborador">Colaborador / Profissional</option>
+            <option value="recurso">Recurso / Sala</option>
+            <option value="unidade">Unidade</option>
+            <option value="geral">Geral</option>
+          </select>
+        </label>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+          <label style="display:flex; flex-direction:column; gap:6px; font-size:12px; color:hsl(var(--text-muted)); font-weight:600;">Duração padrão (min)
+            <input id="na_duracao" type="number" min="5" value="30" style="padding:9px 12px; border:1px solid hsl(var(--border)); border-radius:8px; font-size:13px;"/>
+          </label>
+          <label style="display:flex; flex-direction:column; gap:6px; font-size:12px; color:hsl(var(--text-muted)); font-weight:600;">Capacidade simultânea
+            <input id="na_capacidade" type="number" min="1" value="1" style="padding:9px 12px; border:1px solid hsl(var(--border)); border-radius:8px; font-size:13px;"/>
+          </label>
+        </div>
+      </div>
+      <div style="padding:14px 20px; border-top:1px solid hsl(var(--border)); display:flex; gap:8px; justify-content:flex-end;">
+        <button id="naCancel" class="btn">Cancelar</button>
+        <button id="naSave" class="btn primary"><i class="ti ti-check"></i> Criar agenda</button>
+      </div>
+    </div>
+  </div>
+
   <div id="toast" style="display:none; position:fixed; bottom:20px; right:20px; background:hsl(var(--text)); color:hsl(var(--surface)); padding:10px 16px; border-radius:8px; font-size:13px; z-index:10000; box-shadow:0 10px 30px rgba(0,0,0,0.25);"></div>
 
   <script>
@@ -902,9 +938,36 @@
           populateSelect('f_prof', d.profissionais, 'Nenhum profissional cadastrado');
           if(Array.isArray(d.leads)) CRM_LEADS = d.leads;
         }
+        if(d.type === 'agenda:create-agenda-result'){
+          const t = document.getElementById('toast');
+          if(t){ t.textContent = d.ok ? 'Agenda criada com sucesso' : ('Erro ao criar agenda: ' + (d.error||'')); t.style.display='block'; setTimeout(()=>{t.style.display='none';}, 2800); }
+          if(d.ok){
+            document.getElementById('novaAgendaModal').style.display = 'none';
+            ['na_nome'].forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
+          }
+        }
       });
       // Avisa o parent que está pronto
       try { window.parent.postMessage({ type: 'agenda:ready' }, '*'); } catch(_) {}
+
+      // ---------- Nova Agenda ----------
+      function openNovaAgenda(){ const m=document.getElementById('novaAgendaModal'); if(m){ m.style.display='flex'; setTimeout(()=>document.getElementById('na_nome')?.focus(), 50);} }
+      function closeNovaAgenda(){ const m=document.getElementById('novaAgendaModal'); if(m) m.style.display='none'; }
+      document.getElementById('btnNovaAgenda')?.addEventListener('click', openNovaAgenda);
+      document.getElementById('naClose')?.addEventListener('click', closeNovaAgenda);
+      document.getElementById('naCancel')?.addEventListener('click', closeNovaAgenda);
+      document.getElementById('naSave')?.addEventListener('click', () => {
+        const nome = (document.getElementById('na_nome').value||'').trim();
+        if(!nome){ alert('Informe o nome da agenda'); return; }
+        const payload = {
+          type: 'agenda:create-agenda',
+          nome,
+          tipo: document.getElementById('na_tipo').value || 'colaborador',
+          tempo_medio_servico: parseInt(document.getElementById('na_duracao').value||'30',10),
+          capacidade_simultanea: parseInt(document.getElementById('na_capacidade').value||'1',10),
+        };
+        try { window.parent.postMessage(payload, '*'); } catch(_){}
+      });
 
       // ---------- Autocomplete de contatos do CRM ----------
       function normalize(s){ return String(s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,''); }
