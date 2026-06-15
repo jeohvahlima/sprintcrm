@@ -155,6 +155,66 @@ export default function Leads() {
       }
     };
 
+    const importLeads = async (leads: any[], tags: string[]) => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user?.id) throw new Error("Usuário não autenticado.");
+        const { data: userRole } = await supabase
+          .from("user_roles").select("company_id").eq("user_id", user.id).maybeSingle();
+        if (!userRole?.company_id) throw new Error("Empresa não encontrada.");
+
+        const existing = new Set<string>();
+        let fromIdx = 0;
+        while (true) {
+          const { data, error } = await supabase
+            .from("leads").select("phone, telefone")
+            .eq("company_id", userRole.company_id)
+            .range(fromIdx, fromIdx + 999);
+          if (error || !data?.length) break;
+          data.forEach((l: any) => {
+            const p = String(l.phone || l.telefone || "").replace(/\D/g, "");
+            if (p) existing.add(p);
+          });
+          if (data.length < 1000) break;
+          fromIdx += 1000;
+        }
+
+        const toInsert: any[] = [];
+        let duplicates = 0;
+        for (const l of leads) {
+          const p = String(l.phone || "").replace(/\D/g, "");
+          if (p && existing.has(p)) { duplicates++; continue; }
+          if (p) existing.add(p);
+          toInsert.push({
+            name: l.name || (p ? `Contato ${p.slice(-4)}` : "Contato"),
+            phone: p ? `+${p}` : null,
+            telefone: p ? `+${p}` : null,
+            email: l.email || null,
+            source: "import",
+            status: "novo",
+            stage: "prospeccao",
+            value: 0,
+            company_id: userRole.company_id,
+            owner_id: user.id,
+            ...(tags.length ? { tags } : {}),
+          });
+        }
+
+        let success = 0;
+        for (let i = 0; i < toInsert.length; i += 500) {
+          const batch = toInsert.slice(i, i + 500);
+          const { error } = await supabase.from("leads").insert(batch as any);
+          if (error) throw error;
+          success += batch.length;
+        }
+        send({ type: "contatos-import-result", ok: true, success, duplicates });
+        loadStats(); loadContacts();
+      } catch (err: any) {
+        console.error("[Leads import]", err);
+        send({ type: "contatos-import-result", ok: false, error: err?.message || "Erro ao importar." });
+      }
+    };
+
     const onMessage = (ev: MessageEvent) => {
       if (ev.data?.type === "contatos-ready") {
         loadStats();
@@ -162,6 +222,9 @@ export default function Leads() {
       }
       if (ev.data?.type === "contatos-create-lead") {
         createLead(ev.data.lead);
+      }
+      if (ev.data?.type === "contatos-import-leads") {
+        importLeads(ev.data.leads || [], ev.data.tags || []);
       }
       if (ev.data?.type === "contatos-open-aniversariantes") {
         setAnivOpen(true);

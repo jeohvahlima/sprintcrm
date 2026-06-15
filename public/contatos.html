@@ -902,12 +902,181 @@
       modalBackdrop.hidden = true;
     }
 
-    function openImportPanel() {
-      showModal('Importar contatos', `
-        <p>O botão de importação agora está funcionando no iframe.</p>
-        <p>Neste protótipo, a ação abre este painel. Em versões futuras, ele poderá abrir o assistente de importação completo.</p>
-      `);
+    // ===== Importador de contatos (colar números ou CSV) =====
+    function parsePhonesFromText(text) {
+      const out = []; const seen = new Set();
+      const add = (digits) => {
+        let d = (digits || '').replace(/\D/g, '');
+        if (!d) return;
+        if (d.length >= 10 && d.length <= 11) d = '55' + d;           // DDD + número → +55
+        if (d.length < 12 || d.length > 13) return;                    // valida 12-13 (55 + DDD + 8/9)
+        if (seen.has(d)) return; seen.add(d); out.push(d);
+      };
+      const lines = text.split(/\n/);
+      for (const rawLine of lines) {
+        const line = rawLine.trim(); if (!line) continue;
+        // (XX) XXXX-XXXX ou (XX) XXXXX-XXXX
+        let rest = line;
+        const paren = /\((\d{2})\)\s*(\d{4,5})[- ]?(\d{4})/g; let m;
+        while ((m = paren.exec(line)) !== null) { add(m[1] + m[2] + m[3]); rest = rest.replace(m[0], ' '); }
+        const cleaned = rest.replace(/[^\d\s]/g, ' ').replace(/\s+/g, ' ').trim();
+        if (!cleaned) continue;
+        const parts = cleaned.split(' ').filter(Boolean);
+        let i = 0;
+        while (i < parts.length) {
+          const d = parts[i].replace(/\D/g, '');
+          if (d.length === 2) {
+            const ddd = d; i++;
+            while (i < parts.length) {
+              const n = parts[i].replace(/\D/g, '');
+              if (n.length === 2) break;
+              if (n.length === 8 || n.length === 9) add(ddd + n);
+              else if (n.length >= 10 && n.length <= 13) add(n);
+              else if (n.length >= 14) { let r = n; while (r.length >= 10) { add(r.substring(0,11)); r = r.substring(11); } }
+              i++;
+            }
+          } else if (d.length >= 10 && d.length <= 13) { add(d); i++; }
+          else if (d.length >= 14) { let r = d; while (r.length >= 10) { add(r.substring(0,11)); r = r.substring(11); } i++; }
+          else i++;
+        }
+      }
+      return out;
     }
+
+    function parseCsvText(text) {
+      // CSV simples: nome,telefone,email (cabeçalho opcional). Aceita ; ou ,
+      const rows = text.split(/\r?\n/).map(r => r.trim()).filter(Boolean);
+      if (!rows.length) return [];
+      const sep = rows[0].includes(';') ? ';' : ',';
+      const header = rows[0].toLowerCase().split(sep).map(s => s.trim());
+      const hasHeader = header.some(h => /nome|name|telefone|phone|e-?mail/.test(h));
+      const idx = { name: -1, phone: -1, email: -1 };
+      if (hasHeader) {
+        header.forEach((h, i) => {
+          if (/nome|name/.test(h)) idx.name = i;
+          else if (/tel|phone|celular|whats/.test(h)) idx.phone = i;
+          else if (/mail/.test(h)) idx.email = i;
+        });
+      } else {
+        idx.name = 0; idx.phone = 1; idx.email = 2;
+      }
+      const start = hasHeader ? 1 : 0;
+      const out = [];
+      for (let i = start; i < rows.length; i++) {
+        const cols = rows[i].split(sep).map(c => c.trim().replace(/^"|"$/g, ''));
+        const name = idx.name >= 0 ? cols[idx.name] : '';
+        const phoneRaw = idx.phone >= 0 ? cols[idx.phone] : '';
+        const email = idx.email >= 0 ? cols[idx.email] : '';
+        let phone = (phoneRaw || '').replace(/\D/g, '');
+        if (phone && phone.length >= 10 && phone.length <= 11) phone = '55' + phone;
+        if (!name && !phone && !email) continue;
+        out.push({ name: name || (phone ? `Contato ${phone.slice(-4)}` : `Contato ${i}`), phone: phone || null, email: email || null });
+      }
+      return out;
+    }
+
+    function openImportPanel() {
+      const btnStyle = 'padding:10px 16px;border:none;border-radius:8px;background:hsl(var(--primary));color:#fff;font-weight:700;font-size:14px;cursor:pointer;font-family:inherit;';
+      const tabStyle = (active) => `flex:1;padding:10px;border:1px solid hsl(var(--border));border-bottom:${active?'2px solid hsl(var(--primary))':'1px solid hsl(var(--border))'};background:${active?'hsl(var(--background))':'hsl(var(--muted))'};color:hsl(var(--foreground));font-weight:600;font-size:13px;cursor:pointer;font-family:inherit;`;
+      const inputStyle = 'width:100%;padding:10px 12px;border:1px solid hsl(var(--border));border-radius:8px;font-size:14px;font-family:inherit;background:hsl(var(--background));color:hsl(var(--foreground));outline:none;box-sizing:border-box;';
+      showModal('Importar contatos', `
+        <div style="display:flex;gap:0;margin-bottom:12px;">
+          <button type="button" id="impTabText" style="${tabStyle(true)}">📋 Colar números</button>
+          <button type="button" id="impTabCsv" style="${tabStyle(false)}">📄 CSV</button>
+        </div>
+        <div id="impPanelText">
+          <p style="font-size:13px;color:hsl(var(--muted-foreground));margin:0 0 8px;">Cole números (um por linha ou separados por espaço). Aceita <code>DDD + número</code> ou <code>(XX) XXXXX-XXXX</code>.</p>
+          <textarea id="impText" rows="8" style="${inputStyle}font-family:monospace;" placeholder="21 27287549\n(11) 99492-0769\n61 999639787"></textarea>
+        </div>
+        <div id="impPanelCsv" style="display:none;">
+          <p style="font-size:13px;color:hsl(var(--muted-foreground));margin:0 0 8px;">Envie um CSV com colunas <code>nome, telefone, email</code> (cabeçalho opcional). Separador <code>,</code> ou <code>;</code>.</p>
+          <input type="file" id="impCsvFile" accept=".csv,text/csv" style="${inputStyle}">
+        </div>
+        <div style="margin-top:12px;">
+          <label style="display:block;font-size:12px;font-weight:600;margin:0 0 4px;color:hsl(var(--muted-foreground));">Tags (opcional, separadas por vírgula)</label>
+          <input id="impTags" placeholder="cliente-vip, promocao" style="${inputStyle}">
+        </div>
+        <div id="impPreview" style="margin-top:12px;font-size:13px;color:hsl(var(--muted-foreground));"></div>
+        <div id="impError" style="display:none;color:#dc2626;font-size:13px;margin-top:8px;"></div>
+        <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:14px;">
+          <button type="button" id="impAnalyze" style="${btnStyle}background:hsl(var(--muted));color:hsl(var(--foreground));">Analisar</button>
+          <button type="button" id="impSubmit" style="${btnStyle}" disabled>Importar</button>
+        </div>
+      `);
+
+      let currentTab = 'text';
+      let parsed = []; // [{name, phone, email}]
+      const tabText = document.getElementById('impTabText');
+      const tabCsv = document.getElementById('impTabCsv');
+      const panelText = document.getElementById('impPanelText');
+      const panelCsv = document.getElementById('impPanelCsv');
+      const preview = document.getElementById('impPreview');
+      const errEl = document.getElementById('impError');
+      const submitBtn = document.getElementById('impSubmit');
+      const setTab = (t) => {
+        currentTab = t;
+        const isText = t === 'text';
+        tabText.style.cssText = ((active)=>`flex:1;padding:10px;border:1px solid hsl(var(--border));border-bottom:${active?'2px solid hsl(var(--primary))':'1px solid hsl(var(--border))'};background:${active?'hsl(var(--background))':'hsl(var(--muted))'};color:hsl(var(--foreground));font-weight:600;font-size:13px;cursor:pointer;font-family:inherit;`)(isText);
+        tabCsv.style.cssText = ((active)=>`flex:1;padding:10px;border:1px solid hsl(var(--border));border-bottom:${active?'2px solid hsl(var(--primary))':'1px solid hsl(var(--border))'};background:${active?'hsl(var(--background))':'hsl(var(--muted))'};color:hsl(var(--foreground));font-weight:600;font-size:13px;cursor:pointer;font-family:inherit;`)(!isText);
+        panelText.style.display = isText ? '' : 'none';
+        panelCsv.style.display = isText ? 'none' : '';
+        parsed = []; preview.textContent = ''; submitBtn.disabled = true;
+      };
+      tabText.addEventListener('click', () => setTab('text'));
+      tabCsv.addEventListener('click', () => setTab('csv'));
+
+      document.getElementById('impAnalyze').addEventListener('click', async () => {
+        errEl.style.display = 'none';
+        try {
+          if (currentTab === 'text') {
+            const txt = document.getElementById('impText').value || '';
+            const phones = parsePhonesFromText(txt);
+            parsed = phones.map((p, i) => ({ name: `Contato (${p.substring(2,4)}) ${p.substring(4)}`, phone: p, email: null }));
+          } else {
+            const file = document.getElementById('impCsvFile').files?.[0];
+            if (!file) { errEl.style.display='block'; errEl.textContent='Selecione um arquivo CSV.'; return; }
+            const txt = await file.text();
+            parsed = parseCsvText(txt);
+          }
+          if (!parsed.length) {
+            preview.textContent = 'Nenhum contato válido encontrado.';
+            submitBtn.disabled = true;
+          } else {
+            preview.innerHTML = `<strong>${parsed.length}</strong> contato(s) prontos para importar.`;
+            submitBtn.disabled = false;
+          }
+        } catch (e) {
+          errEl.style.display='block'; errEl.textContent = e?.message || 'Erro ao analisar.';
+        }
+      });
+
+      submitBtn.addEventListener('click', () => {
+        if (!parsed.length) return;
+        const tags = (document.getElementById('impTags').value || '').split(/[,;]/).map(s=>s.trim()).filter(Boolean);
+        submitBtn.disabled = true; submitBtn.textContent = 'Importando...';
+        try {
+          window.parent.postMessage({ type: 'contatos-import-leads', leads: parsed, tags }, '*');
+        } catch (e) {
+          errEl.style.display='block'; errEl.textContent = 'Falha ao enviar para o aplicativo.';
+          submitBtn.disabled = false; submitBtn.textContent = 'Importar';
+        }
+      });
+    }
+
+    window.addEventListener('message', (ev) => {
+      const m = ev.data;
+      if (!m || m.type !== 'contatos-import-result') return;
+      const submitBtn = document.getElementById('impSubmit');
+      const errEl = document.getElementById('impError');
+      const preview = document.getElementById('impPreview');
+      if (m.ok) {
+        if (preview) preview.innerHTML = `✅ <strong>${m.success}</strong> importado(s)${m.duplicates ? ` · ${m.duplicates} duplicado(s) ignorado(s)` : ''}.`;
+        setTimeout(() => closeModalFn(), 1200);
+      } else {
+        if (errEl) { errEl.style.display='block'; errEl.textContent = m.error || 'Erro ao importar.'; }
+        if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = 'Importar'; }
+      }
+    });
 
     function openNewContactPanel() {
       const inputStyle = 'width:100%;padding:10px 12px;border:1px solid hsl(var(--border));border-radius:8px;font-size:14px;font-family:inherit;background:hsl(var(--background));color:hsl(var(--foreground));outline:none;box-sizing:border-box;';
