@@ -988,14 +988,24 @@
       document.getElementById('naSave')?.addEventListener('click', () => {
         const nome = (document.getElementById('na_nome').value||'').trim();
         if(!nome){ alert('Informe o nome da agenda'); return; }
+        const dias = Array.from(document.querySelectorAll('#na_dias input[type=checkbox]:checked')).map(i => i.value);
         const payload = {
           type: 'agenda:create-agenda',
           nome,
           tipo: document.getElementById('na_tipo').value || 'colaborador',
           tempo_medio_servico: parseInt(document.getElementById('na_duracao').value||'30',10),
           capacidade_simultanea: parseInt(document.getElementById('na_capacidade').value||'1',10),
+          disponibilidade: {
+            dias: dias.length ? dias : ['seg','ter','qua','qui','sex'],
+            horario_inicio: document.getElementById('na_hini').value || '08:00',
+            horario_fim: document.getElementById('na_hfim').value || '18:00',
+          },
+          senha_acesso: (document.getElementById('na_senha').value||'').trim() || null,
         };
+        const btn = document.getElementById('naSave');
+        if(btn){ btn.disabled = true; btn.innerHTML = '<i class="ti ti-loader"></i> Criando...'; }
         try { window.parent.postMessage(payload, '*'); } catch(_){}
+        setTimeout(() => { if(btn){ btn.disabled = false; btn.innerHTML = '<i class="ti ti-check"></i> Criar agenda'; } }, 4000);
       });
 
       // ---------- Autocomplete de contatos do CRM ----------
