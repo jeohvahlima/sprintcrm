@@ -48,9 +48,17 @@ export default function Agenda() {
           .eq("user_id", user.id)
           .maybeSingle();
         const company_id = role?.company_id;
-        if (!company_id) throw new Error("Empresa não encontrada");
+        if (!company_id) throw new Error("Empresa não encontrada para o usuário");
 
-        const { error } = await supabase.from("agendas").insert({
+        const slug = String(data.nome || "agenda")
+          .toLowerCase()
+          .normalize("NFD")
+          .replace(/[\u0300-\u036f]/g, "")
+          .replace(/[^a-z0-9]+/g, "-")
+          .replace(/(^-|-$)/g, "")
+          .slice(0, 40) + "-" + Math.random().toString(36).slice(2, 7);
+
+        const insertPayload: any = {
           nome: data.nome,
           tipo: data.tipo || "colaborador",
           tempo_medio_servico: data.tempo_medio_servico || 30,
@@ -58,8 +66,20 @@ export default function Agenda() {
           owner_id: user.id,
           company_id,
           status: "ativo",
-        });
-        if (error) throw error;
+          slug,
+          disponibilidade: data.disponibilidade || {
+            dias: ["seg", "ter", "qua", "qui", "sex"],
+            horario_inicio: "08:00",
+            horario_fim: "18:00",
+          },
+          senha_acesso: data.senha_acesso || null,
+        };
+
+        const { error } = await supabase.from("agendas").insert(insertPayload);
+        if (error) {
+          console.error("[createAgenda] insert error", error);
+          throw error;
+        }
 
         iframeRef.current?.contentWindow?.postMessage(
           { type: "agenda:create-agenda-result", ok: true },
@@ -67,8 +87,9 @@ export default function Agenda() {
         );
         await loadAndSend();
       } catch (e: any) {
+        console.error("[createAgenda]", e);
         iframeRef.current?.contentWindow?.postMessage(
-          { type: "agenda:create-agenda-result", ok: false, error: e?.message || "Erro" },
+          { type: "agenda:create-agenda-result", ok: false, error: e?.message || "Erro ao criar agenda" },
           "*"
         );
       }

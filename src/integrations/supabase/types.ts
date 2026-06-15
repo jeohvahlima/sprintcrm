@@ -373,6 +373,7 @@ export type Database = {
           owner_id: string
           permite_simultaneo: boolean | null
           responsavel_id: string | null
+          senha_acesso: string | null
           slug: string | null
           status: string | null
           tempo_medio_servico: number | null
@@ -389,6 +390,7 @@ export type Database = {
           owner_id: string
           permite_simultaneo?: boolean | null
           responsavel_id?: string | null
+          senha_acesso?: string | null
           slug?: string | null
           status?: string | null
           tempo_medio_servico?: number | null
@@ -405,6 +407,7 @@ export type Database = {
           owner_id?: string
           permite_simultaneo?: boolean | null
           responsavel_id?: string | null
+          senha_acesso?: string | null
           slug?: string | null
           status?: string | null
           tempo_medio_servico?: number | null
