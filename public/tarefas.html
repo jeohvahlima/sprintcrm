@@ -2044,27 +2044,49 @@ window.concluirCurrentTask = async function () {
 
 window.onTaskAttachPicked = async function (input) {
   const file = input.files?.[0]; if (!file) { return; }
-  const t = window._currentTask; if (!t || !sb) return;
+  const t = window._currentTask; if (!t || !sb) { alert('Tarefa não disponível'); return; }
   const list = document.getElementById('taskAttachList');
   const loadingEl = document.createElement('div');
-  loadingEl.style.cssText = 'font-size:11px;color:var(--text3);padding:6px 10px';
-  loadingEl.innerHTML = `<i class="ti ti-loader"></i> Enviando ${file.name}...`;
+  loadingEl.style.cssText = 'grid-column:1/-1;font-size:11px;color:var(--text3);padding:6px 10px;background:var(--bg3);border-radius:6px';
+  loadingEl.innerHTML = `<i class="ti ti-loader"></i> Enviando ${escapeHtml(file.name)}...`;
   list?.appendChild(loadingEl);
   try {
-    const path = `tarefas/${t.id}/${Date.now()}-${file.name.replace(/[^\w.\-]/g,'_')}`;
-    const { error } = await sb.storage.from('lead-attachments').upload(path, file, { upsert: false });
-    if (error) throw error;
+    const safeName = file.name.replace(/[^\w.\-]/g,'_');
+    const path = `tarefas/${t.id}/${Date.now()}-${safeName}`;
+    const { error: upErr } = await sb.storage.from('lead-attachments').upload(path, file, { upsert: false, contentType: file.type || undefined });
+    if (upErr) throw upErr;
     const { data: pub } = sb.storage.from('lead-attachments').getPublicUrl(path);
-    const att = { name: file.name, url: pub.publicUrl };
-    t.attachments = Array.isArray(t.attachments) ? [...t.attachments, att] : [att];
-    await callApi('editar_tarefa', { task_id: t.id, attachments: t.attachments });
+    const att = { name: file.name, url: pub.publicUrl, mime: file.type || '', size: file.size || 0 };
+    const newList = Array.isArray(t.attachments) ? [...t.attachments, att] : [att];
+    const res = await callApi('editar_tarefa', { task_id: t.id, attachments: newList.map(a => ({ name: a.name, url: a.url })) });
+    if (res?.error) throw new Error(res.error);
+    t.attachments = newList;
+    // sync in main tasks array
+    const idx = tasks.findIndex(x => x.id === t.id);
+    if (idx >= 0) tasks[idx].attachments = newList;
     openTaskPanel(t);
   } catch (e) {
     console.error('[task attach]', e);
-    alert('Erro ao anexar: ' + (e.message || e));
+    alert('Erro ao anexar arquivo: ' + (e.message || e));
     loadingEl.remove();
   }
   input.value = '';
+};
+
+window.removeTaskAttachment = async function (idx) {
+  const t = window._currentTask; if (!t) return;
+  if (!confirm('Remover este anexo?')) return;
+  const list = Array.isArray(t.attachments) ? [...t.attachments] : [];
+  list.splice(idx, 1);
+  try {
+    await callApi('editar_tarefa', { task_id: t.id, attachments: list });
+    t.attachments = list;
+    const i = tasks.findIndex(x => x.id === t.id);
+    if (i >= 0) tasks[i].attachments = list;
+    openTaskPanel(t);
+  } catch (e) {
+    alert('Erro ao remover: ' + (e.message || e));
+  }
 };
 
 window.duplicateCurrentTask = async function () {
