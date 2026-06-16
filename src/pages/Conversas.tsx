@@ -9857,6 +9857,18 @@ function Conversas() {
                     <MediaUpload onFileSelected={handleSendMedia} />
 
                     <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="text-muted-foreground hover:text-primary flex-shrink-0"
+                      title="Compartilhar contato do CRM"
+                      onClick={() => setShareContactOpen(true)}
+                    >
+                      <Users className="h-5 w-5" />
+                    </Button>
+
+
+                    <Button
                       variant="outline"
                       size="icon"
                       className="text-muted-foreground border-border flex-shrink-0"
