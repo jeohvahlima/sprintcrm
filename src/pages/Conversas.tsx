@@ -12177,6 +12177,15 @@ function Conversas() {
         companyId={userCompanyId || ""}
       />
 
+      {/* Dialog: Compartilhar contato do CRM */}
+      <ShareCrmContactDialog
+        open={shareContactOpen}
+        onOpenChange={setShareContactOpen}
+        companyId={userCompanyId || ""}
+        targetNumber={(selectedConv?.phoneNumber || selectedConv?.id || "") as string}
+      />
+
+
       {/* 📊 Painel de Produtividade */}
       <ProductivityPanel
         open={productivityPanelOpen}
