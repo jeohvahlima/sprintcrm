@@ -29,6 +29,7 @@ import { CoachIAFloatingButton } from "@/components/conversas/CoachIAFloatingBut
 import { ConversationListItem } from "@/components/conversas/ConversationListItem";
 import { MessageItem } from "@/components/conversas/MessageItem";
 import { ForwardMessageDialog } from "@/components/conversas/ForwardMessageDialog";
+import { ShareCrmContactDialog } from "@/components/conversas/ShareCrmContactDialog";
 import { AudioRecorder } from "@/components/conversas/AudioRecorder";
 import { MediaUpload } from "@/components/conversas/MediaUpload";
 import { NovaConversaDialog } from "@/components/conversas/NovaConversaDialog";
@@ -582,6 +583,7 @@ function Conversas() {
   const [cleanHistoryDialogOpen, setCleanHistoryDialogOpen] = useState(false);
   const [attachmentsOpen, setAttachmentsOpen] = useState(false);
   const [attachmentsCount, setAttachmentsCount] = useState(0);
+  const [shareContactOpen, setShareContactOpen] = useState(false);
   const [valorVendaDialogOpen, setValorVendaDialogOpen] = useState(false);
   const [valorVendaInput, setValorVendaInput] = useState("");
   const [salvandoValor, setSalvandoValor] = useState(false);
@@ -9856,6 +9858,18 @@ function Conversas() {
                     <MediaUpload onFileSelected={handleSendMedia} />
 
                     <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="text-muted-foreground hover:text-primary flex-shrink-0"
+                      title="Compartilhar contato do CRM"
+                      onClick={() => setShareContactOpen(true)}
+                    >
+                      <Users className="h-5 w-5" />
+                    </Button>
+
+
+                    <Button
                       variant="outline"
                       size="icon"
                       className="text-muted-foreground border-border flex-shrink-0"
@@ -12162,6 +12176,15 @@ function Conversas() {
         fileName={forwardData.fileName}
         companyId={userCompanyId || ""}
       />
+
+      {/* Dialog: Compartilhar contato do CRM */}
+      <ShareCrmContactDialog
+        open={shareContactOpen}
+        onOpenChange={setShareContactOpen}
+        companyId={userCompanyId || ""}
+        targetNumber={(selectedConv?.phoneNumber || selectedConv?.id || "") as string}
+      />
+
 
       {/* 📊 Painel de Produtividade */}
       <ProductivityPanel
