@@ -2058,6 +2058,43 @@ async function _sbCompany() {
 
 function _isUuid(s) { return typeof s === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(s); }
 
+// ===== Render current logged-in CRM user in topbar avatar =====
+function _initials(name, email) {
+  const src = (name || '').trim() || (email || '').split('@')[0] || '';
+  if (!src) return '··';
+  const parts = src.replace(/[._-]+/g, ' ').split(/\s+/).filter(Boolean);
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+}
+async function _renderTopbarUser() {
+  const el = document.getElementById('topbarUserAvatar');
+  if (!el) return;
+  const tok = _sbToken();
+  if (!tok) { el.textContent = '?'; return; }
+  try {
+    const r = await fetch(SB_URL + '/auth/v1/user', { headers: { 'apikey': SB_ANON, 'Authorization': 'Bearer ' + tok }});
+    if (!r.ok) return;
+    const u = await r.json();
+    const meta = u?.user_metadata || {};
+    const name = meta.full_name || meta.name || meta.display_name || '';
+    const email = u?.email || '';
+    const avatar = meta.avatar_url || meta.picture || '';
+    el.title = (name || email) + (email && name ? ' · ' + email : '');
+    if (avatar) {
+      el.style.backgroundImage = `url("${avatar}")`;
+      el.textContent = '';
+    } else {
+      el.textContent = _initials(name, email);
+    }
+  } catch (e) { console.warn('[topbarUser]', e); }
+}
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', _renderTopbarUser);
+} else {
+  _renderTopbarUser();
+}
+
+
 async function _sbPullPages() {
   const cid = await _sbCompany();
   if (!cid) return;
