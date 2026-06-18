@@ -2050,11 +2050,9 @@ async function _sbCompany() {
   const tok = _sbToken();
   if (!tok) return null;
   try {
-    const payload = JSON.parse(atob(tok.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')));
-    const uid = payload.sub;
-    const rows = await _sbFetch(`/profiles?select=company_id&id=eq.${uid}`);
-    if (rows && rows[0] && rows[0].company_id) { __sbCompanyId = rows[0].company_id; return __sbCompanyId; }
-  } catch (e) {}
+    const cid = await _sbFetch('/rpc/get_my_company_id', { method: 'POST', body: '{}' });
+    if (cid && _isUuid(cid)) { __sbCompanyId = cid; return __sbCompanyId; }
+  } catch (e) { console.warn('[procPages] company err', e); }
   return null;
 }
 
