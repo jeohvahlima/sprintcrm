@@ -375,23 +375,23 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
     <div class="stat-card s-blue">
       <div class="stat-icon si-blue"><i class="ti ti-checklist"></i></div>
       <div>
-        <div class="stat-num">48</div>
+        <div class="stat-num" id="statTotal">0</div>
         <div class="stat-label">Total de tarefas</div>
-        <div class="stat-trend trend-up"><i class="ti ti-trending-up" style="font-size:11px"></i>+6 esta semana</div>
+        <div class="stat-trend trend-up" id="statTotalTrend"><i class="ti ti-trending-up" style="font-size:11px"></i>+0 esta semana</div>
       </div>
     </div>
     <div class="stat-card s-green">
       <div class="stat-icon si-green"><i class="ti ti-circle-check"></i></div>
       <div>
-        <div class="stat-num">31</div>
+        <div class="stat-num" id="statDone">0</div>
         <div class="stat-label">Concluídas</div>
-        <div class="stat-trend trend-up"><i class="ti ti-trending-up" style="font-size:11px"></i>64.6% taxa</div>
+        <div class="stat-trend trend-up" id="statDoneTrend"><i class="ti ti-trending-up" style="font-size:11px"></i>0% taxa</div>
       </div>
     </div>
     <div class="stat-card s-red">
       <div class="stat-icon si-red"><i class="ti ti-alert-circle"></i></div>
       <div>
-        <div class="stat-num" id="overdueCount">7</div>
+        <div class="stat-num" id="overdueCount">0</div>
         <div class="stat-label">Atrasadas</div>
         <div class="stat-trend trend-down"><i class="ti ti-trending-down" style="font-size:11px"></i>Atenção urgente</div>
       </div>
@@ -399,27 +399,27 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
     <div class="stat-card s-amber">
       <div class="stat-icon si-amber"><i class="ti ti-clock"></i></div>
       <div>
-        <div class="stat-num">12h</div>
-        <div class="stat-label">Tempo registrado</div>
-        <div class="stat-trend trend-neu">média 1.8h/tarefa</div>
+        <div class="stat-num" id="statDueToday">0</div>
+        <div class="stat-label">Vencem hoje</div>
+        <div class="stat-trend trend-neu">prazos do dia</div>
       </div>
     </div>
     <div class="stat-card s-purple">
       <div class="stat-icon si-purple"><i class="ti ti-chart-pie"></i></div>
       <div>
-        <div class="stat-num">5</div>
+        <div class="stat-num" id="statReview">0</div>
         <div class="stat-label">Em revisão</div>
         <div style="margin-top:5px">
-          <div class="progress-bar"><div class="progress-fill" style="width:64%;background:var(--purple)"></div></div>
+          <div class="progress-bar"><div class="progress-fill" id="statReviewBar" style="width:0%;background:var(--purple)"></div></div>
         </div>
       </div>
     </div>
     <div class="stat-card s-teal">
-      <div class="stat-icon si-teal"><i class="ti ti-brand-whatsapp"></i></div>
+      <div class="stat-icon si-teal"><i class="ti ti-flag-2"></i></div>
       <div>
-        <div class="stat-num">9</div>
-        <div class="stat-label">Lembretes enviados</div>
-        <div class="stat-trend trend-up"><i class="ti ti-trending-up" style="font-size:11px"></i>hoje</div>
+        <div class="stat-num" id="statHigh">0</div>
+        <div class="stat-label">Alta prioridade</div>
+        <div class="stat-trend trend-up"><i class="ti ti-trending-up" style="font-size:11px"></i>abertas</div>
       </div>
     </div>
   </div>
@@ -1638,7 +1638,51 @@ async function loadAll() {
   if (!currentBoardId && boards[0]) currentBoardId = boards[0].id;
   renderBoards();
   renderKanban();
+  renderStats();
   populateModalSelects();
+}
+
+function renderStats() {
+  const list = tasks || [];
+  const isDone = (t) => {
+    const s = (t.status || '').toLowerCase();
+    if (s === 'concluido' || s === 'concluído' || s === 'done' || s === 'completed') return true;
+    const col = columns.find(c => c.id === t.column_id);
+    const cn = (col?.nome || '').toLowerCase();
+    return cn.includes('ganho') || cn.includes('conclu') || cn.includes('done');
+  };
+  const isReview = (t) => {
+    const col = columns.find(c => c.id === t.column_id);
+    const cn = (col?.nome || '').toLowerCase();
+    return cn.includes('revis') || cn.includes('review');
+  };
+  const now = new Date();
+  const startToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const endToday = new Date(startToday.getTime() + 86400000);
+  const weekAgo = new Date(now.getTime() - 7 * 86400000);
+
+  const total = list.length;
+  const done = list.filter(isDone).length;
+  const overdue = list.filter(t => !isDone(t) && t.due_date && new Date(t.due_date) < now).length;
+  const dueToday = list.filter(t => t.due_date && new Date(t.due_date) >= startToday && new Date(t.due_date) < endToday).length;
+  const review = list.filter(isReview).length;
+  const high = list.filter(t => !isDone(t) && ['alta', 'urgente'].includes((t.priority || '').toLowerCase())).length;
+  const newWeek = list.filter(t => t.created_at && new Date(t.created_at) >= weekAgo).length;
+  const taxa = total ? Math.round((done / total) * 1000) / 10 : 0;
+
+  const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+  set('statTotal', total);
+  const tt = document.getElementById('statTotalTrend');
+  if (tt) tt.innerHTML = `<i class="ti ti-trending-up" style="font-size:11px"></i>+${newWeek} esta semana`;
+  set('statDone', done);
+  const dt = document.getElementById('statDoneTrend');
+  if (dt) dt.innerHTML = `<i class="ti ti-trending-up" style="font-size:11px"></i>${taxa}% taxa`;
+  set('overdueCount', overdue);
+  set('statDueToday', dueToday);
+  set('statReview', review);
+  const bar = document.getElementById('statReviewBar');
+  if (bar) bar.style.width = (total ? Math.round((review / total) * 100) : 0) + '%';
+  set('statHigh', high);
 }
 
 function subscribeRealtime() {
@@ -1713,7 +1757,7 @@ function renderKanban() {
         if (cor) callApi('editar_coluna', { column_id: col.id, cor }).then(loadAll);
       } else if (op === '3') {
         if (confirm('Excluir coluna? Tarefas serão movidas para outra coluna.'))
-          callApi('excluir_coluna', { column_id: col.id }).then(loadAll);
+          callApi('deletar_coluna', { column_id: col.id }).then(loadAll);
       }
     };
   });
@@ -1764,7 +1808,7 @@ function buildCardEl(t) {
   div.querySelector('[data-act="del"]').onclick = (e) => {
     e.stopPropagation();
     if (!confirm('Deletar esta tarefa?')) return;
-    callApi('excluir_tarefa', { task_id: t.id }).then(loadAll);
+    callApi('deletar_tarefa', { task_id: t.id }).then(loadAll);
   };
   return div;
 }
@@ -2183,7 +2227,7 @@ window.createCol = async function () {
 window.deleteCard = async function (cardId) {
   const taskId = cardId.replace(/^card-/, '');
   if (!confirm('Deletar esta tarefa?')) return;
-  await callApi('excluir_tarefa', { task_id: taskId });
+  await callApi('deletar_tarefa', { task_id: taskId });
   loadAll();
 };
 
@@ -2223,7 +2267,7 @@ window.bulkDelete = async function () {
   if (!window.selectedCards || !window.selectedCards.size) return;
   if (!confirm(`Deletar ${window.selectedCards.size} tarefa(s)?`)) return;
   for (const id of window.selectedCards) {
-    try { await callApi('excluir_tarefa', { task_id: id }); } catch {}
+    try { await callApi('deletar_tarefa', { task_id: id }); } catch {}
   }
   window.selectedCards.clear();
   loadAll();
