@@ -580,6 +580,8 @@ function Conversas() {
   const [roteirosDialogOpen, setRoteirosDialogOpen] = useState(false);
   const [agendaModalOpen, setAgendaModalOpen] = useState(false);
   const [tarefaModalOpen, setTarefaModalOpen] = useState(false);
+  const [scheduledMsgOpen, setScheduledMsgOpen] = useState(false);
+  const [remindersDialogOpen, setRemindersDialogOpen] = useState(false);
   const [cleanHistoryDialogOpen, setCleanHistoryDialogOpen] = useState(false);
   const [attachmentsOpen, setAttachmentsOpen] = useState(false);
   const [attachmentsCount, setAttachmentsCount] = useState(0);
