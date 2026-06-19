@@ -754,19 +754,175 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
   </div>
 </div>
 
-<!-- ═══ CAMPANHAS + AGENDA panels (placeholder) ═══ -->
+<!-- ═══ CAMPANHAS panel ═══ -->
 <div class="panel" id="panel-campanhas">
   <div class="phdr">
     <div class="phdr-icon" style="background:var(--ad);color:var(--amber)"><i class="ti ti-send"></i></div>
     <div><div class="phdr-title">Campanhas</div><div class="phdr-sub">Disparos usando templates aprovados pela Meta</div></div>
-    <div class="phdr-actions"><button class="btn btn-green"><i class="ti ti-plus"></i>Nova Campanha</button></div>
+    <div class="phdr-actions">
+      <button class="btn btn-ghost" onclick="renderCampaignsList()"><i class="ti ti-refresh"></i>Atualizar</button>
+      <button class="btn btn-green" onclick="openNewCampaign()"><i class="ti ti-plus"></i>Nova Campanha</button>
+    </div>
   </div>
   <div class="pbody">
-    <div class="card" style="text-align:center;padding:40px;border-style:dashed">
-      <i class="ti ti-send" style="font-size:38px;color:var(--text3);opacity:.4"></i>
-      <div style="font-size:14px;font-weight:700;color:var(--text2);margin-top:12px">Gerencie campanhas de disparo em massa</div>
-      <div style="font-size:12px;color:var(--text3);margin-top:5px">Selecione leads, escolha um template aprovado e configure o disparo</div>
-      <button class="btn btn-green" style="margin-top:14px"><i class="ti ti-plus"></i>Criar primeira campanha</button>
+    <div id="campaignsListWrap">
+      <div class="card" style="text-align:center;padding:40px;border-style:dashed">
+        <i class="ti ti-send" style="font-size:38px;color:var(--text3);opacity:.4"></i>
+        <div style="font-size:14px;font-weight:700;color:var(--text2);margin-top:12px">Gerencie campanhas de disparo em massa</div>
+        <div style="font-size:12px;color:var(--text3);margin-top:5px">Selecione leads, escolha um template aprovado e configure o disparo</div>
+        <button class="btn btn-green" style="margin-top:14px" onclick="openNewCampaign()"><i class="ti ti-plus"></i>Criar primeira campanha</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ NEW CAMPAIGN MODAL ═══ -->
+<div class="modal-bg" id="newCampaignModal" onclick="if(event.target===this)closeModal('newCampaignModal')">
+  <div class="modal" style="max-width:880px;width:880px">
+    <div class="modal-left" style="border-right:none">
+      <div class="modal-header">
+        <div class="phdr-icon" style="background:var(--gd);color:var(--green);width:32px;height:32px;font-size:16px"><i class="ti ti-send"></i></div>
+        <div class="modal-title">Nova Campanha de Disparo</div>
+        <div class="modal-close" onclick="closeModal('newCampaignModal')"><i class="ti ti-x"></i></div>
+      </div>
+      <div class="modal-body" style="display:flex;flex-direction:column;gap:14px">
+        <div>
+          <label style="font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.06em">Nome da campanha</label>
+          <input id="cmpName" placeholder="Ex: Black Friday 2026" style="width:100%;margin-top:6px;background:var(--bg3);border:1px solid var(--border2);border-radius:var(--r-sm);padding:9px 12px;color:var(--text);font-size:13px;font-family:var(--font)" />
+        </div>
+        <label style="display:flex;align-items:flex-start;gap:10px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--r-sm);padding:10px 12px;cursor:pointer">
+          <input id="cmpProspeccao" type="checkbox" style="margin-top:3px;accent-color:var(--green)" />
+          <div>
+            <div style="font-size:13px;font-weight:600;color:var(--text)">🎯 Marcar leads selecionados para prospecção</div>
+            <div style="font-size:11px;color:var(--text3);margin-top:2px">Adiciona automaticamente os leads desta campanha à fila de prospecção (canal WhatsApp).</div>
+          </div>
+        </label>
+        <div>
+          <label style="font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.06em">Tipo de mensagem</label>
+          <div id="cmpMsgTypeTabs" style="display:flex;gap:6px;margin-top:6px">
+            <button type="button" data-type="template" onclick="setCampaignMsgType('template')" class="cmp-tab cmp-tab-active" style="flex:1;background:var(--gd);border:1px solid var(--green);color:var(--green);padding:8px 10px;border-radius:var(--r-sm);font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px"><i class="ti ti-template"></i>Template <span style="background:var(--text);color:var(--bg);padding:1px 5px;border-radius:8px;font-size:9.5px">Meta</span></button>
+            <button type="button" data-type="text" onclick="setCampaignMsgType('text')" class="cmp-tab" style="flex:1;background:var(--bg3);border:1px solid var(--border2);color:var(--text2);padding:8px 10px;border-radius:var(--r-sm);font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px"><i class="ti ti-file-text"></i>Texto</button>
+            <button type="button" data-type="image" onclick="setCampaignMsgType('image')" class="cmp-tab" style="flex:1;background:var(--bg3);border:1px solid var(--border2);color:var(--text2);padding:8px 10px;border-radius:var(--r-sm);font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px"><i class="ti ti-photo"></i>Imagem</button>
+            <button type="button" data-type="video" onclick="setCampaignMsgType('video')" class="cmp-tab" style="flex:1;background:var(--bg3);border:1px solid var(--border2);color:var(--text2);padding:8px 10px;border-radius:var(--r-sm);font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px"><i class="ti ti-video"></i>Vídeo</button>
+          </div>
+        </div>
+        <div id="cmpTemplateBlock">
+          <label style="font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.06em">Template aprovado</label>
+          <select id="cmpTemplate" onchange="onCampaignTemplateChange()" style="width:100%;margin-top:6px;background:var(--bg3);border:1px solid var(--border2);border-radius:var(--r-sm);padding:9px 12px;color:var(--text);font-size:13px;font-family:var(--font)">
+            <option value="">Selecione...</option>
+          </select>
+          <div id="cmpTplHint" style="font-size:11px;color:var(--text3);margin-top:5px"></div>
+        </div>
+        <div id="cmpVarsWrap" style="display:none;background:var(--bg3);border:1px solid var(--border);border-radius:var(--r-sm);padding:10px 12px">
+          <div style="font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Variáveis do template</div>
+          <div id="cmpVarsList" style="display:flex;flex-direction:column;gap:8px"></div>
+          <div style="font-size:10.5px;color:var(--text3);margin-top:8px">Dica: use <code style="background:var(--bg4);padding:1px 5px;border-radius:3px">{{nome}}</code> para inserir o nome do lead.</div>
+        </div>
+        <div id="cmpMediaWrap" style="display:none">
+          <label style="font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.06em">URL da mídia do cabeçalho</label>
+          <input id="cmpMediaUrl" placeholder="https://..." style="width:100%;margin-top:6px;background:var(--bg3);border:1px solid var(--border2);border-radius:var(--r-sm);padding:9px 12px;color:var(--text);font-size:13px;font-family:var(--font)" />
+        </div>
+        <div id="cmpFreeMediaWrap" style="display:none">
+          <label style="font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.06em"><span id="cmpFreeMediaLabel">URL da mídia</span></label>
+          <input id="cmpFreeMediaUrl" placeholder="https://..." style="width:100%;margin-top:6px;background:var(--bg3);border:1px solid var(--border2);border-radius:var(--r-sm);padding:9px 12px;color:var(--text);font-size:13px;font-family:var(--font)" />
+        </div>
+        <div id="cmpFreeTextWrap" style="display:none">
+          <label style="font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.06em"><span id="cmpFreeTextLabel">Mensagem</span></label>
+          <textarea id="cmpFreeText" rows="4" placeholder="Digite a mensagem que será enviada para todos os leads selecionados... Use {{nome}} para personalizar." style="width:100%;margin-top:6px;background:var(--bg3);border:1px solid var(--border2);border-radius:var(--r-sm);padding:9px 12px;color:var(--text);font-size:13px;font-family:var(--font);resize:vertical"></textarea>
+          <div style="font-size:10.5px;color:var(--amber);margin-top:5px">⚠️ Envio fora do template só funciona para leads com janela de 24h aberta (conversa recente).</div>
+        </div>
+        <div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--r-sm);padding:12px">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+            <i class="ti ti-filter" style="color:var(--green)"></i>
+            <div style="font-size:12px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.06em">Filtros de seleção</div>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px">
+            <div>
+              <label style="font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase">Buscar</label>
+              <input id="cmpFltSearch" oninput="onCampaignFilterChange()" placeholder="Nome, email, telefone..." style="width:100%;margin-top:4px;background:var(--bg4);border:1px solid var(--border2);border-radius:var(--r-sm);padding:7px 9px;color:var(--text);font-size:12px;font-family:var(--font)" />
+            </div>
+            <div>
+              <label style="font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase">Status</label>
+              <select id="cmpFltStatus" onchange="onCampaignFilterChange()" style="width:100%;margin-top:4px;background:var(--bg4);border:1px solid var(--border2);border-radius:var(--r-sm);padding:7px 9px;color:var(--text);font-size:12px;font-family:var(--font)">
+                <option value="">Todos</option>
+                <option value="novo">novo</option>
+                <option value="ativo">ativo</option>
+                <option value="qualificado">qualificado</option>
+                <option value="cliente">cliente</option>
+                <option value="perdido">perdido</option>
+              </select>
+            </div>
+            <div>
+              <label style="font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase">Tag</label>
+              <select id="cmpTagFilter" onchange="onCampaignFilterChange()" style="width:100%;margin-top:4px;background:var(--bg4);border:1px solid var(--border2);border-radius:var(--r-sm);padding:7px 9px;color:var(--text);font-size:12px;font-family:var(--font)">
+                <option value="">Todas</option>
+              </select>
+            </div>
+            <div>
+              <label style="font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase">Segmentação</label>
+              <select id="cmpFltSegmento" onchange="onCampaignFilterChange()" style="width:100%;margin-top:4px;background:var(--bg4);border:1px solid var(--border2);border-radius:var(--r-sm);padding:7px 9px;color:var(--text);font-size:12px;font-family:var(--font)">
+                <option value="">Todas</option>
+              </select>
+            </div>
+            <div>
+              <label style="font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase">Histórico de disparo</label>
+              <select id="cmpFltDisparo" onchange="onCampaignFilterChange()" style="width:100%;margin-top:4px;background:var(--bg4);border:1px solid var(--border2);border-radius:var(--r-sm);padding:7px 9px;color:var(--text);font-size:12px;font-family:var(--font)">
+                <option value="">Todos</option>
+                <option value="nunca">Nunca recebeu disparo</option>
+                <option value="ja">Já recebeu disparo</option>
+              </select>
+            </div>
+            <div>
+              <label style="font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase">Entrou no CRM de</label>
+              <input id="cmpFltDateFrom" type="date" onchange="onCampaignFilterChange()" style="width:100%;margin-top:4px;background:var(--bg4);border:1px solid var(--border2);border-radius:var(--r-sm);padding:7px 9px;color:var(--text);font-size:12px;font-family:var(--font)" />
+            </div>
+            <div>
+              <label style="font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase">Até</label>
+              <input id="cmpFltDateTo" type="date" onchange="onCampaignFilterChange()" style="width:100%;margin-top:4px;background:var(--bg4);border:1px solid var(--border2);border-radius:var(--r-sm);padding:7px 9px;color:var(--text);font-size:12px;font-family:var(--font)" />
+            </div>
+            <div>
+              <label style="font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase">Tags</label>
+              <select id="cmpFltHasTags" onchange="onCampaignFilterChange()" style="width:100%;margin-top:4px;background:var(--bg4);border:1px solid var(--border2);border-radius:var(--r-sm);padding:7px 9px;color:var(--text);font-size:12px;font-family:var(--font)">
+                <option value="">Com e sem tags</option>
+                <option value="com">Apenas com tags</option>
+                <option value="sem">Apenas sem tags</option>
+              </select>
+            </div>
+          </div>
+          <div id="cmpLeadsCount" style="font-size:12px;color:var(--green);margin-top:10px;font-weight:600">Carregando leads...</div>
+        </div>
+        <div>
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+            <div style="font-size:12px;font-weight:700;color:var(--text)">Selecionar Leads</div>
+            <div style="display:flex;gap:6px">
+              <button type="button" onclick="toggleSelectAllCampaignLeads(true)" style="background:var(--bg3);border:1px solid var(--border2);color:var(--text2);padding:5px 10px;border-radius:var(--r-sm);font-size:11px;font-weight:600;cursor:pointer">Selecionar todos</button>
+              <button type="button" onclick="toggleSelectAllCampaignLeads(false)" style="background:var(--bg3);border:1px solid var(--border2);color:var(--text2);padding:5px 10px;border-radius:var(--r-sm);font-size:11px;font-weight:600;cursor:pointer">Limpar</button>
+            </div>
+          </div>
+          <div id="cmpLeadsList" style="max-height:280px;overflow-y:auto;background:var(--bg3);border:1px solid var(--border);border-radius:var(--r-sm)"></div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">
+          <div>
+            <label style="font-size:10.5px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.06em">Delay (seg)</label>
+            <input id="cmpDelay" type="number" value="7" min="1" max="300" style="width:100%;margin-top:5px;background:var(--bg3);border:1px solid var(--border2);border-radius:var(--r-sm);padding:8px 10px;color:var(--text);font-size:13px;font-family:var(--mono)" />
+          </div>
+          <div>
+            <label style="font-size:10.5px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.06em">Pausa após</label>
+            <input id="cmpPauseAfter" type="number" value="15" min="1" style="width:100%;margin-top:5px;background:var(--bg3);border:1px solid var(--border2);border-radius:var(--r-sm);padding:8px 10px;color:var(--text);font-size:13px;font-family:var(--mono)" />
+          </div>
+          <div>
+            <label style="font-size:10.5px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.06em">Pausa (seg)</label>
+            <input id="cmpPauseDur" type="number" value="120" min="0" style="width:100%;margin-top:5px;background:var(--bg3);border:1px solid var(--border2);border-radius:var(--r-sm);padding:8px 10px;color:var(--text);font-size:13px;font-family:var(--mono)" />
+          </div>
+        </div>
+        <div style="background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.25);border-radius:var(--r-sm);padding:10px 12px;font-size:11.5px;color:var(--text2)">
+          <strong style="color:var(--amber)">Atenção:</strong> o envio acontece em segundo plano. Você pode fechar essa página — a campanha continuará processando.
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" onclick="closeModal('newCampaignModal')">Cancelar</button>
+        <button id="cmpSubmitBtn" class="btn btn-green" onclick="submitCampaign()"><i class="ti ti-send"></i>Iniciar disparo</button>
+      </div>
     </div>
   </div>
 </div>
@@ -1548,6 +1704,491 @@ document.addEventListener('keydown', e => {
     document.querySelectorAll('.modal-bg.show').forEach(m => m.classList.remove('show'));
   }
 });
+
+// ─── CAMPANHAS (disparo em massa) ─────────────────────────────
+let cmpLeadsCache = [];
+let cmpTagsCache = [];
+let cmpSegmentosCache = [];
+let cmpSelectedTpl = null;
+let cmpSelectedLeadIds = new Set();
+
+async function ensureCampaignLeadsLoaded() {
+  if (cmpLeadsCache.length || !waSb || !waCompanyId) return;
+  try {
+    const rows = await fetchPagedTable('leads', 'id,name,telefone,phone,tags,status,segmento,created_at,last_disparo_at,disparo_count', (q) =>
+      q.eq('company_id', waCompanyId).or('telefone.not.is.null,phone.not.is.null')
+    );
+    cmpLeadsCache = rows.filter(l => l.telefone || l.phone);
+    const tagSet = new Set();
+    const segSet = new Set();
+    cmpLeadsCache.forEach(l => {
+      if (Array.isArray(l.tags)) l.tags.forEach(t => tagSet.add(t));
+      if (l.segmento) segSet.add(l.segmento);
+    });
+    cmpTagsCache = Array.from(tagSet).sort();
+    cmpSegmentosCache = Array.from(segSet).sort();
+  } catch (e) {
+    console.error('Erro ao carregar leads para campanha', e);
+  }
+}
+
+async function ensureCampaignTemplatesLoaded() {
+  if (!waTplCache.length && !window.__tplLoaded) {
+    window.__tplLoaded = true;
+    await renderTemplatesGrid().catch(() => {});
+  }
+}
+
+async function openNewCampaign() {
+  if (!waSb || !waCompanyId) { showToast('Sessão ainda carregando...'); return; }
+  document.getElementById('newCampaignModal').classList.add('show');
+  document.getElementById('cmpName').value = '';
+  document.getElementById('cmpTemplate').value = '';
+  document.getElementById('cmpTagFilter').value = '';
+  document.getElementById('cmpFltSearch').value = '';
+  document.getElementById('cmpFltStatus').value = '';
+  document.getElementById('cmpFltSegmento').value = '';
+  document.getElementById('cmpFltDisparo').value = '';
+  document.getElementById('cmpFltDateFrom').value = '';
+  document.getElementById('cmpFltDateTo').value = '';
+  document.getElementById('cmpFltHasTags').value = '';
+  document.getElementById('cmpVarsWrap').style.display = 'none';
+  document.getElementById('cmpMediaWrap').style.display = 'none';
+  document.getElementById('cmpTplHint').textContent = '';
+  document.getElementById('cmpLeadsCount').textContent = 'Carregando leads...';
+  document.getElementById('cmpLeadsList').innerHTML = '<div style="padding:20px;text-align:center;color:var(--text3);font-size:12px">Carregando leads...</div>';
+  document.getElementById('cmpProspeccao').checked = false;
+  document.getElementById('cmpFreeText').value = '';
+  document.getElementById('cmpFreeMediaUrl').value = '';
+  cmpSelectedTpl = null;
+  cmpSelectedLeadIds = new Set();
+  setCampaignMsgType('template');
+  await Promise.all([ensureCampaignLeadsLoaded(), ensureCampaignTemplatesLoaded()]);
+  populateCampaignTemplates();
+  populateCampaignTagFilter();
+  populateCampaignSegmentoFilter();
+  // Pré-selecionar todos por padrão
+  cmpSelectedLeadIds = new Set(cmpLeadsCache.map(l => l.id).filter(Boolean));
+  renderCampaignLeadsList();
+  updateCampaignLeadsCount();
+}
+
+let cmpMsgType = 'template';
+function setCampaignMsgType(type) {
+  cmpMsgType = type;
+  document.querySelectorAll('#cmpMsgTypeTabs .cmp-tab').forEach(b => {
+    const active = b.dataset.type === type;
+    b.style.background = active ? 'var(--gd)' : 'var(--bg3)';
+    b.style.border = active ? '1px solid var(--green)' : '1px solid var(--border2)';
+    b.style.color = active ? 'var(--green)' : 'var(--text2)';
+  });
+  document.getElementById('cmpTemplateBlock').style.display = type === 'template' ? '' : 'none';
+  if (type !== 'template') {
+    document.getElementById('cmpVarsWrap').style.display = 'none';
+    document.getElementById('cmpMediaWrap').style.display = 'none';
+  } else {
+    onCampaignTemplateChange();
+  }
+  const freeText = document.getElementById('cmpFreeTextWrap');
+  const freeMedia = document.getElementById('cmpFreeMediaWrap');
+  const textLabel = document.getElementById('cmpFreeTextLabel');
+  const mediaLabel = document.getElementById('cmpFreeMediaLabel');
+  if (type === 'text') {
+    freeText.style.display = ''; freeMedia.style.display = 'none';
+    textLabel.textContent = 'Mensagem';
+  } else if (type === 'image' || type === 'video') {
+    freeText.style.display = ''; freeMedia.style.display = '';
+    textLabel.textContent = 'Legenda (opcional)';
+    mediaLabel.textContent = type === 'image' ? 'URL da imagem' : 'URL do vídeo';
+  } else {
+    freeText.style.display = 'none'; freeMedia.style.display = 'none';
+  }
+}
+
+function populateCampaignTemplates() {
+  const sel = document.getElementById('cmpTemplate');
+  const approved = waTplCache.filter(t => String(t.status || '').toUpperCase() === 'APPROVED');
+  sel.innerHTML = '<option value="">Selecione...</option>' +
+    approved.map(t => `<option value="${t.id}">${t.name} (${t.language || 'pt_BR'})</option>`).join('');
+  if (!approved.length) {
+    document.getElementById('cmpTplHint').innerHTML = '<span style="color:var(--amber)">Nenhum template aprovado. Crie e aguarde aprovação em "Templates".</span>';
+  }
+}
+
+function populateCampaignTagFilter() {
+  const sel = document.getElementById('cmpTagFilter');
+  sel.innerHTML = '<option value="">Todas</option>' +
+    cmpTagsCache.map(t => `<option value="${t}">${t}</option>`).join('');
+}
+
+function populateCampaignSegmentoFilter() {
+  const sel = document.getElementById('cmpFltSegmento');
+  if (!sel) return;
+  sel.innerHTML = '<option value="">Todas</option>' +
+    cmpSegmentosCache.map(s => `<option value="${s}">${s}</option>`).join('');
+}
+
+function getFilteredCampaignLeads() {
+  const tag = (document.getElementById('cmpTagFilter')?.value || '').trim();
+  const search = (document.getElementById('cmpFltSearch')?.value || '').trim().toLowerCase();
+  const status = (document.getElementById('cmpFltStatus')?.value || '').trim().toLowerCase();
+  const segmento = (document.getElementById('cmpFltSegmento')?.value || '').trim();
+  const disparo = (document.getElementById('cmpFltDisparo')?.value || '').trim();
+  const dFrom = document.getElementById('cmpFltDateFrom')?.value;
+  const dTo = document.getElementById('cmpFltDateTo')?.value;
+  const hasTags = (document.getElementById('cmpFltHasTags')?.value || '').trim();
+  const fromMs = dFrom ? new Date(dFrom + 'T00:00:00').getTime() : null;
+  const toMs = dTo ? new Date(dTo + 'T23:59:59').getTime() : null;
+  return cmpLeadsCache.filter(l => {
+    if (tag && !(Array.isArray(l.tags) && l.tags.includes(tag))) return false;
+    if (status && String(l.status || '').toLowerCase() !== status) return false;
+    if (segmento && l.segmento !== segmento) return false;
+    if (disparo === 'nunca' && l.last_disparo_at) return false;
+    if (disparo === 'ja' && !l.last_disparo_at) return false;
+    if (hasTags === 'com' && !(Array.isArray(l.tags) && l.tags.length)) return false;
+    if (hasTags === 'sem' && Array.isArray(l.tags) && l.tags.length) return false;
+    if (fromMs || toMs) {
+      const t = l.created_at ? new Date(l.created_at).getTime() : 0;
+      if (fromMs && t < fromMs) return false;
+      if (toMs && t > toMs) return false;
+    }
+    if (search) {
+      const hay = `${l.name || ''} ${l.telefone || ''} ${l.phone || ''} ${l.email || ''}`.toLowerCase();
+      if (!hay.includes(search)) return false;
+    }
+    return true;
+  });
+}
+
+function getSelectedCampaignLeads() {
+  const filtered = getFilteredCampaignLeads();
+  return filtered.filter(l => cmpSelectedLeadIds.has(l.id));
+}
+
+function onCampaignFilterChange() {
+  renderCampaignLeadsList();
+  updateCampaignLeadsCount();
+}
+
+function toggleCampaignLead(id, checked) {
+  if (checked) cmpSelectedLeadIds.add(id); else cmpSelectedLeadIds.delete(id);
+  updateCampaignLeadsCount();
+}
+
+function toggleSelectAllCampaignLeads(select) {
+  const filtered = getFilteredCampaignLeads();
+  filtered.forEach(l => { if (l.id) { if (select) cmpSelectedLeadIds.add(l.id); else cmpSelectedLeadIds.delete(l.id); } });
+  renderCampaignLeadsList();
+  updateCampaignLeadsCount();
+}
+
+function renderCampaignLeadsList() {
+  const wrap = document.getElementById('cmpLeadsList');
+  if (!wrap) return;
+  const filtered = getFilteredCampaignLeads();
+  if (!filtered.length) {
+    wrap.innerHTML = '<div style="padding:24px;text-align:center;color:var(--text3);font-size:12px">Nenhum lead encontrado com esse filtro</div>';
+    return;
+  }
+  const shown = filtered.slice(0, 200);
+  wrap.innerHTML = shown.map(l => {
+    const checked = cmpSelectedLeadIds.has(l.id) ? 'checked' : '';
+    const phone = l.telefone || l.phone || '';
+    const status = (l.status || 'novo').toLowerCase();
+    const badgeColor = status === 'cliente' ? 'var(--green)' : status === 'ativo' ? 'var(--teal)' : status === 'perdido' ? 'var(--red)' : 'var(--text2)';
+    const disparoTxt = l.last_disparo_at
+      ? `Último disparo: ${new Date(l.last_disparo_at).toLocaleDateString('pt-BR')}${l.last_disparo_campaign ? ' · ' + l.last_disparo_campaign : ''}`
+      : 'Nunca recebeu disparo';
+    return `<label style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-bottom:1px solid var(--border);cursor:pointer">
+      <input type="checkbox" ${checked} onchange="toggleCampaignLead('${l.id}', this.checked)" style="accent-color:var(--green);width:16px;height:16px" />
+      <div style="flex:1;min-width:0">
+        <div style="font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${(l.name || 'Sem nome').replace(/</g,'&lt;')}</div>
+        <div style="font-size:12px;color:var(--text2);font-family:var(--mono)">${phone}</div>
+        <div style="font-size:10.5px;color:var(--text3);margin-top:2px">${disparoTxt}</div>
+      </div>
+      <span style="background:var(--bg4);color:${badgeColor};border:1px solid var(--border2);padding:2px 9px;border-radius:10px;font-size:10.5px;font-weight:600;text-transform:lowercase">${status}</span>
+    </label>`;
+  }).join('') + (filtered.length > shown.length
+    ? `<div style="padding:10px;text-align:center;color:var(--text3);font-size:11px">Exibindo ${shown.length} de ${filtered.length} — use os filtros para refinar</div>`
+    : '');
+}
+
+function updateCampaignLeadsCount() {
+  const filtered = getFilteredCampaignLeads().length;
+  const selected = getSelectedCampaignLeads().length;
+  const el = document.getElementById('cmpLeadsCount');
+  if (filtered === 0) {
+    el.innerHTML = '<span style="color:var(--red)">Nenhum lead encontrado com esse filtro</span>';
+  } else {
+    el.innerHTML = `<i class="ti ti-users"></i> <strong>${selected}</strong> de <strong>${filtered}</strong> lead${filtered !== 1 ? 's' : ''} selecionado${selected !== 1 ? 's' : ''}`;
+  }
+}
+
+function extractTplVars(tpl) {
+  const vars = new Set();
+  (tpl.components || []).forEach(c => {
+    if (c.text) (c.text.match(/\{\{(\d+)\}\}/g) || []).forEach(m => vars.add(m.replace(/[{}]/g, '')));
+  });
+  return Array.from(vars).sort((a, b) => +a - +b);
+}
+
+function onCampaignTemplateChange() {
+  const id = document.getElementById('cmpTemplate').value;
+  cmpSelectedTpl = waTplCache.find(t => t.id === id) || null;
+  const varsWrap = document.getElementById('cmpVarsWrap');
+  const varsList = document.getElementById('cmpVarsList');
+  const mediaWrap = document.getElementById('cmpMediaWrap');
+  const hint = document.getElementById('cmpTplHint');
+  if (!cmpSelectedTpl) {
+    varsWrap.style.display = 'none';
+    mediaWrap.style.display = 'none';
+    hint.textContent = '';
+    return;
+  }
+  hint.textContent = `Categoria: ${cmpSelectedTpl.category || '—'} · Status: APPROVED`;
+  const vars = extractTplVars(cmpSelectedTpl);
+  if (vars.length === 0) {
+    varsWrap.style.display = 'none';
+  } else {
+    varsWrap.style.display = 'block';
+    varsList.innerHTML = vars.map((v, i) => `
+      <div>
+        <label style="font-size:11px;color:var(--text2);font-weight:600">Variável {{${v}}}${i === 0 ? ' (sugerido: {{nome}})' : ''}</label>
+        <input data-var="${v}" value="${i === 0 ? '{{nome}}' : ''}" placeholder="Valor para {{${v}}}" style="width:100%;margin-top:4px;background:var(--bg4);border:1px solid var(--border);border-radius:var(--r-sm);padding:7px 10px;color:var(--text);font-size:12.5px;font-family:var(--font)" />
+      </div>
+    `).join('');
+  }
+  const header = (cmpSelectedTpl.components || []).find(c => (c.type || '').toUpperCase() === 'HEADER');
+  const isMediaHeader = header && header.format && header.format !== 'TEXT';
+  const hasHandle = !!(header && header.example && header.example.header_handle && header.example.header_handle[0]);
+  mediaWrap.style.display = (isMediaHeader && !hasHandle) ? 'block' : 'none';
+  if (isMediaHeader && !hasHandle) {
+    mediaWrap.querySelector('label').textContent = `URL da mídia do cabeçalho (${header.format})`;
+  }
+}
+
+function collectCampaignVars() {
+  const obj = {};
+  document.querySelectorAll('#cmpVarsList input[data-var]').forEach(el => {
+    obj[el.dataset.var] = el.value || '';
+  });
+  return obj;
+}
+
+function buildTplComponentsForCampaign(tpl, vars, mediaUrl) {
+  const components = [];
+  if (!tpl.components) return components;
+  const header = tpl.components.find(c => (c.type || '').toUpperCase() === 'HEADER');
+  if (header) {
+    if (header.format && header.format !== 'TEXT') {
+      const fmt = header.format.toLowerCase();
+      const handle = header.example && header.example.header_handle && header.example.header_handle[0];
+      if (mediaUrl) {
+        components.push({ type: 'header', parameters: [{ type: fmt, [fmt]: { link: mediaUrl } }] });
+      } else if (handle) {
+        const isUrl = String(handle).startsWith('http');
+        components.push({ type: 'header', parameters: [{ type: fmt, [fmt]: isUrl ? { link: handle } : { id: handle } }] });
+      }
+    } else if (header.text && header.text.includes('{{')) {
+      const params = (header.text.match(/\{\{(\d+)\}\}/g) || []).map(m => {
+        const n = m.replace(/[{}]/g, '');
+        return { type: 'text', text: (vars[n] || 'Cliente').replace('{{nome}}', 'Cliente') };
+      });
+      if (params.length) components.push({ type: 'header', parameters: params });
+    }
+  }
+  const body = tpl.components.find(c => (c.type || '').toUpperCase() === 'BODY');
+  if (body && body.text && body.text.includes('{{')) {
+    const params = (body.text.match(/\{\{(\d+)\}\}/g) || []).map(m => {
+      const n = m.replace(/[{}]/g, '');
+      // keep {{nome}} marker; edge function / receivers replace it per-lead
+      return { type: 'text', text: vars[n] || 'Cliente' };
+    });
+    if (params.length) components.push({ type: 'body', parameters: params });
+  }
+  const btns = tpl.components.find(c => (c.type || '').toUpperCase() === 'BUTTONS');
+  if (btns && btns.buttons) {
+    btns.buttons.forEach((b, i) => {
+      if (b.type === 'QUICK_REPLY') {
+        components.push({ type: 'button', sub_type: 'quick_reply', index: String(i), parameters: [{ type: 'payload', payload: b.text || `btn_${i}` }] });
+      }
+    });
+  }
+  return components;
+}
+
+async function submitCampaign() {
+  const name = document.getElementById('cmpName').value.trim();
+  const tplId = document.getElementById('cmpTemplate').value;
+  const delay = parseInt(document.getElementById('cmpDelay').value, 10) || 7;
+  const pauseAfter = parseInt(document.getElementById('cmpPauseAfter').value, 10) || 15;
+  const pauseDur = parseInt(document.getElementById('cmpPauseDur').value, 10) || 120;
+  const mediaUrl = document.getElementById('cmpMediaUrl').value.trim();
+  const freeText = document.getElementById('cmpFreeText').value.trim();
+  const freeMedia = document.getElementById('cmpFreeMediaUrl').value.trim();
+  const prospeccao = document.getElementById('cmpProspeccao').checked;
+
+  if (!name) { showToast('Informe o nome da campanha'); return; }
+  if (cmpMsgType === 'template' && (!tplId || !cmpSelectedTpl)) { showToast('Selecione um template'); return; }
+  if (cmpMsgType === 'text' && !freeText) { showToast('Digite a mensagem'); return; }
+  if ((cmpMsgType === 'image' || cmpMsgType === 'video') && !freeMedia) { showToast('Informe a URL da mídia'); return; }
+  const leads = getSelectedCampaignLeads();
+  if (!leads.length) { showToast('Selecione pelo menos um lead'); return; }
+
+  let tplComps = null;
+  if (cmpMsgType === 'template') {
+    const header = (cmpSelectedTpl.components || []).find(c => (c.type || '').toUpperCase() === 'HEADER');
+    if (header && header.format && header.format !== 'TEXT') {
+      const hasHandle = !!(header.example && header.example.header_handle && header.example.header_handle[0]);
+      if (!hasHandle && !mediaUrl) { showToast(`Informe a URL da mídia (${header.format})`); return; }
+    }
+    const vars = collectCampaignVars();
+    tplComps = buildTplComponentsForCampaign(cmpSelectedTpl, vars, mediaUrl);
+  }
+
+  const campaignId = `campanha_${Date.now()}_${Math.random().toString(36).slice(2, 11)}`;
+  const btn = document.getElementById('cmpSubmitBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<i class="ti ti-loader-2" style="animation:spin .8s linear infinite"></i>Iniciando...';
+
+  try {
+    const { error: insErr } = await waSb.from('disparo_campaigns').insert({
+      id: campaignId,
+      company_id: waCompanyId,
+      campaign_name: name,
+      status: 'pending',
+      total_leads: leads.length,
+      message_type: cmpMsgType,
+      message_content: cmpMsgType === 'template' ? null : freeText,
+      template_name: cmpMsgType === 'template' ? cmpSelectedTpl.name : null,
+      template_language: cmpMsgType === 'template' ? (cmpSelectedTpl.language || 'pt_BR') : null,
+      template_components: tplComps,
+      template_media_url: cmpMsgType === 'template' ? (mediaUrl || null) : null,
+      media_storage_url: (cmpMsgType === 'image' || cmpMsgType === 'video') ? freeMedia : null,
+      delay_between_messages: delay,
+      pause_after_messages: pauseAfter,
+      pause_duration: pauseDur,
+      leads_data: leads.map(l => ({ id: l.id, name: l.name, telefone: l.telefone, phone: l.phone })),
+    });
+    if (insErr) throw insErr;
+
+    if (prospeccao) {
+      try {
+        const { data: queues } = await waSb.from('prospecting_queues').select('id').eq('company_id', waCompanyId).eq('channel', 'whatsapp').limit(1);
+        let queueId = queues && queues[0] && queues[0].id;
+        if (!queueId) {
+          const { data: newQ } = await waSb.from('prospecting_queues').insert({ company_id: waCompanyId, name: 'WhatsApp', channel: 'whatsapp' }).select('id').single();
+          queueId = newQ && newQ.id;
+        }
+        if (queueId) {
+          const rows = leads.filter(l => l.id).map(l => ({ queue_id: queueId, lead_id: l.id, company_id: waCompanyId, status: 'pending' }));
+          if (rows.length) await waSb.from('prospecting_queue_leads').insert(rows);
+        }
+      } catch (pErr) { console.warn('Prospecção opcional falhou', pErr); }
+    }
+
+    waSb.functions.invoke('disparo-em-massa', { body: { campaign_id: campaignId } }).catch(err => {
+      console.error('Erro ao acionar disparo-em-massa', err);
+    });
+
+    showToast('✅ Campanha iniciada! O envio continua em segundo plano.');
+    closeModal('newCampaignModal');
+    renderCampaignsList();
+  } catch (e) {
+    console.error('Erro ao criar campanha', e);
+    showToast('Erro: ' + (e.message || e));
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '<i class="ti ti-send"></i>Iniciar disparo';
+  }
+}
+
+async function renderCampaignsList() {
+  const wrap = document.getElementById('campaignsListWrap');
+  if (!waSb || !waCompanyId) return;
+  try {
+    const { data, error } = await waSb
+      .from('disparo_campaigns')
+      .select('id,campaign_name,status,total_leads,sent_count,error_count,is_paused,template_name,created_at')
+      .eq('company_id', waCompanyId)
+      .order('created_at', { ascending: false })
+      .limit(50);
+    if (error) throw error;
+    if (!data || !data.length) {
+      wrap.innerHTML = `<div class="card" style="text-align:center;padding:40px;border-style:dashed">
+        <i class="ti ti-send" style="font-size:38px;color:var(--text3);opacity:.4"></i>
+        <div style="font-size:14px;font-weight:700;color:var(--text2);margin-top:12px">Nenhuma campanha criada ainda</div>
+        <div style="font-size:12px;color:var(--text3);margin-top:5px">Selecione leads, escolha um template aprovado e configure o disparo</div>
+        <button class="btn btn-green" style="margin-top:14px" onclick="openNewCampaign()"><i class="ti ti-plus"></i>Criar primeira campanha</button>
+      </div>`;
+      return;
+    }
+    const stMap = {
+      pending:    { c: 'bg-a', label: 'Pendente' },
+      sending:    { c: 'bg-b', label: 'Enviando' },
+      completed:  { c: 'bg-g', label: 'Concluída' },
+      cancelled:  { c: 'bg-r', label: 'Cancelada' },
+      error:      { c: 'bg-r', label: 'Erro' },
+    };
+    wrap.innerHTML = `
+      <div class="card" style="padding:0;overflow:hidden">
+        <table style="width:100%;border-collapse:collapse;font-size:12.5px">
+          <thead style="background:var(--bg4)">
+            <tr style="text-align:left;color:var(--text3);font-size:11px;text-transform:uppercase;letter-spacing:.06em">
+              <th style="padding:10px 14px">Campanha</th>
+              <th style="padding:10px 14px">Template</th>
+              <th style="padding:10px 14px;text-align:right">Enviadas</th>
+              <th style="padding:10px 14px;text-align:right">Erros</th>
+              <th style="padding:10px 14px">Status</th>
+              <th style="padding:10px 14px">Criada em</th>
+              <th style="padding:10px 14px"></th>
+            </tr>
+          </thead>
+          <tbody>
+            ${data.map(c => {
+              const s = stMap[c.status] || { c: 'bg-a', label: c.status };
+              const dt = c.created_at ? new Date(c.created_at).toLocaleString('pt-BR') : '—';
+              const pct = c.total_leads ? Math.round((c.sent_count / c.total_leads) * 100) : 0;
+              const canCancel = c.status === 'pending' || c.status === 'sending';
+              return `<tr style="border-top:1px solid var(--border)">
+                <td style="padding:10px 14px;font-weight:600">${c.campaign_name || '—'}<div style="font-size:10.5px;color:var(--text3);font-weight:400">${c.total_leads || 0} leads</div></td>
+                <td style="padding:10px 14px;color:var(--text2)">${c.template_name || '—'}</td>
+                <td style="padding:10px 14px;text-align:right" class="mono">${c.sent_count || 0} <span style="color:var(--text3)">(${pct}%)</span></td>
+                <td style="padding:10px 14px;text-align:right;color:${(c.error_count || 0) > 0 ? 'var(--red)' : 'var(--text3)'}" class="mono">${c.error_count || 0}</td>
+                <td style="padding:10px 14px"><span class="badge ${s.c}">${c.is_paused ? 'Pausada' : s.label}</span></td>
+                <td style="padding:10px 14px;color:var(--text3);font-size:11px">${dt}</td>
+                <td style="padding:10px 14px;text-align:right">${canCancel ? `<button class="btn btn-ghost" style="padding:5px 10px;font-size:11px" onclick="cancelCampaign('${c.id}')"><i class="ti ti-x"></i>Cancelar</button>` : ''}</td>
+              </tr>`;
+            }).join('')}
+          </tbody>
+        </table>
+      </div>`;
+  } catch (e) {
+    console.error('Erro ao listar campanhas', e);
+    wrap.innerHTML = `<div class="card" style="color:var(--red);text-align:center;padding:20px">Erro ao carregar campanhas: ${e.message || e}</div>`;
+  }
+}
+
+async function cancelCampaign(id) {
+  if (!confirm('Cancelar essa campanha? Mensagens já enviadas não serão revertidas.')) return;
+  try {
+    const { error } = await waSb.from('disparo_campaigns').update({ status: 'cancelled', updated_at: new Date().toISOString() }).eq('id', id);
+    if (error) throw error;
+    showToast('Campanha cancelada');
+    renderCampaignsList();
+  } catch (e) {
+    showToast('Erro ao cancelar: ' + (e.message || e));
+  }
+}
+
+// Hook into switchPanel to auto-render campaigns when entering the panel
+const __origSwitchPanel = switchPanel;
+switchPanel = function(id, el) {
+  __origSwitchPanel(id, el);
+  if (id === 'campanhas' && waSb && waCompanyId) {
+    renderCampaignsList();
+  }
+};
 </script>
 </body>
 </html>

@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Processos Comerciais — GrowSOS</title>
+<title>Gestão de Processos</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -44,7 +44,7 @@
 html, body { height: 100%; background: var(--bg0); color: var(--text0); font-size: 14px; line-height: 1.5; overflow: hidden; }
 
 /* ── LAYOUT ── */
-.app { display: flex; flex-direction: column; height: 100vh; }
+.app { display: flex; flex-direction: column; height: 100vh; min-height: 0; }
 .topbar {
   height: var(--topbar-h); background: var(--bg1); border-bottom: 1px solid var(--border);
   display: flex; align-items: center; padding: 0 16px; gap: 12px; flex-shrink: 0; z-index: 20;
@@ -61,7 +61,7 @@ html, body { height: 100%; background: var(--bg0); color: var(--text0); font-siz
 .topbar-title strong { color: var(--text0); font-weight: 500; }
 .topbar-actions { margin-left: auto; display: flex; align-items: center; gap: 6px; }
 
-.body { display: flex; flex: 1; overflow: hidden; }
+.body { display: flex; flex: 1; min-height: 0; overflow: hidden; }
 
 /* ── SIDEBAR ── */
 .sidebar {
@@ -119,7 +119,7 @@ html, body { height: 100%; background: var(--bg0); color: var(--text0); font-siz
 .nav-sub { padding-left: 20px; }
 
 /* ── MAIN ── */
-.main { flex: 1; display: flex; flex-direction: column; overflow: hidden; background: var(--bg0); }
+.main { flex: 1; min-height: 0; display: flex; flex-direction: column; overflow: hidden; background: var(--bg0); }
 
 /* TAB BAR */
 .tabbar {
@@ -146,13 +146,15 @@ html, body { height: 100%; background: var(--bg0); color: var(--text0); font-siz
 .tab-divider { width: 1px; height: 20px; background: var(--border); margin: 0 4px; flex-shrink: 0; }
 
 /* CONTENT AREA */
-.content { flex: 1; overflow: hidden; display: flex; }
+.content { flex: 1; min-height: 0; overflow: hidden; display: flex; }
 
 /* ── WORKSPACE VIEW ── */
-.workspace { display: flex; flex: 1; overflow: hidden; }
-.page-area { flex: 1; overflow-y: auto; padding: 32px 48px 64px; max-width: 860px; margin: 0 auto; width: 100%; }
-.page-area::-webkit-scrollbar { width: 4px; }
-.page-area::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 4px; }
+.workspace { display: flex; flex: 1; min-height: 0; height: 100%; overflow: hidden; }
+.page-area { flex: 1; min-height: 0; height: calc(100vh - var(--topbar-h) - var(--tab-h)); max-height: calc(100vh - var(--topbar-h) - var(--tab-h)); overflow-y: scroll; overscroll-behavior: contain; padding: 32px max(48px, calc((100% - 764px) / 2)) 120px; width: 100%; scrollbar-width: thin; scrollbar-color: var(--border2) transparent; }
+.page-area::-webkit-scrollbar { width: 10px; }
+.page-area::-webkit-scrollbar-track { background: transparent; }
+.page-area::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 6px; border: 2px solid transparent; background-clip: padding-box; }
+.page-area::-webkit-scrollbar-thumb:hover { background: var(--text2); border: 2px solid transparent; background-clip: padding-box; }
 
 /* PAGE HEADER */
 .page-icon { font-size: 48px; margin-bottom: 12px; cursor: pointer; display: inline-block; }
@@ -251,7 +253,7 @@ html, body { height: 100%; background: var(--bg0); color: var(--text0); font-siz
 /* SLASH COMMAND MENU */
 .slash-menu {
   position: fixed; background: var(--bg2); border: 1px solid var(--border2);
-  border-radius: 10px; width: 240px; z-index: 100; overflow: hidden;
+  border-radius: 10px; width: 240px; z-index: 100; overflow-y: auto; max-height: 70vh;
   box-shadow: 0 20px 60px rgba(0,0,0,0.6); backdrop-filter: blur(12px);
   background: rgba(21, 25, 35, 0.95);
 }
@@ -732,22 +734,13 @@ html, body { height: 100%; background: var(--bg0); color: var(--text0); font-siz
 
 <!-- TOP BAR -->
 <div class="topbar">
-  <div class="topbar-logo">
-    <div class="logo-icon">🌱</div>
-    <span class="logo-text">GrowSOS</span>
-  </div>
-  <div class="topbar-sep"></div>
-  <div class="topbar-title">
-    <strong>Processos Comerciais</strong>
-    <span style="color:var(--text3)"> · workspace</span>
-  </div>
   <div class="topbar-actions">
     <button class="btn btn-ghost btn-sm" onclick="openSearch()">
       <span>🔍</span> Busca global <kbd style="font-size:10px;background:var(--bg3);border:1px solid var(--border);border-radius:4px;padding:1px 5px;">⌘K</kbd>
     </button>
     <button class="btn btn-ai btn-sm" onclick="toggleAI()">✦ IA</button>
     <button class="btn btn-primary btn-sm" onclick="showNewMenu()">+ Novo</button>
-    <div style="width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,#3b82f6,#a78bfa);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;cursor:pointer;">LM</div>
+    <div id="topbarUserAvatar" title="" style="width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,#22c55e,#16a34a);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;cursor:pointer;color:#fff;overflow:hidden;background-size:cover;background-position:center;">··</div>
   </div>
 </div>
 
@@ -760,9 +753,13 @@ html, body { height: 100%; background: var(--bg0); color: var(--text0); font-siz
       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
       <input placeholder="Filtrar..." />
     </div>
-    <button class="sidebar-new" onclick="setTab('workspace')">
+    <button class="sidebar-new" onclick="createNewPage()">
       <span>📄</span> Nova página
     </button>
+    <div class="nav-section" id="nav-custom-pages" style="display:none;">
+      <div class="nav-section-title">📝 Minhas páginas</div>
+      <div id="custom-pages-list"></div>
+    </div>
   </div>
   <div class="sidebar-nav">
     <div class="nav-section">
@@ -1707,6 +1704,7 @@ Posso te mostrar em 10 minutos como funciona?
     <button class="mm-tbtn ghost" onclick="mmUndo()" title="Ctrl+Z">↩</button>
     <button class="mm-tbtn ghost" onclick="mmRedo()" title="Ctrl+Y">↪</button>
     <div class="mm-tsep"></div>
+    <button class="mm-tbtn ghost" id="mm-save-map" onclick="mmSave()">💾 Salvar</button>
     <button class="mm-tbtn ghost" id="mm-toggle-panel" onclick="mmTogglePanel()">🎨 Estilos</button>
     <button class="mm-tbtn ai" onclick="mmOpenAI()">✦ IA</button>
   </div>
@@ -1803,10 +1801,12 @@ Posso te mostrar em 10 minutos como funciona?
           </div>
         </div>
         <div class="mm-psec">
-          <div class="mm-psec-title">📤 Exportar</div>
+          <div class="mm-psec-title">📤 Exportar / Importar</div>
           <button class="mm-expbtn" onclick="mmExportSVG()">🖼 Exportar SVG</button>
           <button class="mm-expbtn" onclick="mmExportJSON()">📄 Exportar JSON</button>
           <button class="mm-expbtn" onclick="mmExportTxt()">📝 Exportar Texto</button>
+          <button class="mm-expbtn" onclick="mmImportJSON()">📂 Importar JSON</button>
+          <button class="mm-expbtn" onclick="mmShare()">🔗 Compartilhar link</button>
         </div>
       </div>
     </div>
@@ -1824,6 +1824,7 @@ Posso te mostrar em 10 minutos como funciona?
   </div>
 </div>
 <div class="mm-toast" id="mm-toast"></div>
+  <input id="mm-import-file" type="file" accept="application/json,.json" style="display:none" onchange="mmImportFile(event)" />
   </div><!-- /content -->
 </div><!-- /main -->
 
@@ -1869,22 +1870,84 @@ Posso te mostrar em 10 minutos como funciona?
 </div>
 
 <!-- SLASH MENU -->
+<!-- NEW PAGE MODAL -->
+<style>
+#newpage-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.6); z-index:500; align-items:center; justify-content:center; }
+.np-modal { width:580px; max-width:94vw; max-height:88vh; overflow-y:auto; background:var(--bg2); border:1px solid var(--border); border-radius:12px; padding:20px; box-shadow:0 20px 60px rgba(0,0,0,.5); }
+.np-label { font-size:11px; font-weight:600; color:var(--text2); text-transform:uppercase; letter-spacing:.05em; margin:12px 0 5px; display:block; }
+.np-input { width:100%; background:var(--bg3); border:1px solid var(--border); border-radius:8px; padding:8px 10px; font-size:13px; color:var(--text0); outline:none; }
+.np-input:focus { border-color:var(--accent, #22c55e); }
+.np-tabs { display:flex; gap:6px; margin-top:14px; }
+.np-tab { flex:1; text-align:center; padding:10px 8px; border:1px solid var(--border); border-radius:8px; background:var(--bg3); color:var(--text2); font-size:12px; cursor:pointer; user-select:none; transition:all .15s; }
+.np-tab:hover { color:var(--text0); border-color:var(--text3); }
+.np-tab.np-tab-active { border-color:#22c55e; color:var(--text0); background:rgba(34,197,94,.08); }
+.np-tab .np-tab-icon { font-size:18px; display:block; margin-bottom:4px; }
+#np-paste { width:100%; min-height:160px; resize:vertical; background:var(--bg3); border:1px solid var(--border); border-radius:8px; padding:10px; font-size:13px; color:var(--text0); outline:none; font-family:inherit; }
+.np-hint { font-size:11px; color:var(--text3); margin-top:6px; }
+.np-footer { display:flex; justify-content:flex-end; gap:8px; margin-top:18px; }
+</style>
+<div id="newpage-overlay" onclick="if(event.target===this)closeNewPageModal()">
+  <div class="np-modal">
+    <div style="display:flex;align-items:center;justify-content:space-between;">
+      <div style="font-size:15px;font-weight:700;color:var(--text0);">📄 Criar nova página</div>
+      <button class="btn btn-ghost btn-sm" onclick="closeNewPageModal()">✕</button>
+    </div>
+
+    <div style="display:flex;gap:10px;">
+      <div style="flex:1;">
+        <label class="np-label">Nome da página</label>
+        <input id="np-name" class="np-input" placeholder="Ex.: Playbook de Prospecção" />
+      </div>
+      <div style="width:90px;">
+        <label class="np-label">Ícone</label>
+        <input id="np-icon" class="np-input" value="📄" maxlength="4" style="text-align:center;" />
+      </div>
+    </div>
+
+    <label class="np-label">Como deseja criar?</label>
+    <div class="np-tabs">
+      <div class="np-tab np-tab-active" data-mode="blank" onclick="_npSetMode('blank')"><span class="np-tab-icon">✏️</span>Página em branco</div>
+      <div class="np-tab" data-mode="paste" onclick="_npSetMode('paste')"><span class="np-tab-icon">📋</span>Colar texto</div>
+      <div class="np-tab" data-mode="file" onclick="_npSetMode('file')"><span class="np-tab-icon">📎</span>Anexar documento</div>
+    </div>
+
+    <div id="np-paste-wrap" style="display:none;">
+      <label class="np-label">Cole o conteúdo do documento</label>
+      <textarea id="np-paste" placeholder="Cole aqui todo o texto. Dicas: use # ou ## para títulos, - para listas, [ ] para checklist."></textarea>
+      <div class="np-hint">O texto será convertido automaticamente em blocos (títulos, parágrafos, listas e checklists).</div>
+    </div>
+
+    <div id="np-file-wrap" style="display:none;">
+      <label class="np-label">Selecione um arquivo (PDF, DOCX, TXT, MD)</label>
+      <input id="np-file" class="np-input" type="file" accept=".pdf,.docx,.txt,.md" style="padding:7px;" />
+      <div class="np-hint">O conteúdo do documento será extraído e convertido em blocos editáveis.</div>
+    </div>
+
+    <div class="np-footer">
+      <button class="btn btn-ghost btn-sm" onclick="closeNewPageModal()">Cancelar</button>
+      <button class="btn btn-primary btn-sm" id="np-create-btn" onclick="_npCreate()">Criar página</button>
+    </div>
+  </div>
+</div>
+
 <div class="slash-menu" id="slash-menu" style="display:none;top:300px;left:300px;">
   <div class="slash-menu-header">
     <div class="slash-menu-search">Blocos básicos</div>
   </div>
   <div class="slash-section-title">Texto</div>
-  <div class="slash-item focused" onclick="hideSlash()"><div class="slash-item-icon">📝</div><div class="slash-item-text"><div class="name">Parágrafo</div><div class="desc">Texto simples</div></div></div>
-  <div class="slash-item" onclick="hideSlash()"><div class="slash-item-icon">H1</div><div class="slash-item-text"><div class="name">Título Grande</div><div class="desc">Seção principal</div></div></div>
-  <div class="slash-item" onclick="hideSlash()"><div class="slash-item-icon">H2</div><div class="slash-item-text"><div class="name">Título Médio</div><div class="desc">Subseção</div></div></div>
+  <div class="slash-item focused" onclick="insertBlock('p')"><div class="slash-item-icon">📝</div><div class="slash-item-text"><div class="name">Parágrafo</div><div class="desc">Texto simples</div></div></div>
+  <div class="slash-item" onclick="insertBlock('h1')"><div class="slash-item-icon">H1</div><div class="slash-item-text"><div class="name">Título Grande</div><div class="desc">Seção principal</div></div></div>
+  <div class="slash-item" onclick="insertBlock('h2')"><div class="slash-item-icon">H2</div><div class="slash-item-text"><div class="name">Título Médio</div><div class="desc">Subseção</div></div></div>
+  <div class="slash-item" onclick="insertBlock('divider')"><div class="slash-item-icon">—</div><div class="slash-item-text"><div class="name">Divisor</div><div class="desc">Linha separadora</div></div></div>
   <div class="slash-section-title">IA</div>
-  <div class="slash-item" onclick="hideSlash();toggleAI()"><div class="slash-item-icon" style="background:var(--purple-bg);border-color:#2a1a50;">✦</div><div class="slash-item-text"><div class="name" style="color:var(--purple);">Gerar com IA</div><div class="desc">Criar conteúdo automaticamente</div></div></div>
-  <div class="slash-item" onclick="hideSlash()"><div class="slash-item-icon" style="background:var(--purple-bg);border-color:#2a1a50;">📋</div><div class="slash-item-text"><div class="name" style="color:var(--purple);">Resumir com IA</div><div class="desc">Resumir seção selecionada</div></div></div>
+  <div class="slash-item" onclick="slashAI()"><div class="slash-item-icon" style="background:var(--purple-bg);border-color:#2a1a50;">✦</div><div class="slash-item-text"><div class="name" style="color:var(--purple);">Gerar com IA</div><div class="desc">Criar conteúdo automaticamente</div></div></div>
+  <div class="slash-item" onclick="slashAI()"><div class="slash-item-icon" style="background:var(--purple-bg);border-color:#2a1a50;">📋</div><div class="slash-item-text"><div class="name" style="color:var(--purple);">Resumir com IA</div><div class="desc">Resumir seção selecionada</div></div></div>
   <div class="slash-section-title">Dados</div>
-  <div class="slash-item" onclick="hideSlash()"><div class="slash-item-icon">📋</div><div class="slash-item-text"><div class="name">Tabela</div><div class="desc">Grade de dados</div></div></div>
-  <div class="slash-item" onclick="hideSlash()"><div class="slash-item-icon">✅</div><div class="slash-item-text"><div class="name">Checklist</div><div class="desc">Lista de tarefas</div></div></div>
-  <div class="slash-item" onclick="hideSlash()"><div class="slash-item-icon">📌</div><div class="slash-item-text"><div class="name">Kanban inline</div><div class="desc">Mini-quadro embutido</div></div></div>
-  <div class="slash-item" onclick="hideSlash()"><div class="slash-item-icon">💡</div><div class="slash-item-text"><div class="name">Callout</div><div class="desc">Destaque colorido</div></div></div>
+  <div class="slash-item" onclick="insertBlock('table')"><div class="slash-item-icon">📋</div><div class="slash-item-text"><div class="name">Tabela</div><div class="desc">Grade de dados</div></div></div>
+  <div class="slash-item" onclick="insertBlock('checklist')"><div class="slash-item-icon">✅</div><div class="slash-item-text"><div class="name">Checklist</div><div class="desc">Lista de tarefas</div></div></div>
+  <div class="slash-item" onclick="insertBlock('code')"><div class="slash-item-icon">⌨️</div><div class="slash-item-text"><div class="name">Código</div><div class="desc">Bloco de código</div></div></div>
+  <div class="slash-item" onclick="insertBlock('kanban')"><div class="slash-item-icon">📌</div><div class="slash-item-text"><div class="name">Kanban inline</div><div class="desc">Mini-quadro embutido</div></div></div>
+  <div class="slash-item" onclick="insertBlock('callout')"><div class="slash-item-icon">💡</div><div class="slash-item-text"><div class="name">Callout</div><div class="desc">Destaque colorido</div></div></div>
 </div>
 
 <script>
@@ -1896,12 +1959,537 @@ function setTab(tab) {
     if (el) el.style.display = 'none';
   });
   const active = document.getElementById('view-' + tab);
-  if (active) { active.style.display = tab === 'kanban' ? 'flex' : ''; }
+  if (active) { active.style.display = ''; }
 
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
   const tabEl = document.getElementById('tab-' + tab);
   if (tabEl) tabEl.classList.add('active');
 }
+
+// ===== Document (page) management =====
+const DOC_STORE_KEY = 'proc_docs_v2';
+const DOC_CUSTOM_KEY = 'proc_custom_pages_v2';
+const DOC_CURRENT_KEY = 'proc_current_doc_v2';
+
+const DOC_DEFAULTS = {
+  'playbook-vendas':  { icon: '📖', title: 'Playbook de Vendas — Clínicas' },
+  'metodologia':      { icon: '🎯', title: 'Metodologia de Vendas' },
+  'script-objecoes':  { icon: '💬', title: 'Scripts de Objeções' },
+  'cold-call':        { icon: '📞', title: 'Cold Call' },
+  'proposta':         { icon: '📋', title: 'Proposta Comercial' },
+  'followup':         { icon: '🔄', title: 'Follow-up' },
+  'icp':              { icon: '🎯', title: 'ICP e Personas' },
+  'onboarding':       { icon: '🚀', title: 'Onboarding de Vendedor' },
+  'objecoes':         { icon: '🛡️', title: 'Mapa de Objeções' },
+};
+
+let __originalEditorHTML = '';
+let __currentDocId = 'playbook-vendas';
+
+function _loadDocs() {
+  try { return JSON.parse(localStorage.getItem(DOC_STORE_KEY) || '{}'); } catch(e) { return {}; }
+}
+function _saveDocs(d) { localStorage.setItem(DOC_STORE_KEY, JSON.stringify(d)); }
+function _loadCustom() {
+  try { return JSON.parse(localStorage.getItem(DOC_CUSTOM_KEY) || '[]'); } catch(e) { return []; }
+}
+function _saveCustom(list) { localStorage.setItem(DOC_CUSTOM_KEY, JSON.stringify(list)); }
+
+// ===== Supabase sync layer (hybrid: localStorage + process_pages) =====
+const SB_URL = 'https://dteppsfseusqixuppglh.supabase.co';
+const SB_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR0ZXBwc2ZzZXVzcWl4dXBwZ2xoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA4MzY0OTgsImV4cCI6MjA3NjQxMjQ5OH0.eEz5cyfwi5chae1U9S0Yt1FBwglyuVnm_Fzg9HVrV_Q';
+let __sbCompanyId = null;
+let __sbSaveTimers = {};
+
+function _sbToken() {
+  try {
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (k && k.startsWith('sb-') && k.endsWith('-auth-token')) {
+        const raw = localStorage.getItem(k);
+        if (!raw) continue;
+        const p = JSON.parse(raw);
+        const tok = p?.access_token || p?.currentSession?.access_token;
+        if (tok) return tok;
+      }
+    }
+  } catch (e) {}
+  return null;
+}
+
+async function _sbFetch(path, opts = {}) {
+  const tok = _sbToken();
+  if (!tok) return null;
+  const headers = {
+    'apikey': SB_ANON,
+    'Authorization': 'Bearer ' + tok,
+    'Content-Type': 'application/json',
+    ...(opts.headers || {})
+  };
+  if (opts.method === 'POST' || opts.method === 'PATCH') {
+    headers['Prefer'] = 'return=representation';
+  }
+  try {
+    const r = await fetch(SB_URL + '/rest/v1' + path, { ...opts, headers });
+    if (!r.ok) { console.warn('[procPages]', r.status, await r.text().catch(() => '')); return null; }
+    const ct = r.headers.get('content-type') || '';
+    return ct.includes('application/json') ? await r.json() : null;
+  } catch (e) { console.warn('[procPages] fetch err', e); return null; }
+}
+
+async function _sbCompany() {
+  if (__sbCompanyId) return __sbCompanyId;
+  const tok = _sbToken();
+  if (!tok) return null;
+  try {
+    const cid = await _sbFetch('/rpc/get_my_company_id', { method: 'POST', body: '{}' });
+    if (cid && _isUuid(cid)) { __sbCompanyId = cid; return __sbCompanyId; }
+  } catch (e) { console.warn('[procPages] company err', e); }
+  return null;
+}
+
+function _isUuid(s) { return typeof s === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(s); }
+
+// ===== Render current logged-in CRM user in topbar avatar =====
+function _initials(name, email) {
+  const src = (name || '').trim() || (email || '').split('@')[0] || '';
+  if (!src) return '··';
+  const parts = src.replace(/[._-]+/g, ' ').split(/\s+/).filter(Boolean);
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+}
+async function _renderTopbarUser() {
+  const el = document.getElementById('topbarUserAvatar');
+  if (!el) return;
+  const tok = _sbToken();
+  if (!tok) { el.textContent = '?'; return; }
+  try {
+    const r = await fetch(SB_URL + '/auth/v1/user', { headers: { 'apikey': SB_ANON, 'Authorization': 'Bearer ' + tok }});
+    if (!r.ok) return;
+    const u = await r.json();
+    const meta = u?.user_metadata || {};
+    const name = meta.full_name || meta.name || meta.display_name || '';
+    const email = u?.email || '';
+    const avatar = meta.avatar_url || meta.picture || '';
+    el.title = (name || email) + (email && name ? ' · ' + email : '');
+    if (avatar) {
+      el.style.backgroundImage = `url("${avatar}")`;
+      el.textContent = '';
+    } else {
+      el.textContent = _initials(name, email);
+    }
+  } catch (e) { console.warn('[topbarUser]', e); }
+}
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', _renderTopbarUser);
+} else {
+  _renderTopbarUser();
+}
+
+
+async function _sbPullPages() {
+  const cid = await _sbCompany();
+  if (!cid) return;
+  const rows = await _sbFetch(`/process_pages?company_id=eq.${cid}&page_type=eq.custom&order=position.asc`);
+  if (!rows) return;
+  const list = rows.map(r => ({ id: r.id, title: r.title || 'Sem título', icon: r.icon || '📄' }));
+  _saveCustom(list);
+  const docs = _loadDocs();
+  rows.forEach(r => {
+    const html = r.properties && r.properties.html;
+    if (html) docs[r.id] = { title: r.title || 'Sem título', icon: r.icon || '📄', html };
+  });
+  _saveDocs(docs);
+  _renderCustomPages();
+}
+
+async function _sbCreatePage(title, icon, html) {
+  const cid = await _sbCompany();
+  if (!cid) return null;
+  const res = await _sbFetch('/process_pages', {
+    method: 'POST',
+    body: JSON.stringify({ company_id: cid, title, icon, page_type: 'custom', properties: { html } })
+  });
+  return (res && res[0] && res[0].id) ? res[0].id : null;
+}
+
+async function _sbUpdatePage(id, patch) {
+  if (!_isUuid(id)) return;
+  await _sbFetch(`/process_pages?id=eq.${id}`, { method: 'PATCH', body: JSON.stringify(patch) });
+}
+
+async function _sbDeletePage(id) {
+  if (!_isUuid(id)) return;
+  await _sbFetch(`/process_pages?id=eq.${id}`, { method: 'DELETE' });
+}
+
+function _sbDebouncedSaveCurrent() {
+  const id = __currentDocId;
+  if (!_isUuid(id)) return; // built-in or local-only
+  clearTimeout(__sbSaveTimers[id]);
+  __sbSaveTimers[id] = setTimeout(() => {
+    const docs = _loadDocs();
+    const d = docs[id];
+    if (!d) return;
+    _sbUpdatePage(id, { title: d.title || 'Sem título', icon: d.icon || '📄', properties: { html: d.html || '' } });
+  }, 1200);
+}
+
+
+function _getEditorEl()  { return document.querySelector('#view-workspace .block-editor'); }
+function _getTitleEl()   { return document.querySelector('#view-workspace .page-title'); }
+function _getIconEl()    { return document.querySelector('#view-workspace .page-icon'); }
+
+function _captureCurrentDoc() {
+  const docs = _loadDocs();
+  const editor = _getEditorEl();
+  const titleEl = _getTitleEl();
+  const iconEl  = _getIconEl();
+  if (!editor) return;
+  docs[__currentDocId] = {
+    title: titleEl ? titleEl.value : '',
+    icon:  iconEl ? iconEl.textContent : '📄',
+    html:  editor.innerHTML,
+  };
+  _saveDocs(docs);
+  _sbDebouncedSaveCurrent();
+}
+
+
+function setDoc(id) {
+  // Save current page before switching
+  _captureCurrentDoc();
+
+  setTab('workspace');
+
+  const docs = _loadDocs();
+  const editor = _getEditorEl();
+  const titleEl = _getTitleEl();
+  const iconEl  = _getIconEl();
+  if (!editor || !titleEl) return;
+
+  // Highlight active item
+  document.querySelectorAll('.sidebar .nav-item').forEach(n => n.classList.remove('active'));
+  const navEl = document.querySelector('.sidebar .nav-item[data-doc-id="' + id + '"]')
+              || Array.from(document.querySelectorAll('.sidebar .nav-item'))
+                   .find(n => (n.getAttribute('onclick')||'').includes("setDoc('" + id + "')"));
+  if (navEl) navEl.classList.add('active');
+
+  const saved = docs[id];
+  const meta = DOC_DEFAULTS[id] || _loadCustom().find(p => p.id === id) || { icon: '📄', title: 'Sem título' };
+
+  if (saved) {
+    titleEl.value = saved.title || meta.title;
+    if (iconEl) iconEl.textContent = saved.icon || meta.icon;
+    editor.innerHTML = saved.html || _emptyDocHTML(meta.title);
+  } else {
+    titleEl.value = meta.title;
+    if (iconEl) iconEl.textContent = meta.icon;
+    editor.innerHTML = (id === 'playbook-vendas' && __originalEditorHTML)
+      ? __originalEditorHTML
+      : _emptyDocHTML(meta.title);
+  }
+
+  __currentDocId = id;
+  localStorage.setItem(DOC_CURRENT_KEY, id);
+  _bindEditableHandlers();
+}
+
+function _emptyDocHTML(title) {
+  return `
+    <div class="block"><div class="block-handle">⠿</div>
+      <div class="block-content block-h1" contenteditable="true">${(title||'Nova página').replace(/</g,'&lt;')}</div>
+    </div>
+    <div class="block"><div class="block-handle">⠿</div>
+      <div class="block-content block-p" contenteditable="true">Comece a escrever... Pressione <strong>/</strong> para inserir blocos.</div>
+    </div>`;
+}
+
+let __npMode = 'blank';
+
+function createNewPage() {
+  const ov = document.getElementById('newpage-overlay');
+  if (!ov) return;
+  document.getElementById('np-name').value = '';
+  document.getElementById('np-icon').value = '📄';
+  document.getElementById('np-paste').value = '';
+  document.getElementById('np-file').value = '';
+  _npSetMode('blank');
+  ov.style.display = 'flex';
+  setTimeout(() => document.getElementById('np-name').focus(), 50);
+}
+
+function closeNewPageModal() {
+  const ov = document.getElementById('newpage-overlay');
+  if (ov) ov.style.display = 'none';
+}
+
+function _npSetMode(m) {
+  __npMode = m;
+  document.querySelectorAll('#newpage-overlay .np-tab').forEach(t =>
+    t.classList.toggle('np-tab-active', t.dataset.mode === m));
+  document.getElementById('np-paste-wrap').style.display = m === 'paste' ? '' : 'none';
+  document.getElementById('np-file-wrap').style.display = m === 'file' ? '' : 'none';
+}
+
+function _npEscape(s) {
+  return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+// Converts plain text into editor blocks (headings, paragraphs, lists, checklists)
+function _textToBlocksHTML(text) {
+  const handle = '<div class="block-handle">⠿</div>';
+  const lines = text.split(/\r?\n/);
+  const out = [];
+  let buf = [];
+  const flush = () => {
+    if (!buf.length) return;
+    const t = buf.join(' ').trim();
+    if (t) out.push(`<div class="block">${handle}<div class="block-content block-p" contenteditable="true">${_npEscape(t)}</div></div>`);
+    buf = [];
+  };
+  for (const raw of lines) {
+    const line = raw.trim();
+    if (!line) { flush(); continue; }
+    const mdH = line.match(/^(#{1,3})\s+(.*)$/);
+    if (mdH) {
+      flush();
+      const cls = mdH[1].length === 1 ? 'block-h1' : mdH[1].length === 2 ? 'block-h2' : 'block-h3';
+      out.push(`<div class="block">${handle}<div class="block-content ${cls}" contenteditable="true">${_npEscape(mdH[2])}</div></div>`);
+      continue;
+    }
+    if (/^\[[ xX]\]\s+/.test(line)) {
+      flush();
+      const checked = /^\[[xX]\]/.test(line);
+      out.push(`<div class="block">${handle}<div class="block-checklist${checked ? ' checked' : ''}"><input type="checkbox"${checked ? ' checked' : ''} /><span class="check-text" contenteditable="true">${_npEscape(line.replace(/^\[[ xX]\]\s+/, ''))}</span></div></div>`);
+      continue;
+    }
+    if (/^[-*•]\s+/.test(line)) {
+      flush();
+      out.push(`<div class="block">${handle}<div class="block-content block-p" contenteditable="true">• ${_npEscape(line.replace(/^[-*•]\s+/, ''))}</div></div>`);
+      continue;
+    }
+    // Heuristic: short ALL-CAPS line = section heading
+    if (line.length < 80 && line === line.toUpperCase() && /[A-ZÀ-Ú]/.test(line) && !/[.!?]$/.test(line)) {
+      flush();
+      out.push(`<div class="block">${handle}<div class="block-content block-h2" contenteditable="true">${_npEscape(line)}</div></div>`);
+      continue;
+    }
+    buf.push(line);
+  }
+  flush();
+  return out.join('');
+}
+
+// Loads an external script trying multiple CDNs (resilience fallback)
+function _npLoadScript(urls) {
+  return new Promise((resolve, reject) => {
+    const tryNext = (i) => {
+      if (i >= urls.length) return reject(new Error('Não foi possível carregar a biblioteca de leitura do arquivo. Verifique sua conexão.'));
+      const s = document.createElement('script');
+      s.src = urls[i];
+      s.onload = () => resolve();
+      s.onerror = () => { s.remove(); tryNext(i + 1); };
+      document.head.appendChild(s);
+    };
+    tryNext(0);
+  });
+}
+
+async function _npExtractPdf(file) {
+  if (!window.pdfjsLib) {
+    await _npLoadScript([
+      'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js',
+      'https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.min.js'
+    ]);
+  }
+  window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+  const buf = await file.arrayBuffer();
+  const pdf = await window.pdfjsLib.getDocument({ data: buf }).promise;
+  let out = '';
+  for (let i = 1; i <= pdf.numPages; i++) {
+    const page = await pdf.getPage(i);
+    const content = await page.getTextContent();
+    let lastY = null;
+    for (const item of content.items) {
+      const y = item.transform && item.transform[5];
+      if (lastY !== null && Math.abs(y - lastY) > 2) out += '\n';
+      out += item.str + ' ';
+      lastY = y;
+    }
+    out += '\n\n';
+  }
+  return out;
+}
+
+async function _npExtractDocx(file) {
+  if (!window.mammoth) {
+    await _npLoadScript([
+      'https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js',
+      'https://unpkg.com/mammoth@1.6.0/mammoth.browser.min.js'
+    ]);
+  }
+  const buf = await file.arrayBuffer();
+  const result = await window.mammoth.extractRawText({ arrayBuffer: buf });
+  return result.value;
+}
+
+async function _npCreate() {
+  const btn = document.getElementById('np-create-btn');
+  try {
+    btn.disabled = true;
+    btn.textContent = 'Criando...';
+    let text = '';
+    if (__npMode === 'paste') {
+      text = (document.getElementById('np-paste').value || '').trim();
+      if (!text) { alert('Cole o texto do documento.'); return; }
+    } else if (__npMode === 'file') {
+      const f = document.getElementById('np-file').files[0];
+      if (!f) { alert('Selecione um arquivo.'); return; }
+      btn.textContent = 'Lendo arquivo...';
+      const ext = (f.name.split('.').pop() || '').toLowerCase();
+      if (ext === 'pdf') text = await _npExtractPdf(f);
+      else if (ext === 'docx') text = await _npExtractDocx(f);
+      else if (ext === 'txt' || ext === 'md') text = await f.text();
+      else { alert('Formato não suportado. Use PDF, DOCX, TXT ou MD.'); return; }
+      if (!text.trim()) { alert('Não foi possível extrair texto deste arquivo.'); return; }
+    }
+
+    // Page title: input > first line of the text > default
+    let title = (document.getElementById('np-name').value || '').trim();
+    if (!title && text) {
+      const firstLine = text.split(/\r?\n/).map(l => l.trim()).find(l => l);
+      title = (firstLine || 'Nova página').replace(/^#+\s*/, '').slice(0, 120);
+    }
+    if (!title) title = 'Nova página';
+    const icon = (document.getElementById('np-icon').value || '📄').trim() || '📄';
+
+    const handle = '<div class="block-handle">⠿</div>';
+    let html = `<div class="block">${handle}<div class="block-content block-h1" contenteditable="true">${_npEscape(title)}</div></div>`;
+    if (text) {
+      const lines = text.split(/\r?\n/);
+      while (lines.length && !lines[0].trim()) lines.shift();
+      if (lines.length && lines[0].trim().replace(/^#+\s*/, '') === title) lines.shift();
+      html += _textToBlocksHTML(lines.join('\n'));
+    } else {
+      html += `<div class="block">${handle}<div class="block-content block-p" contenteditable="true">Comece a escrever... Pressione <strong>/</strong> para inserir blocos.</div></div>`;
+    }
+
+    // 1) Save to Supabase first (so we get a real UUID). Fallback to local id if offline/unauth.
+    let id = await _sbCreatePage(title, icon, html);
+    if (!id) id = 'custom-' + Date.now();
+
+    const list = _loadCustom();
+    list.push({ id, title, icon });
+    _saveCustom(list);
+
+    const docs = _loadDocs();
+    docs[id] = { title, icon, html };
+    _saveDocs(docs);
+
+    _renderCustomPages();
+    closeNewPageModal();
+
+    setDoc(id);
+  } catch (e) {
+    console.error(e);
+    alert('Erro ao criar a página: ' + (e && e.message ? e.message : e));
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Criar página';
+  }
+}
+
+function showNewMenu() { createNewPage(); }
+
+function renameCurrentPage() {
+  const name = prompt('Renomear página:', _getTitleEl()?.value || '');
+  if (!name) return;
+  _getTitleEl().value = name;
+  _captureCurrentDoc();
+  _renderCustomPages();
+  // update sidebar label for built-ins too
+  const navEl = Array.from(document.querySelectorAll('.sidebar .nav-item'))
+    .find(n => (n.getAttribute('onclick')||'').includes("setDoc('" + __currentDocId + "')"));
+  if (navEl) {
+    const iconSpan = navEl.querySelector('.icon');
+    navEl.innerHTML = '';
+    if (iconSpan) navEl.appendChild(iconSpan);
+    navEl.appendChild(document.createTextNode(' ' + name));
+  }
+}
+
+function deleteCustomPage(id, ev) {
+  if (ev) ev.stopPropagation();
+  if (!confirm('Excluir esta página?')) return;
+  let list = _loadCustom().filter(p => p.id !== id);
+  _saveCustom(list);
+  const docs = _loadDocs();
+  delete docs[id];
+  _saveDocs(docs);
+  _renderCustomPages();
+  if (__currentDocId === id) setDoc('playbook-vendas');
+  _sbDeletePage(id);
+}
+
+
+function _renderCustomPages() {
+  const list = _loadCustom();
+  const wrap = document.getElementById('nav-custom-pages');
+  const ul   = document.getElementById('custom-pages-list');
+  if (!wrap || !ul) return;
+  ul.innerHTML = '';
+  if (list.length === 0) { wrap.style.display = 'none'; return; }
+  wrap.style.display = '';
+  list.forEach(p => {
+    const div = document.createElement('div');
+    div.className = 'nav-item';
+    div.setAttribute('data-doc-id', p.id);
+    div.onclick = () => setDoc(p.id);
+    div.innerHTML = `<span class="icon">${p.icon||'📄'}</span> ${p.title}
+      <span style="margin-left:auto;display:flex;gap:4px;">
+        <span title="Renomear" onclick="event.stopPropagation();__currentDocId='${p.id}';renameCurrentPage();" style="cursor:pointer;opacity:.6;">✏️</span>
+        <span title="Excluir" onclick="deleteCustomPage('${p.id}',event)" style="cursor:pointer;opacity:.6;">🗑️</span>
+      </span>`;
+    ul.appendChild(div);
+  });
+}
+
+function _bindEditableHandlers() {
+  const editor = _getEditorEl();
+  const titleEl = _getTitleEl();
+  if (editor && !editor.dataset.bound) {
+    editor.dataset.bound = '1';
+    editor.addEventListener('input', () => _captureCurrentDoc());
+  }
+  if (titleEl && !titleEl.dataset.bound) {
+    titleEl.dataset.bound = '1';
+    titleEl.addEventListener('input', () => _captureCurrentDoc());
+  }
+  const iconEl = _getIconEl();
+  if (iconEl && !iconEl.dataset.bound) {
+    iconEl.dataset.bound = '1';
+    iconEl.setAttribute('contenteditable', 'true');
+    iconEl.title = 'Clique para editar o ícone';
+    iconEl.addEventListener('input', () => _captureCurrentDoc());
+  }
+}
+
+// Initialize on load
+window.addEventListener('DOMContentLoaded', () => {
+  const editor = _getEditorEl();
+  if (editor) __originalEditorHTML = editor.innerHTML;
+  _renderCustomPages();
+  _bindEditableHandlers();
+  const last = localStorage.getItem(DOC_CURRENT_KEY);
+  if (last && last !== 'playbook-vendas') setDoc(last);
+  // Pull latest pages from backend and re-render (hybrid sync)
+  _sbPullPages().then(() => {
+    const cur = localStorage.getItem(DOC_CURRENT_KEY);
+    if (cur && _loadDocs()[cur]) setDoc(cur);
+  }).catch(() => {});
+});
+
 
 function toggleCheck(el) {
   const cb = el.querySelector('input[type=checkbox]');
@@ -1927,7 +2515,9 @@ function closeSearch(e) {
 }
 function updateSearch(v) { /* live filter would go here */ }
 
-// Slash menu
+// ===== Block editor engine =====
+let __slashEl = null;
+
 document.addEventListener('keydown', e => {
   if (e.key === 'Escape') {
     closeSearch(); hideSlash();
@@ -1935,23 +2525,238 @@ document.addEventListener('keydown', e => {
   if (e.key === 'k' && (e.ctrlKey || e.metaKey)) { e.preventDefault(); openSearch(); }
 });
 
+// ===== Mouse-wheel scrolling guarantee for the page editor =====
+// Ensures the wheel always scrolls the page area, even when the cursor is
+// over contenteditable blocks, the title, the cover, or page margins.
+document.addEventListener('wheel', function (e) {
+  const ws = document.getElementById('view-workspace');
+  if (!ws || getComputedStyle(ws).display === 'none') return;
+  const pa = ws.querySelector('.page-area');
+  if (!pa) return;
+
+  const t = e.target;
+  // Let dedicated scrollable UI handle its own wheel (slash menu, search, tables, code)
+  if (t && t.closest) {
+    if (t.closest('.slash-menu, .search-results, .modal, #view-mindmap, .mm-canvas, #newpage-overlay')) return;
+    // any intermediate element that can itself scroll vertically
+    let el = t.nodeType === 1 ? t : t.parentElement;
+    while (el && el !== pa && el !== document.body) {
+      const cs = getComputedStyle(el);
+      if (/(auto|scroll)/.test(cs.overflowY) && el.scrollHeight > el.clientHeight + 2) return;
+      if (/(auto|scroll)/.test(cs.overflowX) && el.scrollWidth > el.clientWidth + 2 && Math.abs(e.deltaX) > Math.abs(e.deltaY)) return;
+      el = el.parentElement;
+    }
+    // ignore wheel happening over the left sidebar or top tabs, but keep the
+    // whole workspace editable page scrollable even when the cursor is over
+    // the right panel or page margins.
+    if (t.closest('.sidebar, .tabbar, .topbar')) return;
+  }
+
+  if (pa.scrollHeight <= pa.clientHeight + 2) return;
+  e.preventDefault();
+  pa.scrollTop += (e.deltaMode === 1 ? e.deltaY * 24 : e.deltaY);
+}, { passive: false });
+
+document.addEventListener('keydown', function (e) {
+  const ws = document.getElementById('view-workspace');
+  if (!ws || getComputedStyle(ws).display === 'none') return;
+  const pa = ws.querySelector('.page-area');
+  if (!pa || pa.scrollHeight <= pa.clientHeight + 2) return;
+  if (e.target && e.target.closest && e.target.closest('input, textarea, [contenteditable="true"], .slash-menu')) return;
+  const step = Math.max(80, pa.clientHeight * 0.82);
+  if (e.key === 'PageDown') { e.preventDefault(); pa.scrollTop += step; }
+  if (e.key === 'PageUp') { e.preventDefault(); pa.scrollTop -= step; }
+  if (e.key === 'Home') { e.preventDefault(); pa.scrollTop = 0; }
+  if (e.key === 'End') { e.preventDefault(); pa.scrollTop = pa.scrollHeight; }
+});
+
 function hideSlash() { document.getElementById('slash-menu').style.display = 'none'; }
 
-// Show slash menu on / in contenteditable
-document.querySelectorAll('[contenteditable]').forEach(el => {
-  el.addEventListener('keydown', e => {
-    if (e.key === '/') {
-      setTimeout(() => {
-        const rect = el.getBoundingClientRect();
-        const menu = document.getElementById('slash-menu');
-        menu.style.display = 'block';
-        menu.style.top = (rect.bottom + 8) + 'px';
-        menu.style.left = rect.left + 'px';
-      }, 10);
-    } else {
-      hideSlash();
+function _inEditor(el) { return !!(el && el.closest && el.closest('.block-editor')); }
+
+function _placeCaretEnd(el) {
+  if (!el) return;
+  el.focus();
+  try {
+    const r = document.createRange();
+    r.selectNodeContents(el); r.collapse(false);
+    const s = window.getSelection(); s.removeAllRanges(); s.addRange(r);
+  } catch(err) {}
+}
+
+function _stripSlash(el) {
+  if (!el) return;
+  const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+  let last = null, n;
+  while ((n = walker.nextNode())) { if (n.textContent.includes('/')) last = n; }
+  if (last) {
+    const i = last.textContent.lastIndexOf('/');
+    last.textContent = last.textContent.slice(0, i) + last.textContent.slice(i + 1);
+  }
+}
+
+function _blockHTML(type) {
+  const handle = '<div class="block-handle">⠿</div>';
+  switch (type) {
+    case 'h1': return `<div class="block">${handle}<div class="block-content block-h1" contenteditable="true" data-placeholder="Título grande"></div></div>`;
+    case 'h2': return `<div class="block">${handle}<div class="block-content block-h2" contenteditable="true" data-placeholder="Título médio"></div></div>`;
+    case 'divider': return `<div class="block">${handle}<hr class="block-divider" /></div>`;
+    case 'callout': return `<div class="block">${handle}<div class="block-callout"><span class="callout-icon">💡</span><div class="block-content" contenteditable="true" data-placeholder="Escreva o destaque..." style="flex:1;color:var(--text1);"></div></div></div>`;
+    case 'checklist': return `<div class="block">${handle}<div class="block-checklist"><input type="checkbox" /><span class="check-text" contenteditable="true" data-placeholder="Nova tarefa"></span></div></div>`;
+    case 'code': return `<div class="block">${handle}<div class="block-code"><div class="code-lang">código</div><div contenteditable="true" data-placeholder="Cole ou digite o código..." style="outline:none;white-space:pre-wrap;"></div></div></div>`;
+    case 'table': return `<div class="block">${handle}<div class="block-table-wrap"><table class="block-table"><thead><tr><th contenteditable="true">Coluna 1</th><th contenteditable="true">Coluna 2</th><th contenteditable="true">Coluna 3</th></tr></thead><tbody>${'<tr><td contenteditable="true">&nbsp;</td><td contenteditable="true">&nbsp;</td><td contenteditable="true">&nbsp;</td></tr>'.repeat(3)}</tbody></table></div></div>`;
+    case 'kanban': {
+      const col = (name) => `<div style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:8px;"><div contenteditable="true" style="font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.05em;padding:2px 4px;outline:none;">${name}</div><div contenteditable="true" data-placeholder="Novo cartão..." style="background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:6px 8px;font-size:12.5px;color:var(--text1);margin-top:6px;outline:none;min-height:24px;"></div></div>`;
+      return `<div class="block">${handle}<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:4px 0;">${col('A Fazer')}${col('Em Andamento')}${col('Concluído')}</div></div>`;
     }
-  });
+    default: return `<div class="block">${handle}<div class="block-content block-p" contenteditable="true" data-placeholder="Digite o texto ou pressione / para blocos..."></div></div>`;
+  }
+}
+
+function _insertBlockAfter(refCe, type) {
+  const editor = _getEditorEl();
+  if (!editor) return;
+  // climb to the direct child .block of the editor
+  let refBlock = null;
+  if (refCe) {
+    let b = refCe;
+    while (b && b.parentElement && b.parentElement !== editor) b = b.parentElement;
+    if (b && b.parentElement === editor) refBlock = b;
+  }
+  const wrap = document.createElement('div');
+  wrap.innerHTML = _blockHTML(type);
+  const newBlock = wrap.firstElementChild;
+  if (refBlock) refBlock.after(newBlock); else editor.appendChild(newBlock);
+  const focusable = newBlock.querySelector('[contenteditable]');
+  if (focusable) setTimeout(() => _placeCaretEnd(focusable), 0);
+  newBlock.scrollIntoView({ block: 'nearest' });
+  _captureCurrentDoc();
+}
+
+function insertBlock(type) {
+  const el = __slashEl; __slashEl = null;
+  hideSlash();
+  if (el) _stripSlash(el);
+  _insertBlockAfter(el, type);
+}
+
+function slashAI() {
+  const el = __slashEl; __slashEl = null;
+  hideSlash();
+  if (el) _stripSlash(el);
+  _captureCurrentDoc();
+  toggleAI();
+}
+
+// Positions the slash menu so it always fits inside the viewport:
+// measures the real height, opens above the anchor when there's no room
+// below, and clamps top/left to the screen edges.
+function _positionSlashMenu(rect) {
+  const menu = document.getElementById('slash-menu');
+  const margin = 12;
+  menu.style.display = 'block';
+  menu.style.maxHeight = (window.innerHeight - margin * 2) + 'px';
+  const h = menu.offsetHeight;
+  const w = menu.offsetWidth || 240;
+  let top = rect.bottom + 8;
+  if (top + h > window.innerHeight - margin) {
+    if (rect.top - h - 8 >= margin) top = rect.top - h - 8;          // open above
+    else top = Math.max(margin, window.innerHeight - margin - h);    // clamp to screen
+  }
+  menu.style.top = top + 'px';
+  menu.style.left = Math.max(8, Math.min(rect.left, window.innerWidth - w - 8)) + 'px';
+}
+
+function _showSlashFor(ce) {
+  __slashEl = ce;
+  setTimeout(() => _positionSlashMenu(ce.getBoundingClientRect()), 10);
+}
+
+// Fallback: detect "/" typed via input events (mobile keyboards / IME)
+document.addEventListener('input', e => {
+  const t = e.target;
+  const ce = t && t.closest ? t.closest('[contenteditable="true"]') : null;
+  if (!ce || !_inEditor(ce)) return;
+  if (e.data === '/' || (e.data && e.data.endsWith('/'))) _showSlashFor(ce);
+});
+
+// Delegated keyboard handling — works for blocks created dynamically too
+document.addEventListener('keydown', e => {
+  const t = e.target;
+  const ce = t && t.closest ? t.closest('[contenteditable="true"]') : null;
+  if (!ce || !_inEditor(ce)) return;
+
+  if (e.key === '/') {
+    _showSlashFor(ce);
+    return;
+  }
+
+
+  if (e.key === 'Enter' && !e.shiftKey && !ce.closest('.block-code') && !ce.closest('td') && !ce.closest('th')) {
+    e.preventDefault();
+    hideSlash(); __slashEl = null;
+    _insertBlockAfter(ce, ce.classList.contains('check-text') ? 'checklist' : 'p');
+    return;
+  }
+
+  if (e.key === 'Backspace') {
+    const txt = (ce.textContent || '').trim();
+    if (txt === '' && !ce.closest('td') && !ce.closest('th')) {
+      const editor = _getEditorEl();
+      let b = ce;
+      while (b && b.parentElement && b.parentElement !== editor) b = b.parentElement;
+      if (b && b.parentElement === editor && b.previousElementSibling) {
+        e.preventDefault();
+        const prev = b.previousElementSibling;
+        b.remove();
+        const prevCes = prev.querySelectorAll('[contenteditable]');
+        _placeCaretEnd(prevCes[prevCes.length - 1]);
+        _captureCurrentDoc();
+        hideSlash();
+        return;
+      }
+    }
+  }
+
+  if (e.key !== 'Escape' && e.key !== '/') hideSlash();
+});
+
+// Hide slash menu when clicking outside of it
+document.addEventListener('click', e => {
+  const menu = document.getElementById('slash-menu');
+  if (menu && menu.style.display !== 'none' && !menu.contains(e.target)) hideSlash();
+});
+
+// Checklist toggling + persistence (delegated, works for new blocks)
+document.addEventListener('change', e => {
+  const cb = e.target;
+  if (cb && cb.matches && cb.matches('.block-checklist input[type=checkbox]') && _inEditor(cb)) {
+    cb.closest('.block-checklist').classList.toggle('checked', cb.checked);
+    _captureCurrentDoc();
+  }
+});
+
+// "+ Adicionar bloco" button below the editor
+window.addEventListener('DOMContentLoaded', () => {
+  const editor = _getEditorEl();
+  if (!editor || document.getElementById('add-block-btn')) return;
+  const btn = document.createElement('button');
+  btn.id = 'add-block-btn';
+  btn.className = 'btn btn-sm btn-ghost';
+  btn.textContent = '+ Adicionar bloco';
+  btn.style.cssText = 'margin-top:14px;opacity:.65;font-size:12px;';
+  btn.onclick = (ev) => {
+    ev.stopPropagation();
+    const ed = _getEditorEl() || editor;
+    const blocks = ed.querySelectorAll(':scope > .block');
+    const lastBlock = blocks.length ? blocks[blocks.length - 1] : null;
+    const lastCe = lastBlock ? lastBlock.querySelector('[contenteditable]') : null;
+    // Open the block-type menu anchored at the button; selecting an item
+    // inserts the chosen block (título, texto, tabela, checklist, etc.)
+    __slashEl = lastCe;
+    _positionSlashMenu(btn.getBoundingClientRect());
+  };
+  editor.after(btn);
 });
 
 // Toggle blocks
@@ -1971,19 +2776,35 @@ document.querySelectorAll('.block-checklist').forEach(el => {
 
   function init(){
     try{ const d=JSON.parse(localStorage.getItem('mm_gs')||'null'); if(d) Object.assign(S,d); }catch(e){}
-    if(!S.maps||!S.maps.length){ loadTmpl('processos'); } else { activate(S.maps[0].id); }
-    renderMapList();
+    if(!S.maps||!S.maps.length){
+      loadTmpl('processos');
+    } else {
+      const stored = S.maps.find((x) => x.id === S.activeId) || S.maps[0];
+      if(stored) S.activeId = stored.id;
+      activate(S.activeId);
+    }
+    const shareMatch = location.hash.match(/^#share=(.+)$/);
+    if (shareMatch){
+      loadSharedMap(shareMatch[1]);
+      history.replaceState(null, '', location.pathname);
+    }
     document.addEventListener('keydown', handleKey);
   }
   function save(){
     const m=S.maps.find(x=>x.id===S.activeId);
-    if(m){m._n=JSON.parse(JSON.stringify(S.nodes));m._e=JSON.parse(JSON.stringify(S.edges));m._ni=S.nid;}
+    if(m){
+      m.title = document.getElementById('mm-map-title')?.value || m.title;
+      m.date = new Date().toLocaleDateString('pt-BR');
+      m._n=JSON.parse(JSON.stringify(S.nodes));
+      m._e=JSON.parse(JSON.stringify(S.edges));
+      m._ni=S.nid;
+    }
     try{ localStorage.setItem('mm_gs',JSON.stringify({maps:S.maps,activeId:S.activeId,nodes:S.nodes,edges:S.edges,nid:S.nid,lineStyle:S.lineStyle})); }catch(e){}
   }
   function newMap(){
     pushH(); saveSnap();
     const id='m'+Date.now();
-    S.maps.push({id,title:'Novo Mapa',emoji:'🧠',date:new Date().toLocaleDateString('pt-BR')});
+    S.maps.push({id,title:'Novo Mapa',emoji:'🧠',date:new Date().toLocaleDateString('pt-BR'),_n:[],_e:[],_ni:1});
     S.activeId=id; S.nodes=[]; S.edges=[]; S.nid=1; selId=null;
     V={x:0,y:0,s:1};
     document.getElementById('mm-map-title').value='Novo Mapa';
@@ -2341,6 +3162,101 @@ document.querySelectorAll('.block-checklist').forEach(el => {
     dl('mapa-mental.txt','data:text/plain;charset=utf-8,'+encodeURIComponent(txt));
     toast('Texto exportado!');
   }
+  function base64Encode(str){
+    const bytes = new TextEncoder().encode(str);
+    let binary = '';
+    bytes.forEach((b) => binary += String.fromCharCode(b));
+    return btoa(binary);
+  }
+  function base64Decode(str){
+    const binary = atob(str);
+    const bytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+    return new TextDecoder().decode(bytes);
+  }
+  function getActiveMapData(){
+    const m = S.maps.find(x => x.id === S.activeId);
+    return {
+      title: m?.title || document.getElementById('mm-map-title')?.value || 'Mapa Mental',
+      nodes: S.nodes,
+      edges: S.edges,
+    };
+  }
+  function computeNextNid(nodes){
+    let max = 1;
+    nodes.forEach((n) => {
+      const match = /^n(\d+)$/.exec(n.id);
+      if (match) max = Math.max(max, Number(match[1]) + 1);
+    });
+    return max;
+  }
+  function loadImportedMap(data){
+    if (!data || !Array.isArray(data.nodes) || !Array.isArray(data.edges)){
+      toast('Formato de mapa inválido');
+      return;
+    }
+    pushH(); saveSnap();
+    const id = 'm' + Date.now();
+    const title = data.title || 'Mapa Importado';
+    S.maps.push({
+      id,
+      title,
+      emoji: '🧠',
+      date: new Date().toLocaleDateString('pt-BR'),
+      _n: JSON.parse(JSON.stringify(data.nodes)),
+      _e: JSON.parse(JSON.stringify(data.edges)),
+      _ni: computeNextNid(data.nodes),
+    });
+    activate(id);
+    toast('Mapa importado!');
+  }
+  function mmImportJSON(){
+    const input = document.getElementById('mm-import-file');
+    if (input) input.click();
+  }
+  function mmImportFile(event){
+    const file = event.target.files && event.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      try {
+        const data = JSON.parse(reader.result || '{}');
+        loadImportedMap(data);
+      } catch (err) {
+        toast('Arquivo JSON inválido');
+        console.error(err);
+      }
+    };
+    reader.readAsText(file);
+    event.target.value = '';
+  }
+  function createShareURL(){
+    const mapData = getActiveMapData();
+    const payload = JSON.stringify(mapData);
+    const encoded = base64Encode(payload);
+    return `${location.origin}${location.pathname}#share=${encoded}`;
+  }
+  function mmShare(){
+    try {
+      const url = createShareURL();
+      navigator.clipboard.writeText(url);
+      toast('Link copiado para a área de transferência');
+    } catch (err) {
+      console.error(err);
+      toast('Falha ao criar link');
+    }
+  }
+  function loadSharedMap(encoded){
+    try {
+      const json = base64Decode(encoded);
+      const data = JSON.parse(json);
+      loadImportedMap(data);
+      toast('Mapa compartilhado carregado!');
+    } catch (err) {
+      console.error(err);
+      toast('Link de compartilhamento inválido');
+    }
+  }
   function dl(name,url){const a=document.createElement('a');a.download=name;a.href=url;a.click();}
   function openAI(){ document.getElementById('mm-ai-modal').classList.add('show'); document.getElementById('mm-ai-prompt').focus(); }
   function closeAI(){ document.getElementById('mm-ai-modal').classList.remove('show'); }
@@ -2389,6 +3305,10 @@ document.querySelectorAll('.block-checklist').forEach(el => {
     activate, delMap, addRoot, addChild, addChildB, delNode, delEdge,
     zoom, fit, togglePanel, setColor, setEmoji, lineStyle, undo, redo,
     newMap, loadTmpl, exportSVG, exportJSON, exportTxt, openAI, closeAI, genAI,
+    save,
+    importJSON: mmImportJSON,
+    importFile: mmImportFile,
+    share: mmShare,
     updateTitle(v){ const m=S.maps.find(x=>x.id===S.activeId); if(m){m.title=v;save();renderMapList();} },
     canvasDown, canvasMove, canvasUp, canvasWheel, canvasDbl,
     delSelected, addChildSelected,
@@ -2403,6 +3323,7 @@ function mmZoom(d)         { window._mm.zoom(d); }
 function mmFit()           { window._mm.fit(); }
 function mmUndo()          { window._mm.undo(); }
 function mmRedo()          { window._mm.redo(); }
+function mmSave()          { window._mm.save(); toast('Mapa salvo!'); }
 function mmTogglePanel()   { window._mm.togglePanel(); }
 function mmOpenAI()        { window._mm.openAI(); }
 function mmCloseAI()       { window._mm.closeAI(); }
@@ -2414,6 +3335,9 @@ function mmLoadTmpl(k)     { window._mm.loadTmpl(k); }
 function mmExportSVG()     { window._mm.exportSVG(); }
 function mmExportJSON()    { window._mm.exportJSON(); }
 function mmExportTxt()     { window._mm.exportTxt(); }
+function mmImportJSON()    { window._mm.importJSON(); }
+function mmImportFile(e)   { window._mm.importFile(e); }
+function mmShare()         { window._mm.share(); }
 function mmUpdateTitle(v)  { window._mm.updateTitle(v); }
 function mmCanvasDown(e)   { window._mm.canvasDown(e); }
 function mmCanvasMove(e)   { window._mm.canvasMove(e); }

@@ -375,23 +375,23 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
     <div class="stat-card s-blue">
       <div class="stat-icon si-blue"><i class="ti ti-checklist"></i></div>
       <div>
-        <div class="stat-num">48</div>
+        <div class="stat-num" id="statTotal">0</div>
         <div class="stat-label">Total de tarefas</div>
-        <div class="stat-trend trend-up"><i class="ti ti-trending-up" style="font-size:11px"></i>+6 esta semana</div>
+        <div class="stat-trend trend-up" id="statTotalTrend"><i class="ti ti-trending-up" style="font-size:11px"></i>+0 esta semana</div>
       </div>
     </div>
     <div class="stat-card s-green">
       <div class="stat-icon si-green"><i class="ti ti-circle-check"></i></div>
       <div>
-        <div class="stat-num">31</div>
+        <div class="stat-num" id="statDone">0</div>
         <div class="stat-label">Concluídas</div>
-        <div class="stat-trend trend-up"><i class="ti ti-trending-up" style="font-size:11px"></i>64.6% taxa</div>
+        <div class="stat-trend trend-up" id="statDoneTrend"><i class="ti ti-trending-up" style="font-size:11px"></i>0% taxa</div>
       </div>
     </div>
     <div class="stat-card s-red">
       <div class="stat-icon si-red"><i class="ti ti-alert-circle"></i></div>
       <div>
-        <div class="stat-num" id="overdueCount">7</div>
+        <div class="stat-num" id="overdueCount">0</div>
         <div class="stat-label">Atrasadas</div>
         <div class="stat-trend trend-down"><i class="ti ti-trending-down" style="font-size:11px"></i>Atenção urgente</div>
       </div>
@@ -399,27 +399,27 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
     <div class="stat-card s-amber">
       <div class="stat-icon si-amber"><i class="ti ti-clock"></i></div>
       <div>
-        <div class="stat-num">12h</div>
-        <div class="stat-label">Tempo registrado</div>
-        <div class="stat-trend trend-neu">média 1.8h/tarefa</div>
+        <div class="stat-num" id="statDueToday">0</div>
+        <div class="stat-label">Vencem hoje</div>
+        <div class="stat-trend trend-neu">prazos do dia</div>
       </div>
     </div>
     <div class="stat-card s-purple">
       <div class="stat-icon si-purple"><i class="ti ti-chart-pie"></i></div>
       <div>
-        <div class="stat-num">5</div>
+        <div class="stat-num" id="statReview">0</div>
         <div class="stat-label">Em revisão</div>
         <div style="margin-top:5px">
-          <div class="progress-bar"><div class="progress-fill" style="width:64%;background:var(--purple)"></div></div>
+          <div class="progress-bar"><div class="progress-fill" id="statReviewBar" style="width:0%;background:var(--purple)"></div></div>
         </div>
       </div>
     </div>
     <div class="stat-card s-teal">
-      <div class="stat-icon si-teal"><i class="ti ti-brand-whatsapp"></i></div>
+      <div class="stat-icon si-teal"><i class="ti ti-flag-2"></i></div>
       <div>
-        <div class="stat-num">9</div>
-        <div class="stat-label">Lembretes enviados</div>
-        <div class="stat-trend trend-up"><i class="ti ti-trending-up" style="font-size:11px"></i>hoje</div>
+        <div class="stat-num" id="statHigh">0</div>
+        <div class="stat-label">Alta prioridade</div>
+        <div class="stat-trend trend-up"><i class="ti ti-trending-up" style="font-size:11px"></i>abertas</div>
       </div>
     </div>
   </div>
@@ -1638,7 +1638,51 @@ async function loadAll() {
   if (!currentBoardId && boards[0]) currentBoardId = boards[0].id;
   renderBoards();
   renderKanban();
+  renderStats();
   populateModalSelects();
+}
+
+function renderStats() {
+  const list = tasks || [];
+  const isDone = (t) => {
+    const s = (t.status || '').toLowerCase();
+    if (s === 'concluido' || s === 'concluído' || s === 'done' || s === 'completed') return true;
+    const col = columns.find(c => c.id === t.column_id);
+    const cn = (col?.nome || '').toLowerCase();
+    return cn.includes('ganho') || cn.includes('conclu') || cn.includes('done');
+  };
+  const isReview = (t) => {
+    const col = columns.find(c => c.id === t.column_id);
+    const cn = (col?.nome || '').toLowerCase();
+    return cn.includes('revis') || cn.includes('review');
+  };
+  const now = new Date();
+  const startToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const endToday = new Date(startToday.getTime() + 86400000);
+  const weekAgo = new Date(now.getTime() - 7 * 86400000);
+
+  const total = list.length;
+  const done = list.filter(isDone).length;
+  const overdue = list.filter(t => !isDone(t) && t.due_date && new Date(t.due_date) < now).length;
+  const dueToday = list.filter(t => t.due_date && new Date(t.due_date) >= startToday && new Date(t.due_date) < endToday).length;
+  const review = list.filter(isReview).length;
+  const high = list.filter(t => !isDone(t) && ['alta', 'urgente'].includes((t.priority || '').toLowerCase())).length;
+  const newWeek = list.filter(t => t.created_at && new Date(t.created_at) >= weekAgo).length;
+  const taxa = total ? Math.round((done / total) * 1000) / 10 : 0;
+
+  const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+  set('statTotal', total);
+  const tt = document.getElementById('statTotalTrend');
+  if (tt) tt.innerHTML = `<i class="ti ti-trending-up" style="font-size:11px"></i>+${newWeek} esta semana`;
+  set('statDone', done);
+  const dt = document.getElementById('statDoneTrend');
+  if (dt) dt.innerHTML = `<i class="ti ti-trending-up" style="font-size:11px"></i>${taxa}% taxa`;
+  set('overdueCount', overdue);
+  set('statDueToday', dueToday);
+  set('statReview', review);
+  const bar = document.getElementById('statReviewBar');
+  if (bar) bar.style.width = (total ? Math.round((review / total) * 100) : 0) + '%';
+  set('statHigh', high);
 }
 
 function subscribeRealtime() {
@@ -1713,7 +1757,7 @@ function renderKanban() {
         if (cor) callApi('editar_coluna', { column_id: col.id, cor }).then(loadAll);
       } else if (op === '3') {
         if (confirm('Excluir coluna? Tarefas serão movidas para outra coluna.'))
-          callApi('excluir_coluna', { column_id: col.id }).then(loadAll);
+          callApi('deletar_coluna', { column_id: col.id }).then(loadAll);
       }
     };
   });
@@ -1764,7 +1808,7 @@ function buildCardEl(t) {
   div.querySelector('[data-act="del"]').onclick = (e) => {
     e.stopPropagation();
     if (!confirm('Deletar esta tarefa?')) return;
-    callApi('excluir_tarefa', { task_id: t.id }).then(loadAll);
+    callApi('deletar_tarefa', { task_id: t.id }).then(loadAll);
   };
   return div;
 }
@@ -1873,12 +1917,27 @@ function openTaskPanel(t) {
           <button class="btn btn-ghost" style="font-size:11px;padding:5px 10px" onclick="document.getElementById('taskAttachInput').click()"><i class="ti ti-paperclip" style="color:var(--blue)"></i>Anexar arquivo</button>
           <input type="file" id="taskAttachInput" style="display:none" accept="image/*,application/pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,.zip" onchange="onTaskAttachPicked(this)">
         </div>
-        <div id="taskAttachList" style="margin-top:8px;display:flex;flex-direction:column;gap:6px">
-          ${(t.attachments || []).map(a => `
-            <a href="${a.url}" target="_blank" style="display:flex;align-items:center;gap:6px;padding:6px 10px;background:var(--bg3);border-radius:6px;color:var(--text2);font-size:11px;text-decoration:none">
-              <i class="ti ti-file"></i><span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${a.name || 'Arquivo'}</span>
-            </a>
-          `).join('')}
+      </div>
+      <div class="panel-section">
+        <div class="panel-label">Anexos (${(t.attachments || []).length})</div>
+        <div id="taskAttachList" style="margin-top:6px;display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px">
+          ${(t.attachments || []).length === 0 ? '<div style="font-size:11px;color:var(--text3);grid-column:1/-1">Nenhum arquivo anexado</div>' : (t.attachments || []).map((a, idx) => {
+            const url = a.url || '';
+            const name = a.name || 'Arquivo';
+            const isImg = /\.(png|jpe?g|gif|webp|bmp|svg)$/i.test(name);
+            const isPdf = /\.pdf$/i.test(name);
+            return `
+              <div style="position:relative;background:var(--bg3);border:1px solid var(--border);border-radius:8px;overflow:hidden">
+                <a href="${escapeHtml(url)}" target="_blank" rel="noopener" style="display:flex;height:80px;align-items:center;justify-content:center;background:#000;text-decoration:none">
+                  ${isImg
+                    ? `<img src="${escapeHtml(url)}" style="width:100%;height:100%;object-fit:cover" onerror="this.outerHTML='<i class=&quot;ti ti-photo&quot; style=&quot;font-size:28px;color:#888&quot;></i>'">`
+                    : `<i class="ti ${isPdf ? 'ti-file-type-pdf' : 'ti-file'}" style="font-size:32px;color:var(--text2)"></i>`}
+                </a>
+                <div style="padding:5px 6px;font-size:10.5px;color:var(--text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${escapeHtml(name)}">${escapeHtml(name)}</div>
+                <button onclick="removeTaskAttachment(${idx})" title="Remover" style="position:absolute;top:4px;right:4px;background:rgba(0,0,0,.65);border:0;color:#fff;width:20px;height:20px;border-radius:50%;cursor:pointer;font-size:12px;line-height:1">×</button>
+              </div>
+            `;
+          }).join('')}
         </div>
       </div>
     `;
@@ -2029,27 +2088,49 @@ window.concluirCurrentTask = async function () {
 
 window.onTaskAttachPicked = async function (input) {
   const file = input.files?.[0]; if (!file) { return; }
-  const t = window._currentTask; if (!t || !sb) return;
+  const t = window._currentTask; if (!t || !sb) { alert('Tarefa não disponível'); return; }
   const list = document.getElementById('taskAttachList');
   const loadingEl = document.createElement('div');
-  loadingEl.style.cssText = 'font-size:11px;color:var(--text3);padding:6px 10px';
-  loadingEl.innerHTML = `<i class="ti ti-loader"></i> Enviando ${file.name}...`;
+  loadingEl.style.cssText = 'grid-column:1/-1;font-size:11px;color:var(--text3);padding:6px 10px;background:var(--bg3);border-radius:6px';
+  loadingEl.innerHTML = `<i class="ti ti-loader"></i> Enviando ${escapeHtml(file.name)}...`;
   list?.appendChild(loadingEl);
   try {
-    const path = `tarefas/${t.id}/${Date.now()}-${file.name.replace(/[^\w.\-]/g,'_')}`;
-    const { error } = await sb.storage.from('lead-attachments').upload(path, file, { upsert: false });
-    if (error) throw error;
+    const safeName = file.name.replace(/[^\w.\-]/g,'_');
+    const path = `tarefas/${t.id}/${Date.now()}-${safeName}`;
+    const { error: upErr } = await sb.storage.from('lead-attachments').upload(path, file, { upsert: false, contentType: file.type || undefined });
+    if (upErr) throw upErr;
     const { data: pub } = sb.storage.from('lead-attachments').getPublicUrl(path);
-    const att = { name: file.name, url: pub.publicUrl };
-    t.attachments = Array.isArray(t.attachments) ? [...t.attachments, att] : [att];
-    await callApi('editar_tarefa', { task_id: t.id, attachments: t.attachments });
+    const att = { name: file.name, url: pub.publicUrl, mime: file.type || '', size: file.size || 0 };
+    const newList = Array.isArray(t.attachments) ? [...t.attachments, att] : [att];
+    const res = await callApi('editar_tarefa', { task_id: t.id, attachments: newList.map(a => ({ name: a.name, url: a.url })) });
+    if (res?.error) throw new Error(res.error);
+    t.attachments = newList;
+    // sync in main tasks array
+    const idx = tasks.findIndex(x => x.id === t.id);
+    if (idx >= 0) tasks[idx].attachments = newList;
     openTaskPanel(t);
   } catch (e) {
     console.error('[task attach]', e);
-    alert('Erro ao anexar: ' + (e.message || e));
+    alert('Erro ao anexar arquivo: ' + (e.message || e));
     loadingEl.remove();
   }
   input.value = '';
+};
+
+window.removeTaskAttachment = async function (idx) {
+  const t = window._currentTask; if (!t) return;
+  if (!confirm('Remover este anexo?')) return;
+  const list = Array.isArray(t.attachments) ? [...t.attachments] : [];
+  list.splice(idx, 1);
+  try {
+    await callApi('editar_tarefa', { task_id: t.id, attachments: list });
+    t.attachments = list;
+    const i = tasks.findIndex(x => x.id === t.id);
+    if (i >= 0) tasks[i].attachments = list;
+    openTaskPanel(t);
+  } catch (e) {
+    alert('Erro ao remover: ' + (e.message || e));
+  }
 };
 
 window.duplicateCurrentTask = async function () {
@@ -2146,7 +2227,7 @@ window.createCol = async function () {
 window.deleteCard = async function (cardId) {
   const taskId = cardId.replace(/^card-/, '');
   if (!confirm('Deletar esta tarefa?')) return;
-  await callApi('excluir_tarefa', { task_id: taskId });
+  await callApi('deletar_tarefa', { task_id: taskId });
   loadAll();
 };
 
@@ -2186,7 +2267,7 @@ window.bulkDelete = async function () {
   if (!window.selectedCards || !window.selectedCards.size) return;
   if (!confirm(`Deletar ${window.selectedCards.size} tarefa(s)?`)) return;
   for (const id of window.selectedCards) {
-    try { await callApi('excluir_tarefa', { task_id: id }); } catch {}
+    try { await callApi('deletar_tarefa', { task_id: id }); } catch {}
   }
   window.selectedCards.clear();
   loadAll();

@@ -95,13 +95,16 @@ code { font-family: 'JetBrains Mono', monospace; font-size: 11px; }
 /* ─── FILTER BAR ─── */
 .filter-bar { display: flex; gap: 6px; padding: 10px 16px; border-bottom: 1px solid var(--border); flex-wrap: wrap; background: var(--bg2); flex-shrink: 0; }
 .fchip { padding: 4px 10px; border-radius: 20px; font-size: 11px; cursor: pointer; border: 1px solid var(--border); color: var(--text2); background: transparent; white-space: nowrap; transition: all 0.12s; }
-.fchip.active { border-color: var(--green); color: var(--green); background: var(--green-dim); font-weight: 500; }
-.fchip.c-amber { border-color: var(--amber); color: var(--amber); background: var(--amber-dim); }
-.fchip.c-blue { border-color: var(--blue); color: var(--blue); background: var(--blue-dim); }
-.fchip.c-red { border-color: var(--red); color: var(--red); background: var(--red-dim); }
-.fchip.c-purple { border-color: var(--purple); color: var(--purple); background: var(--purple-dim); }
-.fchip.c-teal { border-color: var(--teal); color: var(--teal); background: var(--teal-dim); }
-.fchip.c-text2 { color: var(--text2); }
+.fchip:hover { border-color: var(--border2); color: var(--text); }
+.fchip.active { border-color: var(--green) !important; color: var(--green) !important; background: var(--green-dim) !important; font-weight: 600; box-shadow: 0 0 0 1px var(--green-dim); }
+/* Cores apenas no texto quando inativo — destaque só no .active */
+.fchip.c-amber  { color: var(--amber); }
+.fchip.c-blue   { color: var(--blue); }
+.fchip.c-red    { color: var(--red); }
+.fchip.c-purple { color: var(--purple); }
+.fchip.c-teal   { color: var(--teal); }
+.fchip.c-green  { color: var(--green); }
+.fchip.c-text2  { color: var(--text2); }
 
 /* ─── SESSION HUD ─── */
 .session-hud { background: var(--bg3); border: 1px solid var(--border2); border-radius: var(--radius); padding: 12px 16px; display: flex; align-items: center; gap: 16px; }
@@ -328,20 +331,20 @@ code { font-family: 'JetBrains Mono', monospace; font-size: 11px; }
   </div>
   <nav class="nav">
     <div class="nav-section">Prospecção</div>
-    <div class="nav-item active">
+    <div class="nav-item active" data-channel="coldcall" onclick="selectChannel(this)">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21L8.91 10.35a11.046 11.046 0 005.516 5.516l.964-1.314a1 1 0 011.21-.502l4.493 1.498A1 1 0 0122 16.72V20a2 2 0 01-2 2h-1C9.716 22 2 14.284 2 5v-1a2 2 0 012-2z"/></svg>
       Cold Call
       <span class="nav-badge">1578</span>
     </div>
-    <div class="nav-item">
+    <div class="nav-item" data-channel="whatsapp" onclick="selectChannel(this)">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
       WhatsApp
     </div>
-    <div class="nav-item">
+    <div class="nav-item" data-channel="email" onclick="selectChannel(this)">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M22 7l-10 7L2 7"/></svg>
       E-mail
     </div>
-    <div class="nav-item">
+    <div class="nav-item" data-channel="instagram" onclick="selectChannel(this)">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="2" width="20" height="20" rx="5"/><path d="M16 11.37A4 4 0 1112.63 8 4 4 0 0116 11.37zM17.5 6.5h.01"/></svg>
       Instagram
     </div>
@@ -460,18 +463,18 @@ code { font-family: 'JetBrains Mono', monospace; font-size: 11px; }
 
   <!-- FILTER BAR -->
   <div class="filter-bar">
-    <div class="fchip active">Todos (1578)</div>
-    <div class="fchip">Minha Fila (0)</div>
-    <div class="fchip">Contactados hoje (0)</div>
-    <div class="fchip">Já abordados (499)</div>
-    <div class="fchip c-amber">Pendente sem tentativa (1079)</div>
-    <div class="fchip c-teal">Prospectado OK (8)</div>
-    <div class="fchip c-text2">Sem resposta (9)</div>
-    <div class="fchip c-blue">Oportunidade (8)</div>
-    <div class="fchip c-purple">Retornar Call (7)</div>
-    <div class="fchip c-text2">Follow-up (6)</div>
-    <div class="fchip c-green" style="color:var(--green);border-color:var(--green);background:var(--green-dim)">Ganho (1)</div>
-    <div class="fchip c-red">Descartado (47)</div>
+    <div class="fchip active" data-filter="all">Todos (1578)</div>
+    <div class="fchip" data-filter="minha_fila">Minha Fila (0)</div>
+    <div class="fchip" data-filter="contactados_hoje">Contactados hoje (0)</div>
+    <div class="fchip" data-filter="abordados">Já abordados (499)</div>
+    <div class="fchip c-amber" data-filter="pendente">Pendente sem tentativa (1079)</div>
+    <div class="fchip c-teal" data-filter="prospectado">Prospectado OK (8)</div>
+    <div class="fchip c-text2" data-filter="sem_resposta">Sem resposta (9)</div>
+    <div class="fchip c-blue" data-filter="oportunidade">Oportunidade (8)</div>
+    <div class="fchip c-purple" data-filter="retornar">Retornar Call (7)</div>
+    <div class="fchip c-text2" data-filter="follow_up">Follow-up (6)</div>
+    <div class="fchip c-green" data-filter="ganho">Ganho (1)</div>
+    <div class="fchip c-red" data-filter="descartado">Descartado (47)</div>
     <div style="margin-left:auto;display:flex;gap:5px">
       <div class="fchip" style="color:var(--amber);border-color:var(--amber);background:var(--amber-dim)">
         <svg style="display:inline;width:11px;height:11px;vertical-align:-1px;margin-right:3px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4"/></svg>
@@ -553,7 +556,7 @@ code { font-family: 'JetBrains Mono', monospace; font-size: 11px; }
         <div class="lead-list">
 
           <!-- Lead 1 — alta prioridade, em ligação -->
-          <div class="lead-card active high" id="card-active">
+          <div class="lead-card active high" id="card-active" data-channel="coldcall" data-status="abordados contactados_hoje oportunidade minha_fila">
             <svg style="width:13px;height:13px;color:var(--amber);flex-shrink:0" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
             <div class="lead-score score-high">82</div>
             <div class="lead-info">
@@ -621,7 +624,7 @@ code { font-family: 'JetBrains Mono', monospace; font-size: 11px; }
           </div>
 
           <!-- Lead 2 -->
-          <div class="lead-card">
+          <div class="lead-card" data-channel="coldcall" data-status="pendente">
             <svg style="width:13px;height:13px;color:var(--text3);flex-shrink:0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
             <div class="lead-score score-high">74</div>
             <div class="lead-info">
@@ -660,7 +663,7 @@ code { font-family: 'JetBrains Mono', monospace; font-size: 11px; }
           </div>
 
           <!-- Lead 3 -->
-          <div class="lead-card">
+          <div class="lead-card" data-channel="coldcall" data-status="abordados retornar sem_resposta">
             <svg style="width:13px;height:13px;color:var(--amber);flex-shrink:0" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
             <div class="lead-score score-med">69</div>
             <div class="lead-info">
@@ -699,7 +702,7 @@ code { font-family: 'JetBrains Mono', monospace; font-size: 11px; }
           </div>
 
           <!-- Lead 4 — WhatsApp automático sugerido -->
-          <div class="lead-card" style="border-color:rgba(0,201,177,0.3)">
+          <div class="lead-card" data-channel="whatsapp" data-status="abordados follow_up" style="border-color:rgba(0,201,177,0.3)">
             <svg style="width:13px;height:13px;color:var(--text3);flex-shrink:0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
             <div class="lead-score score-med">61</div>
             <div class="lead-info">
@@ -732,7 +735,7 @@ code { font-family: 'JetBrains Mono', monospace; font-size: 11px; }
           </div>
 
           <!-- Lead 5 -->
-          <div class="lead-card">
+          <div class="lead-card" data-channel="email" data-status="abordados prospectado contactados_hoje">
             <svg style="width:13px;height:13px;color:var(--text3);flex-shrink:0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
             <div class="lead-score score-med">58</div>
             <div class="lead-info">
@@ -760,8 +763,36 @@ code { font-family: 'JetBrains Mono', monospace; font-size: 11px; }
             </div>
           </div>
 
+          <!-- Lead 6 — Instagram -->
+          <div class="lead-card" data-channel="instagram" data-status="pendente minha_fila">
+            <svg style="width:13px;height:13px;color:var(--text3);flex-shrink:0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+            <div class="lead-score score-med">65</div>
+            <div class="lead-info">
+              <div class="lead-name">@studio.beleza.rj</div>
+              <div class="lead-meta">
+                <span class="lead-meta-item">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:11px;height:11px"><rect x="2" y="2" width="20" height="20" rx="5"/><path d="M16 11.37A4 4 0 1112.63 8 4 4 0 0116 11.37z"/></svg>
+                  12.4k seguidores · Beauty
+                </span>
+              </div>
+              <div class="lead-tags">
+                <span class="tag tag-purple">Instagram DM</span>
+                <span class="lead-pipeline-stage">novo</span>
+              </div>
+            </div>
+            <div class="lead-actions">
+              <button class="btn-call"><svg style="width:13px;height:13px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8"/></svg>Conversar</button>
+              <button class="btn-action"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12h6M12 9v6M21 12a9 9 0 11-18 0"/></svg></button>
+            </div>
+          </div>
+
+          <div class="lead-empty" id="leadEmpty" style="display:none;text-align:center;padding:40px 16px;color:var(--text3);font-size:12px">
+            Nenhum contato corresponde a este filtro.
+          </div>
+
         </div>
       </div>
+
 
       <!-- ===== PIPELINE TAB ===== -->
       <div id="tab-pipeline" style="display:none">
@@ -1158,8 +1189,51 @@ function showTab(name, el) {
   el.classList.add('active');
 }
 
+// Conteúdo padrão completo do menu "Registrar tentativa" (alinhado com os filtros)
+var REG_MENU_HTML = ''
+  + '<div class="reg-section">Primeira abordagem</div>'
+  + '<div class="reg-item"><div class="reg-dot" style="background:var(--blue)"></div>Primeiro contato</div>'
+  + '<div class="reg-item"><div class="reg-dot" style="background:var(--red)"></div>Não atendeu</div>'
+  + '<div class="reg-item"><div class="reg-dot" style="background:var(--amber)"></div>Caixa postal</div>'
+  + '<div class="reg-item"><div class="reg-dot" style="background:var(--amber)"></div>Ocupado</div>'
+  + '<div class="reg-item"><div class="reg-dot" style="background:var(--text3)"></div>Número inválido</div>'
+  + '<div class="reg-item"><div class="reg-dot" style="background:var(--blue)"></div>Follow-up</div>'
+  + '<div class="reg-item"><div class="reg-dot" style="background:var(--green)"></div>WhatsApp enviado</div>'
+  + '<div class="reg-item"><div class="reg-dot" style="background:var(--purple)"></div>Retornar depois</div>'
+  + '<div class="reg-section" style="margin-top:4px">Resultado</div>'
+  + '<div class="reg-item"><div class="reg-dot" style="background:var(--text3)"></div>Pendente</div>'
+  + '<div class="reg-item"><div class="reg-dot" style="background:var(--teal)"></div>Prospectado</div>'
+  + '<div class="reg-item"><div class="reg-dot" style="background:var(--text3)"></div>Sem resposta</div>'
+  + '<div class="reg-item"><div class="reg-dot" style="background:var(--amber)"></div>Oportunidade</div>'
+  + '<div class="reg-item"><div class="reg-dot" style="background:var(--purple)"></div>Retornar / Responsável</div>'
+  + '<div class="reg-item"><div class="reg-dot" style="background:var(--blue)"></div>Follow-up</div>'
+  + '<div class="reg-item"><div class="reg-dot" style="background:var(--green)"></div>Ganho</div>'
+  + '<div class="reg-item"><div class="reg-dot" style="background:var(--red)"></div>Descartado</div>';
+
+function ensureRegMenu(card) {
+  var actions = card.querySelector('.lead-actions');
+  if (!actions) return;
+  var drop = actions.querySelector('.rel-drop');
+  if (!drop) {
+    drop = document.createElement('div');
+    drop.className = 'rel-drop';
+    drop.innerHTML = '<button class="btn-action" onclick="toggleReg(this)" title="Registrar tentativa">'
+      + '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>'
+      + '</button><div class="reg-menu" style="display:none"></div>';
+    var firstBtn = actions.querySelector('.btn-call');
+    if (firstBtn && firstBtn.nextSibling) actions.insertBefore(drop, firstBtn.nextSibling);
+    else actions.appendChild(drop);
+  }
+  var menu = drop.querySelector('.reg-menu');
+  if (menu) menu.innerHTML = REG_MENU_HTML;
+}
+function normalizeAllRegMenus() {
+  document.querySelectorAll('#tab-lista .lead-card').forEach(ensureRegMenu);
+}
+
 // Register dropdown toggle
 function toggleReg(btn) {
+  normalizeAllRegMenus();
   const menu = btn.parentElement.querySelector('.reg-menu');
   document.querySelectorAll('.reg-menu').forEach(m => { if(m !== menu) m.style.display='none'; });
   menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
@@ -1169,6 +1243,9 @@ document.addEventListener('click', function(e) {
     document.querySelectorAll('.reg-menu').forEach(m => m.style.display='none');
   }
 });
+// Aplica o menu completo a todos os cards no carregamento
+document.addEventListener('DOMContentLoaded', normalizeAllRegMenus);
+setTimeout(normalizeAllRegMenus, 0);
 
 // Live call demo
 let callTimer;
@@ -1210,14 +1287,114 @@ function endCall() {
   });
 }
 
-// Chip toggle
-document.querySelectorAll('.fchip').forEach(chip => {
-  chip.addEventListener('click', function() {
-    const bar = this.closest('.filter-bar');
-    bar.querySelectorAll('.fchip.active').forEach(c => c.classList.remove('active'));
+// ===== Filtros de chip + canal (sidebar) =====
+var currentChannel = 'coldcall';
+var currentFilter  = 'all';
+
+var CHANNEL_META = {
+  coldcall:  { title: 'Cold Call',  sub: '1578 contatos · 0 prospectados hoje' },
+  whatsapp:  { title: 'WhatsApp',   sub: '— prospecção via mensagem' },
+  email:     { title: 'E-mail',     sub: '— prospecção via e-mail' },
+  instagram: { title: 'Instagram',  sub: '— prospecção via DM' }
+};
+
+// Gera leads de demonstração para popular a lista (mantém os cards estáticos existentes)
+(function seedDemoLeads(){
+  var list = document.querySelector('#tab-lista .lead-list');
+  if (!list) return;
+  var anchor = document.getElementById('leadEmpty');
+  var nomes = [
+    ['Metalúrgica Vale Aço','(31) 3344-8800','coldcall','pendente minha_fila','Indústria · MG'],
+    ['Studio Odonto Premium','(11) 95541-2210','whatsapp','pendente minha_fila','Saúde · SP'],
+    ['Auto Center Diamante','(47) 3422-7711','coldcall','retornar abordados','Automotivo · SC'],
+    ['Imobiliária Horizonte','(85) 99812-3344','whatsapp','follow_up abordados contactados_hoje','Imóveis · CE'],
+    ['Logística Cargo Express','(81) 3127-5500','email','prospectado abordados','Logística · PE'],
+    ['Clínica Vida Plena','(62) 99880-1122','coldcall','pendente','Saúde · GO'],
+    ['@boutique.luxo.sp','22.1k seguidores','instagram','pendente minha_fila','Moda · SP'],
+    ['Padaria Forno Real','(19) 3251-9090','coldcall','abordados sem_resposta retornar','Alimentos · SP'],
+    ['Escola Saber+','(48) 3025-1414','email','pendente minha_fila','Educação · SC'],
+    ['Construtora Líder Sul','(51) 3221-7788','coldcall','oportunidade abordados contactados_hoje','Construção · RS'],
+    ['Pet Shop Amigo Fiel','(11) 4422-9091','whatsapp','ganho abordados','Pet · SP'],
+    ['Tech Solutions BR','(11) 3344-1010','email','descartado abordados','Tecnologia · SP'],
+    ['@cafe.aroma.rj','8.7k seguidores','instagram','follow_up abordados','Gastronomia · RJ'],
+    ['Distribuidora Norte+','(91) 3211-4040','coldcall','pendente','Atacado · PA'],
+    ['Academia Movimento','(31) 99777-2020','whatsapp','pendente minha_fila','Fitness · MG']
+  ];
+  var html = nomes.map(function(n){
+    var score = 40 + Math.floor(Math.random()*55);
+    var btn = n[2]==='instagram' ? 'Conversar' : (n[2]==='email' ? 'E-mail' : (n[2]==='whatsapp' ? 'WhatsApp' : 'Ligar'));
+    return '<div class="lead-card" data-channel="'+n[2]+'" data-status="'+n[3]+'">'
+      + '<svg style="width:13px;height:13px;color:var(--text3);flex-shrink:0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>'
+      + '<div class="lead-score '+(score>=70?'score-high':'score-med')+'">'+score+'</div>'
+      + '<div class="lead-info"><div class="lead-name">'+n[0]+'</div>'
+      + '<div class="lead-meta"><span class="lead-meta-item">'+n[1]+'</span><span class="lead-meta-item">'+n[4]+'</span></div>'
+      + '<div class="lead-tags">'+ n[3].split(/\s+/).map(function(t){return '<span class="tag tag-gray">'+t+'</span>';}).join('') +'</div>'
+      + '</div>'
+      + '<div class="lead-actions"><button class="btn-call">'+btn+'</button></div>'
+      + '</div>';
+  }).join('');
+  if (anchor) anchor.insertAdjacentHTML('beforebegin', html);
+  else list.insertAdjacentHTML('beforeend', html);
+})();
+
+function updateBadges() {
+  // Badges fixos (números reais do banco) — preservados no HTML.
+  // Apenas mantém o subtítulo do canal atual.
+  var s = document.querySelector('.title-sub');
+  if (s) {
+    var meta = CHANNEL_META[currentChannel] || CHANNEL_META.coldcall;
+    s.textContent = meta.sub;
+  }
+}
+
+function applyLeadFilters() {
+  var cards = document.querySelectorAll('#tab-lista .lead-card');
+  var visible = 0;
+  cards.forEach(function(card){
+    var ch = card.getAttribute('data-channel') || 'coldcall';
+    var st = (card.getAttribute('data-status') || '').split(/\s+/);
+    var matchChannel = (ch === currentChannel);
+    var matchFilter  = (currentFilter === 'all') || (st.indexOf(currentFilter) !== -1);
+    var show = matchChannel && matchFilter;
+    card.style.display = show ? '' : 'none';
+    if (show) visible++;
+  });
+  var empty = document.getElementById('leadEmpty');
+  if (empty) empty.style.display = visible === 0 ? '' : 'none';
+  updateBadges();
+}
+
+function selectChannel(el) {
+  document.querySelectorAll('.nav-item').forEach(function(n){ n.classList.remove('active'); });
+  el.classList.add('active');
+  currentChannel = el.getAttribute('data-channel') || 'coldcall';
+  var meta = CHANNEL_META[currentChannel] || CHANNEL_META.coldcall;
+  var t = document.querySelector('.title-text');
+  if (t) t.textContent = meta.title;
+  // ao trocar canal, reseta filtro para "Todos"
+  currentFilter = 'all';
+  document.querySelectorAll('.fchip[data-filter]').forEach(function(c){
+    c.classList.toggle('active', c.getAttribute('data-filter')==='all');
+  });
+  var listaTab = document.querySelector('.ttab');
+  if (listaTab && typeof showTab === 'function') showTab('lista', listaTab);
+  applyLeadFilters();
+}
+
+// Chip click → filtra de verdade
+document.querySelectorAll('.fchip[data-filter]').forEach(function(chip){
+  chip.addEventListener('click', function(){
+    var bar = this.closest('.filter-bar');
+    bar.querySelectorAll('.fchip.active').forEach(function(c){ c.classList.remove('active'); });
     this.classList.add('active');
+    currentFilter = this.getAttribute('data-filter') || 'all';
+    applyLeadFilters();
   });
 });
+
+// Estado inicial
+applyLeadFilters();
+
 </script>
 </body>
 </html>

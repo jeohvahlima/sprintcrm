@@ -334,10 +334,12 @@
       <div class="title-row">
         <h1 class="page-title">Agenda</h1>
         <span class="chip-pill"><i class="ti ti-calendar-event"></i> Multi-agendas</span>
+        <button class="btn" id="btnNovaAgenda" title="Criar nova agenda"><i class="ti ti-calendar-plus"></i> Nova agenda</button>
       </div>
       <div class="actions">
         <span class="status-chip"><span class="dot"></span> <strong>Google Calendar</strong> <span class="conn">conectado</span></span>
         <button class="btn" id="btnSync"><i class="ti ti-refresh"></i> Sincronizar</button>
+        <button class="btn" id="btnClearMock" title="Remover dados locais de exemplo">Limpar dados</button>
         <button class="btn icon" title="Configurações" id="btnConfig"><i class="ti ti-settings"></i></button>
         <button class="btn primary" id="btnCriar"><i class="ti ti-plus"></i> Criar</button>
       </div>
@@ -399,41 +401,39 @@
               </div>
             </div>
             <div class="panel-body">
-              <div class="cal-head"><span>Junho 2026</span></div>
-              <div class="cal-grid">
-                <div class="cal-dow">D</div><div class="cal-dow">S</div><div class="cal-dow">T</div>
-                <div class="cal-dow">Q</div><div class="cal-dow">Q</div><div class="cal-dow">S</div><div class="cal-dow">S</div>
-                <!-- Week 1 -->
-                <div class="cal-day muted">31</div><div class="cal-day">1</div><div class="cal-day">2</div>
-                <div class="cal-day today">3</div><div class="cal-day">4</div><div class="cal-day">5</div><div class="cal-day">6</div>
-                <!-- Week 2 -->
-                <div class="cal-day">7</div><div class="cal-day">8</div><div class="cal-day">9</div>
-                <div class="cal-day has-completed">10<span class="ev-dot"></span></div>
-                <div class="cal-day">11</div><div class="cal-day">12</div>
-                <div class="cal-day has-completed">13<span class="ev-dot"></span></div>
-                <!-- Week 3 -->
-                <div class="cal-day">14</div><div class="cal-day">15</div><div class="cal-day">16</div>
-                <div class="cal-day">17</div>
-                <div class="cal-day has-completed">18<span class="ev-dot"></span></div>
-                <div class="cal-day">19</div>
-                <div class="cal-day">20<span class="ev-dot"></span></div>
-                <!-- Week 4 -->
-                <div class="cal-day">21</div>
-                <div class="cal-day">22<span class="ev-dot"></span></div>
-                <div class="cal-day">23</div><div class="cal-day">24</div>
-                <div class="cal-day has-cancel">25<span class="ev-dot"></span></div>
-                <div class="cal-day">26</div><div class="cal-day">27</div>
-                <!-- Week 5 -->
-                <div class="cal-day">28<span class="ev-dot"></span></div>
-                <div class="cal-day">29</div>
-                <div class="cal-day has-completed">30<span class="ev-dot"></span></div>
-                <div class="cal-day muted">1</div><div class="cal-day muted">2</div>
-                <div class="cal-day muted">3</div><div class="cal-day muted">4</div>
-                <!-- Week 6 -->
-                <div class="cal-day muted">5</div><div class="cal-day muted">6</div><div class="cal-day muted">7</div>
-                <div class="cal-day muted">8</div><div class="cal-day muted">9</div>
-                <div class="cal-day muted">10</div><div class="cal-day muted">11</div>
-              </div>
+              <div class="cal-head"><span id="cal_title">—</span></div>
+              <div class="cal-grid" id="cal_grid"></div>
+              <script>
+                (function(){
+                  const MES = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+                  const today = new Date();
+                  let view = new Date(today.getFullYear(), today.getMonth(), 1);
+                  function render(){
+                    const grid = document.getElementById('cal_grid');
+                    const title = document.getElementById('cal_title');
+                    if(!grid || !title) return;
+                    title.textContent = MES[view.getMonth()] + ' ' + view.getFullYear();
+                    const y = view.getFullYear(), m = view.getMonth();
+                    const first = new Date(y, m, 1);
+                    const startDow = first.getDay();
+                    const daysInMonth = new Date(y, m+1, 0).getDate();
+                    const daysPrev = new Date(y, m, 0).getDate();
+                    let html = '<div class="cal-dow">D</div><div class="cal-dow">S</div><div class="cal-dow">T</div><div class="cal-dow">Q</div><div class="cal-dow">Q</div><div class="cal-dow">S</div><div class="cal-dow">S</div>';
+                    for(let i=startDow-1;i>=0;i--) html += '<div class="cal-day muted">'+(daysPrev-i)+'</div>';
+                    for(let d=1; d<=daysInMonth; d++){
+                      const isToday = d===today.getDate() && m===today.getMonth() && y===today.getFullYear();
+                      html += '<div class="cal-day'+(isToday?' today':'')+'">'+d+'</div>';
+                    }
+                    const total = startDow + daysInMonth;
+                    const trail = (7 - (total % 7)) % 7;
+                    for(let d=1; d<=trail; d++) html += '<div class="cal-day muted">'+d+'</div>';
+                    grid.innerHTML = html;
+                  }
+                  document.addEventListener('DOMContentLoaded', render);
+                  render();
+                  window.__renderAgendaCal = render;
+                })();
+              </script>
               <div class="cal-legend">
                 <span><i class="leg-blue"></i> Agendado</span>
                 <span><i class="leg-green"></i> Concluído</span>
@@ -475,72 +475,163 @@
           <!-- Week view -->
           <div class="panel">
             <div class="panel-head week-toolbar">
-              <div class="panel-title"><i class="ti ti-calendar-week"></i> Visão semanal — 2 a 8 jun</div>
-              <div class="view-toggle">
-                <button>Dia</button>
-                <button class="active">Semana</button>
+              <div class="panel-title"><i class="ti ti-calendar-week"></i> <span id="week_title">Visão semanal</span></div>
+              <div class="view-toggle" id="view_toggle">
+                <button data-view="dia">Dia</button>
+                <button class="active" data-view="semana">Semana</button>
+                <button data-view="mensal">Mensal</button>
               </div>
             </div>
-            <div class="week-grid">
-              <div class="wh-head"></div>
-              <div class="wh-head"><span>DOM</span><span class="num">1</span></div>
-              <div class="wh-head"><span>SEG</span><span class="num">2</span></div>
-              <div class="wh-head today"><span>TER</span><span class="num">3</span></div>
-              <div class="wh-head"><span>QUA</span><span class="num">4</span></div>
-              <div class="wh-head"><span>QUI</span><span class="num">5</span></div>
-              <div class="wh-head"><span>SEX</span><span class="num">6</span></div>
-              <div class="wh-head"><span>SÁB</span><span class="num">7</span></div>
+            <div class="week-grid" id="week_grid"></div>
+            <div id="month_grid" style="display:none; padding:12px;"></div>
+            <script>
+              (function(){
+                const DOW = ['DOM','SEG','TER','QUA','QUI','SEX','SÁB'];
+                const MES_ABREV = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+                const BH = (function(){ try { return JSON.parse(localStorage.getItem('agenda_business_hours')) || {start:7,end:21}; } catch(_) { return {start:7,end:21}; } })();
+                const HOURS = []; for(let h=BH.start; h<=BH.end; h++) HOURS.push(h);
+                function render(){
+                  const grid = document.getElementById('week_grid');
+                  const title = document.getElementById('week_title');
+                  if(!grid || !title) return;
+                  const today = new Date();
+                  const start = new Date(today);
+                  start.setDate(today.getDate() - today.getDay());
+                  const end = new Date(start);
+                  end.setDate(start.getDate() + 6);
+                  title.textContent = `Visão semanal — ${start.getDate()} a ${end.getDate()} ${MES_ABREV[end.getMonth()]}`;
+                  let html = '<div class="wh-head"></div>';
+                  const days = [];
+                  for(let i=0;i<7;i++){
+                    const d = new Date(start); d.setDate(start.getDate()+i);
+                    days.push(d);
+                    const isToday = d.toDateString() === today.toDateString();
+                    html += `<div class="wh-head${isToday?' today':''}"><span>${DOW[i]}</span><span class="num">${d.getDate()}</span></div>`;
+                  }
+                  for(const h of HOURS){
+                    html += `<div class="wh-time">${String(h).padStart(2,'0')}:00</div>`;
+                    for(let i=0;i<7;i++){
+                      const isToday = days[i].toDateString() === today.toDateString();
+                      html += `<div class="wh-slot wh-cell${isToday?' today-col':''}"></div>`;
+                    }
+                  }
+                  grid.innerHTML = html;
+                }
+                document.addEventListener('DOMContentLoaded', render);
+                render();
+                window.__renderAgendaWeek = render;
 
-              <!-- 08:00 -->
-              <div class="wh-time">08:00</div>
-              <div class="wh-slot wh-cell"></div>
-              <div class="wh-slot wh-cell"></div>
-              <div class="wh-slot wh-cell today-col"></div>
-              <div class="wh-slot wh-cell"></div>
-              <div class="wh-slot wh-cell"></div>
-              <div class="wh-slot wh-cell"></div>
-              <div class="wh-slot wh-cell"></div>
+                // Day / Month views + toggle
+                const MES_FULL = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+                function renderDay(){
+                  const grid = document.getElementById('week_grid');
+                  const title = document.getElementById('week_title');
+                  if(!grid || !title) return;
+                  const today = new Date();
+                  title.textContent = `Visão diária — ${today.getDate()} ${MES_ABREV[today.getMonth()]}`;
+                  let html = '<div class="wh-head"></div>';
+                  html += `<div class="wh-head today" style="grid-column: span 7;"><span>${DOW[today.getDay()]}</span><span class="num">${today.getDate()}</span></div>`;
+                  for(const h of HOURS){
+                    html += `<div class="wh-time">${String(h).padStart(2,'0')}:00</div>`;
+                    html += `<div class="wh-slot wh-cell today-col" style="grid-column: span 7;"></div>`;
+                  }
+                  grid.innerHTML = html;
+                }
+                function renderMonth(){
+                  const mg = document.getElementById('month_grid');
+                  const titleEl = document.querySelector('.week-toolbar .panel-title');
+                  if(!mg) { console.warn('[agenda] month_grid not found'); return; }
+                  const today = new Date();
+                  const y = today.getFullYear(), m = today.getMonth();
+                  if(titleEl) titleEl.innerHTML = `<i class="ti ti-calendar-month"></i> Visão mensal — ${MES_FULL[m]} ${y}`;
+                  // load appointments
+                  let items = [];
+                  try { items = JSON.parse(localStorage.getItem('agenda_appointments_v1')) || []; } catch(_){ items = []; }
+                  const byDate = {};
+                  items.forEach(it => { if(!it || !it.date) return; (byDate[it.date] = byDate[it.date] || []).push(it); });
+                  const first = new Date(y, m, 1);
+                  const startDow = first.getDay();
+                  const daysInMonth = new Date(y, m+1, 0).getDate();
+                  let html = '<div style="display:grid; grid-template-columns: repeat(7,1fr); gap:6px;">';
+                  for(const d of DOW){
+                    html += `<div style="text-align:center; font-size:11px; font-weight:700; color:hsl(var(--text-muted)); padding:6px 0;">${d}</div>`;
+                  }
+                  for(let i=0;i<startDow;i++){ html += '<div></div>'; }
+                  for(let d=1; d<=daysInMonth; d++){
+                    const iso = `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+                    const dayItems = byDate[iso] || [];
+                    const isToday = (d===today.getDate());
+                    const bg = isToday ? 'background:hsl(var(--info)); color:white;' : 'background:hsl(var(--surface-soft)); color:hsl(var(--text));';
+                    let inner = `<div style="display:flex; align-items:center; justify-content:space-between;"><span>${d}</span>`;
+                    if(dayItems.length){
+                      inner += `<span style="background:${isToday?'rgba(255,255,255,0.25)':'hsl(var(--info))'}; color:white; font-size:10px; font-weight:700; padding:1px 6px; border-radius:10px;">${dayItems.length}</span>`;
+                    }
+                    inner += '</div>';
+                    // event chips (max 2)
+                    dayItems.slice(0,2).forEach(ev => {
+                      const t = (ev.start||'').slice(0,5);
+                      const label = (ev.client || ev.title || 'Compromisso');
+                      inner += `<div style="margin-top:3px; font-size:10px; font-weight:600; padding:2px 4px; border-radius:4px; background:${isToday?'rgba(255,255,255,0.2)':'hsl(var(--info) / 0.15)'}; color:${isToday?'white':'hsl(var(--info))'}; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${t} ${label}</div>`;
+                    });
+                    if(dayItems.length>2){
+                      inner += `<div style="font-size:9px; opacity:0.75; margin-top:2px;">+${dayItems.length-2} mais</div>`;
+                    }
+                    html += `<div data-month-day="${iso}" style="min-height:78px; border:1px solid hsl(var(--border)); border-radius:8px; padding:6px; font-size:13px; font-weight:600; cursor:pointer; ${bg} display:flex; flex-direction:column; gap:2px; overflow:hidden;">${inner}</div>`;
+                  }
+                  html += '</div>';
+                  mg.innerHTML = html;
+                  mg.querySelectorAll('[data-month-day]').forEach(cell => {
+                    cell.addEventListener('click', () => {
+                      const iso = cell.getAttribute('data-month-day');
+                      try {
+                        if(typeof window.openModal === 'function'){
+                          window.openModal(null, { date: iso });
+                        } else {
+                          // fallback: set selectedDate and switch back to week view
+                          const ev = new CustomEvent('agenda:select-day', { detail: { date: iso } });
+                          document.dispatchEvent(ev);
+                        }
+                      } catch(_){}
+                    });
+                  });
+                }
+                window.__renderAgendaMonth = renderMonth;
 
-              <!-- 09:00 -->
-              <div class="wh-time">09:00</div>
-              <div class="wh-slot wh-cell"></div>
-              <div class="wh-slot wh-cell"><div class="ev blue"><div class="nm">Maria Silva</div><div class="tm">09:00 – 09:30</div></div></div>
-              <div class="wh-slot wh-cell today-col"><div class="ev orange"><div class="nm">João Pereira</div><div class="tm">09:30 – 10:00</div></div></div>
-              <div class="wh-slot wh-cell"></div>
-              <div class="wh-slot wh-cell"></div>
-              <div class="wh-slot wh-cell"><div class="ev green"><div class="nm">Ricardo Lima</div><div class="tm">09:00 – 10:00</div></div></div>
-              <div class="wh-slot wh-cell"></div>
-
-              <!-- 10:00 -->
-              <div class="wh-time">10:00</div>
-              <div class="wh-slot wh-cell"></div>
-              <div class="wh-slot wh-cell"></div>
-              <div class="wh-slot wh-cell today-col"></div>
-              <div class="wh-slot wh-cell"><div class="ev purple"><div class="nm">Ana Rodrigues</div><div class="tm">10:00 – 10:30</div></div></div>
-              <div class="wh-slot wh-cell"></div>
-              <div class="wh-slot wh-cell"></div>
-              <div class="wh-slot wh-cell"></div>
-
-              <!-- 11:00 -->
-              <div class="wh-time">11:00</div>
-              <div class="wh-slot wh-cell"></div>
-              <div class="wh-slot wh-cell"><div class="ev green"><div class="nm">Carlos Mendes</div><div class="tm">11:00 – 11:30</div></div></div>
-              <div class="wh-slot wh-cell today-col"></div>
-              <div class="wh-slot wh-cell"></div>
-              <div class="wh-slot wh-cell"><div class="ev blue"><div class="nm">Fernanda Costa</div><div class="tm">11:00 – 11:30</div></div></div>
-              <div class="wh-slot wh-cell"></div>
-              <div class="wh-slot wh-cell"></div>
-
-              <!-- 12:00 -->
-              <div class="wh-time">12:00</div>
-              <div class="wh-slot wh-cell"></div>
-              <div class="wh-slot wh-cell"></div>
-              <div class="wh-slot wh-cell today-col"></div>
-              <div class="wh-slot wh-cell"></div>
-              <div class="wh-slot wh-cell"></div>
-              <div class="wh-slot wh-cell"></div>
-              <div class="wh-slot wh-cell"></div>
-            </div>
+                let currentView = 'semana';
+                const toggle = document.getElementById('view_toggle');
+                if(toggle){
+                  toggle.addEventListener('click', (e) => {
+                    const btn = e.target.closest('button[data-view]');
+                    if(!btn) return;
+                    toggle.querySelectorAll('button').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    currentView = btn.dataset.view;
+                    const wg = document.getElementById('week_grid');
+                    const mg = document.getElementById('month_grid');
+                    if(currentView === 'mensal'){
+                      wg.style.display = 'none';
+                      mg.style.display = 'block';
+                      renderMonth();
+                    } else if(currentView === 'dia'){
+                      mg.style.display = 'none';
+                      wg.style.display = '';
+                      renderDay();
+                    } else {
+                      mg.style.display = 'none';
+                      wg.style.display = '';
+                      render();
+                    }
+                  });
+                }
+                // Refresh month when data changes
+                window.addEventListener('storage', (e) => {
+                  if(e.key === 'agenda_appointments_v1' && currentView === 'mensal') renderMonth();
+                });
+                document.addEventListener('agenda:data-changed', () => {
+                  if(currentView === 'mensal') renderMonth();
+                });
+              })();
+            </script>
           </div>
 
           <!-- Tabs + list -->
@@ -559,148 +650,6 @@
             </div>
 
             <div class="compromisso-list">
-              <!-- Maria Silva -->
-              <div class="item c-info">
-                <div class="avatar">MS</div>
-                <div class="item-main">
-                  <div class="item-head">
-                    <span class="item-name">Maria Silva</span>
-                    <span class="pill info"><i class="ti ti-calendar-time"></i> Agendado</span>
-                    <span class="pill warning"><i class="ti ti-clock"></i> Aguardando confirmação</span>
-                  </div>
-                  <div class="item-meta-row">
-                    <div class="item-meta">
-                      <span><i class="ti ti-calendar"></i> 03/06/2026 às 09:00</span>
-                      <span class="sep">·</span>
-                      <span><i class="ti ti-clock"></i> 09:00 – 09:30</span>
-                      <span class="pill neutral">Consulta</span>
-                    </div>
-                    <div class="item-meta">
-                      <span><i class="ti ti-user"></i> Dr. Carlos Pinto — Cardiologia</span>
-                      <span class="sep">·</span>
-                      <span><i class="ti ti-calendar-event"></i> Agenda Principal</span>
-                    </div>
-                  </div>
-                </div>
-                <div class="item-actions">
-                  <button class="iconbtn green" title="WhatsApp"><i class="ti ti-brand-whatsapp"></i></button>
-                  <button class="iconbtn" title="Editar"><i class="ti ti-pencil"></i></button>
-                  <button class="iconbtn" title="Mais"><i class="ti ti-dots-vertical"></i></button>
-                </div>
-              </div>
-
-              <!-- Carlos Mendes -->
-              <div class="item c-success">
-                <div class="avatar">CM</div>
-                <div class="item-main">
-                  <div class="item-head">
-                    <span class="item-name">Carlos Mendes</span>
-                    <span class="pill success"><i class="ti ti-circle-check"></i> Concluído</span>
-                    <span class="pill success"><i class="ti ti-check"></i> Confirmado</span>
-                  </div>
-                  <div class="item-meta-row">
-                    <div class="item-meta">
-                      <span><i class="ti ti-calendar"></i> 02/06/2026 às 11:00</span>
-                      <span class="sep">·</span>
-                      <span><i class="ti ti-clock"></i> 11:00 – 11:30</span>
-                      <span class="pill neutral">Retorno</span>
-                    </div>
-                    <div class="item-meta">
-                      <span><i class="ti ti-user"></i> Dra. Ana Lima — Neurologia</span>
-                      <span class="sep">·</span>
-                      <span class="money"><i class="ti ti-currency-real"></i> R$ 350,00</span>
-                    </div>
-                  </div>
-                </div>
-                <div class="item-actions">
-                  <button class="iconbtn" title="Editar"><i class="ti ti-pencil"></i></button>
-                  <button class="iconbtn" title="Mais"><i class="ti ti-dots-vertical"></i></button>
-                </div>
-              </div>
-
-              <!-- João Pereira -->
-              <div class="item c-info">
-                <div class="avatar">JP</div>
-                <div class="item-main">
-                  <div class="item-head">
-                    <span class="item-name">João Pereira</span>
-                    <span class="pill info"><i class="ti ti-calendar-time"></i> Agendado</span>
-                  </div>
-                  <div class="item-meta-row">
-                    <div class="item-meta">
-                      <span><i class="ti ti-calendar"></i> 03/06/2026 às 09:30</span>
-                      <span class="sep">·</span>
-                      <span><i class="ti ti-clock"></i> 09:30 – 10:00</span>
-                      <span class="pill neutral">Procedimento</span>
-                    </div>
-                    <div class="item-meta">
-                      <span><i class="ti ti-user"></i> Dr. Rafael Souza — Ortopedia</span>
-                      <span class="sep">·</span>
-                      <span class="money"><i class="ti ti-currency-real"></i> R$ 180,00</span>
-                    </div>
-                  </div>
-                </div>
-                <div class="item-actions">
-                  <button class="iconbtn green" title="WhatsApp"><i class="ti ti-brand-whatsapp"></i></button>
-                  <button class="iconbtn" title="Mais"><i class="ti ti-dots-vertical"></i></button>
-                </div>
-              </div>
-
-              <!-- Ana Rodrigues -->
-              <div class="item c-danger">
-                <div class="avatar">AR</div>
-                <div class="item-main">
-                  <div class="item-head">
-                    <span class="item-name">Ana Rodrigues</span>
-                    <span class="pill danger"><i class="ti ti-x"></i> Cancelado</span>
-                  </div>
-                  <div class="item-meta-row">
-                    <div class="item-meta">
-                      <span><i class="ti ti-calendar"></i> 30/05/2026 às 14:00</span>
-                      <span class="sep">·</span>
-                      <span><i class="ti ti-clock"></i> 14:00 – 14:30</span>
-                      <span class="pill neutral">Consulta</span>
-                    </div>
-                    <div class="item-meta">
-                      <span><i class="ti ti-brand-whatsapp"></i> Notificação de cancelamento enviada via WhatsApp</span>
-                    </div>
-                  </div>
-                </div>
-                <div class="item-actions">
-                  <button class="iconbtn" title="Reagendar"><i class="ti ti-calendar-plus"></i></button>
-                  <button class="iconbtn" title="Mais"><i class="ti ti-dots-vertical"></i></button>
-                </div>
-              </div>
-
-              <!-- Fernanda Costa -->
-              <div class="item c-info">
-                <div class="avatar">FC</div>
-                <div class="item-main">
-                  <div class="item-head">
-                    <span class="item-name">Fernanda Costa</span>
-                    <span class="pill info"><i class="ti ti-calendar-time"></i> Agendado</span>
-                    <span class="pill success"><i class="ti ti-check"></i> Confirmado</span>
-                  </div>
-                  <div class="item-meta-row">
-                    <div class="item-meta">
-                      <span><i class="ti ti-calendar"></i> 05/06/2026 às 11:00</span>
-                      <span class="sep">·</span>
-                      <span><i class="ti ti-clock"></i> 11:00 – 11:30</span>
-                      <span class="pill neutral">Consulta</span>
-                    </div>
-                    <div class="item-meta">
-                      <span><i class="ti ti-user"></i> Dra. Patricia Mello — Dermatologia</span>
-                      <span class="sep">·</span>
-                      <span class="money"><i class="ti ti-currency-real"></i> R$ 280,00</span>
-                    </div>
-                  </div>
-                </div>
-                <div class="item-actions">
-                  <button class="iconbtn green" title="WhatsApp"><i class="ti ti-brand-whatsapp"></i></button>
-                  <button class="iconbtn" title="Editar"><i class="ti ti-pencil"></i></button>
-                  <button class="iconbtn" title="Mais"><i class="ti ti-dots-vertical"></i></button>
-                </div>
-              </div>
             </div>
           </div>
         </div>
@@ -716,24 +665,19 @@
         <button id="apptClose" class="iconbtn" title="Fechar"><i class="ti ti-x"></i></button>
       </div>
       <div style="padding:18px 20px; display:flex; flex-direction:column; gap:12px;">
-        <label style="display:flex; flex-direction:column; gap:6px; font-size:12px; color:hsl(var(--text-muted)); font-weight:600;">Cliente
-          <input id="f_name" type="text" placeholder="Nome do cliente" style="padding:9px 12px; border:1px solid hsl(var(--border)); border-radius:8px; font-size:13px; background:hsl(var(--surface)); color:hsl(var(--text));"/>
+        <label style="display:flex; flex-direction:column; gap:6px; font-size:12px; color:hsl(var(--text-muted)); font-weight:600; position:relative;">Cliente
+          <input id="f_name" type="text" autocomplete="off" placeholder="Buscar contato do CRM ou digitar nome..." style="padding:9px 12px; border:1px solid hsl(var(--border)); border-radius:8px; font-size:13px; background:hsl(var(--surface)); color:hsl(var(--text));"/>
+          <div id="f_name_suggest" style="display:none; position:absolute; top:100%; left:0; right:0; background:hsl(var(--surface)); border:1px solid hsl(var(--border)); border-radius:8px; max-height:220px; overflow-y:auto; z-index:50; box-shadow:0 8px 24px rgba(0,0,0,0.12); margin-top:2px;"></div>
         </label>
         <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
           <label style="display:flex; flex-direction:column; gap:6px; font-size:12px; color:hsl(var(--text-muted)); font-weight:600;">Agenda
             <select id="f_agenda" style="padding:9px 12px; border:1px solid hsl(var(--border)); border-radius:8px; font-size:13px; background:hsl(var(--surface));">
-              <option>Dr. Carlos Pinto — Cardiologia</option>
-              <option>Dra. Ana Souza — Pediatria</option>
-              <option>Dr. João Lima — Clínica Geral</option>
-              <option>Agenda compartilhada</option>
+              <option value="">Carregando agendas...</option>
             </select>
           </label>
           <label style="display:flex; flex-direction:column; gap:6px; font-size:12px; color:hsl(var(--text-muted)); font-weight:600;">Profissional / Especialista
             <select id="f_prof" style="padding:9px 12px; border:1px solid hsl(var(--border)); border-radius:8px; font-size:13px; background:hsl(var(--surface));">
-              <option>Dr. Carlos Pinto</option>
-              <option>Dra. Ana Souza</option>
-              <option>Dr. João Lima</option>
-              <option>Equipe Comercial</option>
+              <option value="">Carregando profissionais...</option>
             </select>
           </label>
         </div>
@@ -747,6 +691,34 @@
           <label style="display:flex; flex-direction:column; gap:6px; font-size:12px; color:hsl(var(--text-muted)); font-weight:600;">Fim
             <input id="f_end" type="time" style="padding:9px 12px; border:1px solid hsl(var(--border)); border-radius:8px; font-size:13px;"/>
           </label>
+        </div>
+        <div style="margin-top:6px; padding:12px; border:1px solid hsl(var(--border)); border-radius:10px;">
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:10px;">
+            <label style="display:flex; flex-direction:column; gap:6px; font-size:12px; color:hsl(var(--text-muted)); font-weight:600;">Duração (min)
+              <select id="f_duration" style="padding:9px 12px; border:1px solid hsl(var(--border)); border-radius:8px; font-size:13px; background:hsl(var(--surface));">
+                <option value="15">15 min</option>
+                <option value="30" selected>30 min</option>
+                <option value="45">45 min</option>
+                <option value="60">1 hora</option>
+                <option value="90">1h 30 min</option>
+                <option value="120">2 horas</option>
+              </select>
+            </label>
+            <div style="display:flex; flex-direction:column; gap:6px;">
+              <div style="font-size:12px; color:hsl(var(--text-muted)); font-weight:600;">Disponibilidade</div>
+              <div style="display:flex; gap:12px; font-size:11px; color:hsl(var(--text-muted)); align-items:center; padding-top:6px;">
+                <span><span id="slots_free_count">0</span> disponíveis</span>
+                <span><span id="slots_busy_count">0</span> ocupados</span>
+              </div>
+            </div>
+          </div>
+          <div style="font-size:12px; font-weight:700; color:hsl(var(--text)); margin-bottom:8px;">Selecione o horário</div>
+          <div id="f_slots" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(80px, 1fr)); gap:6px; max-height:220px; overflow-y:auto; padding:4px;"></div>
+          <div style="display:flex; gap:14px; font-size:11px; color:hsl(var(--text-muted)); margin-top:10px;">
+            <span style="display:inline-flex; align-items:center; gap:4px;"><span style="width:8px; height:8px; border-radius:999px; background:hsl(var(--success));"></span> Livre</span>
+            <span style="display:inline-flex; align-items:center; gap:4px;"><span style="width:8px; height:8px; border-radius:999px; background:hsl(var(--danger));"></span> Ocupado</span>
+            <span style="display:inline-flex; align-items:center; gap:4px;"><span style="width:8px; height:8px; border-radius:999px; background:hsl(var(--text-muted));"></span> Passado</span>
+          </div>
         </div>
         <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
           <label style="display:flex; flex-direction:column; gap:6px; font-size:12px; color:hsl(var(--text-muted)); font-weight:600;">Tipo de serviço
@@ -808,26 +780,298 @@
       </div>
       <div style="padding:14px 20px; border-top:1px solid hsl(var(--border)); display:flex; gap:8px; justify-content:flex-end; position:sticky; bottom:0; background:hsl(var(--surface));">
         <button id="apptDelete" class="btn" style="display:none; color:hsl(var(--danger)); border-color:hsl(var(--danger-soft));"><i class="ti ti-trash"></i> Excluir</button>
+        <button id="apptReschedule" class="btn" style="display:none;"><i class="ti ti-calendar-event"></i> Remarcar</button>
         <button id="apptCancel" class="btn">Cancelar</button>
         <button id="apptSave" class="btn primary"><i class="ti ti-check"></i> Salvar</button>
       </div>
     </div>
   </div>
 
+  <!-- Config Modal -->
+  <div id="cfgModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:9999; align-items:center; justify-content:center;">
+    <div style="background:hsl(var(--surface)); border-radius:12px; width:min(560px, 94vw); max-height:90vh; overflow:auto; box-shadow:0 20px 60px rgba(0,0,0,0.3);">
+      <div style="padding:16px 20px; border-bottom:1px solid hsl(var(--border)); display:flex; justify-content:space-between; align-items:center; position:sticky; top:0; background:hsl(var(--surface)); z-index:2;">
+        <div style="font-size:15px; font-weight:700; display:flex; align-items:center; gap:8px;"><i class="ti ti-settings"></i> Configurações da Agenda</div>
+        <button id="cfgClose" style="background:none; border:none; cursor:pointer; font-size:18px; color:hsl(var(--text-muted));"><i class="ti ti-x"></i></button>
+      </div>
+      <div style="padding:18px 20px; display:flex; flex-direction:column; gap:14px;">
+        <div>
+          <div style="font-size:12px; font-weight:700; color:hsl(var(--text)); display:flex; align-items:center; gap:6px; margin-bottom:8px;"><i class="ti ti-calendar-week"></i> Dias de atendimento</div>
+          <div id="cfg_days" style="display:flex; gap:6px; flex-wrap:wrap;"></div>
+        </div>
+        <div style="border:1px solid hsl(var(--border)); border-radius:10px; padding:12px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+            <div style="font-size:13px; font-weight:700; display:flex; align-items:center; gap:6px;"><i class="ti ti-sun" style="color:#f59e0b;"></i> Manhã</div>
+            <label style="display:inline-flex; align-items:center; gap:6px; font-size:11px; cursor:pointer;"><input type="checkbox" id="cfg_manha_on" style="accent-color:hsl(var(--primary));"/> Ativo</label>
+          </div>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+            <label style="font-size:11px; color:hsl(var(--text-muted)); font-weight:600;">Início<input id="cfg_manha_ini" type="time" style="display:block; width:100%; margin-top:4px; padding:8px 10px; border:1px solid hsl(var(--border)); border-radius:8px; font-size:13px;"/></label>
+            <label style="font-size:11px; color:hsl(var(--text-muted)); font-weight:600;">Fim<input id="cfg_manha_fim" type="time" style="display:block; width:100%; margin-top:4px; padding:8px 10px; border:1px solid hsl(var(--border)); border-radius:8px; font-size:13px;"/></label>
+          </div>
+        </div>
+        <div style="border:1px solid hsl(var(--border)); border-radius:10px; padding:12px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+            <div style="font-size:13px; font-weight:700; display:flex; align-items:center; gap:6px;"><i class="ti ti-coffee" style="color:#ea580c;"></i> Intervalo de Almoço</div>
+            <label style="display:inline-flex; align-items:center; gap:6px; font-size:11px; cursor:pointer;"><input type="checkbox" id="cfg_lunch_on" style="accent-color:hsl(var(--primary));"/> Ativo</label>
+          </div>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+            <label style="font-size:11px; color:hsl(var(--text-muted)); font-weight:600;">Início<input id="cfg_lunch_ini" type="time" style="display:block; width:100%; margin-top:4px; padding:8px 10px; border:1px solid hsl(var(--border)); border-radius:8px; font-size:13px;"/></label>
+            <label style="font-size:11px; color:hsl(var(--text-muted)); font-weight:600;">Fim<input id="cfg_lunch_fim" type="time" style="display:block; width:100%; margin-top:4px; padding:8px 10px; border:1px solid hsl(var(--border)); border-radius:8px; font-size:13px;"/></label>
+          </div>
+        </div>
+        <div style="border:1px solid hsl(var(--border)); border-radius:10px; padding:12px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+            <div style="font-size:13px; font-weight:700; display:flex; align-items:center; gap:6px;"><i class="ti ti-clock" style="color:#3b82f6;"></i> Tarde</div>
+            <label style="display:inline-flex; align-items:center; gap:6px; font-size:11px; cursor:pointer;"><input type="checkbox" id="cfg_tarde_on" style="accent-color:hsl(var(--primary));"/> Ativo</label>
+          </div>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+            <label style="font-size:11px; color:hsl(var(--text-muted)); font-weight:600;">Início<input id="cfg_tarde_ini" type="time" style="display:block; width:100%; margin-top:4px; padding:8px 10px; border:1px solid hsl(var(--border)); border-radius:8px; font-size:13px;"/></label>
+            <label style="font-size:11px; color:hsl(var(--text-muted)); font-weight:600;">Fim<input id="cfg_tarde_fim" type="time" style="display:block; width:100%; margin-top:4px; padding:8px 10px; border:1px solid hsl(var(--border)); border-radius:8px; font-size:13px;"/></label>
+          </div>
+        </div>
+        <div style="border:1px solid hsl(var(--border)); border-radius:10px; padding:12px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+            <div style="font-size:13px; font-weight:700; display:flex; align-items:center; gap:6px;"><i class="ti ti-moon" style="color:#6366f1;"></i> Noite (Opcional)</div>
+            <label style="display:inline-flex; align-items:center; gap:6px; font-size:11px; cursor:pointer;"><input type="checkbox" id="cfg_noite_on" style="accent-color:hsl(var(--primary));"/> Ativo</label>
+          </div>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+            <label style="font-size:11px; color:hsl(var(--text-muted)); font-weight:600;">Início<input id="cfg_noite_ini" type="time" style="display:block; width:100%; margin-top:4px; padding:8px 10px; border:1px solid hsl(var(--border)); border-radius:8px; font-size:13px;"/></label>
+            <label style="font-size:11px; color:hsl(var(--text-muted)); font-weight:600;">Fim<input id="cfg_noite_fim" type="time" style="display:block; width:100%; margin-top:4px; padding:8px 10px; border:1px solid hsl(var(--border)); border-radius:8px; font-size:13px;"/></label>
+          </div>
+        </div>
+        <div style="border:1px solid hsl(var(--border)); border-radius:10px; padding:12px; display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+          <label style="font-size:11px; color:hsl(var(--text-muted)); font-weight:600;">Duração padrão do slot
+            <select id="cfg_slot" style="display:block; width:100%; margin-top:4px; padding:8px 10px; border:1px solid hsl(var(--border)); border-radius:8px; font-size:13px; background:hsl(var(--surface));">
+              <option value="15">15 minutos</option>
+              <option value="30">30 minutos</option>
+              <option value="45">45 minutos</option>
+              <option value="60">60 minutos</option>
+            </select>
+          </label>
+          <label style="font-size:11px; color:hsl(var(--text-muted)); font-weight:600;">Antecedência mínima
+            <select id="cfg_minLead" style="display:block; width:100%; margin-top:4px; padding:8px 10px; border:1px solid hsl(var(--border)); border-radius:8px; font-size:13px; background:hsl(var(--surface));">
+              <option value="0">Sem mínimo</option>
+              <option value="30">30 minutos</option>
+              <option value="60">1 hora</option>
+              <option value="180">3 horas</option>
+              <option value="1440">1 dia</option>
+            </select>
+          </label>
+        </div>
+        <div style="font-size:11px; color:hsl(var(--text-muted));">Aplicado à visão semanal, diária e seletor de horários. O intervalo de almoço bloqueia novos agendamentos nesse período.</div>
+      </div>
+      <div style="padding:14px 20px; border-top:1px solid hsl(var(--border)); display:flex; gap:8px; justify-content:flex-end; position:sticky; bottom:0; background:hsl(var(--surface));">
+        <button id="cfgCancel" class="btn">Cancelar</button>
+        <button id="cfgSave" class="btn primary"><i class="ti ti-check"></i> Salvar</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Toast -->
+  <!-- Modal Nova Agenda -->
+  <div id="novaAgendaModal" style="display:none; position:fixed; inset:0; background:rgba(15,23,42,0.55); z-index:9999; align-items:center; justify-content:center; padding:20px;">
+    <div style="background:hsl(var(--surface)); border-radius:14px; width:100%; max-width:560px; max-height:92vh; overflow-y:auto; box-shadow:0 20px 60px rgba(0,0,0,0.25);">
+      <div style="display:flex; align-items:center; justify-content:space-between; padding:16px 20px; border-bottom:1px solid hsl(var(--border)); position:sticky; top:0; background:hsl(var(--surface)); z-index:2;">
+        <h3 style="margin:0; font-size:16px; font-weight:700;">Nova agenda</h3>
+        <button id="naClose" class="iconbtn" title="Fechar"><i class="ti ti-x"></i></button>
+      </div>
+      <div style="padding:18px 20px; display:flex; flex-direction:column; gap:12px;">
+        <label style="display:flex; flex-direction:column; gap:6px; font-size:12px; color:hsl(var(--text-muted)); font-weight:600;">Nome da agenda
+          <input id="na_nome" type="text" placeholder="Ex.: Dr. João, Sala 2, Clínica Centro..." style="padding:9px 12px; border:1px solid hsl(var(--border)); border-radius:8px; font-size:13px;"/>
+        </label>
+        <label style="display:flex; flex-direction:column; gap:6px; font-size:12px; color:hsl(var(--text-muted)); font-weight:600;">Tipo
+          <select id="na_tipo" style="padding:9px 12px; border:1px solid hsl(var(--border)); border-radius:8px; font-size:13px; background:hsl(var(--surface));">
+            <option value="colaborador">Colaborador / Profissional</option>
+            <option value="recurso">Recurso / Sala</option>
+            <option value="unidade">Unidade</option>
+            <option value="geral">Geral</option>
+          </select>
+        </label>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+          <label style="display:flex; flex-direction:column; gap:6px; font-size:12px; color:hsl(var(--text-muted)); font-weight:600;">Duração padrão (min)
+            <input id="na_duracao" type="number" min="5" value="30" style="padding:9px 12px; border:1px solid hsl(var(--border)); border-radius:8px; font-size:13px;"/>
+          </label>
+          <label style="display:flex; flex-direction:column; gap:6px; font-size:12px; color:hsl(var(--text-muted)); font-weight:600;">Capacidade simultânea
+            <input id="na_capacidade" type="number" min="1" value="1" style="padding:9px 12px; border:1px solid hsl(var(--border)); border-radius:8px; font-size:13px;"/>
+          </label>
+        </div>
+
+        <div style="border:1px solid hsl(var(--border)); border-radius:10px; padding:12px;">
+          <div style="font-size:12px; font-weight:700; margin-bottom:8px; display:flex; align-items:center; gap:6px;"><i class="ti ti-clock"></i> Horário de atendimento</div>
+          <div style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:10px;" id="na_dias">
+            <label style="display:inline-flex; align-items:center; gap:4px; font-size:12px;"><input type="checkbox" value="seg" checked/> Seg</label>
+            <label style="display:inline-flex; align-items:center; gap:4px; font-size:12px;"><input type="checkbox" value="ter" checked/> Ter</label>
+            <label style="display:inline-flex; align-items:center; gap:4px; font-size:12px;"><input type="checkbox" value="qua" checked/> Qua</label>
+            <label style="display:inline-flex; align-items:center; gap:4px; font-size:12px;"><input type="checkbox" value="qui" checked/> Qui</label>
+            <label style="display:inline-flex; align-items:center; gap:4px; font-size:12px;"><input type="checkbox" value="sex" checked/> Sex</label>
+            <label style="display:inline-flex; align-items:center; gap:4px; font-size:12px;"><input type="checkbox" value="sab"/> Sáb</label>
+            <label style="display:inline-flex; align-items:center; gap:4px; font-size:12px;"><input type="checkbox" value="dom"/> Dom</label>
+          </div>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+            <label style="display:flex; flex-direction:column; gap:6px; font-size:12px; color:hsl(var(--text-muted)); font-weight:600;">Início
+              <input id="na_hini" type="time" value="08:00" style="padding:9px 12px; border:1px solid hsl(var(--border)); border-radius:8px; font-size:13px;"/>
+            </label>
+            <label style="display:flex; flex-direction:column; gap:6px; font-size:12px; color:hsl(var(--text-muted)); font-weight:600;">Fim
+              <input id="na_hfim" type="time" value="18:00" style="padding:9px 12px; border:1px solid hsl(var(--border)); border-radius:8px; font-size:13px;"/>
+            </label>
+          </div>
+        </div>
+
+        <div style="border:1px solid hsl(var(--border)); border-radius:10px; padding:12px;">
+          <div style="font-size:12px; font-weight:700; margin-bottom:8px; display:flex; align-items:center; gap:6px;"><i class="ti ti-lock"></i> Acesso público (opcional)</div>
+          <label style="display:flex; flex-direction:column; gap:6px; font-size:12px; color:hsl(var(--text-muted)); font-weight:600;">Senha para o usuário acessar a agenda
+            <input id="na_senha" type="text" placeholder="Deixe em branco para acesso livre" autocomplete="off" style="padding:9px 12px; border:1px solid hsl(var(--border)); border-radius:8px; font-size:13px;"/>
+          </label>
+          <div style="font-size:11px; color:hsl(var(--text-muted)); margin-top:6px;">Quando preenchida, será solicitada ao abrir o link público desta agenda.</div>
+        </div>
+      </div>
+      <div style="padding:14px 20px; border-top:1px solid hsl(var(--border)); display:flex; gap:8px; justify-content:flex-end; position:sticky; bottom:0; background:hsl(var(--surface));">
+        <button id="naCancel" class="btn">Cancelar</button>
+        <button id="naSave" class="btn primary"><i class="ti ti-check"></i> Criar agenda</button>
+      </div>
+    </div>
+  </div>
+
   <div id="toast" style="display:none; position:fixed; bottom:20px; right:20px; background:hsl(var(--text)); color:hsl(var(--surface)); padding:10px 16px; border-radius:8px; font-size:13px; z-index:10000; box-shadow:0 10px 30px rgba(0,0,0,0.25);"></div>
 
   <script>
     (function(){
       const STORAGE_KEY = 'agenda_appointments_v1';
+
+      // Recebe agendas/profissionais reais do CRM via postMessage do React wrapper
+      function populateSelect(id, items, placeholder){
+        const el = document.getElementById(id);
+        if(!el) return;
+        const current = el.value;
+        el.innerHTML = '';
+        if(!items || items.length === 0){
+          const opt = document.createElement('option');
+          opt.value = '';
+          opt.textContent = placeholder;
+          el.appendChild(opt);
+          return;
+        }
+        items.forEach(it => {
+          const opt = document.createElement('option');
+          opt.value = it.id || it.label;
+          opt.textContent = it.label;
+          el.appendChild(opt);
+        });
+        if(current) el.value = current;
+      }
+      let CRM_LEADS = [];
+      window.addEventListener('message', (e) => {
+        const d = e.data || {};
+        if(d.type === 'agenda:data'){
+          populateSelect('f_agenda', d.agendas, 'Nenhuma agenda cadastrada');
+          populateSelect('f_prof', d.profissionais, 'Nenhum profissional cadastrado');
+          if(Array.isArray(d.leads)) CRM_LEADS = d.leads;
+        }
+        if(d.type === 'agenda:create-agenda-result'){
+          const t = document.getElementById('toast');
+          if(t){ t.textContent = d.ok ? 'Agenda criada com sucesso' : ('Erro ao criar agenda: ' + (d.error||'')); t.style.display='block'; setTimeout(()=>{t.style.display='none';}, 2800); }
+          if(d.ok){
+            document.getElementById('novaAgendaModal').style.display = 'none';
+            ['na_nome'].forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
+          }
+        }
+      });
+      // Avisa o parent que está pronto
+      try { window.parent.postMessage({ type: 'agenda:ready' }, '*'); } catch(_) {}
+
+      // ---------- Nova Agenda ----------
+      function openNovaAgenda(){ const m=document.getElementById('novaAgendaModal'); if(m){ m.style.display='flex'; setTimeout(()=>document.getElementById('na_nome')?.focus(), 50);} }
+      function closeNovaAgenda(){ const m=document.getElementById('novaAgendaModal'); if(m) m.style.display='none'; }
+      document.getElementById('btnNovaAgenda')?.addEventListener('click', openNovaAgenda);
+      document.getElementById('naClose')?.addEventListener('click', closeNovaAgenda);
+      document.getElementById('naCancel')?.addEventListener('click', closeNovaAgenda);
+      document.getElementById('naSave')?.addEventListener('click', () => {
+        const nome = (document.getElementById('na_nome').value||'').trim();
+        if(!nome){ alert('Informe o nome da agenda'); return; }
+        const dias = Array.from(document.querySelectorAll('#na_dias input[type=checkbox]:checked')).map(i => i.value);
+        const payload = {
+          type: 'agenda:create-agenda',
+          nome,
+          tipo: document.getElementById('na_tipo').value || 'colaborador',
+          tempo_medio_servico: parseInt(document.getElementById('na_duracao').value||'30',10),
+          capacidade_simultanea: parseInt(document.getElementById('na_capacidade').value||'1',10),
+          disponibilidade: {
+            dias: dias.length ? dias : ['seg','ter','qua','qui','sex'],
+            horario_inicio: document.getElementById('na_hini').value || '08:00',
+            horario_fim: document.getElementById('na_hfim').value || '18:00',
+          },
+          senha_acesso: (document.getElementById('na_senha').value||'').trim() || null,
+        };
+        const btn = document.getElementById('naSave');
+        if(btn){ btn.disabled = true; btn.innerHTML = '<i class="ti ti-loader"></i> Criando...'; }
+        try { window.parent.postMessage(payload, '*'); } catch(_){}
+        setTimeout(() => { if(btn){ btn.disabled = false; btn.innerHTML = '<i class="ti ti-check"></i> Criar agenda'; } }, 4000);
+      });
+
+      // ---------- Autocomplete de contatos do CRM ----------
+      function normalize(s){ return String(s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,''); }
+      function renderLeadSuggestions(q){
+        const box = document.getElementById('f_name_suggest');
+        if(!box) return;
+        const qn = normalize(q);
+        let list = CRM_LEADS;
+        if(qn){
+          list = CRM_LEADS.filter(l => normalize(l.name).includes(qn) || normalize(l.phone).includes(qn) || normalize(l.email).includes(qn));
+        }
+        list = list.slice(0, 20);
+        if(!list.length){ box.style.display='none'; box.innerHTML=''; return; }
+        box.innerHTML = list.map(l => (
+          '<div class="lead-opt" data-id="'+escapeAttr(l.id)+'" style="padding:8px 12px; cursor:pointer; border-bottom:1px solid hsl(var(--border)); font-size:13px;">'
+          + '<div style="font-weight:600; color:hsl(var(--text));">'+escapeHTML(l.name||'(sem nome)')+'</div>'
+          + '<div style="font-size:11px; color:hsl(var(--text-muted));">'+escapeHTML(l.phone||'')+(l.email?' · '+escapeHTML(l.email):'')+'</div>'
+          + '</div>'
+        )).join('');
+        box.style.display='block';
+        box.querySelectorAll('.lead-opt').forEach(el => {
+          el.addEventListener('mousedown', (ev) => {
+            ev.preventDefault();
+            const id = el.getAttribute('data-id');
+            const lead = CRM_LEADS.find(x => String(x.id) === String(id));
+            if(lead){
+              document.getElementById('f_name').value = lead.name || '';
+              if(lead.phone) document.getElementById('f_phone').value = lead.phone;
+              if(lead.email) document.getElementById('f_email').value = lead.email;
+            }
+            box.style.display='none';
+          });
+        });
+      }
+      document.addEventListener('input', (e) => {
+        if(e.target && e.target.id === 'f_name'){ renderLeadSuggestions(e.target.value); }
+      });
+      document.addEventListener('focusin', (e) => {
+        if(e.target && e.target.id === 'f_name'){ renderLeadSuggestions(e.target.value); }
+      });
+      document.addEventListener('focusout', (e) => {
+        if(e.target && e.target.id === 'f_name'){
+          setTimeout(() => { const b=document.getElementById('f_name_suggest'); if(b) b.style.display='none'; }, 150);
+        }
+      });
+
       const monthNames = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
       const dowShort = ['DOM','SEG','TER','QUA','QUI','SEX','SÁB'];
 
-      let viewDate = new Date(2026, 5, 3); // Junho 2026 selecionado dia 3
-      let selectedDate = new Date(viewDate);
+      let viewDate = new Date();
+      let selectedDate = new Date();
       let editingId = null;
 
-      function load(){ try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; } catch { return []; } }
+      function isUuidLike(s){ return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(String(s||'').trim()); }
+      function load(){
+        try {
+          const arr = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+          // sanitiza: remove UUIDs salvos antigamente em agenda/prof
+          return arr.map(it => ({
+            ...it,
+            agenda: isUuidLike(it.agenda) ? '' : it.agenda,
+            prof: isUuidLike(it.prof) ? '' : it.prof,
+          }));
+        } catch { return []; }
+      }
       function save(list){ localStorage.setItem(STORAGE_KEY, JSON.stringify(list)); }
       function toast(msg){ const t=document.getElementById('toast'); t.textContent=msg; t.style.display='block'; clearTimeout(t._h); t._h=setTimeout(()=>t.style.display='none',2500); }
       function pad(n){ return String(n).padStart(2,'0'); }
@@ -905,7 +1149,8 @@
         }
         const items = load();
         const colorOf = t => ({Consulta:'blue', Retorno:'green', Procedimento:'orange', 'Reunião':'purple'}[t] || 'blue');
-        for(let h=8; h<=12; h++){
+        const _bh = (function(){ try { return JSON.parse(localStorage.getItem('agenda_business_hours')) || {start:7,end:21}; } catch(_) { return {start:7,end:21}; } })();
+        for(let h=_bh.start; h<=_bh.end; h++){
           const time = document.createElement('div'); time.className='wh-time'; time.textContent = pad(h)+':00'; wg.appendChild(time);
           for(let i=0;i<7;i++){
             const d = new Date(start); d.setDate(start.getDate()+i);
@@ -916,7 +1161,12 @@
             const ev = items.find(it => it.date===fmtDateISO(d) && it.start && parseInt(it.start)===h);
             if(ev){
               const e = document.createElement('div'); e.className='ev '+colorOf(ev.type);
-              e.innerHTML = '<div class="nm">'+escapeHTML(ev.name)+'</div><div class="tm">'+ev.start+' – '+(ev.end||'')+'</div>';
+              const subt = [ev.type, ev.prof].filter(Boolean).join(' • ');
+              const tip = [ev.name, ev.start+' – '+(ev.end||''), ev.type, ev.agenda, ev.prof, ev.phone, ev.email, ev.notes].filter(Boolean).join('\n');
+              e.title = tip;
+              e.innerHTML = '<div class="nm">'+escapeHTML(ev.name)+'</div>'
+                + '<div class="tm">'+ev.start+' – '+(ev.end||'')+'</div>'
+                + (subt ? '<div class="tm" style="opacity:.85;">'+escapeHTML(subt)+'</div>' : '');
               e.addEventListener('click', (evt) => { evt.stopPropagation(); openModal(ev.id); });
               cell.appendChild(e);
             }
@@ -987,8 +1237,14 @@
         document.getElementById('f_start').value = ev?.start || prefill?.start || '09:00';
         document.getElementById('f_end').value = ev?.end || '09:30';
         document.getElementById('f_type').value = ev?.type || 'Consulta';
-        document.getElementById('f_agenda').value = ev?.agenda || 'Dr. Carlos Pinto — Cardiologia';
-        document.getElementById('f_prof').value = ev?.prof || 'Dr. Carlos Pinto';
+        const fa = document.getElementById('f_agenda');
+        const fp = document.getElementById('f_prof');
+        function setSelectByLabel(sel, label){
+          if(!label){ if(sel.options[0]) sel.value = sel.options[0].value; return; }
+          for(const o of sel.options){ if((o.textContent||'').trim() === label){ sel.value = o.value; return; } }
+        }
+        setSelectByLabel(fa, ev?.agenda);
+        setSelectByLabel(fp, ev?.prof);
         document.getElementById('f_value').value = ev?.value ?? '';
         document.getElementById('f_phone').value = ev?.phone || '';
         document.getElementById('f_email').value = ev?.email || '';
@@ -998,10 +1254,89 @@
         document.getElementById('f_confirmNow').checked = ev?.confirmNow ?? true;
         document.getElementById('f_confirmEmail').checked = ev?.confirmEmail ?? false;
         document.getElementById('f_notes').value = ev?.notes || '';
+        // Duração inferida do compromisso (ou 30min padrão)
+        const durSel = document.getElementById('f_duration');
+        if(ev?.start && ev?.end){
+          const [sh,sm] = ev.start.split(':').map(Number);
+          const [eh,em] = ev.end.split(':').map(Number);
+          const dur = (eh*60+em) - (sh*60+sm);
+          const opt = Array.from(durSel.options).find(o => parseInt(o.value)===dur);
+          durSel.value = opt ? opt.value : '30';
+        } else durSel.value = '30';
         document.getElementById('apptDelete').style.display = ev ? 'inline-flex' : 'none';
+        const rb = document.getElementById('apptReschedule');
+        if(rb) rb.style.display = ev ? 'inline-flex' : 'none';
         document.getElementById('apptModal').style.display = 'flex';
+        renderSlots();
       }
       function closeModal(){ document.getElementById('apptModal').style.display='none'; editingId=null; }
+
+      // ---------- Seletor de horários ----------
+      function pad2(n){ return String(n).padStart(2,'0'); }
+      function minToHHMM(m){ return pad2(Math.floor(m/60))+':'+pad2(m%60); }
+      function hhmmToMin(s){ const [h,m] = String(s||'0:0').split(':').map(Number); return (h||0)*60+(m||0); }
+      function renderSlots(){
+        const box = document.getElementById('f_slots');
+        if(!box) return;
+        const date = document.getElementById('f_date').value;
+        const dur = parseInt(document.getElementById('f_duration').value) || 30;
+        const selectedStart = document.getElementById('f_start').value;
+        const items = load().filter(i => i.date === date && i.id !== editingId);
+        const now = new Date();
+        const isToday = date === fmtDateISO(now);
+        const nowMin = now.getHours()*60 + now.getMinutes();
+        const _cfg = (typeof getCfg==='function') ? getCfg() : null;
+        const _r = (typeof cfgHourRange==='function') ? cfgHourRange() : { start:7, end:21 };
+        const START_MIN = _r.start*60, END_MIN = (_r.end+1)*60, STEP = (_cfg?.slot) || 30;
+        let free = 0, busy = 0;
+        let html = '';
+        for(let t = START_MIN; t + dur <= END_MIN; t += STEP){
+          const slotStart = t, slotEnd = t + dur;
+          const past = isToday && slotEnd <= nowMin;
+          const blocked = (typeof cfgIsBlocked==='function') ? cfgIsBlocked(date, slotStart, slotEnd) : false;
+          const occupied = items.some(i => {
+            const s = hhmmToMin(i.start), e = hhmmToMin(i.end || minToHHMM(s+30));
+            return slotStart < e && slotEnd > s;
+          });
+          const selected = selectedStart && hhmmToMin(selectedStart) === slotStart;
+          let bg = 'hsl(var(--surface))', color = 'hsl(var(--text))', dot = 'hsl(var(--success))', cursor='pointer', border='hsl(var(--border))';
+          if(past){ color='hsl(var(--text-muted))'; dot='hsl(var(--text-muted))'; cursor='not-allowed'; }
+          else if(blocked){ color='hsl(var(--text-muted))'; dot='hsl(var(--text-muted))'; cursor='not-allowed'; bg='hsl(var(--surface-soft) / 0.5)'; }
+          else if(occupied){ color='hsl(var(--danger))'; dot='hsl(var(--danger))'; cursor='not-allowed'; }
+          else free++;
+          if(occupied && !past && !blocked) busy++;
+          if(selected){ bg='hsl(var(--info) / 0.12)'; border='hsl(var(--info))'; }
+          const disabled = past || occupied || blocked;
+          html += '<button type="button" data-slot="'+minToHHMM(slotStart)+'" data-end="'+minToHHMM(slotEnd)+'" '+(disabled?'disabled':'')
+            + ' style="padding:8px 6px; border:1px solid '+border+'; border-radius:8px; background:'+bg+'; color:'+color
+            + '; font-size:12px; font-weight:600; cursor:'+cursor+'; display:flex; flex-direction:column; align-items:center; gap:2px;'
+            + (disabled?'opacity:.55;':'')+ '">'
+            + minToHHMM(slotStart)
+            + '<span style="width:6px; height:6px; border-radius:999px; background:'+dot+';"></span>'
+            + '</button>';
+        }
+        box.innerHTML = html;
+        document.getElementById('slots_free_count').textContent = free;
+        document.getElementById('slots_busy_count').textContent = busy;
+        box.querySelectorAll('button[data-slot]:not([disabled])').forEach(b => {
+          b.addEventListener('click', () => {
+            document.getElementById('f_start').value = b.getAttribute('data-slot');
+            document.getElementById('f_end').value = b.getAttribute('data-end');
+            renderSlots();
+          });
+        });
+      }
+      document.addEventListener('change', (e) => {
+        if(e.target && (e.target.id === 'f_date' || e.target.id === 'f_duration')){
+          const dur = parseInt(document.getElementById('f_duration').value) || 30;
+          const start = document.getElementById('f_start').value;
+          if(start){
+            document.getElementById('f_end').value = minToHHMM(hhmmToMin(start)+dur);
+          }
+          renderSlots();
+        }
+        if(e.target && e.target.id === 'f_start'){ renderSlots(); }
+      });
 
       document.getElementById('apptClose').addEventListener('click', closeModal);
       document.getElementById('apptCancel').addEventListener('click', closeModal);
@@ -1017,8 +1352,8 @@
           name, date, start,
           end: document.getElementById('f_end').value,
           type: document.getElementById('f_type').value,
-          agenda: document.getElementById('f_agenda').value,
-          prof: document.getElementById('f_prof').value.trim(),
+          agenda: (document.getElementById('f_agenda').selectedOptions[0]?.textContent || '').trim(),
+          prof: (document.getElementById('f_prof').selectedOptions[0]?.textContent || '').trim(),
           value: parseFloat(document.getElementById('f_value').value) || 0,
           phone: document.getElementById('f_phone').value.trim(),
           email: document.getElementById('f_email').value.trim(),
@@ -1046,11 +1381,136 @@
         if(!confirm('Excluir este compromisso?')) return;
         save(load().filter(i=>i.id!==editingId)); closeModal(); renderAll(); toast('Compromisso excluído');
       });
+      document.getElementById('apptReschedule').addEventListener('click', () => {
+        if(!editingId) return;
+        const fd = document.getElementById('f_date');
+        const fs = document.getElementById('f_start');
+        const fe = document.getElementById('f_end');
+        fd.value = ''; fs.value = ''; fe.value = '';
+        document.getElementById('apptTitle').textContent = 'Remarcar compromisso';
+        toast('Escolha a nova data e horário, depois clique em Salvar');
+        setTimeout(() => fd.focus(), 50);
+      });
 
       // ---------- Top buttons ----------
       document.getElementById('btnCriar').addEventListener('click', () => openModal(null));
       document.getElementById('btnSync').addEventListener('click', () => toast('Sincronizado com Google Calendar'));
-      document.getElementById('btnConfig').addEventListener('click', () => toast('Abrindo configurações...'));
+      document.getElementById('btnClearMock').addEventListener('click', () => {
+        if(!confirm('Remover todos os compromissos locais de exemplo? Esta ação não afeta dados reais no servidor.')) return;
+        localStorage.removeItem(STORAGE_KEY);
+        renderAll();
+        toast('Dados locais removidos');
+      });
+      // ---------- Agenda config (periods, lunch, days, slot) ----------
+      const DEFAULT_CFG = {
+        days: [false,true,true,true,true,true,false], // dom..sáb
+        manha: { ativo:true, ini:'07:00', fim:'12:00' },
+        lunch: { ativo:true, ini:'12:00', fim:'14:00' },
+        tarde: { ativo:true, ini:'14:00', fim:'18:00' },
+        noite: { ativo:false, ini:'19:00', fim:'23:00' },
+        slot: 30,
+        minLead: 60
+      };
+      function getCfg(){
+        try {
+          const raw = JSON.parse(localStorage.getItem('agenda_config'));
+          if(raw && raw.manha) return { ...DEFAULT_CFG, ...raw };
+        } catch(_) {}
+        // migra do formato antigo
+        try {
+          const bh = JSON.parse(localStorage.getItem('agenda_business_hours'));
+          if(bh) return { ...DEFAULT_CFG, manha:{...DEFAULT_CFG.manha, ini:String(bh.start).padStart(2,'0')+':00'}, noite:{...DEFAULT_CFG.noite, fim:String(bh.end).padStart(2,'0')+':00'} };
+        } catch(_) {}
+        return DEFAULT_CFG;
+      }
+      window.getAgendaCfg = getCfg;
+      function cfgHourRange(){
+        const c = getCfg();
+        const all = [c.manha, c.tarde, c.noite].filter(p => p.ativo);
+        if(!all.length) return { start:7, end:21 };
+        const mins = Math.min(...all.map(p => parseInt(p.ini)));
+        const maxs = Math.max(...all.map(p => parseInt(p.fim)));
+        return { start: mins, end: Math.max(mins+1, maxs) };
+      }
+      window.cfgHourRange = cfgHourRange;
+      function cfgIsBlocked(date, slotStartMin, slotEndMin){
+        const c = getCfg();
+        const d = (typeof date === 'string') ? parseISO(date) : date;
+        if(!c.days[d.getDay()]) return true;
+        const inAny = [c.manha, c.tarde, c.noite].some(p => {
+          if(!p.ativo) return false;
+          const a = hhmmToMin(p.ini), b = hhmmToMin(p.fim);
+          return slotStartMin >= a && slotEndMin <= b;
+        });
+        if(!inAny) return true;
+        if(c.lunch.ativo){
+          const a = hhmmToMin(c.lunch.ini), b = hhmmToMin(c.lunch.fim);
+          if(slotStartMin < b && slotEndMin > a) return true;
+        }
+        return false;
+      }
+      window.cfgIsBlocked = cfgIsBlocked;
+
+      function renderCfgDays(active){
+        const labels = ['D','S','T','Q','Q','S','S'];
+        const box = document.getElementById('cfg_days'); if(!box) return;
+        box.innerHTML = '';
+        labels.forEach((l, i) => {
+          const b = document.createElement('button');
+          b.type = 'button';
+          b.textContent = l;
+          b.dataset.idx = i;
+          b.style.cssText = 'width:36px; height:36px; border-radius:999px; border:1px solid hsl(var(--border)); font-weight:700; font-size:12px; cursor:pointer; '
+            + (active[i] ? 'background:hsl(var(--primary)); color:white; border-color:hsl(var(--primary));' : 'background:hsl(var(--surface)); color:hsl(var(--text-muted));');
+          b.addEventListener('click', () => {
+            active[i] = !active[i];
+            renderCfgDays(active);
+          });
+          box.appendChild(b);
+        });
+      }
+      let _cfgDays = [];
+      function openCfg(){
+        const c = getCfg();
+        _cfgDays = [...c.days];
+        renderCfgDays(_cfgDays);
+        document.getElementById('cfg_manha_on').checked = c.manha.ativo;
+        document.getElementById('cfg_manha_ini').value = c.manha.ini;
+        document.getElementById('cfg_manha_fim').value = c.manha.fim;
+        document.getElementById('cfg_lunch_on').checked = c.lunch.ativo;
+        document.getElementById('cfg_lunch_ini').value = c.lunch.ini;
+        document.getElementById('cfg_lunch_fim').value = c.lunch.fim;
+        document.getElementById('cfg_tarde_on').checked = c.tarde.ativo;
+        document.getElementById('cfg_tarde_ini').value = c.tarde.ini;
+        document.getElementById('cfg_tarde_fim').value = c.tarde.fim;
+        document.getElementById('cfg_noite_on').checked = c.noite.ativo;
+        document.getElementById('cfg_noite_ini').value = c.noite.ini;
+        document.getElementById('cfg_noite_fim').value = c.noite.fim;
+        document.getElementById('cfg_slot').value = String(c.slot);
+        document.getElementById('cfg_minLead').value = String(c.minLead);
+        document.getElementById('cfgModal').style.display = 'flex';
+      }
+      function closeCfg(){ document.getElementById('cfgModal').style.display = 'none'; }
+      document.getElementById('btnConfig').addEventListener('click', openCfg);
+      document.getElementById('cfgClose').addEventListener('click', closeCfg);
+      document.getElementById('cfgCancel').addEventListener('click', closeCfg);
+      document.getElementById('cfgModal').addEventListener('click', (e)=>{ if(e.target.id==='cfgModal') closeCfg(); });
+      document.getElementById('cfgSave').addEventListener('click', () => {
+        const cfg = {
+          days: _cfgDays,
+          manha: { ativo: document.getElementById('cfg_manha_on').checked, ini: document.getElementById('cfg_manha_ini').value || '07:00', fim: document.getElementById('cfg_manha_fim').value || '12:00' },
+          lunch: { ativo: document.getElementById('cfg_lunch_on').checked, ini: document.getElementById('cfg_lunch_ini').value || '12:00', fim: document.getElementById('cfg_lunch_fim').value || '14:00' },
+          tarde: { ativo: document.getElementById('cfg_tarde_on').checked, ini: document.getElementById('cfg_tarde_ini').value || '14:00', fim: document.getElementById('cfg_tarde_fim').value || '18:00' },
+          noite: { ativo: document.getElementById('cfg_noite_on').checked, ini: document.getElementById('cfg_noite_ini').value || '19:00', fim: document.getElementById('cfg_noite_fim').value || '23:00' },
+          slot: parseInt(document.getElementById('cfg_slot').value) || 30,
+          minLead: parseInt(document.getElementById('cfg_minLead').value) || 0
+        };
+        localStorage.setItem('agenda_config', JSON.stringify(cfg));
+        // mantém compat
+        const r = cfgHourRange();
+        localStorage.setItem('agenda_business_hours', JSON.stringify({start:r.start, end:r.end}));
+        closeCfg(); toast('Configurações salvas'); renderAll();
+      });
 
       // calendar nav
       const navBtns = document.querySelectorAll('.cal-nav button');
@@ -1076,7 +1536,8 @@
         }
       });
 
-      function renderAll(){ renderCalendar(); renderWeek(); renderList(); }
+      function renderAll(){ renderCalendar(); renderWeek(); renderList(); try { if(typeof window.__renderAgendaMonth === 'function') window.__renderAgendaMonth(); } catch(_){} document.dispatchEvent(new CustomEvent('agenda:data-changed')); }
+      window.openModal = openModal;
       renderAll();
     })();
   </script>

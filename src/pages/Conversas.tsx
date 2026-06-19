@@ -9903,7 +9903,7 @@ function Conversas() {
                     <AudioRecorder onSendAudio={handleSendAudio} onTranscribed={(text) => setMessageInput(prev => prev ? `${prev} ${text}` : text)} />
 
 
-                    <div className={`${showMobileExtras ? 'flex absolute bottom-full left-0 mb-2 bg-popover border border-border rounded-lg p-2 shadow-lg z-50' : 'hidden'} items-end gap-1.5 sm:gap-2`}>
+                    <div className={`${showMobileExtras ? 'flex absolute bottom-full left-0 mb-2 bg-popover border border-border rounded-lg p-2 shadow-lg z-50' : 'hidden'} flex-col items-center gap-1.5`}>
                       <MediaUpload onFileSelected={handleSendMedia} />
                       <Button
                         type="button"
