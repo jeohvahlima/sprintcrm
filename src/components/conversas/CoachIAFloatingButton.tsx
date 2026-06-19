@@ -256,11 +256,12 @@ export function CoachIAFloatingButton({
     if (!companyId) return;
     setCrmLoading(true);
     try {
+      const sb: any = supabase;
       const [f, e, t, u] = await Promise.all([
-        supabase.from("funis").select("id, nome").eq("company_id", companyId).order("nome"),
-        supabase.from("etapas").select("id, nome, funil_id, posicao").eq("company_id", companyId).order("posicao"),
-        supabase.from("company_tags").select("tag_name").eq("company_id", companyId).order("tag_name"),
-        supabase.from("profiles").select("id, full_name, email").eq("company_id", companyId).order("full_name"),
+        sb.from("funis").select("id, nome").eq("company_id", companyId).order("nome"),
+        sb.from("etapas").select("id, nome, funil_id, posicao").eq("company_id", companyId).order("posicao"),
+        sb.from("company_tags").select("tag_name").eq("company_id", companyId).order("tag_name"),
+        sb.from("profiles").select("id, full_name, email").eq("company_id", companyId).order("full_name"),
       ]);
       setFunis((f.data || []) as FunilRow[]);
       setEtapas((e.data || []) as EtapaRow[]);
