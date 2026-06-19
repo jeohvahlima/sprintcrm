@@ -11034,7 +11034,8 @@ function Conversas() {
                         </Dialog>
 
                         {/* Schedule Message */}
-                        <Dialog>
+                        <Dialog open={scheduledMsgOpen} onOpenChange={setScheduledMsgOpen}>
+
                           <DialogTrigger asChild>
                             <Button variant="outline" className="w-full justify-start gap-2 relative" title="Agendar Mensagem">
                               <Clock className="h-4 w-4" />
