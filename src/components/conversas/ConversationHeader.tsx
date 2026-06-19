@@ -214,9 +214,6 @@ import { toast } from "sonner";
                     <span className="hidden sm:inline">Criar Lead</span>
                   </Button>
                 ))}
-                {protocolNumber && (
-                  <ProtocolBadge protocolNumber={protocolNumber} status={protocolStatus} />
-                )}
                 {getSyncStatusBadge()}
               </div>
               <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
