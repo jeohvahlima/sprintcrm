@@ -256,22 +256,24 @@ export function CoachIAFloatingButton({
     if (!companyId) return;
     setCrmLoading(true);
     try {
-      const [f, e, t, u, l] = await Promise.all([
+      const [f, e, t, u] = await Promise.all([
         supabase.from("funis").select("id, nome").eq("company_id", companyId).order("nome"),
         supabase.from("etapas").select("id, nome, funil_id, posicao").eq("company_id", companyId).order("posicao"),
         supabase.from("company_tags").select("tag_name").eq("company_id", companyId).order("tag_name"),
         supabase.from("profiles").select("id, full_name, email").eq("company_id", companyId).order("full_name"),
-        leadId ? supabase.from("leads").select("funil_id, etapa_id, owner_id").eq("id", leadId).maybeSingle() : Promise.resolve({ data: null } as any),
       ]);
       setFunis((f.data || []) as FunilRow[]);
       setEtapas((e.data || []) as EtapaRow[]);
       setCompanyTags(((t.data || []) as any[]).map(x => x.tag_name).filter(Boolean));
       setUsers((u.data || []) as UserRow[]);
-      const ld: any = (l as any)?.data;
-      if (ld) {
-        setSelFunilId(ld.funil_id || "");
-        setSelEtapaId(ld.etapa_id || "");
-        setSelOwnerId(ld.owner_id || "");
+      if (leadId) {
+        const { data: ld } = await supabase.from("leads").select("funil_id, etapa_id, owner_id").eq("id", leadId).maybeSingle();
+        const v: any = ld;
+        if (v) {
+          setSelFunilId(v.funil_id || "");
+          setSelEtapaId(v.etapa_id || "");
+          setSelOwnerId(v.owner_id || "");
+        }
       }
     } catch (err: any) {
       console.error("[Coach] loadCrmData", err);
