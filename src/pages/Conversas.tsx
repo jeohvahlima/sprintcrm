@@ -11138,7 +11138,8 @@ function Conversas() {
                         </Dialog>
 
                         {/* Schedule Reminder */}
-                        <Dialog>
+                        <Dialog open={remindersDialogOpen} onOpenChange={setRemindersDialogOpen}>
+
                           <DialogTrigger asChild>
                             <Button variant="outline" className="w-full justify-start gap-2" title="Gerenciar Lembretes">
                               <Bell className="h-4 w-4" />
