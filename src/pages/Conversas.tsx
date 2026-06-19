@@ -9969,7 +9969,7 @@ function Conversas() {
                         size="icon"
                         className="text-muted-foreground hover:text-primary border-border flex-shrink-0"
                         title="Agendar Mensagem"
-                        onClick={() => { setScheduledMsgOpen(true); setShowMobileExtras(false); }}
+                        onClick={() => { setShowInfoPanel(true); setScheduledMsgOpen(true); setShowMobileExtras(false); }}
                       >
                         <Clock className="h-5 w-5" />
                       </Button>
@@ -9979,7 +9979,7 @@ function Conversas() {
                         size="icon"
                         className="text-muted-foreground hover:text-primary border-border flex-shrink-0"
                         title="Gerenciar Lembretes"
-                        onClick={() => { setRemindersDialogOpen(true); setShowMobileExtras(false); }}
+                        onClick={() => { setShowInfoPanel(true); setRemindersDialogOpen(true); setShowMobileExtras(false); }}
                       >
                         <Bell className="h-5 w-5" />
                       </Button>
@@ -9989,7 +9989,7 @@ function Conversas() {
                         size="icon"
                         className="text-muted-foreground hover:text-primary border-border flex-shrink-0"
                         title="Compromissos"
-                        onClick={() => { setReunioesDialogOpen(true); setShowMobileExtras(false); }}
+                        onClick={() => { setShowInfoPanel(true); setReunioesDialogOpen(true); setShowMobileExtras(false); }}
                       >
                         <Calendar className="h-5 w-5" />
                       </Button>
