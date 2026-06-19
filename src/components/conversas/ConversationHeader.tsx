@@ -6,7 +6,7 @@ import { Progress } from "@/components/ui/progress";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Phone, Video, Info, User, MessageSquare, Instagram, Facebook, FileText, DollarSign, RefreshCw, CheckCircle2, AlertCircle, Loader2, Check, Plus, RotateCcw, ArrowRightLeft, Bot, ArrowLeft, Tag, TrendingUp, UserCog } from "lucide-react";
 import { AIModeSelectorDropdown, type AIMode } from "./AIModeSelectorDropdown";
-import { ProtocolBadge } from "./ProtocolBadge";
+
 import { ProtocolWelcomeSettings } from "./ProtocolWelcomeSettings";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Dialog, DialogContent, DialogHeader as UIDialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
