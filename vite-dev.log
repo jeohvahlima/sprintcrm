@@ -1,0 +1,49 @@
+
+> vite_react_shadcn_ts@0.0.0 dev:4000
+> vite --port 4000 --strictPort
+
+
+  [32m[1mVITE[22m v5.4.21[39m  [2mready in [0m[1m691[22m[2m[0m ms[22m
+
+  [32m➜[39m  [1mLocal[22m:   [36mhttp://localhost:[1m4000[22m/[39m
+  [32m➜[39m  [1mNetwork[22m: [36mhttp://192.168.1.244:[1m4000[22m/[39m
+[2m17:45:53[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/Tarefas.tsx, /src/index.css[22m
+[2m17:45:53[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/Tarefas.tsx, /src/index.css[22m
+[2m17:54:41[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2mpublic/tarefas.html[22m
+[2m17:55:28[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2mpublic/tarefas.html[22m
+[2m17:55:38[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2mpublic/tarefas.html[22m
+[2m17:56:05[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2mpublic/tarefas.html[22m
+[2m17:56:12[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2mpublic/tarefas.html[22m
+[2m17:56:53[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2mpublic/tarefas.html[22m
+[2m17:57:21[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2mpublic/tarefas.html[22m
+[2m17:57:39[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2mpublic/tarefas.html[22m
+[2m17:57:48[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2mpublic/tarefas.html[22m
+[2m17:57:59[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2mpublic/tarefas.html[22m
+[2m18:04:18[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2mpublic/call-center.html[22m
+[2m18:04:49[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2mpublic/call-center.html[22m
+[2m18:05:04[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2mpublic/call-center.html[22m
+[2m18:09:37[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/CallCenterPreview.tsx, /src/index.css[22m
+[2m18:09:53[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2mpublic/call-center.html[22m
+[2m18:11:29[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2mpublic/call-center.html[22m
+[2m18:11:48[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2mpublic/call-center.html[22m
+[2m18:18:18[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2mpublic/call-center.html[22m
+[2m18:18:40[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2mpublic/call-center.html[22m
+[2m18:19:15[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2mpublic/call-center.html[22m
+[2m18:25:14[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2mpublic/call-center.html[22m
+[2m18:25:35[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/CallCenterPreview.tsx, /src/index.css[22m
+[2m18:33:44[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/CallCenterPreview.tsx, /src/index.css[22m
+[2m18:33:52[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/discador/NvoipAccountPanel.tsx, /src/index.css[22m
+[2m18:36:25[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2msrc/hooks/useAIProcessing.ts[22m
+[2m18:41:20[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/CallCenterPreview.tsx, /src/index.css[22m
+[2m18:41:40[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2mpublic/call-center.html[22m
+[2m18:41:52[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2mpublic/call-center.html[22m
+[2m18:42:10[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2mpublic/call-center.html[22m
+[2m18:47:36[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/CallCenterPreview.tsx, /src/index.css[22m
+[2m18:47:50[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2mpublic/call-center.html[22m
+[2m18:47:59[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/CallCenterPreview.tsx, /src/index.css[22m
+[2m18:55:54[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/CallCenterPreview.tsx, /src/index.css[22m
+[2m18:56:39[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/CallCenterPreview.tsx, /src/index.css[22m
+[2m18:56:52[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/CallCenterPreview.tsx, /src/index.css[22m
+[2m18:57:25[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/CallCenterPreview.tsx, /src/index.css[22m
+[2m18:57:54[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/CallCenterPreview.tsx, /src/index.css[22m
+[2m18:58:10[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/CallCenterPreview.tsx, /src/index.css[22m

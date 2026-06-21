@@ -206,6 +206,11 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
 .side-panel{width:0;background:var(--bg2);border-left:1px solid var(--border);display:flex;flex-direction:column;transition:width .22s cubic-bezier(.4,0,.2,1);overflow:hidden;flex-shrink:0}
 .side-panel.open{width:360px}
 .panel-header{padding:14px 16px;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;gap:10px;flex-shrink:0}
+.panel-title-wrap{flex:1;display:flex;align-items:flex-start;gap:10px;min-width:0}
+.panel-lead-avatar{width:36px;height:36px;border-radius:50%;background:var(--green-d);border:1.5px solid var(--green);color:var(--green);display:none;align-items:center;justify-content:center;font-size:12px;font-weight:700;overflow:hidden;flex-shrink:0}
+.panel-lead-avatar img{width:100%;height:100%;object-fit:cover;display:block}
+.panel-title-text{flex:1;min-width:0}
+.panel-title{font-size:14.5px;font-weight:700;line-height:1.35;color:var(--text);word-break:break-word}
 .panel-close{width:28px;height:28px;border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text2);transition:.15s;flex-shrink:0;border:1px solid var(--border);background:transparent;font-size:15px}
 .panel-close:hover{background:var(--bg3);color:var(--text)}
 .panel-tabs{display:flex;border-bottom:1px solid var(--border);flex-shrink:0}
@@ -956,6 +961,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
     <!-- SIDE PANEL -->
     <div class="side-panel" id="sidePanel">
       <div class="panel-header">
+        <div class="panel-lead-avatar" id="panelLeadAvatar">TV</div>
         <div style="flex:1">
           <div style="font-size:10.5px;color:var(--text3);margin-bottom:3px" id="panelLeadCtx">TechVentures SA · Demo</div>
           <div style="font-size:14.5px;font-weight:700;line-height:1.35;color:var(--text)" id="panelTitle">Preparar demo personalizada — TechVentures SA</div>
@@ -1623,7 +1629,7 @@ async function loadAll() {
   const [b, c, t, u] = await Promise.all([
     sb.from('task_boards').select('*').order('criado_em', { ascending: true }),
     sb.from('task_columns').select('*').order('posicao', { ascending: true }),
-    sb.from('tasks').select('*, assignee:assignee_id(id,full_name), lead:lead_id(id,name)').order('created_at', { ascending: false }).limit(500),
+    sb.from('tasks').select('*, assignee:assignee_id(id,full_name), lead:lead_id(id,name,phone,telefone,profile_picture_url)').order('created_at', { ascending: false }).limit(500),
     sb.from('profiles').select('id, full_name').order('full_name'),
   ]);
   boards = b.data || [];
@@ -1631,7 +1637,7 @@ async function loadAll() {
   tasks = t.data || [];
   users = u.data || [];
   try {
-    const { data: ld } = await sb.from('leads').select('id, name, phone, telefone').order('name').limit(200);
+    const { data: ld } = await sb.from('leads').select('id, name, phone, telefone, profile_picture_url').order('name').limit(200);
     leads = ld || [];
   } catch { leads = []; }
 
@@ -1783,7 +1789,12 @@ function buildCardEl(t) {
   div.addEventListener('dragstart', (e) => { window._dragId = t.id; e.dataTransfer.effectAllowed = 'move'; setTimeout(() => div.classList.add('dragging'), 0); });
   div.addEventListener('dragend', () => div.classList.remove('dragging'));
   div.onclick = () => openTaskPanel(t);
-  const leadName = t.lead?.name || '';
+  const lead = getTaskLead(t);
+  const leadName = lead?.name || '';
+  const leadAvatarUrl = lead?.profile_picture_url || '';
+  const leadAvatar = leadName ? (leadAvatarUrl
+    ? `<img src="${escapeHtml(leadAvatarUrl)}" alt="" style="width:100%;height:100%;border-radius:50%;object-fit:cover" onerror="this.remove();this.parentElement.textContent='${escapeHtml(initials(leadName))}'">`
+    : escapeHtml(initials(leadName))) : '';
   const dueLbl = t.due_date ? `<span class="date-badge"><i class="ti ti-calendar"></i>${fmtDate(t.due_date)}</span>` : '';
   const tagsHtml = (t.tags || []).slice(0, 3).map(tg => `<span class="tag tag-blue">${escapeHtml(tg)}</span>`).join('');
   const assName = t.assignee?.full_name || '';
@@ -1792,6 +1803,7 @@ function buildCardEl(t) {
     <div class="card-top-stripe" style="background:${color}"></div>
     <div class="card-body">
       ${tagsHtml ? `<div class="card-tags">${tagsHtml}</div>` : ''}
+      ${leadName ? `<div class="card-lead"><div class="lead-avatar">${leadAvatar}</div><span class="lead-name">${escapeHtml(leadName)}</span></div>` : ''}
       <div class="card-title">${escapeHtml(t.title || '')}</div>
       <div class="card-meta">
         <span class="prio-badge p-${cls}"><i class="ti ti-point-filled" style="font-size:8px"></i>${PRIO_LABEL[prio]}</span>
@@ -1814,6 +1826,11 @@ function buildCardEl(t) {
 }
 
 function escapeHtml(s) { return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
+
+function getTaskLead(t) {
+  const linked = t?.lead_id ? leads.find(l => l.id === t.lead_id) : null;
+  return { ...(linked || {}), ...(t?.lead || {}) };
+}
 
 // ── Side panel (edição rápida) ─────────────────────────────────────────────
 function initials(name) {
@@ -1844,6 +1861,9 @@ function openTaskPanel(t) {
   const prioClass = PRIO_CLASS[prio] || 'media';
   const assName = t.assignee?.full_name || 'Sem responsável';
   const due = formatBR(t.due_date);
+  const lead = getTaskLead(t);
+  const leadAvatarUrl = lead?.profile_picture_url || '';
+  const avatarName = lead?.name || '';
   const leadName = t.lead?.name || '—';
   const leadValue = t.lead?.valor || t.valor_negocio;
 
@@ -1852,6 +1872,20 @@ function openTaskPanel(t) {
   $('panelLeadCtx').textContent = [leadName !== '—' ? leadName : null, col?.nome].filter(Boolean).join(' · ') || '—';
 
   // Details tab — rebuild meta grid
+  const panelAvatar = $('panelLeadAvatar');
+  if (panelAvatar) {
+    if (avatarName) {
+      panelAvatar.style.display = 'flex';
+      panelAvatar.textContent = initials(avatarName);
+      if (leadAvatarUrl) {
+        panelAvatar.innerHTML = `<img src="${escapeHtml(leadAvatarUrl)}" alt="" onerror="this.remove();this.parentElement.textContent='${escapeHtml(initials(avatarName))}'">`;
+      }
+    } else {
+      panelAvatar.style.display = 'none';
+      panelAvatar.innerHTML = '';
+    }
+  }
+
   const details = $('pDetails');
   if (details) {
     const tags = Array.isArray(t.tags) ? t.tags : [];

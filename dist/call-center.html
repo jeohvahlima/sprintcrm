@@ -125,6 +125,7 @@ code { font-family: 'JetBrains Mono', monospace; font-size: 11px; }
 /* ─── LEAD LIST ─── */
 .lead-list { display: flex; flex-direction: column; gap: 4px; }
 .lead-card { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); padding: 11px 14px; display: flex; align-items: center; gap: 12px; cursor: pointer; transition: all 0.15s; }
+#tab-lista .lead-card:not(.real-lead) { display: none; }
 .lead-card:hover { border-color: var(--border2); background: var(--bg3); }
 .lead-card.active { border-color: var(--green-glow); background: rgba(0,214,143,0.04); }
 .lead-card.high { border-left: 2px solid var(--amber); }
@@ -376,7 +377,7 @@ code { font-family: 'JetBrains Mono', monospace; font-size: 11px; }
       Scripts
     </div>
     <div class="nav-section">Gestão</div>
-    <div class="nav-item">
+    <div class="nav-item" onclick="openNvoipCredentials()">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 12h6M12 9v6M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
       Painel do Gestor
       <span class="nav-badge amber">!</span>
@@ -555,8 +556,8 @@ code { font-family: 'JetBrains Mono', monospace; font-size: 11px; }
 
         <div class="lead-list">
 
-          <!-- Lead 1 — alta prioridade, em ligação -->
-          <div class="lead-card active high" id="card-active" data-channel="coldcall" data-status="abordados contactados_hoje oportunidade minha_fila">
+          <!-- Lead 1 — alta prioridade -->
+          <div class="lead-card high" id="card-active" data-channel="coldcall" data-status="abordados contactados_hoje oportunidade minha_fila">
             <svg style="width:13px;height:13px;color:var(--amber);flex-shrink:0" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
             <div class="lead-score score-high">82</div>
             <div class="lead-info">
@@ -584,9 +585,9 @@ code { font-family: 'JetBrains Mono', monospace; font-size: 11px; }
               </div>
             </div>
             <div class="lead-actions">
-              <button class="btn-call calling" onclick="startCall(this)">
+              <button class="btn-call" onclick="startCall(this)">
                 <svg style="width:13px;height:13px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493"/></svg>
-                Ligando…
+                Ligar
               </button>
               <div class="rel-drop">
                 <button class="btn-action" onclick="toggleReg(this)">
@@ -1250,9 +1251,42 @@ setTimeout(normalizeAllRegMenus, 0);
 // Live call demo
 let callTimer;
 let callSeconds = 0;
+let pendingCallButton = null;
+let activeCallButton = null;
+const callIconSvg = '<svg style="width:13px;height:13px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493"/></svg>';
+function setCallButtonState(btn, calling) {
+  if (!btn) return;
+  btn.classList.toggle('calling', calling);
+  var card = btn.closest('.lead-card');
+  var channel = card?.getAttribute('data-channel') || 'coldcall';
+  var idleLabel = channel === 'instagram' ? 'Conversar' : (channel === 'email' ? 'E-mail' : (channel === 'whatsapp' ? 'WhatsApp' : 'Ligar'));
+  btn.innerHTML = callIconSvg + (calling ? 'Ligando…' : idleLabel);
+  btn.disabled = false;
+}
+function setCallButtonPending(btn) {
+  if (!btn) return;
+  btn.classList.add('calling');
+  btn.disabled = true;
+  btn.innerHTML = callIconSvg + 'Iniciando…';
+}
+function getLeadFromButton(btn) {
+  var card = btn?.closest('.lead-card');
+  return {
+    id: card?.getAttribute('data-lead-id') || null,
+    name: card?.querySelector('.lead-name')?.textContent?.trim() || 'Contato',
+    phone: card?.getAttribute('data-phone') || card?.querySelector('.lead-meta-item')?.textContent?.trim() || ''
+  };
+}
+function updateLiveCallLead(lead) {
+  var nameEl = document.querySelector('#liveCallBar .live-name');
+  var subEl = document.querySelector('#liveCallBar .live-sub');
+  if (nameEl) nameEl.textContent = lead.name;
+  if (subEl) subEl.textContent = 'Ligação ativa' + (lead.phone ? ' · ' + formatPhone(lead.phone) : '');
+}
 function startCallDemo() {
   const bar = document.getElementById('liveCallBar');
   bar.style.display = 'flex';
+  updateLiveCallLead({ name: 'Grupo Maximus Engenharia', phone: '(61) 99501-2233' });
   callSeconds = 0;
   clearInterval(callTimer);
   callTimer = setInterval(() => {
@@ -1263,11 +1297,27 @@ function startCallDemo() {
   }, 1000);
   // update button
   const firstBtn = document.querySelector('#card-active .btn-call');
-  if(firstBtn) { firstBtn.textContent = 'Ligando…'; firstBtn.classList.add('calling'); }
+  setCallButtonState(firstBtn, true);
 }
 function startCall(btn) {
-  btn.textContent = 'Ligando…';
-  btn.classList.add('calling');
+  document.querySelectorAll('.btn-call.calling').forEach(b => setCallButtonState(b, false));
+  pendingCallButton = btn;
+  activeCallButton = null;
+  setCallButtonPending(btn);
+  var lead = getLeadFromButton(btn);
+  try {
+    window.parent.postMessage({
+      type: 'call-center-start-call',
+      leadId: lead.id,
+      leadName: lead.name,
+      phone: lead.phone
+    }, '*');
+  } catch {}
+}
+function showActiveCall(btn, lead) {
+  setCallButtonState(btn, true);
+  activeCallButton = btn;
+  updateLiveCallLead(lead);
   document.getElementById('liveCallBar').style.display = 'flex';
   callSeconds = 0;
   clearInterval(callTimer);
@@ -1281,10 +1331,12 @@ function startCall(btn) {
 function endCall() {
   clearInterval(callTimer);
   document.getElementById('liveCallBar').style.display = 'none';
+  try { window.parent.postMessage({ type: 'call-center-end-call' }, '*'); } catch {}
   document.querySelectorAll('.btn-call.calling').forEach(b => {
-    b.classList.remove('calling');
-    b.innerHTML = '<svg style="width:13px;height:13px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493"/></svg>Ligar';
+    setCallButtonState(b, false);
   });
+  pendingCallButton = null;
+  activeCallButton = null;
 }
 
 // ===== Filtros de chip + canal (sidebar) =====
@@ -1337,6 +1389,113 @@ var CHANNEL_META = {
   else list.insertAdjacentHTML('beforeend', html);
 })();
 
+function escapeHtml(value) {
+  return String(value || '').replace(/[&<>"']/g, function(c) {
+    return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+  });
+}
+
+function normalizePhone(value) {
+  return String(value || '').replace(/\D/g, '');
+}
+
+function formatPhone(value) {
+  var digits = normalizePhone(value);
+  if (!digits) return 'Sem telefone';
+  var local = digits.startsWith('55') && digits.length > 11 ? digits.slice(2) : digits;
+  if (local.length === 11) return '(' + local.slice(0, 2) + ') ' + local.slice(2, 7) + '-' + local.slice(7);
+  if (local.length === 10) return '(' + local.slice(0, 2) + ') ' + local.slice(2, 6) + '-' + local.slice(6);
+  return value;
+}
+
+function inferChannel(lead) {
+  var source = String(lead.source || '').toLowerCase();
+  if (source.includes('instagram') || source.includes('ig')) return 'instagram';
+  if (source.includes('email') || source.includes('e-mail')) return 'email';
+  if (source.includes('whatsapp') || source.includes('wpp')) return 'whatsapp';
+  return 'coldcall';
+}
+
+function statusFromLead(lead) {
+  var status = ['pendente', 'minha_fila'];
+  var stage = String(lead.stage || '').toLowerCase().replace(/\s+/g, '_');
+  if (stage) status.push(stage);
+  return status.join(' ');
+}
+
+function scoreFromLead(lead) {
+  var raw = String(lead.id || lead.name || '');
+  var hash = 0;
+  for (var i = 0; i < raw.length; i++) hash = ((hash << 5) - hash) + raw.charCodeAt(i);
+  return 55 + (Math.abs(hash) % 40);
+}
+
+function renderLeadCard(lead) {
+  var channel = inferChannel(lead);
+  var score = scoreFromLead(lead);
+  var phone = lead.telefone || lead.phone || '';
+  var tags = Array.isArray(lead.tags) ? lead.tags : [];
+  var btn = channel === 'instagram' ? 'Conversar' : (channel === 'email' ? 'E-mail' : (channel === 'whatsapp' ? 'WhatsApp' : 'Ligar'));
+  var stage = lead.stage || 'pendente';
+  var meta = [formatPhone(phone), lead.email || lead.source || ''].filter(Boolean);
+  return '<div class="lead-card real-lead" data-channel="' + channel + '" data-status="' + escapeHtml(statusFromLead(lead)) + '" data-phone="' + escapeHtml(phone) + '" data-lead-id="' + escapeHtml(lead.id) + '">'
+    + '<svg style="width:13px;height:13px;color:var(--text3);flex-shrink:0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>'
+    + '<div class="lead-score ' + (score >= 70 ? 'score-high' : 'score-med') + '">' + score + '</div>'
+    + '<div class="lead-info"><div class="lead-name">' + escapeHtml(lead.name || 'Contato sem nome') + '</div>'
+    + '<div class="lead-meta">' + meta.map(function(item){ return '<span class="lead-meta-item">' + escapeHtml(item) + '</span>'; }).join('') + '</div>'
+    + '<div class="lead-tags"><span class="tag tag-gray">' + escapeHtml(stage) + '</span>' + tags.slice(0, 3).map(function(tag){ return '<span class="tag tag-blue">' + escapeHtml(tag) + '</span>'; }).join('') + '</div>'
+    + '</div>'
+    + '<div class="lead-actions"><button class="btn-call" onclick="startCall(this)">' + callIconSvg + escapeHtml(btn) + '</button></div>'
+    + '</div>';
+}
+
+function renderRealLeads(leads) {
+  var list = document.querySelector('#tab-lista .lead-list');
+  if (!list) return;
+  var anchor = document.getElementById('leadEmpty');
+  list.querySelectorAll('.real-lead').forEach(function(card){ card.remove(); });
+  var cleanLeads = (Array.isArray(leads) ? leads : []).filter(function(lead){ return lead.phone || lead.telefone; });
+  var html = cleanLeads.map(renderLeadCard).join('');
+  if (anchor) anchor.insertAdjacentHTML('beforebegin', html);
+  else list.insertAdjacentHTML('beforeend', html);
+  normalizeAllRegMenus();
+  CHANNEL_META.coldcall.sub = cleanLeads.length + ' contatos · CRM';
+  applyLeadFilters();
+}
+
+window.addEventListener('message', function(ev) {
+  if (ev.data?.type === 'call-center-leads') renderRealLeads(ev.data.leads || []);
+  if (ev.data?.type === 'call-center-call-started') {
+    var btn = pendingCallButton;
+    if (!btn) return;
+    var lead = {
+      id: ev.data.leadId,
+      name: ev.data.leadName || getLeadFromButton(btn).name,
+      phone: ev.data.phone || getLeadFromButton(btn).phone
+    };
+    pendingCallButton = null;
+    showActiveCall(btn, lead);
+  }
+  if (ev.data?.type === 'call-center-call-failed') {
+    if (pendingCallButton) setCallButtonState(pendingCallButton, false);
+    pendingCallButton = null;
+    activeCallButton = null;
+    document.getElementById('liveCallBar').style.display = 'none';
+  }
+  if (ev.data?.type === 'call-center-call-ended') {
+    clearInterval(callTimer);
+    document.getElementById('liveCallBar').style.display = 'none';
+    document.querySelectorAll('.btn-call.calling').forEach(b => setCallButtonState(b, false));
+    pendingCallButton = null;
+    activeCallButton = null;
+  }
+});
+try { window.parent.postMessage({ type: 'call-center-ready' }, '*'); } catch {}
+
+function openNvoipCredentials() {
+  try { window.parent.postMessage({ type: 'call-center-open-nvoip' }, '*'); } catch {}
+}
+
 function updateBadges() {
   // Badges fixos (números reais do banco) — preservados no HTML.
   // Apenas mantém o subtítulo do canal atual.
@@ -1348,7 +1507,8 @@ function updateBadges() {
 }
 
 function applyLeadFilters() {
-  var cards = document.querySelectorAll('#tab-lista .lead-card');
+  var realCards = document.querySelectorAll('#tab-lista .lead-card.real-lead');
+  var cards = realCards.length ? realCards : [];
   var visible = 0;
   cards.forEach(function(card){
     var ch = card.getAttribute('data-channel') || 'coldcall';

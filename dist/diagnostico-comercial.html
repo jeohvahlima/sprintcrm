@@ -1,0 +1,1385 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Diagnóstico Comercial — GROW Sales Group</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #14161b;
+    --bg-soft: #1c1f26;
+    --card: #21242c;
+    --line: #2e323d;
+    --text: #eef0f3;
+    --text-dim: #9aa0ad;
+    --accent: #e8a33d;
+    --accent-soft: rgba(232,163,61,.12);
+    --danger: #e8543d;
+    --danger-soft: rgba(232,84,61,.12);
+    --good: #5fbf8f;
+    --good-soft: rgba(95,191,143,.12);
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  html,body{height:100%;}
+  body{
+    font-family:'Inter',sans-serif;
+    background:var(--bg);
+    color:var(--text);
+    -webkit-font-smoothing:antialiased;
+    min-height:100vh;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+  }
+  .app{
+    width:100%;
+    max-width:680px;
+    min-height:100vh;
+    display:flex;
+    flex-direction:column;
+    padding:0 24px;
+  }
+
+  /* ===== TOPBAR ===== */
+  .topbar{
+    padding:24px 0 16px;
+    display:flex;
+    flex-direction:column;
+    gap:14px;
+    position:sticky;
+    top:0;
+    background:var(--bg);
+    z-index:20;
+  }
+  .topbar-row{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+  }
+  .brand{
+    font-family:'Archivo',sans-serif;
+    font-weight:800;
+    font-size:14px;
+    letter-spacing:.14em;
+    color:var(--text-dim);
+    text-transform:uppercase;
+  }
+  .brand b{color:var(--accent);}
+  .step-label{
+    font-size:13px;
+    color:var(--text-dim);
+    font-variant-numeric: tabular-nums;
+  }
+  .progress-track{
+    height:6px;
+    background:var(--bg-soft);
+    border-radius:99px;
+    overflow:hidden;
+    border:1px solid var(--line);
+  }
+  .progress-fill{
+    height:100%;
+    width:0%;
+    background:linear-gradient(90deg, var(--accent), #f4c373);
+    border-radius:99px;
+    transition:width .5s cubic-bezier(.4,0,.2,1);
+  }
+  .pillar-track{
+    display:flex;
+    gap:6px;
+  }
+  .pillar-dot{
+    flex:1;
+    height:3px;
+    border-radius:99px;
+    background:var(--line);
+    position:relative;
+    overflow:hidden;
+  }
+  .pillar-dot.done{background:var(--accent);}
+  .pillar-dot.active{background:var(--line);}
+  .pillar-dot.active::after{
+    content:'';
+    position:absolute; inset:0;
+    background:var(--accent);
+    animation:fillPulse 1.6s ease-in-out infinite;
+  }
+  @keyframes fillPulse{0%,100%{opacity:.35} 50%{opacity:1}}
+
+  /* ===== MAIN STAGE ===== */
+  .stage{
+    flex:1;
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    padding:24px 0 48px;
+    position:relative;
+  }
+  .screen{
+    display:none;
+    animation:rise .5s cubic-bezier(.16,1,.3,1);
+  }
+  .screen.active{display:block;}
+  @keyframes rise{
+    from{opacity:0; transform:translateY(18px);}
+    to{opacity:1; transform:translateY(0);}
+  }
+
+  /* ---- Intro ---- */
+  .intro-eyebrow{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    font-size:12px;
+    font-weight:700;
+    letter-spacing:.12em;
+    text-transform:uppercase;
+    color:var(--accent);
+    background:var(--accent-soft);
+    border:1px solid rgba(232,163,61,.35);
+    padding:6px 14px;
+    border-radius:99px;
+    margin-bottom:24px;
+  }
+  .intro-title{
+    font-family:'Archivo',sans-serif;
+    font-weight:900;
+    font-size:clamp(32px,7vw,48px);
+    line-height:1.08;
+    letter-spacing:-.01em;
+    margin-bottom:18px;
+  }
+  .intro-title em{
+    font-style:normal;
+    color:var(--accent);
+  }
+  .intro-sub{
+    font-size:17px;
+    line-height:1.6;
+    color:var(--text-dim);
+    max-width:50ch;
+    margin-bottom:32px;
+  }
+  .intro-meta{
+    display:flex;
+    gap:28px;
+    flex-wrap:wrap;
+    margin-bottom:36px;
+    padding:20px 0;
+    border-top:1px solid var(--line);
+    border-bottom:1px solid var(--line);
+  }
+  .intro-meta-item{display:flex; flex-direction:column; gap:4px;}
+  .intro-meta-num{
+    font-family:'Archivo',sans-serif;
+    font-weight:800;
+    font-size:24px;
+    color:var(--accent);
+  }
+  .intro-meta-label{
+    font-size:12px;
+    color:var(--text-dim);
+    text-transform:uppercase;
+    letter-spacing:.08em;
+  }
+
+  /* ---- Question screen ---- */
+  .pillar-tag{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    font-size:12px;
+    font-weight:700;
+    text-transform:uppercase;
+    letter-spacing:.1em;
+    color:var(--accent);
+    margin-bottom:18px;
+  }
+  .pillar-tag .dot{
+    width:6px; height:6px; border-radius:50%;
+    background:var(--accent);
+  }
+  .question-title{
+    font-family:'Archivo',sans-serif;
+    font-weight:800;
+    font-size:clamp(24px,5.5vw,32px);
+    line-height:1.25;
+    margin-bottom:8px;
+  }
+  .question-hint{
+    font-size:14px;
+    color:var(--text-dim);
+    margin-bottom:28px;
+    line-height:1.5;
+  }
+  .options{
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+  }
+  .option{
+    display:flex;
+    align-items:center;
+    gap:14px;
+    padding:18px 18px;
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:14px;
+    cursor:pointer;
+    transition:border-color .18s, background .18s, transform .12s;
+    text-align:left;
+    font-family:inherit;
+    color:var(--text);
+  }
+  .option:hover{
+    border-color:rgba(232,163,61,.45);
+    background:#262a33;
+  }
+  .option:active{transform:scale(.99);}
+  .option.selected{
+    border-color:var(--accent);
+    background:var(--accent-soft);
+  }
+  .option-letter{
+    flex:0 0 32px;
+    height:32px;
+    border-radius:9px;
+    background:var(--bg-soft);
+    border:1px solid var(--line);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-family:'Archivo',sans-serif;
+    font-weight:800;
+    font-size:13px;
+    color:var(--text-dim);
+    transition:all .18s;
+  }
+  .option.selected .option-letter{
+    background:var(--accent);
+    border-color:var(--accent);
+    color:#1c1408;
+  }
+  .option-text{
+    font-size:15.5px;
+    line-height:1.45;
+    font-weight:500;
+  }
+
+  .nav-row{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-top:32px;
+  }
+  .btn{
+    font-family:'Inter',sans-serif;
+    font-weight:700;
+    font-size:14px;
+    border:none;
+    border-radius:11px;
+    padding:14px 26px;
+    cursor:pointer;
+    transition:all .18s;
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+  }
+  .btn-primary{
+    background:var(--accent);
+    color:#1c1408;
+  }
+  .btn-primary:hover{background:#f4c373;}
+  .btn-primary:disabled{
+    background:var(--line);
+    color:var(--text-dim);
+    cursor:not-allowed;
+  }
+  .btn-ghost{
+    background:transparent;
+    color:var(--text-dim);
+    border:1px solid var(--line);
+  }
+  .btn-ghost:hover{color:var(--text); border-color:var(--text-dim);}
+  .btn-block{width:100%; justify-content:center; padding:16px;}
+  .btn-lg{font-size:16px; padding:18px 32px;}
+
+  /* ---- Open question (textarea) ---- */
+  textarea.dor-input{
+    width:100%;
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:18px;
+    color:var(--text);
+    font-family:'Inter',sans-serif;
+    font-size:15.5px;
+    line-height:1.5;
+    resize:vertical;
+    min-height:120px;
+  }
+  textarea.dor-input:focus{
+    outline:none;
+    border-color:var(--accent);
+  }
+  textarea.dor-input::placeholder{color:var(--text-dim);}
+
+  /* ---- Transition / segment screen ---- */
+  .segment-card{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:18px;
+    padding:28px;
+    margin-bottom:24px;
+  }
+  .segment-card h3{
+    font-family:'Archivo',sans-serif;
+    font-size:20px;
+    font-weight:800;
+    margin-bottom:8px;
+  }
+  .segment-card p{
+    color:var(--text-dim);
+    font-size:14.5px;
+    line-height:1.6;
+    margin-bottom:18px;
+  }
+  select.segment-select{
+    width:100%;
+    background:var(--bg-soft);
+    border:1px solid var(--line);
+    color:var(--text);
+    padding:14px 16px;
+    border-radius:11px;
+    font-size:15px;
+    font-family:inherit;
+    cursor:pointer;
+  }
+
+  /* ---- Result screen ---- */
+  .result-header{
+    text-align:center;
+    margin-bottom:32px;
+  }
+  .result-eyebrow{
+    font-size:12px;
+    font-weight:700;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    color:var(--text-dim);
+    margin-bottom:14px;
+  }
+  .score-ring-wrap{
+    position:relative;
+    width:200px; height:200px;
+    margin:0 auto 18px;
+  }
+  .score-ring{
+    transform:rotate(-90deg);
+  }
+  .score-ring-bg{
+    fill:none; stroke:var(--bg-soft); stroke-width:12;
+  }
+  .score-ring-fill{
+    fill:none; stroke:var(--accent); stroke-width:12;
+    stroke-linecap:round;
+    stroke-dasharray:565;
+    stroke-dashoffset:565;
+    transition:stroke-dashoffset 1.4s cubic-bezier(.16,1,.3,1) .3s;
+  }
+  .score-center{
+    position:absolute; inset:0;
+    display:flex; flex-direction:column;
+    align-items:center; justify-content:center;
+  }
+  .score-num{
+    font-family:'Archivo',sans-serif;
+    font-weight:900;
+    font-size:56px;
+    line-height:1;
+  }
+  .score-max{font-size:14px; color:var(--text-dim); margin-top:2px;}
+  .result-class{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    font-family:'Archivo',sans-serif;
+    font-weight:800;
+    font-size:15px;
+    padding:10px 20px;
+    border-radius:99px;
+    margin-top:10px;
+  }
+  .class-A{background:var(--good-soft); color:var(--good);}
+  .class-B{background:var(--accent-soft); color:var(--accent);}
+  .class-C{background:rgba(232,163,61,.15); color:#f0b864;}
+  .class-D{background:var(--danger-soft); color:var(--danger);}
+
+  /* Revenue leak — the "tapa na cara" moment */
+  .leak-card{
+    background:linear-gradient(155deg, rgba(232,84,61,.14), rgba(232,84,61,.02));
+    border:1px solid rgba(232,84,61,.35);
+    border-radius:20px;
+    padding:32px 28px;
+    text-align:center;
+    margin-bottom:28px;
+  }
+  .leak-label{
+    font-size:13px;
+    font-weight:700;
+    text-transform:uppercase;
+    letter-spacing:.1em;
+    color:#f0a394;
+    margin-bottom:10px;
+  }
+  .leak-num{
+    font-family:'Archivo',sans-serif;
+    font-weight:900;
+    font-size:clamp(36px,9vw,56px);
+    color:var(--danger);
+    line-height:1.1;
+    letter-spacing:-.01em;
+  }
+  .leak-sub{
+    font-size:14px;
+    color:var(--text-dim);
+    margin-top:10px;
+    line-height:1.5;
+  }
+
+  /* Pillars breakdown */
+  .pillars-list{
+    display:flex;
+    flex-direction:column;
+    gap:14px;
+    margin-bottom:28px;
+  }
+  .pillar-row{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:16px 18px;
+  }
+  .pillar-row-top{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:10px;
+  }
+  .pillar-name{
+    font-weight:700;
+    font-size:14.5px;
+  }
+  .pillar-score{
+    font-family:'Archivo',sans-serif;
+    font-weight:800;
+    font-size:14px;
+    color:var(--text-dim);
+    font-variant-numeric: tabular-nums;
+  }
+  .pillar-bar-track{
+    height:8px;
+    background:var(--bg-soft);
+    border-radius:99px;
+    overflow:hidden;
+  }
+  .pillar-bar-fill{
+    height:100%;
+    border-radius:99px;
+    transition:width 1.2s cubic-bezier(.16,1,.3,1);
+  }
+  .pillar-tag-sev{
+    display:inline-block;
+    font-size:11px;
+    font-weight:700;
+    text-transform:uppercase;
+    letter-spacing:.06em;
+    padding:3px 9px;
+    border-radius:6px;
+    margin-top:10px;
+  }
+  .sev-alta{background:var(--danger-soft); color:var(--danger);}
+  .sev-media{background:var(--accent-soft); color:var(--accent);}
+  .sev-ok{background:var(--good-soft); color:var(--good);}
+
+  /* Section headers in results */
+  .result-section-title{
+    font-family:'Archivo',sans-serif;
+    font-weight:800;
+    font-size:18px;
+    margin-bottom:14px;
+    display:flex;
+    align-items:center;
+    gap:10px;
+  }
+  .result-section-title .num{
+    width:26px; height:26px;
+    border-radius:7px;
+    background:var(--accent-soft);
+    color:var(--accent);
+    display:flex; align-items:center; justify-content:center;
+    font-size:13px; font-weight:800;
+  }
+
+  /* Dor reportada */
+  .dor-card{
+    background:var(--card);
+    border-left:3px solid var(--accent);
+    border-radius:0 14px 14px 0;
+    padding:18px 20px;
+    margin-bottom:28px;
+    font-size:14.5px;
+    line-height:1.6;
+    color:var(--text);
+  }
+  .dor-card span{color:var(--text-dim); font-size:12.5px; display:block; margin-bottom:6px; text-transform:uppercase; letter-spacing:.08em; font-weight:700;}
+
+  /* Action plan */
+  .plan-list{
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+    margin-bottom:32px;
+  }
+  .plan-item{
+    display:flex;
+    gap:14px;
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:16px 18px;
+  }
+  .plan-num{
+    flex:0 0 28px; height:28px;
+    border-radius:8px;
+    background:var(--accent);
+    color:#1c1408;
+    font-family:'Archivo',sans-serif;
+    font-weight:800;
+    font-size:13px;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .plan-text strong{display:block; font-size:14.5px; margin-bottom:3px;}
+  .plan-text span{font-size:13.5px; color:var(--text-dim); line-height:1.5;}
+
+  /* CTA */
+  .cta-card{
+    background:linear-gradient(155deg, var(--accent-soft), transparent);
+    border:1px solid rgba(232,163,61,.35);
+    border-radius:20px;
+    padding:28px;
+    text-align:center;
+  }
+  .cta-card h3{
+    font-family:'Archivo',sans-serif;
+    font-size:22px;
+    font-weight:800;
+    margin-bottom:10px;
+  }
+  .cta-card p{
+    font-size:14.5px;
+    color:var(--text-dim);
+    line-height:1.6;
+    margin-bottom:20px;
+    max-width:46ch;
+    margin-left:auto;
+    margin-right:auto;
+  }
+
+  .footer-note{
+    text-align:center;
+    font-size:12px;
+    color:var(--text-dim);
+    margin-top:40px;
+    padding-bottom:20px;
+    line-height:1.6;
+  }
+  .footer-note b{color:var(--accent);}
+
+  @media (max-width:480px){
+    .intro-meta{gap:18px;}
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- ===== TOPBAR ===== -->
+  <div class="topbar" id="topbar" style="display:none;">
+    <div class="topbar-row">
+      <div class="brand">GROW <b>Diagnóstico</b></div>
+      <div class="step-label" id="stepLabel">1 / 22</div>
+    </div>
+    <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+    <div class="pillar-track" id="pillarTrack"></div>
+  </div>
+
+  <!-- ===== STAGE ===== -->
+  <div class="stage">
+
+    <!-- ---------- SCREEN: INTRO ---------- -->
+    <div class="screen active" id="screen-intro">
+      <div class="intro-eyebrow">⚡ Leva menos de 6 minutos</div>
+      <h1 class="intro-title">Onde a sua empresa está <em>perdendo dinheiro</em> sem perceber?</h1>
+      <p class="intro-sub">
+        22 perguntas rápidas sobre o seu dia a dia comercial. No final, você recebe seu Score de Maturidade,
+        o valor estimado que está deixando na mesa todo mês e um plano de ação direto ao ponto.
+      </p>
+      <div class="intro-meta">
+        <div class="intro-meta-item">
+          <div class="intro-meta-num">22</div>
+          <div class="intro-meta-label">Perguntas</div>
+        </div>
+        <div class="intro-meta-item">
+          <div class="intro-meta-num">5</div>
+          <div class="intro-meta-label">Áreas-chave</div>
+        </div>
+        <div class="intro-meta-item">
+          <div class="intro-meta-num">~6min</div>
+          <div class="intro-meta-label">Duração</div>
+        </div>
+      </div>
+      <button class="btn btn-primary btn-block btn-lg" onclick="startDiagnostic()">Começar diagnóstico →</button>
+    </div>
+
+    <!-- ---------- SCREEN: SEGMENTO ---------- -->
+    <div class="screen" id="screen-segmento">
+      <div class="pillar-tag"><span class="dot"></span> Antes de começar</div>
+      <h2 class="question-title">Qual desses descreve melhor o seu negócio?</h2>
+      <p class="question-hint">Vamos personalizar 2 perguntas extras com base no seu segmento — o resto do diagnóstico é o mesmo para todo mundo.</p>
+      <div class="segment-card">
+        <select class="segment-select" id="segmentoSelect">
+          <option value="generico">Outro / não está na lista</option>
+          <option value="grafica">Gráfica / Comunicação visual</option>
+          <option value="consorcio">Promotora de consórcio / crédito</option>
+          <option value="seguros">Corretora de seguros</option>
+          <option value="imobiliaria">Imobiliária</option>
+          <option value="clinica_odonto">Clínica odontológica / estética</option>
+          <option value="clinica_medica">Clínica médica</option>
+          <option value="educacao">Educação / treinamento</option>
+          <option value="advocacia">Escritório de advocacia</option>
+          <option value="distribuidora">Distribuidora / representação</option>
+        </select>
+      </div>
+      <div class="nav-row">
+        <button class="btn btn-ghost" onclick="goTo('intro')">Voltar</button>
+        <button class="btn btn-primary" onclick="goTo('q', 0)">Continuar →</button>
+      </div>
+    </div>
+
+    <!-- ---------- SCREEN: PERGUNTAS (gerado via JS) ---------- -->
+    <div class="screen" id="screen-q">
+      <div class="pillar-tag"><span class="dot"></span> <span id="qPillarName"></span></div>
+      <h2 class="question-title" id="qTitle"></h2>
+      <p class="question-hint" id="qHint"></p>
+      <div class="options" id="qOptions"></div>
+      <div class="nav-row">
+        <button class="btn btn-ghost" onclick="prevQuestion()">Voltar</button>
+        <button class="btn btn-primary" id="qNextBtn" onclick="nextQuestion()" disabled>Continuar →</button>
+      </div>
+    </div>
+
+    <!-- ---------- SCREEN: DOR ABERTA ---------- -->
+    <div class="screen" id="screen-dor">
+      <div class="pillar-tag"><span class="dot"></span> Última pergunta</div>
+      <h2 class="question-title">Se você pudesse resolver UMA coisa no seu comercial agora, qual seria?</h2>
+      <p class="question-hint">Conta com suas palavras. Isso nos ajuda a entender o que mais te incomoda no dia a dia — sem filtro.</p>
+      <textarea class="dor-input" id="dorInput" placeholder="Ex: Meu time não faz follow-up e a gente perde cliente que já tinha quase fechado..."></textarea>
+      <div class="nav-row">
+        <button class="btn btn-ghost" onclick="prevQuestion()">Voltar</button>
+        <button class="btn btn-primary" onclick="showResults()">Ver meu resultado →</button>
+      </div>
+    </div>
+
+    <!-- ---------- SCREEN: LOADING ---------- -->
+    <div class="screen" id="screen-loading">
+      <div style="text-align:center; padding:60px 0;">
+        <div style="font-size:42px; margin-bottom:18px;" id="loadingEmoji">🔍</div>
+        <div style="font-family:'Archivo',sans-serif; font-weight:800; font-size:20px; margin-bottom:8px;" id="loadingText">Calculando seu Score...</div>
+        <div style="color:var(--text-dim); font-size:14px;">Cruzando suas respostas com os 5 pilares da metodologia GROW</div>
+      </div>
+    </div>
+
+    <!-- ---------- SCREEN: RESULTADOS ---------- -->
+    <div class="screen" id="screen-result">
+
+      <div class="result-header">
+        <div class="result-eyebrow">Seu diagnóstico está pronto</div>
+        <div class="score-ring-wrap">
+          <svg class="score-ring" width="200" height="200" viewBox="0 0 200 200">
+            <circle class="score-ring-bg" cx="100" cy="100" r="90"/>
+            <circle class="score-ring-fill" id="scoreRingFill" cx="100" cy="100" r="90"/>
+          </svg>
+          <div class="score-center">
+            <div class="score-num" id="scoreNum">0</div>
+            <div class="score-max">de 50 pontos</div>
+          </div>
+        </div>
+        <div class="result-class" id="resultClass"></div>
+      </div>
+
+      <!-- REVENUE LEAK -->
+      <div class="leak-card">
+        <div class="leak-label">💸 Estimativa de receita perdida por mês</div>
+        <div class="leak-num" id="leakNum">R$ 0</div>
+        <div class="leak-sub" id="leakSub"></div>
+      </div>
+
+      <!-- PILARES -->
+      <div class="result-section-title"><span class="num">1</span> Seus 5 pilares comerciais</div>
+      <div class="pillars-list" id="pillarsList"></div>
+
+      <!-- DOR REPORTADA -->
+      <div class="result-section-title"><span class="num">2</span> O que você nos contou</div>
+      <div class="dor-card" id="dorCard">
+        <span>Sua maior dor agora</span>
+        <span id="dorTextOut" style="color:var(--text); font-size:14.5px; font-weight:500; line-height:1.6; text-transform:none; letter-spacing:normal;"></span>
+      </div>
+
+      <!-- PLANO DE AÇÃO -->
+      <div class="result-section-title"><span class="num">3</span> Seu plano de ação imediato</div>
+      <div class="plan-list" id="planList"></div>
+
+      <!-- CTA -->
+      <div class="cta-card">
+        <h3>Quer destravar isso com a gente?</h3>
+        <p>Esse diagnóstico é o ponto de partida. A GROW Sales Group estrutura, treina e — se fizer sentido — opera o seu comercial até esses números mudarem de verdade.</p>
+        <button class="btn btn-primary btn-lg" onclick="alert('Em produção: aqui abre o agendamento da reunião de devolutiva com a Grow Sales Group.')">Quero falar com a Grow →</button>
+      </div>
+
+      <div class="footer-note">
+        Diagnóstico gerado pela <b>Metodologia GROW</b> · Grow Sales Group — BPO Comercial<br>
+        Resultado baseado nas respostas fornecidas · válido como retrato do momento atual da operação
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+/* ============================================================
+   BANCO DE 22 PERGUNTAS — 5 pilares (4 perguntas cada = 20)
+   + 2 perguntas de segmento (bônus, opcionais)
+   Linguagem universal — formato "cenário", sem jargão de nicho.
+   Cada pilar soma até 10 pts (2.5 pts por pergunta).
+   ============================================================ */
+
+const PILARES = [
+  { key: "captacao", label: "Geração de Clientes" },
+  { key: "conversao", label: "Conversão & Processo" },
+  { key: "fidelizacao", label: "Retenção & Recompra" },
+  { key: "equipe", label: "Time & Rotina" },
+  { key: "crescimento", label: "Gestão & Previsibilidade" },
+];
+
+const PERGUNTAS = [
+  // ===== PILAR 1 — Geração de Clientes =====
+  {
+    pilar: "captacao",
+    title: "Se você parar de pedir indicação por 30 dias, o que acontece com a entrada de clientes novos?",
+    hint: "Pensa no que realmente aconteceria — sem otimismo.",
+    options: [
+      { text: "Praticamente para. Hoje vivemos de indicação.", score: 0 },
+      { text: "Cai bastante, mas ainda entra algo de outros canais.", score: 0.83 },
+      { text: "Cai um pouco — temos outras fontes funcionando.", score: 1.66 },
+      { text: "Continua igual. Temos prospecção ativa rodando.", score: 2.5 },
+    ]
+  },
+  {
+    pilar: "captacao",
+    title: "Você sabe quanto custa, em média, conquistar um cliente novo hoje?",
+    hint: "Somando tempo, equipe, anúncios — tudo que envolve trazer alguém novo.",
+    options: [
+      { text: "Não faço ideia.", score: 0 },
+      { text: "Tenho uma noção bem solta.", score: 0.83 },
+      { text: "Sei mais ou menos, mas não acompanho com frequência.", score: 1.66 },
+      { text: "Sei o número e acompanho regularmente.", score: 2.5 },
+    ]
+  },
+  {
+    pilar: "captacao",
+    title: "Quando alguém pesquisa pelo que você vende na sua região, o que encontra primeiro?",
+    hint: "Google, redes sociais, indicação no boca a boca...",
+    options: [
+      { text: "Provavelmente encontra o concorrente antes de mim.", score: 0 },
+      { text: "Às vezes apareço, às vezes não.", score: 0.83 },
+      { text: "Apareço, mas sei que poderia estar melhor.", score: 1.66 },
+      { text: "Apareço bem posicionado e isso já gera contato.", score: 2.5 },
+    ]
+  },
+  {
+    pilar: "captacao",
+    title: "Hoje, de onde vem a maior parte dos seus novos clientes?",
+    hint: "Marque a opção que mais se aproxima da realidade.",
+    options: [
+      { text: "Só de indicação / boca a boca.", score: 0 },
+      { text: "Indicação + um pouco de redes sociais sem estratégia.", score: 0.83 },
+      { text: "2 ou 3 canais, mas sem método definido.", score: 1.66 },
+      { text: "Múltiplos canais ativos, com responsável e meta para cada um.", score: 2.5 },
+    ]
+  },
+
+  // ===== PILAR 2 — Conversão & Processo =====
+  {
+    pilar: "conversao",
+    title: "Quando um cliente em potencial te procura e não fecha na hora, o que normalmente acontece?",
+    hint: "Pensa no que de fato costuma rolar, não no que deveria rolar.",
+    options: [
+      { text: "Geralmente esquecemos de voltar a falar com ele.", score: 0 },
+      { text: "Às vezes alguém lembra de fazer follow-up.", score: 0.83 },
+      { text: "Temos um lembrete, mas nem sempre seguimos.", score: 1.66 },
+      { text: "Temos uma sequência definida e seguimos à risca.", score: 2.5 },
+    ]
+  },
+  {
+    pilar: "conversao",
+    title: "Quanto tempo, em média, alguém demora para te responder depois que manda mensagem?",
+    hint: "WhatsApp, Instagram, formulário do site...",
+    options: [
+      { text: "Pode levar horas ou até o dia seguinte.", score: 0 },
+      { text: "Geralmente algumas horas.", score: 0.83 },
+      { text: "Até 30 minutos na maioria das vezes.", score: 1.66 },
+      { text: "Quase imediato — temos alguém ou algo cuidando disso.", score: 2.5 },
+    ]
+  },
+  {
+    pilar: "conversao",
+    title: "Se um cliente disser \"vou pensar e te aviso\", você sabe dizer o que normalmente acontece depois?",
+    hint: "Esse é um dos momentos onde mais se perde venda sem perceber.",
+    options: [
+      { text: "Não sei — geralmente a conversa simplesmente esfria.", score: 0 },
+      { text: "Às vezes ele volta sozinho, às vezes não.", score: 0.83 },
+      { text: "Temos uma forma de retomar, mas é manual e inconsistente.", score: 1.66 },
+      { text: "Temos um processo que retoma esse contato automaticamente.", score: 2.5 },
+    ]
+  },
+  {
+    pilar: "conversao",
+    title: "Toda venda em andamento está registrada em algum lugar (CRM, planilha, funil)?",
+    hint: "Ou parte das negociações vive só na cabeça/whatsapp de quem está atendendo?",
+    options: [
+      { text: "Não, fica na cabeça ou no WhatsApp de quem atende.", score: 0 },
+      { text: "Algumas sim, outras não — depende da pessoa.", score: 0.83 },
+      { text: "A maioria está registrada, mas nem sempre atualizada.", score: 1.66 },
+      { text: "Tudo está registrado e atualizado em um único lugar.", score: 2.5 },
+    ]
+  },
+
+  // ===== PILAR 3 — Retenção & Recompra =====
+  {
+    pilar: "fidelizacao",
+    title: "Um cliente que comprou de você há 6 meses e nunca mais voltou — alguém entra em contato com ele?",
+    hint: "Pensa na sua base de clientes antigos.",
+    options: [
+      { text: "Não, ele simplesmente some da nossa rotina.", score: 0 },
+      { text: "Só se ele entrar em contato primeiro.", score: 0.83 },
+      { text: "De vez em quando alguém lembra de retomar.", score: 1.66 },
+      { text: "Temos uma rotina de reativar clientes antigos.", score: 2.5 },
+    ]
+  },
+  {
+    pilar: "fidelizacao",
+    title: "Você sabe, hoje, quanto da sua receita vem de clientes que já compraram antes (vs. clientes novos)?",
+    hint: "Não precisa ser exato — uma estimativa já vale.",
+    options: [
+      { text: "Não tenho ideia.", score: 0 },
+      { text: "Tenho um chute bem solto.", score: 0.83 },
+      { text: "Tenho uma noção razoável.", score: 1.66 },
+      { text: "Sei o número com precisão.", score: 2.5 },
+    ]
+  },
+  {
+    pilar: "fidelizacao",
+    title: "Quando um cliente compra algo, alguém oferece algo a mais (upgrade, complemento, próximo passo)?",
+    hint: "Pensa no momento da venda e no pós-venda.",
+    options: [
+      { text: "Não, vendemos só o que foi pedido.", score: 0 },
+      { text: "Às vezes, depende de quem está atendendo.", score: 0.83 },
+      { text: "Existe a prática, mas não é treinada nem cobrada.", score: 1.66 },
+      { text: "É parte do processo — todo mundo faz isso.", score: 2.5 },
+    ]
+  },
+  {
+    pilar: "fidelizacao",
+    title: "Você consegue identificar quando um cliente está \"esfriando\" e prestes a sumir?",
+    hint: "Antes que ele já tenha ido para o concorrente.",
+    options: [
+      { text: "Só percebo quando ele já sumiu de vez.", score: 0 },
+      { text: "Às vezes percebo, mas não faço nada a respeito.", score: 0.83 },
+      { text: "Percebo e às vezes ajo, sem método.", score: 1.66 },
+      { text: "Temos um jeito de identificar e agir antes que ele suma.", score: 2.5 },
+    ]
+  },
+
+  // ===== PILAR 4 — Time & Rotina =====
+  {
+    pilar: "equipe",
+    title: "Se você tirar uma semana de férias sem avisar ninguém, o que acontece com as vendas?",
+    hint: "Seja honesto — essa pergunta revela muito.",
+    options: [
+      { text: "Praticamente param.", score: 0 },
+      { text: "Caem bastante, sem mim para destravar.", score: 0.83 },
+      { text: "Continuam, mas em ritmo mais fraco.", score: 1.66 },
+      { text: "Continuam normalmente — o time tem rotina própria.", score: 2.5 },
+    ]
+  },
+  {
+    pilar: "equipe",
+    title: "Quando entra alguém novo para vender ou atender, quanto tempo leva até essa pessoa \"engrenar\"?",
+    hint: "Tempo até performar de verdade, não só conhecer o produto.",
+    options: [
+      { text: "Mais de 3 meses, ou nunca chega a engrenar.", score: 0 },
+      { text: "Entre 1 e 3 meses.", score: 0.83 },
+      { text: "Cerca de 1 mês.", score: 1.66 },
+      { text: "Menos de 1 mês — temos um processo de integração.", score: 2.5 },
+    ]
+  },
+  {
+    pilar: "equipe",
+    title: "Existe algum momento fixo na semana onde o time revisa resultados e ajusta o que for preciso?",
+    hint: "Reunião, painel, conversa — algo que aconteça de fato, toda semana.",
+    options: [
+      { text: "Não, cada semana é uma surpresa.", score: 0 },
+      { text: "Às vezes, quando dá tempo.", score: 0.83 },
+      { text: "Existe, mas nem sempre acontece.", score: 1.66 },
+      { text: "Sim, é fixo e acontece todas as semanas.", score: 2.5 },
+    ]
+  },
+  {
+    pilar: "equipe",
+    title: "Se eu te perguntar \"quem do seu time vende mais e por quê\", você responde com dado ou com achismo?",
+    hint: "A diferença entre saber e sentir que sabe.",
+    options: [
+      { text: "Puro achismo — não acompanho número por pessoa.", score: 0 },
+      { text: "Tenho uma ideia geral, sem números exatos.", score: 0.83 },
+      { text: "Tenho os números, mas olho raramente.", score: 1.66 },
+      { text: "Sei com dados e acompanho isso de perto.", score: 2.5 },
+    ]
+  },
+
+  // ===== PILAR 5 — Gestão & Previsibilidade =====
+  {
+    pilar: "crescimento",
+    title: "Você consegue dizer, com confiança, quanto vai faturar nos próximos 90 dias?",
+    hint: "Não é meta — é previsão realista baseada no que está em andamento.",
+    options: [
+      { text: "Não, cada mês é uma incógnita.", score: 0 },
+      { text: "Tenho uma sensação, mas erro feio às vezes.", score: 0.83 },
+      { text: "Acerto na maioria das vezes.", score: 1.66 },
+      { text: "Sim, com boa precisão — acompanho de perto.", score: 2.5 },
+    ]
+  },
+  {
+    pilar: "crescimento",
+    title: "Nos últimos 12 meses, o crescimento (ou queda) da empresa veio mais de quê?",
+    hint: "Pensa no fator principal por trás do resultado.",
+    options: [
+      { text: "Sorte, momento do mercado, ou indicação pontual.", score: 0 },
+      { text: "Esforço pessoal meu, no improviso.", score: 0.83 },
+      { text: "Uma mistura de esforço pessoal com algumas ações estruturadas.", score: 1.66 },
+      { text: "Método e processo definidos, que se repetem.", score: 2.5 },
+    ]
+  },
+  {
+    pilar: "crescimento",
+    title: "Se a demanda dobrasse amanhã, sua estrutura aguentaria sem perder qualidade?",
+    hint: "Pensa em atendimento, entrega e gestão — tudo junto.",
+    options: [
+      { text: "Não, ia quebrar tudo.", score: 0 },
+      { text: "Aguentaria mal, com muita correria.", score: 0.83 },
+      { text: "Aguentaria com algum esforço extra.", score: 1.66 },
+      { text: "Sim, temos margem para crescer sem travar.", score: 2.5 },
+    ]
+  },
+  {
+    pilar: "crescimento",
+    title: "Sua meta de faturamento para os próximos 6 meses é realista com a estrutura que você tem hoje?",
+    hint: "A pergunta mais importante de todas.",
+    options: [
+      { text: "Não, e nem sei o que mudar para chegar lá.", score: 0 },
+      { text: "Não, mas tenho uma ideia do que falta.", score: 0.83 },
+      { text: "Talvez, com alguns ajustes.", score: 1.66 },
+      { text: "Sim — só falta executar com consistência.", score: 2.5 },
+    ]
+  },
+];
+
+// Perguntas extras por segmento (bônus, não pontuam no score principal — entram como contexto)
+const PERGUNTAS_SEGMENTO = {
+  grafica: [
+    { pilar: "captacao", title: "Vocês prospectam ativamente empresas (B2B), ou só atendem quem chega até vocês?", hint: "Gráficas costumam viver de demanda passiva.", options: [
+      { text: "Só atendemos quem chega até nós.", score: 0 },
+      { text: "Às vezes alguém liga para ex-clientes.", score: 0.83 },
+      { text: "Temos alguma prospecção, mas sem rotina.", score: 1.66 },
+      { text: "Sim, prospectamos ativamente novas empresas.", score: 2.5 } ]},
+    { pilar: "fidelizacao", title: "Clientes que fizeram um pedido grande uma vez — alguém os procura para o próximo pedido?", hint: "Recorrência em gráfica costuma ser ouro esquecido.", options: [
+      { text: "Não, esperamos eles voltarem sozinhos.", score: 0 },
+      { text: "Raramente.", score: 0.83 },
+      { text: "Às vezes, sem padrão.", score: 1.66 },
+      { text: "Sim, temos contato programado com clientes recorrentes.", score: 2.5 } ]},
+  ],
+  consorcio: [
+    { pilar: "conversao", title: "Leads que não fecharam na primeira conversa recebem alguma nutrição depois?", hint: "Consórcio costuma ter ciclo de decisão mais longo.", options: [
+      { text: "Não, seguem sem nenhum contato.", score: 0 },
+      { text: "Só se o vendedor lembrar.", score: 0.83 },
+      { text: "Existe algo, mas inconsistente.", score: 1.66 },
+      { text: "Sim, fluxo de nutrição estruturado.", score: 2.5 } ]},
+    { pilar: "fidelizacao", title: "Clientes que pagam parcelas e ainda não foram contemplados recebem algum tipo de acompanhamento ativo?", hint: "Essa base costuma ser fonte de novas vendas e indicações.", options: [
+      { text: "Não, só recebem cobrança.", score: 0 },
+      { text: "Raramente.", score: 0.83 },
+      { text: "Às vezes.", score: 1.66 },
+      { text: "Sim, acompanhamento ativo programado.", score: 2.5 } ]},
+  ],
+  seguros: [
+    { pilar: "fidelizacao", title: "As renovações de apólice são trabalhadas com antecedência ou só quando o cliente lembra?", hint: "Renovação é a maior fonte de receita recorrente da corretora.", options: [
+      { text: "Só quando o cliente lembra ou liga.", score: 0 },
+      { text: "Tentamos, mas em cima da hora.", score: 0.83 },
+      { text: "Trabalhamos com alguma antecedência.", score: 1.66 },
+      { text: "Processo automático com 60 dias de antecedência.", score: 2.5 } ]},
+    { pilar: "captacao", title: "Vocês oferecem outros seguros (auto, vida, residencial) para quem já é cliente de um deles?", hint: "Cross-sell na carteira atual.", options: [
+      { text: "Não, cada produto é tratado isoladamente.", score: 0 },
+      { text: "Às vezes, sem iniciativa formal.", score: 0.83 },
+      { text: "Existe, mas não é sistemático.", score: 1.66 },
+      { text: "Sim, é parte ativa da nossa rotina comercial.", score: 2.5 } ]},
+  ],
+  imobiliaria: [
+    { pilar: "conversao", title: "Visitas agendadas são confirmadas no dia anterior para reduzir quem não aparece?", hint: "No-show é um dos maiores ralos de tempo do corretor.", options: [
+      { text: "Não confirmamos.", score: 0 },
+      { text: "Às vezes, manualmente.", score: 0.83 },
+      { text: "Confirmamos na maioria das vezes.", score: 1.66 },
+      { text: "Sim, processo automático de confirmação.", score: 2.5 } ]},
+    { pilar: "fidelizacao", title: "Depois que um negócio é fechado, existe algum contato programado para gerar indicações?", hint: "Cliente satisfeito é a melhor fonte de novos leads.", options: [
+      { text: "Não, o relacionamento praticamente acaba ali.", score: 0 },
+      { text: "Às vezes mandamos mensagem.", score: 0.83 },
+      { text: "Existe algo, sem padrão.", score: 1.66 },
+      { text: "Sim, mantemos relacionamento ativo pós-venda.", score: 2.5 } ]},
+  ],
+  clinica_odonto: [
+    { pilar: "conversao", title: "Orçamentos que não foram fechados na hora recebem follow-up em 7, 15 ou 30 dias?", hint: "Muito dinheiro fica parado em orçamentos esquecidos.", options: [
+      { text: "Não, ficam parados.", score: 0 },
+      { text: "Às vezes alguém lembra.", score: 0.83 },
+      { text: "Existe um lembrete, nem sempre seguido.", score: 1.66 },
+      { text: "Sim, fluxo estruturado de retomada.", score: 2.5 } ]},
+    { pilar: "fidelizacao", title: "Pacientes que fizeram limpeza/manutenção recebem lembrete para o retorno (a cada 6 meses)?", hint: "Recorrência automática de manutenção.", options: [
+      { text: "Não.", score: 0 },
+      { text: "Às vezes, manual.", score: 0.83 },
+      { text: "Existe, mas falha bastante.", score: 1.66 },
+      { text: "Sim, lembrete automático programado.", score: 2.5 } ]},
+  ],
+  clinica_medica: [
+    { pilar: "conversao", title: "As consultas são confirmadas automaticamente (24h e 2h antes) para reduzir faltas?", hint: "Faltas são receita perdida na agenda.", options: [
+      { text: "Não confirmamos.", score: 0 },
+      { text: "Confirmamos manualmente, às vezes.", score: 0.83 },
+      { text: "Confirmamos na maioria das vezes.", score: 1.66 },
+      { text: "Sim, confirmação automática em dois momentos.", score: 2.5 } ]},
+    { pilar: "fidelizacao", title: "Pacientes que precisam de retorno/acompanhamento recebem lembrete depois de um tempo?", hint: "Acompanhamento clínico programado.", options: [
+      { text: "Não.", score: 0 },
+      { text: "Às vezes, se alguém lembrar.", score: 0.83 },
+      { text: "Existe, mas inconsistente.", score: 1.66 },
+      { text: "Sim, lembrete programado de retorno.", score: 2.5 } ]},
+  ],
+  educacao: [
+    { pilar: "conversao", title: "Do interesse até a matrícula, esse processo é tranquilo ou tem muita fricção/burocracia?", hint: "Cada etapa extra é uma chance de desistência.", options: [
+      { text: "Tem bastante fricção, perdemos gente no caminho.", score: 0 },
+      { text: "Funciona, mas poderia ser mais simples.", score: 0.83 },
+      { text: "É razoavelmente tranquilo.", score: 1.66 },
+      { text: "É fluido, quase sem fricção.", score: 2.5 } ]},
+    { pilar: "fidelizacao", title: "Alunos que estão terminando um curso recebem oferta para o próximo passo (novo curso/módulo)?", hint: "LTV do aluno.", options: [
+      { text: "Não.", score: 0 },
+      { text: "Às vezes, informalmente.", score: 0.83 },
+      { text: "Existe, sem sistematização.", score: 1.66 },
+      { text: "Sim, processo ativo de upsell para formandos.", score: 2.5 } ]},
+  ],
+  advocacia: [
+    { pilar: "captacao", title: "Existe alguma ação ativa para gerar indicações de clientes já atendidos?", hint: "Indicação ainda é o canal nº1 na advocacia — mas pode ser ativada.", options: [
+      { text: "Não, esperamos acontecer naturalmente.", score: 0 },
+      { text: "Às vezes pedimos informalmente.", score: 0.83 },
+      { text: "Existe alguma ação, sem rotina.", score: 1.66 },
+      { text: "Sim, processo ativo de geração de indicações.", score: 2.5 } ]},
+    { pilar: "conversao", title: "Consultas que não viraram contrato recebem algum follow-up posterior?", hint: "Follow-up pós-consulta.", options: [
+      { text: "Não.", score: 0 },
+      { text: "Raramente.", score: 0.83 },
+      { text: "Às vezes.", score: 1.66 },
+      { text: "Sim, follow-up estruturado.", score: 2.5 } ]},
+  ],
+  distribuidora: [
+    { pilar: "equipe", title: "Os vendedores externos seguem alguma rotina de visitas/contatos definida, ou cada um organiza do seu jeito?", hint: "Padronização da operação externa.", options: [
+      { text: "Cada um faz do seu jeito.", score: 0 },
+      { text: "Existe uma sugestão, mas não é seguida.", score: 0.83 },
+      { text: "A maioria segue uma rotina.", score: 1.66 },
+      { text: "Rotina definida e acompanhada por todos.", score: 2.5 } ]},
+    { pilar: "fidelizacao", title: "Clientes que reduziram ou pararam de comprar são identificados e contatados?", hint: "Detecção de queda na carteira.", options: [
+      { text: "Não, só percebemos quando é tarde.", score: 0 },
+      { text: "Às vezes percebemos.", score: 0.83 },
+      { text: "Percebemos, ação inconsistente.", score: 1.66 },
+      { text: "Sim, identificação e contato ativo.", score: 2.5 } ]},
+  ],
+  generico: [],
+};
+
+/* ============================================================
+   STATE
+   ============================================================ */
+let segmento = "generico";
+let activeQuestions = [];
+let currentIndex = 0;
+let answers = {}; // index -> {pilar, score}
+let dorTexto = "";
+
+const screens = ["intro","segmento","q","dor","loading","result"];
+function showScreen(name){
+  screens.forEach(s => document.getElementById("screen-"+s).classList.remove("active"));
+  document.getElementById("screen-"+name).classList.add("active");
+  document.getElementById("topbar").style.display = (name === "intro") ? "none" : "flex";
+  document.getElementById("topbar").style.flexDirection = "column";
+  window.scrollTo({top:0, behavior:"smooth"});
+}
+
+function startDiagnostic(){
+  showScreen("segmento");
+}
+
+function goTo(name, idx){
+  if(name === "q"){
+    // build question list with segment bonus questions appended
+    activeQuestions = [...PERGUNTAS, ...(PERGUNTAS_SEGMENTO[segmento] || [])];
+    segmento = document.getElementById("segmentoSelect").value;
+    activeQuestions = [...PERGUNTAS, ...(PERGUNTAS_SEGMENTO[segmento] || [])];
+    currentIndex = 0;
+    renderQuestion();
+    showScreen("q");
+  }
+}
+
+function buildPillarTrack(){
+  const track = document.getElementById("pillarTrack");
+  track.innerHTML = "";
+  const total = activeQuestions.length;
+  for(let i=0;i<total;i++){
+    const dot = document.createElement("div");
+    dot.className = "pillar-dot";
+    if(i < currentIndex) dot.classList.add("done");
+    else if(i === currentIndex) dot.classList.add("active");
+    track.appendChild(dot);
+  }
+}
+
+function renderQuestion(){
+  const q = activeQuestions[currentIndex];
+  const pillarMeta = PILARES.find(p => p.key === q.pilar);
+  document.getElementById("qPillarName").textContent = pillarMeta ? pillarMeta.label : "Extra do seu segmento";
+  document.getElementById("qTitle").textContent = q.title;
+  document.getElementById("qHint").textContent = q.hint || "";
+
+  const optsWrap = document.getElementById("qOptions");
+  optsWrap.innerHTML = "";
+  const letters = ["A","B","C","D"];
+  q.options.forEach((opt, i) => {
+    const btn = document.createElement("button");
+    btn.className = "option";
+    if(answers[currentIndex] && answers[currentIndex].optionIndex === i) btn.classList.add("selected");
+    btn.innerHTML = `<span class="option-letter">${letters[i]}</span><span class="option-text">${opt.text}</span>`;
+    btn.onclick = () => selectOption(i);
+    optsWrap.appendChild(btn);
+  });
+
+  document.getElementById("qNextBtn").disabled = !answers[currentIndex];
+  document.getElementById("qNextBtn").textContent = (currentIndex === activeQuestions.length - 1) ? "Última pergunta →" : "Continuar →";
+
+  // topbar
+  document.getElementById("stepLabel").textContent = `${currentIndex+1} / ${activeQuestions.length + 1}`;
+  document.getElementById("progressFill").style.width = `${((currentIndex)/(activeQuestions.length+1))*100}%`;
+  buildPillarTrack();
+}
+
+function selectOption(i){
+  const q = activeQuestions[currentIndex];
+  answers[currentIndex] = {
+    pilar: q.pilar,
+    score: q.options[i].score,
+    optionIndex: i,
+    isBonus: !PILARES.find(p => PERGUNTAS.includes(q)) ? false : false,
+  };
+  // mark bonus questions explicitly
+  if(currentIndex >= PERGUNTAS.length) answers[currentIndex].bonus = true;
+  renderQuestion();
+}
+
+function nextQuestion(){
+  if(currentIndex < activeQuestions.length - 1){
+    currentIndex++;
+    renderQuestion();
+  } else {
+    // go to dor screen
+    document.getElementById("stepLabel").textContent = `${activeQuestions.length+1} / ${activeQuestions.length + 1}`;
+    document.getElementById("progressFill").style.width = `${(activeQuestions.length/(activeQuestions.length+1))*100}%`;
+    showScreen("dor");
+  }
+}
+
+function prevQuestion(){
+  if(document.getElementById("screen-dor").classList.contains("active")){
+    showScreen("q");
+    return;
+  }
+  if(currentIndex > 0){
+    currentIndex--;
+    renderQuestion();
+    showScreen("q");
+  } else {
+    showScreen("segmento");
+  }
+}
+
+/* ============================================================
+   RESULTADOS
+   ============================================================ */
+function showResults(){
+  dorTexto = document.getElementById("dorInput").value.trim();
+  showScreen("loading");
+  setTimeout(() => {
+    // Calcula scores por pilar
+    const pillarScores = {};
+    PILARES.forEach(p => pillarScores[p.key] = 0);
+    for(let i=0;i<PERGUNTAS.length;i++){
+      const a = answers[i];
+      if(a) pillarScores[a.pilar] += a.score;
+    }
+    const total = Math.round(Object.values(pillarScores).reduce((a,b)=>a+b,0) * 10) / 10;
+    const payload = {
+      scoreTotal: total,
+      dor: dorTexto,
+      pilares: PILARES.map(p => ({
+        key: p.key,
+        label: p.label,
+        score: Math.round(pillarScores[p.key] * 10) / 10,
+      })),
+      data: new Date().toISOString(),
+    };
+    try { localStorage.setItem("grow_diagnostico_resultado", JSON.stringify(payload)); } catch(e){}
+    window.location.href = "/resultado-diagnostico.html";
+  }, 1400);
+}
+
+
+function computeResults(){
+  // Pillar scores (only the 20 core questions count toward the 0-50 score)
+  const pillarScores = {};
+  PILARES.forEach(p => pillarScores[p.key] = 0);
+
+  for(let i=0;i<PERGUNTAS.length;i++){
+    const a = answers[i];
+    if(a) pillarScores[a.pilar] += a.score;
+  }
+
+  const total = Object.values(pillarScores).reduce((a,b)=>a+b,0);
+  const totalRounded = Math.round(total * 10) / 10;
+  const pct = (total/50)*100;
+
+  // classification
+  let cls, clsLabel, clsClass;
+  if(pct >= 90){ cls="A"; clsLabel="🚀 Empresa estruturada — fase de escala"; clsClass="class-A"; }
+  else if(pct >= 70){ cls="B"; clsLabel="🏗️ Estrutura funcional, com gargalos"; clsClass="class-B"; }
+  else if(pct >= 50){ cls="C"; clsLabel="⚠️ Ativa, mas sem previsibilidade"; clsClass="class-C"; }
+  else { cls="D"; clsLabel="🚨 Operação desorganizada — \"balde furado\""; clsClass="class-D"; }
+
+  // ring
+  const circumference = 565;
+  const offset = circumference - (pct/100)*circumference;
+  document.getElementById("scoreRingFill").style.strokeDashoffset = offset;
+  document.getElementById("scoreRingFill").style.stroke = cls === "D" ? "var(--danger)" : (cls === "A" ? "var(--good)" : "var(--accent)");
+  document.getElementById("scoreNum").textContent = totalRounded;
+  const resultClassEl = document.getElementById("resultClass");
+  resultClassEl.textContent = clsLabel;
+  resultClassEl.className = "result-class " + clsClass;
+
+  // Revenue Leak — heuristic estimate
+  // Base on the lowest pillars + count of "0" or "0.83" answers
+  let weakAnswers = 0;
+  for(let i=0;i<PERGUNTAS.length;i++){
+    const a = answers[i];
+    if(a && a.score <= 0.83) weakAnswers++;
+  }
+  // Estimated leak multiplier: more weak answers = higher % of revenue at risk
+  const leakPct = Math.min(45, Math.round((weakAnswers/20) * 60));
+  const leakLow = leakPct;
+  const leakHigh = Math.min(60, leakPct + 15);
+
+  const leakEl = document.getElementById("leakNum");
+  const leakSubEl = document.getElementById("leakSub");
+  if(pct >= 85){
+    leakEl.textContent = "Operação saudável";
+    leakEl.style.color = "var(--good)";
+    leakSubEl.textContent = "Sua estrutura está bem encaminhada. O foco agora é escalar com controle, não corrigir vazamentos.";
+  } else {
+    leakEl.textContent = `${leakLow}% a ${leakHigh}% do seu faturamento`;
+    leakSubEl.innerHTML = `Com base nas suas respostas, esse é o tamanho estimado de receita que está se perdendo todo mês por falta de processo, follow-up e rotina comercial — antes mesmo de pensar em gerar mais leads.`;
+  }
+
+  // Pillars list
+  const pillarsListEl = document.getElementById("pillarsList");
+  pillarsListEl.innerHTML = "";
+  const sortedPillars = [...PILARES].map(p => ({...p, score: pillarScores[p.key]})).sort((a,b)=>a.score-b.score);
+
+  PILARES.forEach(p => {
+    const score = Math.round(pillarScores[p.key]*10)/10;
+    const pPct = (score/10)*100;
+    let sevClass, sevLabel, barColor;
+    if(score < 4){ sevClass="sev-alta"; sevLabel="🔴 Gargalo crítico"; barColor="var(--danger)"; }
+    else if(score < 7){ sevClass="sev-media"; sevLabel="🟡 Precisa de atenção"; barColor="var(--accent)"; }
+    else { sevClass="sev-ok"; sevLabel="🟢 Ponto forte"; barColor="var(--good)"; }
+
+    const row = document.createElement("div");
+    row.className = "pillar-row";
+    row.innerHTML = `
+      <div class="pillar-row-top">
+        <div class="pillar-name">${p.label}</div>
+        <div class="pillar-score">${score} / 10</div>
+      </div>
+      <div class="pillar-bar-track"><div class="pillar-bar-fill" data-target="${pPct}" style="width:0%; background:${barColor};"></div></div>
+      <div class="pillar-tag-sev ${sevClass}">${sevLabel}</div>
+    `;
+    pillarsListEl.appendChild(row);
+  });
+
+  // Dor
+  const dorOut = document.getElementById("dorTextOut");
+  dorOut.textContent = dorTexto || "Você não descreveu uma dor específica — mas os dados acima já mostram para onde olhar primeiro.";
+
+  // Plano de ação — pega os 3 pilares mais fracos
+  const planListEl = document.getElementById("planList");
+  planListEl.innerHTML = "";
+  const ACTIONS = {
+    captacao: { title: "Estruturar geração ativa de clientes", desc: "Montar uma rotina de prospecção (ligação, WhatsApp, redes) que não dependa só de indicação." },
+    conversao: { title: "Criar processo de follow-up e resposta rápida", desc: "Definir cadência de retomada de contato e tempo máximo de resposta para não perder oportunidade." },
+    fidelizacao: { title: "Ativar a base de clientes existente", desc: "Criar rotina de reativação e upsell para quem já comprou — receita mais barata e mais rápida." },
+    equipe: { title: "Estruturar rotina e onboarding do time", desc: "Criar checklist diário/semanal e processo de integração para reduzir dependência de uma pessoa." },
+    crescimento: { title: "Implantar painel de indicadores e metas", desc: "Ter visibilidade de número, meta e gap em tempo real para parar de operar no improviso." },
+  };
+  sortedPillars.slice(0,3).forEach((p,i) => {
+    const action = ACTIONS[p.key];
+    const item = document.createElement("div");
+    item.className = "plan-item";
+    item.innerHTML = `
+      <div class="plan-num">${i+1}</div>
+      <div class="plan-text">
+        <strong>${action.title}</strong>
+        <span>${action.desc}</span>
+      </div>
+    `;
+    planListEl.appendChild(item);
+  });
+}
+
+function animateResults(){
+  document.querySelectorAll(".pillar-bar-fill").forEach(el => {
+    const target = el.getAttribute("data-target");
+    requestAnimationFrame(() => { el.style.width = target + "%"; });
+  });
+}
+</script>
+</body>
+</html>
