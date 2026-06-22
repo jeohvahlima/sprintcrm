@@ -6,20 +6,42 @@
 // Funcionalidade: o iframe envia postMessage({__growos:true, ...}) e este
 // wrapper roteia para módulos React reais (Fluxos, Base, Diagnóstico) sem
 // alterar o visual fixo.
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { FluxoAutomacaoBuilder } from "@/components/fluxos/FluxoAutomacaoBuilder";
 import { BaseConhecimentoIA } from "@/components/ia/BaseConhecimentoIA";
+import { SiteInstitucionalConfig } from "@/components/ia/SiteInstitucionalConfig";
 import { supabase } from "@/integrations/supabase/client";
 
-type OverlayModule = "fluxos" | "base" | null;
+type OverlayModule = "fluxos" | "base" | "site" | null;
 
 export default function IA() {
   const navigate = useNavigate();
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const [overlay, setOverlay] = useState<OverlayModule>(null);
+  const [companyId, setCompanyId] = useState<string>("");
+
+  const loadSiteInfo = useCallback(async () => {
+    const { data: s } = await supabase.auth.getSession();
+    const uid = s.session?.user.id;
+    if (!uid) return null;
+    const { data: prof } = await supabase.from("profiles").select("company_id").eq("id", uid).single();
+    const cid = (prof as any)?.company_id;
+    if (!cid) return null;
+    setCompanyId(cid);
+    const { data: comp } = await supabase.from("companies").select("name, capture_page_config").eq("id", cid).single();
+    const cfg: any = (comp as any)?.capture_page_config || {};
+    const slug = cfg.slug || ((comp as any)?.name || "").toString().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || cid;
+    const url = `${window.location.origin}/site/${slug}`;
+    return { url, published: !!cfg.site_published };
+  }, []);
+
+  const sendSiteInfo = useCallback(async () => {
+    const info = await loadSiteInfo();
+    if (info) iframeRef.current?.contentWindow?.postMessage({ type: "growos-site-info", ...info }, "*");
+  }, [loadSiteInfo]);
 
   useEffect(() => {
     const sendSession = async () => {
@@ -36,9 +58,10 @@ export default function IA() {
         refreshToken: session.refresh_token,
         userId: session.user.id,
       }, "*");
+      sendSiteInfo();
     };
 
-    const handler = (event: MessageEvent) => {
+    const handler = async (event: MessageEvent) => {
       const data = event.data;
       if (data?.type === "growos-ready") sendSession();
       if (!data || typeof data !== "object" || !data.__growos) return;
@@ -47,9 +70,19 @@ export default function IA() {
           if (typeof data.path === "string") navigate(data.path);
           break;
         case "overlay":
-          if (data.module === "fluxos" || data.module === "base") {
+          if (data.module === "fluxos" || data.module === "base" || data.module === "site") {
             setOverlay(data.module);
           }
+          break;
+        case "openSite": {
+          const info = await loadSiteInfo();
+          if (!info) { toast.error("Não foi possível localizar o site"); return; }
+          const url = info.published ? info.url : info.url + "?preview=1";
+          window.open(url, "_blank", "noopener");
+          break;
+        }
+        case "requestSiteInfo":
+          sendSiteInfo();
           break;
         case "toast":
           toast(data.message || "Ação registrada");
@@ -64,7 +97,9 @@ export default function IA() {
       window.removeEventListener("message", handler);
       iframe?.removeEventListener("load", sendSession);
     };
-  }, [navigate]);
+  }, [navigate, sendSiteInfo, loadSiteInfo]);
+
+  const overlayTitle = overlay === "fluxos" ? "Fluxos de Automação" : overlay === "base" ? "Base de Conhecimento" : "Site Institucional";
 
   return (
     <div className="w-full h-[calc(100vh-7rem)] min-h-[640px] overflow-hidden rounded-lg border border-border bg-background">
@@ -75,15 +110,14 @@ export default function IA() {
         className="w-full h-full border-0 block"
       />
 
-      <Dialog open={overlay !== null} onOpenChange={(o) => !o && setOverlay(null)}>
+      <Dialog open={overlay !== null} onOpenChange={(o) => { if (!o) { setOverlay(null); sendSiteInfo(); } }}>
         <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>
-              {overlay === "fluxos" ? "Fluxos de Automação" : "Base de Conhecimento"}
-            </DialogTitle>
+            <DialogTitle>{overlayTitle}</DialogTitle>
           </DialogHeader>
           {overlay === "fluxos" && <FluxoAutomacaoBuilder />}
           {overlay === "base" && <BaseConhecimentoIA />}
+          {overlay === "site" && companyId && <SiteInstitucionalConfig companyId={companyId} />}
         </DialogContent>
       </Dialog>
     </div>
