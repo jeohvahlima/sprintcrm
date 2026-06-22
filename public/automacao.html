@@ -1369,8 +1369,7 @@ document.addEventListener('click', function (e) {
     { match: ['ver métricas', 'ver metricas'], action: { type: 'navigate', path: '/analytics' } },
     { match: ['nova campanha', 'confirmar e agendar disparo'], action: { type: 'toast', message: 'Campanhas em breve' } },
     { match: ['conectar n8n', 'conectar', 'novo webhook'], action: { type: 'toast', message: 'Integrações em breve' } },
-    { match: ['ver site ao vivo', 'ver ao vivo', 'abrir'], action: { type: 'toast', message: 'Pré-visualização em breve' } },
-    { match: ['gerar com ia', 'salvar', 'preview'], action: { type: 'toast', message: 'Ação em breve' } },
+    { match: ['salvar'], action: { type: 'toast', message: 'Ação em breve' } },
     { match: ['enviar arquivo', 'adicionar produto', 'adicionar faq', 'adicionar exemplo', 'adicionar primeiro exemplo'], action: { type: 'overlay', module: 'base' } },
   ];
   for (const m of map) {
