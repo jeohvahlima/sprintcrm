@@ -197,8 +197,8 @@ export function SiteInstitucionalConfig({ companyId }: Props) {
             </div>
           </div>
           <div className="flex gap-2">
-            <Button variant="outline" size="sm" onClick={() => window.open(publicUrl, '_blank')} disabled={!cfg.site_published}>
-              <ExternalLink className="w-4 h-4 mr-1" /> Ver site
+            <Button variant="outline" size="sm" onClick={() => window.open(cfg.site_published ? publicUrl : `${publicUrl}?preview=1`, '_blank')}>
+              <ExternalLink className="w-4 h-4 mr-1" /> {cfg.site_published ? 'Ver site' : 'Preview'}
             </Button>
             <Button variant={cfg.site_published ? 'destructive' : 'default'} size="sm" onClick={togglePublish}>
               {cfg.site_published ? 'Despublicar' : 'Publicar agora'}
