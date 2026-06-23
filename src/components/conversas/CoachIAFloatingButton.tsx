@@ -128,7 +128,13 @@ export function CoachIAFloatingButton({
 
   const canRun = !!companyId && (!!leadId || !!contactPhone);
 
-  // 🔄 Auto-análise em background ao trocar de lead (para disparar notificações)
+  // Refs para debounce de re-análise e detecção de novas mensagens
+  const debounceRef = useRef<number | null>(null);
+  const lastRiskRef = useRef<number | null>(null);
+  const autoReplyingRef = useRef(false);
+  const lastAutoReplyAtRef = useRef<number>(0);
+
+  // 🔄 Auto-análise em background ao trocar de lead
   useEffect(() => {
     if (!canRun) return;
     const t = setTimeout(() => { if (!loading && !report) runCoach(); }, 1500);
@@ -136,21 +142,98 @@ export function CoachIAFloatingButton({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [leadId, contactPhone, companyId]);
 
-  const runCoach = async () => {
-    if (!canRun) { toast.error("Sem dados suficientes para analisar"); return; }
-    setLoading(true); setError(null);
+  const runCoach = async (silent = false) => {
+    if (!canRun) { if (!silent) toast.error("Sem dados suficientes para analisar"); return; }
+    if (!silent) setLoading(true);
+    setError(null);
     try {
       const { data, error: err } = await supabase.functions.invoke("lead-coach-analyze", {
-        body: { lead_id: leadId, phone: contactPhone, company_id: companyId, contact_name: contactName, lead_name: leadName },
+        body: {
+          lead_id: leadId, phone: contactPhone, company_id: companyId,
+          contact_name: contactName, lead_name: leadName,
+          knowledge_base: kb,
+        },
       });
       if (err) throw err;
       if ((data as any)?.error) throw new Error((data as any).error);
-      setReport((data as any)?.report || null);
+      const nr = (data as any)?.report as CoachReport | null;
+      // Alerta de delta de risco (>15pts)
+      if (nr && lastRiskRef.current != null) {
+        const delta = (nr.risco_de_perda ?? 0) - lastRiskRef.current;
+        if (delta >= 15) {
+          toast.warning(`⚠️ Risco do lead subiu ${delta} pts (${nr.risco_de_perda}%)`, {
+            description: nr.objecoes_detectadas?.[0] || "Verifique as ações recomendadas.",
+            duration: 9000,
+          });
+        }
+      }
+      if (nr) lastRiskRef.current = nr.risco_de_perda ?? 0;
+      setReport(nr);
       setVariantIdx(0);
+
+      // Auto-detecta "não fechou" e abre aba + toast
+      if (nr?.sinal_nao_fechou || (nr?.acoes_nao_fechou && nr.acoes_nao_fechou.length > 0)) {
+        toast.warning("⚠️ IA detectou risco de perda — ações recomendadas prontas", {
+          duration: 8000,
+          action: { label: "Ver ações", onClick: () => { setOpen(true); setTab("naofechou"); } },
+        });
+      }
     } catch (e: any) {
       setError(e?.message || "Erro ao analisar");
-    } finally { setLoading(false); }
+    } finally { if (!silent) setLoading(false); }
   };
+
+  // 🔁 Re-análise com debounce sempre que detectar nova mensagem (realtime)
+  useEffect(() => {
+    if (!canRun || !contactPhone) return;
+    const phoneNorm = String(contactPhone).replace(/\D/g, "");
+    if (!phoneNorm) return;
+    const ch = (supabase as any)
+      .channel(`coach-conv-${phoneNorm}`)
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "conversas",
+        filter: `telefone_formatado=eq.${phoneNorm}` }, (payload: any) => {
+        const msg = payload?.new;
+        if (!msg) return;
+        // Debounce 2s
+        if (debounceRef.current) window.clearTimeout(debounceRef.current);
+        debounceRef.current = window.setTimeout(() => { runCoach(true); }, 2000);
+
+        // Modo autônomo: gerar e enviar resposta quando o CONTATO mandar mensagem
+        const isFromContact = !(msg.fromme === true || msg.fromme === "true");
+        if (autoMode && isFromContact && !autoReplyingRef.current && onSendSuggested) {
+          const now = Date.now();
+          if (now - lastAutoReplyAtRef.current < 8000) return; // cooldown
+          lastAutoReplyAtRef.current = now;
+          autoReplyingRef.current = true;
+          (async () => {
+            try {
+              const { data, error: err } = await supabase.functions.invoke("coach-auto-reply", {
+                body: {
+                  company_id: companyId, phone: contactPhone, lead_id: leadId,
+                  lead_name: leadName, contact_name: contactName,
+                  knowledge_base: kb,
+                  etapa_funil: report?.estagio_percebido,
+                },
+              });
+              if (err) throw err;
+              const reply = (data as any)?.reply as string | undefined;
+              if (reply) {
+                onSendSuggested(reply);
+                toast("🤖 IA respondeu automaticamente", { description: reply.slice(0, 120), duration: 6000 });
+              }
+            } catch (e: any) {
+              toast.error("Modo Autônomo: " + (e?.message || "falha"));
+            } finally {
+              autoReplyingRef.current = false;
+            }
+          })();
+        }
+      })
+      .subscribe();
+    return () => { try { (supabase as any).removeChannel(ch); } catch {} };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [canRun, contactPhone, companyId, autoMode, kb, leadId, leadName, contactName, report?.estagio_percebido]);
+
 
   const scriptVariants = (): string[] => {
     if (!report) return [];
