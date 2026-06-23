@@ -1,7 +1,6 @@
 // Lead Coach: agente sênior em SDR / abordagem / comunicação / negociação / vendas.
-// Lê o histórico de conversas (WhatsApp/Instagram/etc.) com o contato, o lead vinculado e
-// devolve uma análise consultiva: o que foi feito bem, onde se perdeu oportunidade,
-// script sugerido, próximos passos e mensagem-modelo para retomada.
+// Análise consultiva enriquecida: scores, cadência estruturada, ações "não fechou",
+// detecção de risco e injeção da base de conhecimento da empresa.
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
@@ -11,14 +10,16 @@ const corsHeaders = {
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
-const SYSTEM = `Você é um Coach Sênior em SDR, abordagem comercial, comunicação consultiva, negociação e fechamento de vendas. Está atuando como um agente oculto dentro do CRM: o vendedor NÃO vê suas mensagens em tempo real — você analisa o histórico já trocado com o contato e devolve uma análise crítica, prática e em pt-BR.
+const SYSTEM = `Você é um Coach Sênior em SDR, abordagem comercial, comunicação consultiva, negociação e fechamento de vendas. Você atua como agente oculto dentro do CRM GrowOS: o vendedor NÃO vê suas mensagens em tempo real — você analisa o histórico já trocado com o contato e devolve uma análise crítica, prática e em pt-BR.
+
 Regras:
 - Seja direto, sem floreio, sem "como uma IA".
 - Aponte ganhos e perdas reais com base APENAS no que está no histórico.
-- Se a conversa for curta ou só do contato, diga o que faltou fazer.
 - Quando sugerir scripts/mensagens, escreva como se fossem para o vendedor copiar e enviar agora (tom humano, sem clichês como "tudo bem com você?").
 - Nunca invente fatos do contato. Se algo é suposição, sinalize.
-- Use português do Brasil, tom profissional e empático.`;
+- Use a BASE DE CONHECIMENTO fornecida (se houver) para embasar scripts, cases e respostas a objeções.
+- Use português do Brasil, tom profissional e empático.
+- Scores (0-100) devem refletir o histórico real, não otimismo padrão.`;
 
 const TOOL = {
   type: "function",
@@ -31,24 +32,62 @@ const TOOL = {
         resumo_interacao: { type: "string", description: "1-3 linhas sobre o que aconteceu na conversa até aqui." },
         estagio_percebido: {
           type: "string",
-          enum: ["primeiro_contato", "qualificacao", "apresentacao", "proposta", "negociacao", "objecao", "fechamento", "pos_venda", "frio_perdido"],
-          description: "Onde o lead está hoje, segundo a conversa.",
+          enum: ["primeiro_contato","qualificacao","apresentacao","proposta","negociacao","objecao","fechamento","pos_venda","frio_perdido"],
         },
-        temperatura: { type: "string", enum: ["quente", "morno", "frio"] },
-        pontos_fortes: { type: "array", items: { type: "string" }, description: "O que o vendedor fez bem." },
-        erros_e_perdas: { type: "array", items: { type: "string" }, description: "Onde se perdeu oportunidade ou se quebrou rapport." },
-        abordagem_ideal: { type: "string", description: "Qual abordagem/script deveria ter sido usado, dado o perfil do contato." },
-        comunicacao_mais_assertiva: { type: "string", description: "Como reescrever a comunicação para ser mais assertiva." },
+        temperatura: { type: "string", enum: ["quente","morno","frio"] },
+        pontos_fortes: { type: "array", items: { type: "string" } },
+        erros_e_perdas: { type: "array", items: { type: "string" } },
+        abordagem_ideal: { type: "string" },
+        comunicacao_mais_assertiva: { type: "string" },
         objecoes_detectadas: { type: "array", items: { type: "string" } },
         proximos_passos: { type: "array", items: { type: "string" }, minItems: 1, maxItems: 6 },
-        mensagem_sugerida: { type: "string", description: "Mensagem pronta para o vendedor enviar agora pelo mesmo canal." },
-        risco_de_perda: { type: "integer", minimum: 0, maximum: 100, description: "Risco de o lead esfriar/ser perdido se nada for feito." },
+        mensagem_sugerida: { type: "string" },
+        scripts_alternativos: {
+          type: "array", items: { type: "string" },
+          description: "1-3 variações curtas alternativas para a mensagem sugerida.",
+        },
+        risco_de_perda: { type: "integer", minimum: 0, maximum: 100 },
+        score_engajamento: { type: "integer", minimum: 0, maximum: 100, description: "Quanto o contato se engaja (responde, faz perguntas, demonstra interesse)." },
+        score_intencao: { type: "integer", minimum: 0, maximum: 100, description: "Intenção real de compra detectada na conversa." },
+        score_fit: { type: "integer", minimum: 0, maximum: 100, description: "Fit do contato com o produto/serviço." },
+        sinal_nao_fechou: { type: "boolean", description: "True se já há sinais claros de que o lead pode não fechar (objeções fortes, silêncio, adiamento)." },
+        acoes_nao_fechou: {
+          type: "array",
+          description: "Ações recomendadas quando o lead esfria. Use IDs canônicos quando possível: tag-followup, tag-objecao, mover-funil, follow-d1, follow-d3, ligacao-socio, script-reativacao.",
+          items: {
+            type: "object",
+            properties: {
+              id: { type: "string" },
+              titulo: { type: "string" },
+              descricao: { type: "string" },
+              prioridade: { type: "string", enum: ["alta","media","baixa"] },
+            },
+            required: ["id","titulo"],
+          },
+        },
+        cadencia: {
+          type: "array",
+          description: "Cadência de follow-up (até 6 passos) com prazos relativos.",
+          items: {
+            type: "object",
+            properties: {
+              passo: { type: "integer" },
+              titulo: { type: "string" },
+              descricao: { type: "string" },
+              quando: { type: "string", description: "Ex.: 'Agora', 'D+1 09:00', 'D+3', 'D+7'." },
+              tipo: { type: "string", enum: ["mensagem","followup","ligacao","reativacao"] },
+            },
+            required: ["passo","titulo","descricao","quando"],
+          },
+        },
+        kb_usadas: { type: "array", items: { type: "string" }, description: "IDs dos itens da base de conhecimento que embasaram a resposta." },
       },
       required: [
-        "resumo_interacao", "estagio_percebido", "temperatura",
-        "pontos_fortes", "erros_e_perdas",
-        "abordagem_ideal", "comunicacao_mais_assertiva",
-        "proximos_passos", "mensagem_sugerida", "risco_de_perda",
+        "resumo_interacao","estagio_percebido","temperatura",
+        "pontos_fortes","erros_e_perdas",
+        "abordagem_ideal","comunicacao_mais_assertiva",
+        "proximos_passos","mensagem_sugerida","risco_de_perda",
+        "score_engajamento","score_intencao","score_fit",
       ],
     },
   },
@@ -62,7 +101,7 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
   try {
     const body = await req.json().catch(() => ({}));
-    const { lead_id, phone, company_id, lead_name, contact_name } = body || {};
+    const { lead_id, phone, company_id, lead_name, contact_name, knowledge_base } = body || {};
     if (!company_id || (!lead_id && !phone)) {
       return new Response(JSON.stringify({ error: "company_id e (lead_id ou phone) são obrigatórios" }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -73,18 +112,12 @@ Deno.serve(async (req) => {
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Buscar telefone via lead se não veio
     let telefone = (phone || "").replace(/[^0-9]/g, "");
     if (!telefone && lead_id) {
-      const { data: lead } = await supabase
-        .from("leads")
-        .select("phone, telefone")
-        .eq("id", lead_id)
-        .maybeSingle();
+      const { data: lead } = await supabase.from("leads").select("phone, telefone").eq("id", lead_id).maybeSingle();
       telefone = String((lead as any)?.phone || (lead as any)?.telefone || "").replace(/[^0-9]/g, "");
     }
 
-    // Buscar histórico de mensagens (até 120 últimas)
     let mensagens: any[] = [];
     if (telefone) {
       const { data } = await supabase
@@ -97,14 +130,11 @@ Deno.serve(async (req) => {
       mensagens = (data || []).reverse();
     }
 
-    // Dados extras do lead (contexto)
     let leadCtx = "";
     if (lead_id) {
-      const { data: lead } = await supabase
-        .from("leads")
+      const { data: lead } = await supabase.from("leads")
         .select("name, value, status, source, notes, created_at")
-        .eq("id", lead_id)
-        .maybeSingle();
+        .eq("id", lead_id).maybeSingle();
       if (lead) {
         leadCtx = [
           `Nome: ${(lead as any).name || lead_name || "—"}`,
@@ -126,15 +156,30 @@ Deno.serve(async (req) => {
         }).join("\n")
       : "(Nenhuma mensagem registrada com este contato ainda.)";
 
+    // Base de conhecimento (vem do front)
+    let kbBlock = "";
+    if (Array.isArray(knowledge_base) && knowledge_base.length > 0) {
+      kbBlock = knowledge_base.slice(0, 30).map((k: any, i: number) => {
+        const id = k.id || `kb_${i}`;
+        const title = (k.title || "").toString().slice(0, 120);
+        const excerpt = (k.excerpt || k.content || "").toString().slice(0, 600);
+        const tags = Array.isArray(k.tags) ? k.tags.join(", ") : "";
+        return `- [${id}] ${title}${tags ? ` (tags: ${tags})` : ""}\n  ${excerpt}`;
+      }).join("\n");
+    }
+
     const userContent = [
       "=== CONTEXTO DO LEAD ===",
       leadCtx || `Nome: ${lead_name || contact_name || "—"}`,
       "",
+      kbBlock ? "=== BASE DE CONHECIMENTO DA EMPRESA ===" : "",
+      kbBlock,
+      kbBlock ? "" : "",
       `=== HISTÓRICO DE CONVERSA (${mensagens.length} mensagens) ===`,
       transcricao,
       "",
-      "Gere a análise consultiva estruturada agora. Foque em: o que foi feito, onde perdeu oportunidade, qual script/abordagem deveria ter sido usada com este perfil, comunicação mais assertiva, próximos passos e uma mensagem pronta para retomar AGORA.",
-    ].join("\n");
+      "Gere a análise consultiva estruturada agora. Calcule scores (engajamento, intenção, fit, risco) com base no histórico. Monte a cadência ideal de follow-up e, se houver risco de não fechar, preencha acoes_nao_fechou. Cite em kb_usadas os IDs da base que embasaram seus scripts.",
+    ].filter((l) => l !== "" || true).join("\n");
 
     const apiKey = Deno.env.get("LOVABLE_API_KEY");
     if (!apiKey) {

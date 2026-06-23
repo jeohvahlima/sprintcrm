@@ -1,8 +1,9 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Sparkles, X, Loader2, Copy, Check, RefreshCw, Send, Shuffle,
   Zap, Tag as TagIcon, BarChart3, CalendarCheck, Phone, BookOpen,
   Search, Plus, ChevronRight, Play, CheckCircle2, Clock, UserPlus, ListChecks,
+  TrendingUp, AlertTriangle,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -27,7 +28,15 @@ interface CoachReport {
   objecoes_detectadas?: string[];
   proximos_passos: string[];
   mensagem_sugerida: string;
+  scripts_alternativos?: string[];
   risco_de_perda: number;
+  score_engajamento?: number;
+  score_intencao?: number;
+  score_fit?: number;
+  sinal_nao_fechou?: boolean;
+  acoes_nao_fechou?: { id: string; titulo: string; descricao?: string; prioridade?: string }[];
+  cadencia?: { passo: number; titulo: string; descricao: string; quando: string; tipo?: string }[];
+  kb_usadas?: string[];
 }
 
 type TabKey = "now" | "cadencia" | "naofechou" | "acoes" | "analise" | "kb";
@@ -119,7 +128,13 @@ export function CoachIAFloatingButton({
 
   const canRun = !!companyId && (!!leadId || !!contactPhone);
 
-  // 🔄 Auto-análise em background ao trocar de lead (para disparar notificações)
+  // Refs para debounce de re-análise e detecção de novas mensagens
+  const debounceRef = useRef<number | null>(null);
+  const lastRiskRef = useRef<number | null>(null);
+  const autoReplyingRef = useRef(false);
+  const lastAutoReplyAtRef = useRef<number>(0);
+
+  // 🔄 Auto-análise em background ao trocar de lead
   useEffect(() => {
     if (!canRun) return;
     const t = setTimeout(() => { if (!loading && !report) runCoach(); }, 1500);
@@ -127,25 +142,107 @@ export function CoachIAFloatingButton({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [leadId, contactPhone, companyId]);
 
-  const runCoach = async () => {
-    if (!canRun) { toast.error("Sem dados suficientes para analisar"); return; }
-    setLoading(true); setError(null);
+  const runCoach = async (silent = false) => {
+    if (!canRun) { if (!silent) toast.error("Sem dados suficientes para analisar"); return; }
+    if (!silent) setLoading(true);
+    setError(null);
     try {
       const { data, error: err } = await supabase.functions.invoke("lead-coach-analyze", {
-        body: { lead_id: leadId, phone: contactPhone, company_id: companyId, contact_name: contactName, lead_name: leadName },
+        body: {
+          lead_id: leadId, phone: contactPhone, company_id: companyId,
+          contact_name: contactName, lead_name: leadName,
+          knowledge_base: kb,
+        },
       });
       if (err) throw err;
       if ((data as any)?.error) throw new Error((data as any).error);
-      setReport((data as any)?.report || null);
+      const nr = (data as any)?.report as CoachReport | null;
+      // Alerta de delta de risco (>15pts)
+      if (nr && lastRiskRef.current != null) {
+        const delta = (nr.risco_de_perda ?? 0) - lastRiskRef.current;
+        if (delta >= 15) {
+          toast.warning(`⚠️ Risco do lead subiu ${delta} pts (${nr.risco_de_perda}%)`, {
+            description: nr.objecoes_detectadas?.[0] || "Verifique as ações recomendadas.",
+            duration: 9000,
+          });
+        }
+      }
+      if (nr) lastRiskRef.current = nr.risco_de_perda ?? 0;
+      setReport(nr);
       setVariantIdx(0);
+
+      // Auto-detecta "não fechou" e abre aba + toast
+      if (nr?.sinal_nao_fechou || (nr?.acoes_nao_fechou && nr.acoes_nao_fechou.length > 0)) {
+        toast.warning("⚠️ IA detectou risco de perda — ações recomendadas prontas", {
+          duration: 8000,
+          action: { label: "Ver ações", onClick: () => { setOpen(true); setTab("naofechou"); } },
+        });
+      }
     } catch (e: any) {
       setError(e?.message || "Erro ao analisar");
-    } finally { setLoading(false); }
+    } finally { if (!silent) setLoading(false); }
   };
+
+  // 🔁 Re-análise com debounce sempre que detectar nova mensagem (realtime)
+  useEffect(() => {
+    if (!canRun || !contactPhone) return;
+    const phoneNorm = String(contactPhone).replace(/\D/g, "");
+    if (!phoneNorm) return;
+    const ch = (supabase as any)
+      .channel(`coach-conv-${phoneNorm}`)
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "conversas",
+        filter: `telefone_formatado=eq.${phoneNorm}` }, (payload: any) => {
+        const msg = payload?.new;
+        if (!msg) return;
+        // Debounce 2s
+        if (debounceRef.current) window.clearTimeout(debounceRef.current);
+        debounceRef.current = window.setTimeout(() => { runCoach(true); }, 2000);
+
+        // Modo autônomo: gerar e enviar resposta quando o CONTATO mandar mensagem
+        const isFromContact = !(msg.fromme === true || msg.fromme === "true");
+        if (autoMode && isFromContact && !autoReplyingRef.current && onSendSuggested) {
+          const now = Date.now();
+          if (now - lastAutoReplyAtRef.current < 8000) return; // cooldown
+          lastAutoReplyAtRef.current = now;
+          autoReplyingRef.current = true;
+          (async () => {
+            try {
+              const { data, error: err } = await supabase.functions.invoke("coach-auto-reply", {
+                body: {
+                  company_id: companyId, phone: contactPhone, lead_id: leadId,
+                  lead_name: leadName, contact_name: contactName,
+                  knowledge_base: kb,
+                  etapa_funil: report?.estagio_percebido,
+                },
+              });
+              if (err) throw err;
+              const reply = (data as any)?.reply as string | undefined;
+              if (reply) {
+                onSendSuggested(reply);
+                toast("🤖 IA respondeu automaticamente", { description: reply.slice(0, 120), duration: 6000 });
+              }
+            } catch (e: any) {
+              toast.error("Modo Autônomo: " + (e?.message || "falha"));
+            } finally {
+              autoReplyingRef.current = false;
+            }
+          })();
+        }
+      })
+      .subscribe();
+    return () => { try { (supabase as any).removeChannel(ch); } catch {} };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [canRun, contactPhone, companyId, autoMode, kb, leadId, leadName, contactName, report?.estagio_percebido]);
+
 
   const scriptVariants = (): string[] => {
     if (!report) return [];
-    const arr = [report.mensagem_sugerida, report.comunicacao_mais_assertiva, report.abordagem_ideal].filter(Boolean) as string[];
+    const arr = [
+      report.mensagem_sugerida,
+      ...(report.scripts_alternativos || []),
+      report.comunicacao_mais_assertiva,
+      report.abordagem_ideal,
+    ].filter(Boolean) as string[];
     return arr.length ? arr : [report.mensagem_sugerida];
   };
   const currentScript = scriptVariants()[variantIdx] || report?.mensagem_sugerida || "";
@@ -223,17 +320,41 @@ export function CoachIAFloatingButton({
     risco >= 30 ? "bg-amber-500/15 text-amber-400 border-amber-500/40" :
                   "bg-emerald-500/15 text-emerald-400 border-emerald-500/40";
 
-  // Cadência derivada dos próximos passos do report
+  // Cadência: usa a estruturada do report quando disponível, senão deriva dos próximos passos
   const cadenceSteps = useMemo(() => {
+    if (report?.cadencia && report.cadencia.length > 0) {
+      return report.cadencia.slice(0, 6).map((c, i) => ({
+        step: c.passo ?? i + 1,
+        title: (c.titulo || `Passo ${i + 1}`).slice(0, 60),
+        desc: c.descricao || "",
+        when: c.quando || (i === 0 ? "Agora" : `D+${i}`),
+        tipo: c.tipo || "mensagem",
+      }));
+    }
     const base = report?.proximos_passos?.slice(0, 6) || [];
-    const labels = ["Hoje","D+1","D+2","D+3","D+5","D+7"];
+    const labels = ["Hoje", "D+1", "D+2", "D+3", "D+5", "D+7"];
     return base.map((desc, i) => ({
       step: i + 1,
-      title: desc.split(/[—:.\-]/)[0].slice(0, 60) || `Passo ${i+1}`,
+      title: desc.split(/[—:.\-]/)[0].slice(0, 60) || `Passo ${i + 1}`,
       desc,
-      when: i === 0 ? "Agora" : labels[i] || `D+${i+1}`,
+      when: i === 0 ? "Agora" : labels[i] || `D+${i + 1}`,
+      tipo: "mensagem" as const,
     }));
   }, [report]);
+
+  // KB usadas pela IA (matching por id retornado ou substring no script)
+  const kbUsedIds = useMemo(() => {
+    const ids = new Set<string>(report?.kb_usadas || []);
+    if (report?.mensagem_sugerida) {
+      const lower = report.mensagem_sugerida.toLowerCase();
+      kb.forEach((k) => {
+        const head = k.excerpt.slice(0, 25).toLowerCase();
+        if (head && lower.includes(head)) ids.add(k.id);
+      });
+    }
+    return ids;
+  }, [report, kb]);
+
 
   // ─────────── DADOS DO CRM (funis, etapas, tags, usuários) ───────────
   const [funis, setFunis] = useState<FunilRow[]>([]);
@@ -441,7 +562,11 @@ export function CoachIAFloatingButton({
               </div>
               <div>
                 <div className="text-sm font-semibold text-foreground">Coach IA</div>
-                <div className="text-[10px] text-muted-foreground">Análise em tempo real</div>
+                <div className="text-[10px] text-muted-foreground flex items-center gap-1">
+                  {autoReplyingRef.current ? <><Loader2 className="h-2.5 w-2.5 animate-spin" /> IA respondendo...</> :
+                    loading ? <><Loader2 className="h-2.5 w-2.5 animate-spin" /> Reanalisando...</> :
+                    <><TrendingUp className="h-2.5 w-2.5" /> Análise em tempo real</>}
+                </div>
               </div>
             </div>
             <div className="flex items-center gap-2">
@@ -556,13 +681,13 @@ export function CoachIAFloatingButton({
                 )}
                 <Divider />
                 <button
-                  onClick={() => toast.success("Executando todas as ações...", { description: "Coach IA está atualizando o CRM, criando follow-ups e avançando o funil." })}
+                  onClick={() => { setTab("naofechou"); execAllNaoFechou(); }}
                   className="w-full py-2 rounded-lg bg-gradient-to-r from-violet-600 to-indigo-600 hover:opacity-90 text-xs font-semibold text-white flex items-center justify-center gap-2"
                 >
-                  <Zap className="h-3.5 w-3.5" /> Executar todas as ações automaticamente
+                  <Zap className="h-3.5 w-3.5" /> Executar todas as ações no CRM
                 </button>
                 <button
-                  onClick={runCoach}
+                  onClick={() => runCoach()}
                   className="w-full py-2 rounded-lg border border-border bg-muted/40 hover:bg-muted text-xs font-medium text-foreground flex items-center justify-center gap-2"
                 >
                   <RefreshCw className="h-3.5 w-3.5" /> Reanalisar agora
@@ -615,7 +740,20 @@ export function CoachIAFloatingButton({
                   })}
                 </div>
                 <button
-                  onClick={() => toast.success("Cadência ativada!", { description: "A IA vai executar cada passo no prazo certo." })}
+                  onClick={async () => {
+                    // Cria tarefas reais no CRM para cada passo da cadência (sessão atual)
+                    if (!cadenceSteps.length) { toast.error("Sem cadência para ativar"); return; }
+                    toast("Ativando cadência...", { description: `${cadenceSteps.length} passos serão agendados como tarefas no CRM.` });
+                    let day = 0;
+                    for (const s of cadenceSteps) {
+                      const m = /D\+(\d+)/i.exec(s.when || "");
+                      const days = m ? Number(m[1]) : (s.step - 1);
+                      day = Math.max(day, days);
+                      // eslint-disable-next-line no-await-in-loop
+                      await createTask(`[Cadência ${s.step}] ${s.title}`, day, selOwnerId || undefined);
+                    }
+                    toast.success("Cadência ativada — tarefas criadas no CRM");
+                  }}
                   className="w-full py-2 rounded-lg bg-gradient-to-r from-violet-600 to-indigo-600 hover:opacity-90 text-xs font-semibold text-white flex items-center justify-center gap-2"
                 >
                   <Zap className="h-3.5 w-3.5" /> Ativar cadência automática
@@ -677,6 +815,15 @@ export function CoachIAFloatingButton({
               <>
                 <Section label="Resumo">
                   <p className="text-xs text-muted-foreground leading-relaxed">{report.resumo_interacao}</p>
+                </Section>
+                <Divider />
+                <Section label="Score do lead (IA)">
+                  <div className="space-y-2">
+                    <ScoreRow label="Engajamento" value={report.score_engajamento ?? 0} color="#a78bfa" />
+                    <ScoreRow label="Intenção de compra" value={report.score_intencao ?? 0} color="#34d399" />
+                    <ScoreRow label="Risco de fuga" value={risco} color="#ef4444" />
+                    <ScoreRow label="Fit de produto" value={report.score_fit ?? 0} color="#60a5fa" />
+                  </div>
                 </Section>
                 <Divider />
                 <Section label="Risco de perda">
@@ -861,6 +1008,9 @@ export function CoachIAFloatingButton({
                     >
                       <div className="text-xs font-semibold text-foreground mb-0.5 flex items-center gap-1.5">
                         <BookOpen className="h-3 w-3 text-violet-400" /> {k.title}
+                        {kbUsedIds.has(k.id) && (
+                          <span className="ml-auto text-[9px] px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">Usado pela IA ✓</span>
+                        )}
                       </div>
                       <div className="text-[11px] text-muted-foreground leading-relaxed">{k.excerpt}</div>
                       {k.tags.length > 0 && (
@@ -886,7 +1036,7 @@ export function CoachIAFloatingButton({
             {!loading && !report && (tab === "now" || tab === "cadencia" || tab === "analise") && (
               <div className="text-[11px] text-muted-foreground text-center py-6">
                 Sem análise carregada.
-                <button onClick={runCoach} className="block mx-auto mt-2 px-3 py-1.5 rounded-md bg-violet-600 hover:bg-violet-500 text-white text-[11px] font-medium">
+                <button onClick={() => runCoach()} className="block mx-auto mt-2 px-3 py-1.5 rounded-md bg-violet-600 hover:bg-violet-500 text-white text-[11px] font-medium">
                   Analisar conversa
                 </button>
               </div>
@@ -921,5 +1071,19 @@ function ScriptBtn({ onClick, icon, children, primary }: { onClick: () => void; 
     >
       {icon}{children}
     </button>
+  );
+}
+function ScoreRow({ label, value, color }: { label: string; value: number; color: string }) {
+  const v = Math.max(0, Math.min(100, Math.round(value || 0)));
+  return (
+    <div>
+      <div className="flex justify-between mb-1">
+        <span className="text-[11px] text-muted-foreground">{label}</span>
+        <span className="text-[11px] font-bold text-foreground">{v}</span>
+      </div>
+      <div className="h-1.5 rounded-full bg-muted overflow-hidden">
+        <div className="h-full rounded-full transition-all" style={{ width: `${v}%`, background: color }} />
+      </div>
+    </div>
   );
 }
