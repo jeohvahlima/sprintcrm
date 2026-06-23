@@ -58,8 +58,10 @@ export function SiteInstitucionalConfig({ companyId }: Props) {
   const [generatingAI, setGeneratingAI] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
 
-  const slug = cfg.slug || (companyName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')) || companyId;
+  const generatedSlug = companyName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+  const slug = cfg.slug?.trim() || companyId;
   const publicUrl = `https://app.growos.online/site/${slug}`;
+  const cfgWithSlug = () => ({ ...cfg, slug: cfg.slug?.trim() || generatedSlug || companyId });
 
 
   useEffect(() => { load(); }, [companyId]);
@@ -77,15 +79,16 @@ export function SiteInstitucionalConfig({ companyId }: Props) {
 
   const save = async () => {
     setSaving(true);
-    const { error } = await (supabase as any).rpc('update_capture_page_config', { _company_id: companyId, _config: cfg });
+    const configToSave = cfgWithSlug();
+    const { error } = await (supabase as any).rpc('update_capture_page_config', { _company_id: companyId, _config: configToSave });
     if (error) toast.error(error.message);
-    else toast.success('Site salvo!');
+    else { setCfg(configToSave); toast.success('Site salvo!'); }
     setSaving(false);
   };
 
   const togglePublish = async () => {
     const newState = !cfg.site_published;
-    const newCfg = { ...cfg, site_published: newState };
+    const newCfg = { ...cfgWithSlug(), site_published: newState };
     setCfg(newCfg);
     const { error } = await (supabase as any).rpc('update_capture_page_config', { _company_id: companyId, _config: newCfg });
     if (error) { toast.error(error.message); setCfg(cfg); }
