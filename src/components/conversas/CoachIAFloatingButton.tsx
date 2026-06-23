@@ -654,7 +654,7 @@ export function CoachIAFloatingButton({
                   <Zap className="h-3.5 w-3.5" /> Executar todas as ações automaticamente
                 </button>
                 <button
-                  onClick={runCoach}
+                  onClick={() => runCoach()}
                   className="w-full py-2 rounded-lg border border-border bg-muted/40 hover:bg-muted text-xs font-medium text-foreground flex items-center justify-center gap-2"
                 >
                   <RefreshCw className="h-3.5 w-3.5" /> Reanalisar agora
@@ -978,7 +978,7 @@ export function CoachIAFloatingButton({
             {!loading && !report && (tab === "now" || tab === "cadencia" || tab === "analise") && (
               <div className="text-[11px] text-muted-foreground text-center py-6">
                 Sem análise carregada.
-                <button onClick={runCoach} className="block mx-auto mt-2 px-3 py-1.5 rounded-md bg-violet-600 hover:bg-violet-500 text-white text-[11px] font-medium">
+                <button onClick={() => runCoach()} className="block mx-auto mt-2 px-3 py-1.5 rounded-md bg-violet-600 hover:bg-violet-500 text-white text-[11px] font-medium">
                   Analisar conversa
                 </button>
               </div>
