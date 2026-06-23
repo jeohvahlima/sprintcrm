@@ -1102,8 +1102,8 @@ Att, Rafael</textarea>
       <div class="panel-sub">Crie e publique um site profissional completo com blog, equipe, planos e IA integrada</div>
     </div>
     <div class="panel-hdr-actions">
-      <button class="btn btn-ghost"><i class="ti ti-external-link"></i>Ver site ao vivo</button>
-      <button class="btn btn-primary"><i class="ti ti-sparkles"></i>Gerar com IA</button>
+      <button class="btn btn-ghost" onclick="growosOpenSite()"><i class="ti ti-external-link"></i>Ver site ao vivo</button>
+      <button class="btn btn-primary" onclick="growosEditSite()"><i class="ti ti-sparkles"></i>Editar / Gerar com IA</button>
     </div>
   </div>
   <div class="panel-body">
@@ -1163,12 +1163,12 @@ Att, Rafael</textarea>
 
         <div style="background:var(--green-d);border:1px solid rgba(16,217,122,.2);border-radius:var(--r);padding:12px 14px;display:flex;align-items:center;gap:10px">
           <i class="ti ti-world-check" style="color:var(--green);font-size:18px"></i>
-          <div style="flex:1">
-            <div style="font-size:11.5px;font-weight:600;color:var(--green)">Site publicado e online</div>
-            <div style="font-family:var(--mono);font-size:11px;color:var(--text2);margin-top:2px">seusite.com.br/site/consultoria</div>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:11.5px;font-weight:600;color:var(--green)" id="site-status-label">Site institucional</div>
+            <div style="font-family:var(--mono);font-size:11px;color:var(--text2);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" id="site-url-label">Carregando URL…</div>
           </div>
-          <button class="btn btn-ghost" style="font-size:11px;padding:5px 10px"><i class="ti ti-copy"></i>Copiar link</button>
-          <button class="btn btn-ghost" style="font-size:11px;padding:5px 10px"><i class="ti ti-external-link"></i>Abrir</button>
+          <button class="btn btn-ghost" style="font-size:11px;padding:5px 10px" onclick="growosCopyLink()"><i class="ti ti-copy"></i>Copiar link</button>
+          <button class="btn btn-ghost" style="font-size:11px;padding:5px 10px" onclick="growosOpenSite()"><i class="ti ti-external-link"></i>Abrir</button>
         </div>
       </div>
 
@@ -1281,15 +1281,37 @@ window.parent.postMessage({ type: 'growos-ready' }, '*');
 
 window.addEventListener('message', function (ev) {
   const data = ev.data;
-  if (!data || data.type !== 'growos-init') return;
-  growosSessionPayload = data;
-  const iframe = document.getElementById('waIframe');
-  if (iframe && iframe.contentWindow) iframe.contentWindow.postMessage(data, '*');
+  if (!data) return;
+  if (data.type === 'growos-init') {
+    growosSessionPayload = data;
+    const iframe = document.getElementById('waIframe');
+    if (iframe && iframe.contentWindow) iframe.contentWindow.postMessage(data, '*');
+  }
+  if (data.type === 'growos-site-info') {
+    const lbl = document.getElementById('site-url-label');
+    const st = document.getElementById('site-status-label');
+    if (lbl) lbl.textContent = data.url || 'URL indisponível';
+    if (st) st.textContent = data.published ? 'Site publicado e online' : 'Site em rascunho (modo preview)';
+    window.__growosSiteUrl = data.url;
+    window.__growosSitePublished = !!data.published;
+  }
 });
 
 document.getElementById('waIframe')?.addEventListener('load', function () {
   if (growosSessionPayload && this.contentWindow) this.contentWindow.postMessage(growosSessionPayload, '*');
 });
+
+function growosOpenSite() {
+  const url = window.__growosSiteUrl;
+  if (!url) { post({ type: 'toast', message: 'Carregando URL do site…' }); post({ type: 'requestSiteInfo' }); return; }
+  const open = window.__growosSitePublished ? url : url + (url.includes('?') ? '&' : '?') + 'preview=1';
+  window.open(open, '_blank', 'noopener');
+}
+function growosCopyLink() {
+  const url = window.__growosSiteUrl || window.location.origin;
+  try { navigator.clipboard.writeText(url); post({ type: 'toast', message: 'Link copiado!' }); } catch { post({ type: 'toast', message: 'Não foi possível copiar' }); }
+}
+function growosEditSite() { post({ type: 'overlay', module: 'site' }); }
 
 function switchTab(id, el) {
   document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
@@ -1347,10 +1369,8 @@ document.addEventListener('click', function (e) {
     { match: ['ver métricas', 'ver metricas'], action: { type: 'navigate', path: '/analytics' } },
     { match: ['nova campanha', 'confirmar e agendar disparo'], action: { type: 'toast', message: 'Campanhas em breve' } },
     { match: ['conectar n8n', 'conectar', 'novo webhook'], action: { type: 'toast', message: 'Integrações em breve' } },
-    { match: ['ver site ao vivo', 'ver ao vivo', 'abrir'], action: { type: 'toast', message: 'Pré-visualização em breve' } },
-    { match: ['gerar com ia', 'salvar', 'preview'], action: { type: 'toast', message: 'Ação em breve' } },
+    { match: ['salvar'], action: { type: 'toast', message: 'Ação em breve' } },
     { match: ['enviar arquivo', 'adicionar produto', 'adicionar faq', 'adicionar exemplo', 'adicionar primeiro exemplo'], action: { type: 'overlay', module: 'base' } },
-    { match: ['copiar link'], action: { type: 'copy-link' } },
   ];
   for (const m of map) {
     if (m.match.some(t => label === t || label.endsWith(t) || label.includes(t))) {

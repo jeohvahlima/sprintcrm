@@ -553,16 +553,16 @@ export function CoachIAFloatingButton({
       )}
 
       {open && (
-        <div className="absolute bottom-6 right-6 z-50 w-[380px] max-h-[85vh] bg-card border border-border rounded-xl shadow-2xl flex flex-col overflow-hidden animate-in slide-in-from-bottom-4">
+        <div className="absolute bottom-6 right-6 z-50 w-[min(560px,calc(100vw-48px))] h-[min(760px,calc(100vh-48px))] max-h-[calc(100vh-48px)] bg-card border border-border rounded-xl shadow-2xl flex flex-col overflow-hidden animate-in slide-in-from-bottom-4">
           {/* Header */}
-          <div className="flex items-center justify-between px-4 py-3 border-b border-border">
-            <div className="flex items-center gap-2.5">
-              <div className="h-9 w-9 rounded-lg bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center">
-                <Sparkles className="h-4 w-4 text-white" />
+          <div className="flex items-center justify-between px-5 py-4 border-b border-border">
+            <div className="flex items-center gap-3">
+              <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center">
+                <Sparkles className="h-5 w-5 text-white" />
               </div>
               <div>
-                <div className="text-sm font-semibold text-foreground">Coach IA</div>
-                <div className="text-[10px] text-muted-foreground flex items-center gap-1">
+                <div className="text-base font-semibold text-foreground">Coach IA</div>
+                <div className="text-xs text-muted-foreground flex items-center gap-1">
                   {autoReplyingRef.current ? <><Loader2 className="h-2.5 w-2.5 animate-spin" /> IA respondendo...</> :
                     loading ? <><Loader2 className="h-2.5 w-2.5 animate-spin" /> Reanalisando...</> :
                     <><TrendingUp className="h-2.5 w-2.5" /> Análise em tempo real</>}
@@ -582,7 +582,7 @@ export function CoachIAFloatingButton({
           </div>
 
           {/* Modo Autônomo */}
-          <div className="flex items-center gap-3 px-4 py-2.5 border-b border-border bg-muted/20">
+          <div className="flex items-center gap-3 px-5 py-3 border-b border-border bg-muted/20">
             <div className="flex-1">
               <div className="text-[11px] font-semibold text-foreground">Modo Autônomo</div>
               <div className="text-[10px] text-muted-foreground">IA conduz a conversa sozinha</div>
@@ -605,7 +605,7 @@ export function CoachIAFloatingButton({
           )}
 
           {/* Tabs */}
-          <div className="flex border-b border-border px-2 overflow-x-auto">
+          <div className="flex border-b border-border px-3 overflow-x-auto">
             {([
               { k: "now", label: "Agora" },
               { k: "cadencia", label: "Cadência" },
@@ -617,7 +617,7 @@ export function CoachIAFloatingButton({
               <button
                 key={t.k}
                 onClick={() => setTab(t.k)}
-                className={`px-2.5 py-2 text-[11px] font-medium border-b-2 -mb-px whitespace-nowrap transition-colors ${
+                className={`px-3 py-2.5 text-xs font-medium border-b-2 -mb-px whitespace-nowrap transition-colors ${
                   tab === t.k ? "border-violet-500 text-violet-400" : "border-transparent text-muted-foreground hover:text-foreground"
                 }`}
               >
@@ -627,7 +627,7 @@ export function CoachIAFloatingButton({
           </div>
 
           {/* Body */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-3 text-sm">
+          <div className="flex-1 overflow-y-auto p-5 space-y-4 text-sm">
             {loading && (
               <div className="flex flex-col items-center justify-center py-10 gap-3 text-muted-foreground">
                 <Loader2 className="h-6 w-6 animate-spin text-primary" />

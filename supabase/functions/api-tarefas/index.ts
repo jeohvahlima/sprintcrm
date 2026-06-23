@@ -159,23 +159,22 @@ serve(async (req) => {
           );
         }
 
-        // ✅ NOVO: Criar coluna "Ganho" automaticamente (coluna fixa)
-        console.log('📦 [API-TAREFAS] Criando coluna fixa "Ganho" para o novo board...');
-        const { error: ganhoError } = await supabase
+        // Criar coluna final padrao para todo quadro novo.
+        console.log('[API-TAREFAS] Criando coluna fixa "Concluida" para o novo board...');
+        const { error: doneColumnError } = await supabase
           .from("task_columns")
           .insert([{
-            nome: '✅ Ganho',
+            nome: 'Concluida',
             board_id: board.id,
             posicao: 9999, // Alta posição para ficar no final
             cor: '#22c55e', // Verde sucesso
             company_id: companyId,
-            is_fixed: true // Marcador para coluna fixa
           }]);
         
-        if (ganhoError) {
-          console.warn('⚠️ [API-TAREFAS] Erro ao criar coluna Ganho (não bloqueante):', ganhoError);
+        if (doneColumnError) {
+          console.warn('[API-TAREFAS] Erro ao criar coluna Concluida (nao bloqueante):', doneColumnError);
         } else {
-          console.log('✅ [API-TAREFAS] Coluna "Ganho" criada com sucesso');
+          console.log('[API-TAREFAS] Coluna "Concluida" criada com sucesso');
         }
 
         return new Response(JSON.stringify({ success: true, data: board }), {
