@@ -34,8 +34,10 @@ export default function IA() {
     const { data: comp } = await supabase.from("companies").select("name, capture_page_config").eq("id", cid).single();
     const cfg: any = (comp as any)?.capture_page_config || {};
     const slug = cfg.slug || ((comp as any)?.name || "").toString().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || cid;
-    const url = `${window.location.origin}/site/${slug}`;
+    const baseUrl = "https://app.growos.online";
+    const url = `${baseUrl}/site/${slug}`;
     return { url, published: !!cfg.site_published };
+
   }, []);
 
   const sendSiteInfo = useCallback(async () => {
