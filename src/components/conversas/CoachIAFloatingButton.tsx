@@ -813,6 +813,15 @@ export function CoachIAFloatingButton({
                   <p className="text-xs text-muted-foreground leading-relaxed">{report.resumo_interacao}</p>
                 </Section>
                 <Divider />
+                <Section label="Score do lead (IA)">
+                  <div className="space-y-2">
+                    <ScoreRow label="Engajamento" value={report.score_engajamento ?? 0} color="#a78bfa" />
+                    <ScoreRow label="Intenção de compra" value={report.score_intencao ?? 0} color="#34d399" />
+                    <ScoreRow label="Risco de fuga" value={risco} color="#ef4444" />
+                    <ScoreRow label="Fit de produto" value={report.score_fit ?? 0} color="#60a5fa" />
+                  </div>
+                </Section>
+                <Divider />
                 <Section label="Risco de perda">
                   <div className="flex justify-between mb-1">
                     <span className="text-[11px] text-muted-foreground">Probabilidade de perder sem ação</span>
