@@ -1221,6 +1221,10 @@ window.addEventListener('message', function (ev) {
     if (st) st.textContent = data.published ? 'Site publicado e online' : 'Site em rascunho (modo preview)';
     window.__growosSiteUrl = data.url;
     window.__growosSitePublished = !!data.published;
+    if (data.url && window.__growosPendingOpenSite) {
+      window.__growosPendingOpenSite = false;
+      growosOpenSite();
+    }
   }
 });
 
@@ -1230,7 +1234,7 @@ document.getElementById('waIframe')?.addEventListener('load', function () {
 
 function growosOpenSite() {
   const url = window.__growosSiteUrl;
-  if (!url) { post({ type: 'toast', message: 'Carregando URL do site…' }); post({ type: 'requestSiteInfo' }); return; }
+  if (!url) { window.__growosPendingOpenSite = true; post({ type: 'toast', message: 'Carregando URL do site…' }); post({ type: 'requestSiteInfo' }); return; }
   const open = window.__growosSitePublished ? url : url + (url.includes('?') ? '&' : '?') + 'preview=1';
   window.open(open, '_blank', 'noopener');
 }

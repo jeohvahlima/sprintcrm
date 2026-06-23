@@ -27,13 +27,22 @@ export default function IA() {
     const { data: s } = await supabase.auth.getSession();
     const uid = s.session?.user.id;
     if (!uid) return null;
-    const { data: prof } = await supabase.from("profiles").select("company_id").eq("id", uid).single();
-    const cid = (prof as any)?.company_id;
+    const { data: roles } = await supabase
+      .from("user_roles")
+      .select("company_id")
+      .eq("user_id", uid)
+      .not("company_id", "is", null)
+      .limit(1);
+    let cid = (roles as any)?.[0]?.company_id;
+    if (!cid) {
+      const { data: prof } = await supabase.from("profiles").select("company_id").eq("id", uid).maybeSingle();
+      cid = (prof as any)?.company_id;
+    }
     if (!cid) return null;
     setCompanyId(cid);
     const { data: comp } = await supabase.from("companies").select("name, capture_page_config").eq("id", cid).single();
     const cfg: any = (comp as any)?.capture_page_config || {};
-    const slug = cfg.slug || ((comp as any)?.name || "").toString().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || cid;
+    const slug = typeof cfg.slug === "string" && cfg.slug.trim() ? cfg.slug.trim() : cid;
     const baseUrl = "https://app.growos.online";
     const url = `${baseUrl}/site/${slug}`;
     return { url, published: !!cfg.site_published };
@@ -73,6 +82,7 @@ export default function IA() {
           break;
         case "overlay":
           if (data.module === "fluxos" || data.module === "base" || data.module === "site") {
+            if (data.module === "site") await loadSiteInfo();
             setOverlay(data.module);
           }
           break;
