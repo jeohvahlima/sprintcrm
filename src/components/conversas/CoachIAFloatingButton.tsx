@@ -736,7 +736,20 @@ export function CoachIAFloatingButton({
                   })}
                 </div>
                 <button
-                  onClick={() => toast.success("Cadência ativada!", { description: "A IA vai executar cada passo no prazo certo." })}
+                  onClick={async () => {
+                    // Cria tarefas reais no CRM para cada passo da cadência (sessão atual)
+                    if (!cadenceSteps.length) { toast.error("Sem cadência para ativar"); return; }
+                    toast("Ativando cadência...", { description: `${cadenceSteps.length} passos serão agendados como tarefas no CRM.` });
+                    let day = 0;
+                    for (const s of cadenceSteps) {
+                      const m = /D\+(\d+)/i.exec(s.when || "");
+                      const days = m ? Number(m[1]) : (s.step - 1);
+                      day = Math.max(day, days);
+                      // eslint-disable-next-line no-await-in-loop
+                      await createTask(`[Cadência ${s.step}] ${s.title}`, day, selOwnerId || undefined);
+                    }
+                    toast.success("Cadência ativada — tarefas criadas no CRM");
+                  }}
                   className="w-full py-2 rounded-lg bg-gradient-to-r from-violet-600 to-indigo-600 hover:opacity-90 text-xs font-semibold text-white flex items-center justify-center gap-2"
                 >
                   <Zap className="h-3.5 w-3.5" /> Ativar cadência automática
