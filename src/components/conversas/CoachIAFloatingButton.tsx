@@ -237,7 +237,12 @@ export function CoachIAFloatingButton({
 
   const scriptVariants = (): string[] => {
     if (!report) return [];
-    const arr = [report.mensagem_sugerida, report.comunicacao_mais_assertiva, report.abordagem_ideal].filter(Boolean) as string[];
+    const arr = [
+      report.mensagem_sugerida,
+      ...(report.scripts_alternativos || []),
+      report.comunicacao_mais_assertiva,
+      report.abordagem_ideal,
+    ].filter(Boolean) as string[];
     return arr.length ? arr : [report.mensagem_sugerida];
   };
   const currentScript = scriptVariants()[variantIdx] || report?.mensagem_sugerida || "";
