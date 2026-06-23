@@ -59,7 +59,8 @@ export function SiteInstitucionalConfig({ companyId }: Props) {
   const [copied, setCopied] = useState(false);
 
   const slug = cfg.slug || (companyName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')) || companyId;
-  const publicUrl = `${window.location.origin}/site/${slug}`;
+  const publicUrl = `https://app.growos.online/site/${slug}`;
+
 
   useEffect(() => { load(); }, [companyId]);
 
