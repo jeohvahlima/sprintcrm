@@ -82,6 +82,7 @@ export default function IA() {
           break;
         case "overlay":
           if (data.module === "fluxos" || data.module === "base" || data.module === "site") {
+            if (data.module === "site") await loadSiteInfo();
             setOverlay(data.module);
           }
           break;
