@@ -1066,3 +1066,17 @@ function ScriptBtn({ onClick, icon, children, primary }: { onClick: () => void; 
     </button>
   );
 }
+function ScoreRow({ label, value, color }: { label: string; value: number; color: string }) {
+  const v = Math.max(0, Math.min(100, Math.round(value || 0)));
+  return (
+    <div>
+      <div className="flex justify-between mb-1">
+        <span className="text-[11px] text-muted-foreground">{label}</span>
+        <span className="text-[11px] font-bold text-foreground">{v}</span>
+      </div>
+      <div className="h-1.5 rounded-full bg-muted overflow-hidden">
+        <div className="h-full rounded-full transition-all" style={{ width: `${v}%`, background: color }} />
+      </div>
+    </div>
+  );
+}
