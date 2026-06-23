@@ -34,8 +34,8 @@ interface CoachReport {
   score_intencao?: number;
   score_fit?: number;
   sinal_nao_fechou?: boolean;
-  acoes_nao_fechou?: { id: string; titulo: string; descricao?: string; prioridade?: string }[];
-  cadencia?: { passo: number; titulo: string; descricao: string; quando: string; tipo?: string }[];
+  acoes_nao_fechou?: { id?: string; tipo?: string; titulo: string; descricao?: string; valor?: string; prioridade?: string }[];
+  cadencia?: { passo: number; titulo: string; descricao: string; quando: string; tipo?: string; status?: "done" | "active" | "pending" }[];
   kb_usadas?: string[];
 }
 
@@ -65,6 +65,7 @@ export function CoachIAFloatingButton({
   const [open, setOpen] = useState(false);
   const [tab, setTab] = useState<TabKey>("now");
   const [loading, setLoading] = useState(false);
+  const [reanalyzing, setReanalyzing] = useState(false);
   const [report, setReport] = useState<CoachReport | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
@@ -87,6 +88,10 @@ export function CoachIAFloatingButton({
 
   // Cadência: ações concluídas (visual)
   const [cadenceDone, setCadenceDone] = useState<number>(1); // passo 1 já feito
+  const [cadenceActive, setCadenceActive] = useState(false);
+  const [cadenceBanner, setCadenceBanner] = useState("");
+  const cadenceTimersRef = useRef<number[]>([]);
+  const autoNaoFechouRef = useRef("");
   // "Não Fechou": ações executadas
   const [doneActions, setDoneActions] = useState<string[]>([]);
 
@@ -144,7 +149,8 @@ export function CoachIAFloatingButton({
 
   const runCoach = async (silent = false) => {
     if (!canRun) { if (!silent) toast.error("Sem dados suficientes para analisar"); return; }
-    if (!silent) setLoading(true);
+    if (silent) setReanalyzing(true);
+    else setLoading(true);
     setError(null);
     try {
       const { data, error: err } = await supabase.functions.invoke("lead-coach-analyze", {
@@ -173,6 +179,8 @@ export function CoachIAFloatingButton({
 
       // Auto-detecta "não fechou" e abre aba + toast
       if (nr?.sinal_nao_fechou || (nr?.acoes_nao_fechou && nr.acoes_nao_fechou.length > 0)) {
+        setOpen(true);
+        setTab("naofechou");
         toast.warning("⚠️ IA detectou risco de perda — ações recomendadas prontas", {
           duration: 8000,
           action: { label: "Ver ações", onClick: () => { setOpen(true); setTab("naofechou"); } },
@@ -180,7 +188,10 @@ export function CoachIAFloatingButton({
       }
     } catch (e: any) {
       setError(e?.message || "Erro ao analisar");
-    } finally { if (!silent) setLoading(false); }
+    } finally {
+      if (silent) setReanalyzing(false);
+      else setLoading(false);
+    }
   };
 
   // 🔁 Re-análise com debounce sempre que detectar nova mensagem (realtime)
@@ -564,7 +575,7 @@ export function CoachIAFloatingButton({
                 <div className="text-base font-semibold text-foreground">Coach IA</div>
                 <div className="text-xs text-muted-foreground flex items-center gap-1">
                   {autoReplyingRef.current ? <><Loader2 className="h-2.5 w-2.5 animate-spin" /> IA respondendo...</> :
-                    loading ? <><Loader2 className="h-2.5 w-2.5 animate-spin" /> Reanalisando...</> :
+                    (loading || reanalyzing) ? <><Loader2 className="h-2.5 w-2.5 animate-spin" /> Reanalisando...</> :
                     <><TrendingUp className="h-2.5 w-2.5" /> Análise em tempo real</>}
                 </div>
               </div>

@@ -9558,6 +9558,7 @@ function Conversas() {
               leadId={leadVinculado?.id}
               contactName={selectedConv.contactName}
               leadName={leadVinculado?.name}
+              onSendSuggested={(text) => handleSendMessage(text)}
             />
             
 
