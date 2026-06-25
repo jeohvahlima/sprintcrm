@@ -39,7 +39,33 @@ interface CoachReport {
   kb_usadas?: string[];
 }
 
-type TabKey = "now" | "cadencia" | "naofechou" | "acoes" | "analise" | "kb";
+type TabKey = "now" | "cadencia" | "naofechou" | "acoes" | "analise" | "kb" | "memoria" | "emocao" | "aprende" | "prospeccao" | "posmortem";
+
+interface LeadMemory {
+  objecao_principal: string;
+  decisor_real: string;
+  maior_interesse: string;
+  tom_preferido: string;
+  melhor_horario: string;
+  historico: { data: string; canal: string; resumo: string; resultado: "fechou" | "nao_fechou" | "andamento" }[];
+}
+interface TomVoz {
+  empresa: string;
+  setor: string;
+  estilo: "formal" | "informal" | "tecnico" | "consultivo";
+  expressoes: string;
+  evitar: string;
+  emojis: "nenhum" | "moderado" | "frequente";
+}
+interface EmocaoState {
+  dominante: "animado" | "hesitante" | "com_pressa" | "comparando";
+  scores: { animado: number; hesitante: number; com_pressa: number; comparando: number };
+  sinais: string[];
+  script_adaptado: string;
+}
+interface LearningItem { id: string; tipo: "sucesso" | "erro" | "novo"; titulo: string; descricao: string; conversas: number }
+interface SimilarLead { id: string; nome: string; cargo: string; empresa: string; canal: string; dias_parado: number; tags: string[]; score: number }
+interface PostMortemCase { id: string; nome: string; data: string; motivo: string; erros: string[]; positivos: string[]; recomendacao: string }
 interface FunilRow { id: string; nome: string }
 interface EtapaRow { id: string; nome: string; funil_id: string; posicao: number | null }
 interface UserRow { id: string; full_name: string | null; email: string | null }
