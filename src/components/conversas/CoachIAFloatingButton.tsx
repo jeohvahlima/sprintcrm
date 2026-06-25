@@ -39,7 +39,33 @@ interface CoachReport {
   kb_usadas?: string[];
 }
 
-type TabKey = "now" | "cadencia" | "naofechou" | "acoes" | "analise" | "kb";
+type TabKey = "now" | "cadencia" | "naofechou" | "acoes" | "analise" | "kb" | "memoria" | "emocao" | "aprende" | "prospeccao" | "posmortem";
+
+interface LeadMemory {
+  objecao_principal: string;
+  decisor_real: string;
+  maior_interesse: string;
+  tom_preferido: string;
+  melhor_horario: string;
+  historico: { data: string; canal: string; resumo: string; resultado: "fechou" | "nao_fechou" | "andamento" }[];
+}
+interface TomVoz {
+  empresa: string;
+  setor: string;
+  estilo: "formal" | "informal" | "tecnico" | "consultivo";
+  expressoes: string;
+  evitar: string;
+  emojis: "nenhum" | "moderado" | "frequente";
+}
+interface EmocaoState {
+  dominante: "animado" | "hesitante" | "com_pressa" | "comparando";
+  scores: { animado: number; hesitante: number; com_pressa: number; comparando: number };
+  sinais: string[];
+  script_adaptado: string;
+}
+interface LearningItem { id: string; tipo: "sucesso" | "erro" | "novo"; titulo: string; descricao: string; conversas: number }
+interface SimilarLead { id: string; nome: string; cargo: string; empresa: string; canal: string; dias_parado: number; tags: string[]; score: number }
+interface PostMortemCase { id: string; nome: string; data: string; motivo: string; erros: string[]; positivos: string[]; recomendacao: string }
 interface FunilRow { id: string; nome: string }
 interface EtapaRow { id: string; nome: string; funil_id: string; posicao: number | null }
 interface UserRow { id: string; full_name: string | null; email: string | null }
@@ -131,7 +157,122 @@ export function CoachIAFloatingButton({
     );
   }, [kb, kbQuery]);
 
+  // ───────── Memória do lead, Tom de voz, Emoção, Aprendizado, Prospecção, Pós-mortem ─────────
+  const memKey = `coach_mem_${companyId || "g"}_${leadId || contactPhone || "x"}`;
+  const tomKey = `coach_tom_${companyId || "global"}`;
+  const learnKey = `coach_learn_${companyId || "global"}`;
+  const postMortemKey = `coach_postmortem_${companyId || "global"}`;
+
+  const [memory, setMemory] = useState<LeadMemory>({
+    objecao_principal: "", decisor_real: "", maior_interesse: "", tom_preferido: "", melhor_horario: "", historico: [],
+  });
+  const [tom, setTom] = useState<TomVoz>({
+    empresa: "", setor: "", estilo: "consultivo", expressoes: "", evitar: "", emojis: "moderado",
+  });
+  const [whisper, setWhisper] = useState<string>("Coach IA pronto. Ao receber mensagens do lead, as sugestões aparecem aqui.");
+  const [emocao, setEmocao] = useState<EmocaoState>({
+    dominante: "hesitante",
+    scores: { animado: 20, hesitante: 45, com_pressa: 15, comparando: 20 },
+    sinais: [],
+    script_adaptado: "",
+  });
+  const [learnings, setLearnings] = useState<LearningItem[]>([]);
+  const [similarLeads, setSimilarLeads] = useState<SimilarLead[]>([]);
+  const [postMortems, setPostMortems] = useState<PostMortemCase[]>([]);
+
+  useEffect(() => {
+    try {
+      const m = localStorage.getItem(memKey); if (m) setMemory(JSON.parse(m));
+      const t = localStorage.getItem(tomKey); if (t) setTom(JSON.parse(t));
+      const l = localStorage.getItem(learnKey); if (l) setLearnings(JSON.parse(l));
+      const p = localStorage.getItem(postMortemKey); if (p) setPostMortems(JSON.parse(p));
+    } catch {}
+  }, [memKey, tomKey, learnKey, postMortemKey]);
+  const saveMemory = (m: LeadMemory) => { setMemory(m); try { localStorage.setItem(memKey, JSON.stringify(m)); } catch {} };
+  const saveTom = (t: TomVoz) => { setTom(t); try { localStorage.setItem(tomKey, JSON.stringify(t)); } catch {} };
+  const saveLearnings = (l: LearningItem[]) => { setLearnings(l); try { localStorage.setItem(learnKey, JSON.stringify(l)); } catch {} };
+  const savePostMortems = (p: PostMortemCase[]) => { setPostMortems(p); try { localStorage.setItem(postMortemKey, JSON.stringify(p)); } catch {} };
+
+  // Derivar emoção e similares a partir do report sempre que mudar
+  useEffect(() => {
+    if (!report) return;
+    const risco = report.risco_de_perda ?? 0;
+    const objQty = (report.objecoes_detectadas?.length || 0);
+    const eng = report.score_engajamento ?? 0;
+    const animado = Math.max(0, Math.min(100, eng - risco/2));
+    const hesitante = Math.max(0, Math.min(100, risco));
+    const comparando = Math.max(0, Math.min(100, objQty * 22));
+    const comPressa = Math.max(0, Math.min(100, 100 - risco - eng/2));
+    const total = animado + hesitante + comparando + comPressa || 1;
+    const norm = (n: number) => Math.round((n / total) * 100);
+    const scores = {
+      animado: norm(animado), hesitante: norm(hesitante),
+      com_pressa: norm(comPressa), comparando: norm(comparando),
+    };
+    const dom = (Object.entries(scores).sort((a, b) => b[1] - a[1])[0][0]) as EmocaoState["dominante"];
+    setEmocao({
+      dominante: dom,
+      scores,
+      sinais: (report.objecoes_detectadas || []).slice(0, 3),
+      script_adaptado: report.comunicacao_mais_assertiva || report.mensagem_sugerida || "",
+    });
+    // Whisper: usar próximo passo ou script reduzido
+    const tip = report.proximos_passos?.[0] || report.mensagem_sugerida || "";
+    if (tip) setWhisper(tip.length > 140 ? tip.slice(0, 137) + "..." : tip);
+  }, [report]);
+
+  const exportHistory = () => {
+    const lines = [
+      `Histórico do lead — ${leadName || contactName || ""}`,
+      `Telefone: ${contactPhone || ""}`,
+      ``,
+      `Objeção principal: ${memory.objecao_principal}`,
+      `Decisor real: ${memory.decisor_real}`,
+      `Maior interesse: ${memory.maior_interesse}`,
+      `Tom preferido: ${memory.tom_preferido}`,
+      `Melhor horário: ${memory.melhor_horario}`,
+      ``,
+      `Conversas anteriores:`,
+      ...memory.historico.map(h => `- [${h.data}] (${h.canal}) ${h.resumo} → ${h.resultado}`),
+    ].join("\n");
+    const blob = new Blob([lines], { type: "text/plain" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a"); a.href = url;
+    a.download = `historico-${(leadName || "lead").replace(/\s+/g, "_")}.txt`;
+    a.click(); URL.revokeObjectURL(url);
+    toast.success("Histórico exportado");
+  };
+
+  const markFechamento = () => {
+    const titulo = window.prompt("O que funcionou nesta venda? (resuma em 1 frase)"); if (!titulo) return;
+    const item: LearningItem = {
+      id: `l_${Date.now()}`,
+      tipo: "sucesso",
+      titulo,
+      descricao: `Aprendido com ${leadName || contactName || "lead"} em ${new Date().toLocaleDateString("pt-BR")}.`,
+      conversas: 1,
+    };
+    saveLearnings([item, ...learnings]);
+    toast.success("Padrão registrado para aprendizado da IA");
+  };
+
+  const registerPostMortem = () => {
+    const motivo = window.prompt("Motivo da perda (em poucas palavras):"); if (!motivo) return;
+    const erros = (window.prompt("Erros cometidos (separe por ';'):") || "").split(";").map(s=>s.trim()).filter(Boolean);
+    const positivos = (window.prompt("Pontos positivos (separe por ';'):") || "").split(";").map(s=>s.trim()).filter(Boolean);
+    const recomendacao = window.prompt("Recomendação para reativar:") || "";
+    const pm: PostMortemCase = {
+      id: `pm_${Date.now()}`,
+      nome: leadName || contactName || "Lead",
+      data: new Date().toLocaleDateString("pt-BR"),
+      motivo, erros, positivos, recomendacao,
+    };
+    savePostMortems([pm, ...postMortems]);
+    toast.success("Pós-mortem registrado");
+  };
+
   const canRun = !!companyId && (!!leadId || !!contactPhone);
+
 
   // Refs para debounce de re-análise e detecção de novas mensagens
   const debounceRef = useRef<number | null>(null);
@@ -158,6 +299,9 @@ export function CoachIAFloatingButton({
           lead_id: leadId, phone: contactPhone, company_id: companyId,
           contact_name: contactName, lead_name: leadName,
           knowledge_base: kb,
+          lead_memory: memory,
+          tom_de_voz: tom,
+          learnings,
         },
       });
       if (err) throw err;
@@ -615,6 +759,22 @@ export function CoachIAFloatingButton({
             </div>
           )}
 
+          {/* 🤫 Whisper bar — sugestão da IA em tempo real */}
+          <div className="flex items-center gap-2 px-3 py-1.5 border-b border-violet-500/20 bg-gradient-to-r from-indigo-500/10 to-violet-500/10">
+            <span className="h-1.5 w-1.5 rounded-full bg-violet-400 animate-pulse flex-shrink-0" />
+            <span className="text-[11px] flex-shrink-0">🤫</span>
+            <span className="text-[11px] text-violet-300 italic flex-1 truncate" title={whisper}>{whisper}</span>
+            {currentScript && (
+              <button
+                onClick={() => sendScript()}
+                className="text-[10px] px-2 py-0.5 rounded border border-violet-500/40 bg-violet-500/15 text-violet-200 hover:bg-violet-500/25 flex-shrink-0"
+                title="Inserir script no input"
+              >
+                Usar ↑
+              </button>
+            )}
+          </div>
+
           {/* Tabs */}
           <div className="flex border-b border-border px-3 overflow-x-auto">
             {([
@@ -624,6 +784,11 @@ export function CoachIAFloatingButton({
               { k: "acoes", label: "⚡ Ações CRM" },
               { k: "analise", label: "Análise" },
               { k: "kb", label: "📚 Base" },
+              { k: "memoria", label: "🧠 Memória" },
+              { k: "emocao", label: "😐 Emoção" },
+              { k: "aprende", label: "🎓 Aprende" },
+              { k: "prospeccao", label: "🎯 Prospecção" },
+              { k: "posmortem", label: "💀 Pós-mortem" },
             ] as { k: TabKey; label: string }[]).map((t) => (
               <button
                 key={t.k}
@@ -636,6 +801,7 @@ export function CoachIAFloatingButton({
               </button>
             ))}
           </div>
+
 
           {/* Body */}
           <div className="flex-1 overflow-y-auto p-5 space-y-4 text-sm">
@@ -1043,7 +1209,352 @@ export function CoachIAFloatingButton({
               </>
             )}
 
-            {/* Fallback quando sem report nas abas que dependem dele */}
+            {/* 🧠 MEMÓRIA — histórico + tom de voz */}
+            {tab === "memoria" && (
+              <>
+                <Section label="Conversas anteriores">
+                  {memory.historico.length === 0 ? (
+                    <div className="text-[11px] text-muted-foreground">Nenhuma conversa anterior registrada ainda.</div>
+                  ) : (
+                    <div className="space-y-2">
+                      {memory.historico.map((h, i) => (
+                        <div key={i} className="rounded-lg border border-border bg-muted/20 p-3">
+                          <div className="flex items-center gap-2 text-[10px] text-muted-foreground mb-1">
+                            <span>{h.data}</span><span>·</span><span>{h.canal}</span>
+                            <span className={`ml-auto px-1.5 py-0.5 rounded text-[9px] border ${
+                              h.resultado === "fechou" ? "border-emerald-500/30 text-emerald-300 bg-emerald-500/10" :
+                              h.resultado === "nao_fechou" ? "border-red-500/30 text-red-300 bg-red-500/10" :
+                              "border-amber-500/30 text-amber-300 bg-amber-500/10"
+                            }`}>{h.resultado === "fechou" ? "Fechou" : h.resultado === "nao_fechou" ? "Não fechou" : "Em andamento"}</span>
+                          </div>
+                          <div className="text-[11px] text-foreground/90 leading-relaxed">{h.resumo}</div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  <button
+                    onClick={() => {
+                      const data = new Date().toLocaleDateString("pt-BR");
+                      const canal = window.prompt("Canal (WhatsApp / Email / Telefone):", "WhatsApp") || "WhatsApp";
+                      const resumo = window.prompt("Resumo desta conversa:"); if (!resumo) return;
+                      const res = (window.prompt("Resultado (fechou / nao_fechou / andamento):", "andamento") || "andamento") as any;
+                      saveMemory({ ...memory, historico: [{ data, canal, resumo, resultado: res }, ...memory.historico] });
+                    }}
+                    className="w-full mt-2 py-1.5 rounded-md border border-violet-500/30 bg-violet-500/10 hover:bg-violet-500/20 text-[11px] text-violet-300"
+                  >+ Registrar conversa anterior</button>
+                </Section>
+                <Divider />
+                <Section label="O que a IA lembra">
+                  <div className="grid grid-cols-1 gap-1.5">
+                    {([
+                      ["objecao_principal", "Objeção principal"],
+                      ["decisor_real", "Decisor real"],
+                      ["maior_interesse", "Maior interesse"],
+                      ["tom_preferido", "Tom preferido"],
+                      ["melhor_horario", "Melhor horário de resposta"],
+                    ] as [keyof LeadMemory, string][]).map(([k, lbl]) => (
+                      <div key={k as string} className="flex gap-1.5 items-center">
+                        <span className="text-[10px] text-muted-foreground w-32 flex-shrink-0">{lbl}</span>
+                        <input
+                          value={(memory as any)[k] || ""}
+                          onChange={(e) => saveMemory({ ...memory, [k]: e.target.value } as any)}
+                          className="flex-1 h-7 px-2 rounded-md bg-muted border border-border text-[11px] text-foreground"
+                          placeholder="—"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </Section>
+                <Divider />
+                <Section label="Tom de voz da empresa">
+                  <div className="grid grid-cols-2 gap-1.5 mb-1.5">
+                    <input value={tom.empresa} onChange={(e) => saveTom({ ...tom, empresa: e.target.value })} placeholder="Nome da empresa"
+                      className="h-7 px-2 rounded-md bg-muted border border-border text-[11px] text-foreground" />
+                    <input value={tom.setor} onChange={(e) => saveTom({ ...tom, setor: e.target.value })} placeholder="Setor"
+                      className="h-7 px-2 rounded-md bg-muted border border-border text-[11px] text-foreground" />
+                  </div>
+                  <div className="grid grid-cols-2 gap-1.5 mb-1.5">
+                    <select value={tom.estilo} onChange={(e) => saveTom({ ...tom, estilo: e.target.value as any })}
+                      className="h-7 px-2 rounded-md bg-muted border border-border text-[11px] text-foreground">
+                      <option value="formal">Formal</option>
+                      <option value="informal">Informal</option>
+                      <option value="tecnico">Técnico</option>
+                      <option value="consultivo">Consultivo</option>
+                    </select>
+                    <select value={tom.emojis} onChange={(e) => saveTom({ ...tom, emojis: e.target.value as any })}
+                      className="h-7 px-2 rounded-md bg-muted border border-border text-[11px] text-foreground">
+                      <option value="nenhum">Sem emojis</option>
+                      <option value="moderado">Emojis moderados</option>
+                      <option value="frequente">Emojis frequentes</option>
+                    </select>
+                  </div>
+                  <textarea value={tom.expressoes} onChange={(e) => saveTom({ ...tom, expressoes: e.target.value })}
+                    placeholder="Expressões que a empresa usa..."
+                    className="w-full mb-1.5 px-2 py-1.5 rounded-md bg-muted border border-border text-[11px] text-foreground min-h-[50px]" />
+                  <textarea value={tom.evitar} onChange={(e) => saveTom({ ...tom, evitar: e.target.value })}
+                    placeholder="Expressões a evitar..."
+                    className="w-full px-2 py-1.5 rounded-md bg-muted border border-border text-[11px] text-foreground min-h-[50px]" />
+                  <div className="mt-2 text-[10px] text-muted-foreground italic">
+                    Esse tom é injetado em todas as respostas da IA para esta empresa.
+                  </div>
+                </Section>
+                <Divider />
+                <button onClick={exportHistory}
+                  className="w-full py-2 rounded-lg bg-gradient-to-r from-violet-600 to-indigo-600 hover:opacity-90 text-xs font-semibold text-white flex items-center justify-center gap-2">
+                  📄 Exportar histórico do lead
+                </button>
+              </>
+            )}
+
+            {/* 😐 EMOÇÃO */}
+            {tab === "emocao" && (
+              <>
+                <Section label="Estado emocional detectado">
+                  <div className="grid grid-cols-2 gap-1.5">
+                    {([
+                      ["animado", "🎉 Animado", "text-emerald-400"],
+                      ["hesitante", "🤔 Hesitante", "text-amber-400"],
+                      ["com_pressa", "⚡ Com pressa", "text-blue-400"],
+                      ["comparando", "⚖️ Comparando", "text-violet-400"],
+                    ] as [keyof EmocaoState["scores"], string, string][]).map(([k, lbl, cls]) => {
+                      const v = emocao.scores[k];
+                      const isDom = emocao.dominante === k;
+                      return (
+                        <div key={k} className={`rounded-lg border p-3 ${isDom ? "border-violet-500/60 bg-violet-500/10" : "border-border bg-muted/20"}`}>
+                          <div className={`text-xs font-semibold ${cls}`}>{lbl}</div>
+                          <div className="text-xl font-bold text-foreground mt-1">{v}%</div>
+                          <div className="h-1 rounded-full bg-muted mt-1 overflow-hidden">
+                            <div className="h-full bg-violet-500" style={{ width: `${v}%` }} />
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </Section>
+                <Divider />
+                <Section label="Como a IA adapta o tom">
+                  <p className="text-[11px] text-muted-foreground leading-relaxed">
+                    {emocao.dominante === "animado" && "Lead engajado — mantenha o ritmo, traga prova social e proponha próximo passo claro."}
+                    {emocao.dominante === "hesitante" && "Lead em dúvida — reduza a pressão, traga garantias e quebre uma objeção por vez."}
+                    {emocao.dominante === "com_pressa" && "Lead pressionado por tempo — seja objetivo, mande resumo executivo + CTA único."}
+                    {emocao.dominante === "comparando" && "Lead em comparação — diferenciação clara, ROI x concorrência e case relevante."}
+                  </p>
+                </Section>
+                {emocao.sinais.length > 0 && (
+                  <>
+                    <Divider />
+                    <Section label="Sinais detectados">
+                      <div className="space-y-1.5">
+                        {emocao.sinais.map((s, i) => (
+                          <div key={i} className="rounded-md bg-amber-500/5 border-l-2 border-amber-500/40 px-2.5 py-1.5 text-[11px] text-amber-200/90">{s}</div>
+                        ))}
+                      </div>
+                    </Section>
+                  </>
+                )}
+                {emocao.script_adaptado && (
+                  <>
+                    <Divider />
+                    <Section label="Script adaptado para o estado emocional">
+                      <div className="rounded-lg border border-violet-500/30 bg-violet-500/5 p-3 text-xs text-foreground leading-relaxed italic">
+                        "{emocao.script_adaptado}"
+                      </div>
+                      <div className="grid grid-cols-2 gap-1.5 mt-2">
+                        <ScriptBtn onClick={() => copyScript(emocao.script_adaptado)} icon={<Copy className="h-3 w-3" />}>Copiar</ScriptBtn>
+                        <ScriptBtn primary onClick={() => sendScript(emocao.script_adaptado)} icon={<Send className="h-3 w-3" />}>Enviar</ScriptBtn>
+                      </div>
+                    </Section>
+                  </>
+                )}
+              </>
+            )}
+
+            {/* 🎓 APRENDE — fechamentos */}
+            {tab === "aprende" && (
+              <>
+                <Section label="Padrões aprendidos pela IA">
+                  {learnings.length === 0 ? (
+                    <div className="text-[11px] text-muted-foreground">Nenhum padrão registrado ainda. Marque um fechamento abaixo.</div>
+                  ) : (
+                    <div className="space-y-1.5">
+                      {learnings.map(l => {
+                        const cls =
+                          l.tipo === "sucesso" ? "border-emerald-500/30 bg-emerald-500/5" :
+                          l.tipo === "erro" ? "border-red-500/30 bg-red-500/5" :
+                          "border-blue-500/30 bg-blue-500/5";
+                        const lbl =
+                          l.tipo === "sucesso" ? "Sucesso" : l.tipo === "erro" ? "Evitar" : "Novo";
+                        const lblCls =
+                          l.tipo === "sucesso" ? "text-emerald-400" : l.tipo === "erro" ? "text-red-400" : "text-blue-400";
+                        return (
+                          <div key={l.id} className={`rounded-lg border p-3 ${cls}`}>
+                            <div className="flex items-center gap-2 mb-1">
+                              <span className={`text-[10px] font-semibold uppercase ${lblCls}`}>{lbl}</span>
+                              <span className="ml-auto text-[10px] text-muted-foreground">{l.conversas} conv.</span>
+                            </div>
+                            <div className="text-xs font-semibold text-foreground">{l.titulo}</div>
+                            <div className="text-[11px] text-muted-foreground mt-0.5 leading-relaxed">{l.descricao}</div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </Section>
+                <Divider />
+                <Section label="Métricas">
+                  <div className="grid grid-cols-2 gap-1.5">
+                    <div className="rounded-lg border border-emerald-500/30 bg-emerald-500/5 p-3">
+                      <div className="text-[10px] text-muted-foreground">Com Coach IA</div>
+                      <div className="text-xl font-bold text-emerald-400">{Math.min(85, 30 + learnings.length * 5)}%</div>
+                    </div>
+                    <div className="rounded-lg border border-border bg-muted/20 p-3">
+                      <div className="text-[10px] text-muted-foreground">Sem Coach IA</div>
+                      <div className="text-xl font-bold text-muted-foreground">22%</div>
+                    </div>
+                  </div>
+                </Section>
+                <Divider />
+                <button onClick={markFechamento}
+                  className="w-full py-2 rounded-lg bg-gradient-to-r from-emerald-600 to-teal-600 hover:opacity-90 text-xs font-semibold text-white flex items-center justify-center gap-2">
+                  🎓 Marcar fechamento e ensinar IA
+                </button>
+              </>
+            )}
+
+            {/* 🎯 PROSPECÇÃO — leads similares */}
+            {tab === "prospeccao" && (
+              <>
+                <Section label="Leads similares parados no funil">
+                  {similarLeads.length === 0 ? (
+                    <div className="text-[11px] text-muted-foreground">
+                      Clique abaixo para a IA buscar leads similares com base no perfil deste contato.
+                    </div>
+                  ) : (
+                    <div className="space-y-1.5">
+                      {similarLeads.map(l => (
+                        <div key={l.id} className="rounded-lg border border-border bg-muted/20 p-3 flex gap-2 items-start">
+                          <div className="h-8 w-8 rounded-full bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center text-[11px] font-bold text-white flex-shrink-0">
+                            {l.nome.split(" ").map(p=>p[0]).slice(0,2).join("")}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="text-xs font-semibold text-foreground truncate">{l.nome}</div>
+                            <div className="text-[10px] text-muted-foreground truncate">{l.cargo} · {l.empresa}</div>
+                            <div className="flex flex-wrap gap-1 mt-1">
+                              {l.tags.slice(0,3).map((t,i) => <span key={i} className="text-[9px] px-1.5 py-0.5 rounded bg-blue-500/10 text-blue-400 border border-blue-500/20">{t}</span>)}
+                            </div>
+                            <div className="text-[10px] text-amber-300 mt-1">{l.dias_parado}d parado · {l.canal}</div>
+                          </div>
+                          <div className="text-right flex-shrink-0">
+                            <div className="text-xs font-bold text-emerald-400">{l.score}%</div>
+                            <button className="mt-1 text-[10px] px-2 py-0.5 rounded border border-violet-500/40 bg-violet-500/15 text-violet-200 hover:bg-violet-500/25">Reativar</button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </Section>
+                <Divider />
+                <button
+                  onClick={() => {
+                    // Stub: gerar leads de exemplo a partir do contexto atual
+                    const base: SimilarLead[] = [
+                      { id: "s1", nome: leadName || "Lead similar 1", cargo: "Gerente Comercial", empresa: "Empresa A", canal: "WhatsApp", dias_parado: 14, tags: tom.setor ? [tom.setor, "B2B"] : ["B2B","SMB"], score: 92 },
+                      { id: "s2", nome: "Maria Cardoso", cargo: "Diretora", empresa: "Empresa B", canal: "Email", dias_parado: 21, tags: ["Preço","Comparando"], score: 87 },
+                      { id: "s3", nome: "João Pires", cargo: "CEO", empresa: "Empresa C", canal: "WhatsApp", dias_parado: 9, tags: ["Decisor"], score: 81 },
+                    ];
+                    setSimilarLeads(base);
+                    toast.success("Leads similares listados");
+                  }}
+                  className="w-full py-2 rounded-lg bg-gradient-to-r from-violet-600 to-indigo-600 hover:opacity-90 text-xs font-semibold text-white flex items-center justify-center gap-2">
+                  🚀 Reativar todos com script personalizado
+                </button>
+              </>
+            )}
+
+            {/* 💀 PÓS-MORTEM */}
+            {tab === "posmortem" && (
+              <>
+                <Section label="Análises pós-venda perdida">
+                  {postMortems.length === 0 ? (
+                    <div className="text-[11px] text-muted-foreground">Nenhum pós-mortem registrado. Marque uma perda abaixo.</div>
+                  ) : (
+                    <div className="space-y-1.5">
+                      {postMortems.map(pm => (
+                        <div key={pm.id} className="rounded-lg border border-border bg-muted/20 p-3">
+                          <div className="flex items-center gap-2 mb-1">
+                            <div className="text-xs font-semibold text-foreground">{pm.nome}</div>
+                            <span className="ml-auto text-[10px] text-muted-foreground">{pm.data}</span>
+                          </div>
+                          <span className="inline-block px-2 py-0.5 rounded-full text-[10px] border border-red-500/30 bg-red-500/10 text-red-300 mb-2">{pm.motivo}</span>
+                          {pm.erros.length > 0 && (
+                            <div className="mb-1.5">
+                              <div className="text-[10px] font-semibold text-red-400 mb-0.5">Erros</div>
+                              {pm.erros.map((e,i) => <div key={i} className="text-[11px] text-red-300/90">• {e}</div>)}
+                            </div>
+                          )}
+                          {pm.positivos.length > 0 && (
+                            <div className="mb-1.5">
+                              <div className="text-[10px] font-semibold text-emerald-400 mb-0.5">Positivos</div>
+                              {pm.positivos.map((e,i) => <div key={i} className="text-[11px] text-emerald-300/90">• {e}</div>)}
+                            </div>
+                          )}
+                          {pm.recomendacao && (
+                            <div className="rounded-md border border-violet-500/30 bg-violet-500/5 px-2 py-1.5 text-[11px] text-violet-200 italic">
+                              💡 {pm.recomendacao}
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </Section>
+                {postMortems.length > 0 && (
+                  <>
+                    <Divider />
+                    <Section label="Principais causas (30d)">
+                      <div className="space-y-1">
+                        {Object.entries(postMortems.reduce<Record<string, number>>((acc, p) => {
+                          acc[p.motivo] = (acc[p.motivo] || 0) + 1; return acc;
+                        }, {})).sort((a,b)=>b[1]-a[1]).slice(0,5).map(([m, c]) => {
+                          const pct = Math.round((c / postMortems.length) * 100);
+                          return (
+                            <div key={m}>
+                              <div className="flex justify-between text-[11px]">
+                                <span className="text-foreground">{m}</span>
+                                <span className="text-muted-foreground">{pct}%</span>
+                              </div>
+                              <div className="h-1 rounded-full bg-muted overflow-hidden">
+                                <div className="h-full bg-red-500" style={{ width: `${pct}%` }} />
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </Section>
+                  </>
+                )}
+                <Divider />
+                <div className="grid grid-cols-2 gap-1.5">
+                  <button onClick={registerPostMortem}
+                    className="py-2 rounded-lg bg-gradient-to-r from-red-600 to-rose-600 hover:opacity-90 text-xs font-semibold text-white flex items-center justify-center gap-2">
+                    💀 Marcar perda
+                  </button>
+                  <button
+                    onClick={() => {
+                      const txt = postMortems.map(pm => `[${pm.data}] ${pm.nome}\nMotivo: ${pm.motivo}\nErros: ${pm.erros.join("; ")}\nPositivos: ${pm.positivos.join("; ")}\nRecomendação: ${pm.recomendacao}\n`).join("\n---\n");
+                      const blob = new Blob([txt || "Sem registros"], { type: "text/plain" });
+                      const a = document.createElement("a");
+                      a.href = URL.createObjectURL(blob);
+                      a.download = `posmortem-${Date.now()}.txt`; a.click();
+                      toast.success("Relatório gerado");
+                    }}
+                    className="py-2 rounded-lg border border-border bg-muted/40 hover:bg-muted text-xs font-medium text-foreground flex items-center justify-center gap-2">
+                    📄 Gerar relatório
+                  </button>
+                </div>
+              </>
+            )}
+
             {!loading && !report && (tab === "now" || tab === "cadencia" || tab === "analise") && (
               <div className="text-[11px] text-muted-foreground text-center py-6">
                 Sem análise carregada.
