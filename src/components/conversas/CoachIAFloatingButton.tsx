@@ -3,10 +3,13 @@ import {
   Sparkles, X, Loader2, Copy, Check, RefreshCw, Send, Shuffle,
   Zap, Tag as TagIcon, BarChart3, CalendarCheck, Phone, BookOpen,
   Search, Plus, ChevronRight, Play, CheckCircle2, Clock, UserPlus, ListChecks,
-  TrendingUp, AlertTriangle,
+  TrendingUp, AlertTriangle, Upload, Globe, Trash2, FileText, File, Image,
+  FileAudio, FileVideo, FileType, Eye, Save,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { useTagsManager } from "@/hooks/useTagsManager";
+import { AgendaModal } from "@/components/agenda/AgendaModal";
 
 interface CoachIAFloatingButtonProps {
   contactPhone?: string;
@@ -69,8 +72,20 @@ interface PostMortemCase { id: string; nome: string; data: string; motivo: strin
 interface FunilRow { id: string; nome: string }
 interface EtapaRow { id: string; nome: string; funil_id: string; posicao: number | null }
 interface UserRow { id: string; full_name: string | null; email: string | null }
+interface TaskBoardRow { id: string; nome: string }
+interface TaskColumnRow { id: string; nome: string; board_id: string }
 
 interface KBItem { id: string; title: string; excerpt: string; tags: string[] }
+type KBFileTipo = "texto" | "pdf" | "imagem" | "audio" | "video";
+interface KBFile {
+  id: string;
+  nome: string;
+  tipo: KBFileTipo;
+  url: string;
+  tamanho?: number;
+  status: "processando" | "pronto" | "erro";
+  conteudoExtraido?: string;
+}
 
 const tempTag: Record<string, { label: string; cls: string; icon: string }> = {
   quente: { label: "Lead quente", cls: "bg-red-500/15 text-red-400 border-red-500/30", icon: "🔥" },
@@ -88,6 +103,7 @@ const DEFAULT_KB: KBItem[] = [
 export function CoachIAFloatingButton({
   contactPhone, companyId, leadId, contactName, leadName, onSendSuggested,
 }: CoachIAFloatingButtonProps) {
+  const { allTags, refreshTags } = useTagsManager();
   const [open, setOpen] = useState(false);
   const [tab, setTab] = useState<TabKey>("now");
   const [loading, setLoading] = useState(false);
@@ -121,32 +137,301 @@ export function CoachIAFloatingButton({
   // "Não Fechou": ações executadas
   const [doneActions, setDoneActions] = useState<string[]>([]);
 
-  // Base de Conhecimento (localStorage por company)
+  // Base de Conhecimento (empresa — persistido no banco + localStorage)
   const kbKey = `coach_kb_${companyId || "global"}`;
   const [kb, setKb] = useState<KBItem[]>(DEFAULT_KB);
+  const [kbFiles, setKbFiles] = useState<KBFile[]>([]);
+  const [siteUrl, setSiteUrl] = useState("");
+  const [informacoesExtras, setInformacoesExtras] = useState("");
   const [kbQuery, setKbQuery] = useState("");
-  useEffect(() => {
-    try {
-      const raw = localStorage.getItem(kbKey);
-      if (raw) setKb(JSON.parse(raw));
-    } catch {}
-  }, [kbKey]);
-  const saveKb = (next: KBItem[]) => {
-    setKb(next);
-    try { localStorage.setItem(kbKey, JSON.stringify(next)); } catch {}
+  const [kbSaving, setKbSaving] = useState(false);
+  const [kbLoading, setKbLoading] = useState(false);
+  const [uploadingKb, setUploadingKb] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [newKbTitle, setNewKbTitle] = useState("");
+  const [newKbExcerpt, setNewKbExcerpt] = useState("");
+  const [showAddKb, setShowAddKb] = useState(false);
+  const kbFileInputRef = useRef<HTMLInputElement>(null);
+
+  const saveKbLocal = (items: KBItem[]) => {
+    setKb(items);
+    try { localStorage.setItem(kbKey, JSON.stringify(items)); } catch {}
   };
-  const addKbPrompt = () => {
-    const title = window.prompt("Título do conhecimento:"); if (!title) return;
-    const excerpt = window.prompt("Resumo / conteúdo:") || "";
-    const tagsStr = window.prompt("Tags separadas por vírgula:", "Script") || "";
+
+  const saveCoachKbToDb = useCallback(async (overrides?: {
+    items?: KBItem[];
+    arquivos?: KBFile[];
+    site_url?: string;
+    informacoes_extras?: string;
+  }) => {
+    if (!companyId) return false;
+    setKbSaving(true);
+    try {
+      const payload = {
+        items: overrides?.items ?? kb,
+        arquivos: overrides?.arquivos ?? kbFiles,
+        site_url: overrides?.site_url ?? siteUrl,
+        informacoes_extras: overrides?.informacoes_extras ?? informacoesExtras,
+      };
+      try { localStorage.setItem(`${kbKey}_full`, JSON.stringify(payload)); } catch {}
+
+      const { data: current } = await supabase
+        .from("ia_configurations")
+        .select("custom_prompts")
+        .eq("company_id", companyId)
+        .maybeSingle();
+
+      const prompts = { ...((current?.custom_prompts as Record<string, unknown>) || {}) };
+      const coach = { ...((prompts.coach as Record<string, unknown>) || {}) };
+      coach.knowledge_base = payload;
+      prompts.coach = coach;
+
+      if (current) {
+        const { error } = await supabase
+          .from("ia_configurations")
+          .update({ custom_prompts: prompts, updated_at: new Date().toISOString() })
+          .eq("company_id", companyId);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase
+          .from("ia_configurations")
+          .insert({ company_id: companyId, custom_prompts: prompts });
+        if (error) throw error;
+      }
+      return true;
+    } catch (e: any) {
+      console.error("[Coach] saveCoachKb", e);
+      toast.error("Erro ao salvar base de conhecimento");
+      return false;
+    } finally {
+      setKbSaving(false);
+    }
+  }, [companyId, kb, kbFiles, siteUrl, informacoesExtras, kbKey]);
+
+  const loadCoachKb = useCallback(async () => {
+    if (!companyId) return;
+    setKbLoading(true);
+    try {
+      const { data } = await supabase
+        .from("ia_configurations")
+        .select("custom_prompts")
+        .eq("company_id", companyId)
+        .maybeSingle();
+
+      const coachKb = (data?.custom_prompts as any)?.coach?.knowledge_base;
+      const atendKb = (data?.custom_prompts as any)?.atendimento?.knowledge_base;
+
+      if (coachKb) {
+        if (Array.isArray(coachKb.items) && coachKb.items.length > 0) setKb(coachKb.items);
+        if (Array.isArray(coachKb.arquivos)) setKbFiles(coachKb.arquivos);
+        if (coachKb.site_url) setSiteUrl(coachKb.site_url);
+        if (coachKb.informacoes_extras) setInformacoesExtras(coachKb.informacoes_extras);
+      } else if (atendKb) {
+        if (Array.isArray(atendKb.arquivos) && atendKb.arquivos.length > 0) {
+          setKbFiles(atendKb.arquivos.map((a: any) => ({
+            ...a,
+            status: a.status || "pronto",
+          })));
+        }
+        if (atendKb.informacoes_extras) setInformacoesExtras(atendKb.informacoes_extras);
+        if (atendKb.empresa?.contato && !siteUrl) setSiteUrl(atendKb.empresa.contato);
+      } else {
+        try {
+          const raw = localStorage.getItem(`${kbKey}_full`) || localStorage.getItem(kbKey);
+          if (raw) {
+            const parsed = JSON.parse(raw);
+            if (Array.isArray(parsed)) setKb(parsed);
+            else if (parsed.items) {
+              if (parsed.items.length) setKb(parsed.items);
+              if (parsed.arquivos) setKbFiles(parsed.arquivos);
+              if (parsed.site_url) setSiteUrl(parsed.site_url);
+              if (parsed.informacoes_extras) setInformacoesExtras(parsed.informacoes_extras);
+            }
+          }
+        } catch {}
+      }
+    } catch (e) {
+      console.error("[Coach] loadCoachKb", e);
+    } finally {
+      setKbLoading(false);
+    }
+  }, [companyId, kbKey]);
+
+  useEffect(() => { if (open) loadCoachKb(); }, [open, loadCoachKb]);
+
+  const kbForCoach = useMemo(() => {
+    const items: KBItem[] = [...kb];
+    if (siteUrl.trim()) {
+      items.push({
+        id: "kb_site",
+        title: "Site da empresa",
+        excerpt: `Site oficial para consulta e treinamento: ${siteUrl.trim()}`,
+        tags: ["Site", "Empresa"],
+      });
+    }
+    if (informacoesExtras.trim()) {
+      items.push({
+        id: "kb_extras",
+        title: "Informações da empresa",
+        excerpt: informacoesExtras.trim().slice(0, 2000),
+        tags: ["Empresa"],
+      });
+    }
+    kbFiles.filter(f => f.status === "pronto").forEach(f => {
+      items.push({
+        id: f.id,
+        title: f.nome,
+        excerpt: (f.conteudoExtraido || `Arquivo ${f.tipo} anexado para treinamento da IA.`).slice(0, 2000),
+        tags: [f.tipo, "Arquivo"],
+      });
+    });
+    return items;
+  }, [kb, siteUrl, informacoesExtras, kbFiles]);
+
+  const getKbFileType = (file: File): KBFileTipo => {
+    const ext = file.name.split(".").pop()?.toLowerCase();
+    if (file.type.startsWith("image/")) return "imagem";
+    if (file.type.startsWith("audio/")) return "audio";
+    if (file.type.startsWith("video/")) return "video";
+    if (file.type === "application/pdf" || ext === "pdf") return "pdf";
+    return "texto";
+  };
+
+  const getKbFileIcon = (tipo: KBFileTipo) => {
+    switch (tipo) {
+      case "imagem": return <Image className="h-4 w-4 text-green-500" />;
+      case "audio": return <FileAudio className="h-4 w-4 text-purple-500" />;
+      case "video": return <FileVideo className="h-4 w-4 text-red-500" />;
+      case "pdf": return <FileType className="h-4 w-4 text-orange-500" />;
+      default: return <FileText className="h-4 w-4 text-blue-500" />;
+    }
+  };
+
+  const formatKbFileSize = (bytes?: number) => {
+    if (!bytes) return "—";
+    const k = 1024;
+    const sizes = ["Bytes", "KB", "MB", "GB"];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return `${parseFloat((bytes / Math.pow(k, i)).toFixed(1))} ${sizes[i]}`;
+  };
+
+  const extractTextFromFile = async (file: File): Promise<string> => {
+    const tipo = getKbFileType(file);
+    if (tipo === "texto" || file.type.startsWith("text/")) {
+      try {
+        const text = await file.text();
+        return text.slice(0, 8000);
+      } catch { /* ignore */ }
+    }
+    const labels: Record<KBFileTipo, string> = {
+      pdf: "Documento PDF",
+      imagem: "Imagem",
+      audio: "Áudio",
+      video: "Vídeo",
+      texto: "Documento",
+    };
+    return `${labels[tipo]} "${file.name}" anexado para treinamento da IA (${formatKbFileSize(file.size)}).`;
+  };
+
+  const handleKbFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
+    if (!files?.length || !companyId) return;
+
+    setUploadingKb(true);
+    setUploadProgress(0);
+    const newFiles: KBFile[] = [...kbFiles];
+
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      if (file.size > 50 * 1024 * 1024) {
+        toast.error(`${file.name} excede 50MB`);
+        continue;
+      }
+
+      const allowed = [
+        "text/plain", "text/csv", "text/markdown",
+        "application/pdf",
+        "image/jpeg", "image/png", "image/gif", "image/webp",
+        "audio/mpeg", "audio/wav", "audio/ogg", "audio/mp3",
+        "video/mp4", "video/webm", "video/ogg",
+      ];
+      if (!allowed.includes(file.type) && !file.name.match(/\.(txt|csv|md|pdf|jpg|jpeg|png|gif|webp|mp3|wav|ogg|mp4|webm)$/i)) {
+        toast.error(`Tipo não suportado: ${file.name}`);
+        continue;
+      }
+
+      try {
+        const fileId = `file_${Date.now()}_${i}`;
+        const fileName = `${Date.now()}-${file.name.replace(/[^\w.\-]+/g, "_")}`;
+        const storagePath = `coach/${companyId}/${fileName}`;
+
+        let url = "";
+        const { error: uploadError } = await supabase.storage
+          .from("ia-knowledge")
+          .upload(storagePath, file, { upsert: true });
+
+        if (uploadError) {
+          url = URL.createObjectURL(file);
+        } else {
+          const { data: urlData } = supabase.storage.from("ia-knowledge").getPublicUrl(storagePath);
+          url = urlData.publicUrl;
+        }
+
+        const conteudoExtraido = await extractTextFromFile(file);
+        const novo: KBFile = {
+          id: fileId,
+          nome: file.name,
+          tipo: getKbFileType(file),
+          url,
+          tamanho: file.size,
+          status: "pronto",
+          conteudoExtraido,
+        };
+        newFiles.push(novo);
+        setUploadProgress(((i + 1) / files.length) * 100);
+      } catch (e) {
+        console.error("[Coach] upload", e);
+        toast.error(`Erro ao enviar ${file.name}`);
+      }
+    }
+
+    setKbFiles(newFiles);
+    setUploadingKb(false);
+    setUploadProgress(0);
+    if (kbFileInputRef.current) kbFileInputRef.current.value = "";
+
+    if (newFiles.length > kbFiles.length) {
+      await saveCoachKbToDb({ arquivos: newFiles });
+      toast.success(`${newFiles.length - kbFiles.length} arquivo(s) adicionado(s) à base`);
+    }
+  };
+
+  const removeKbFile = async (id: string) => {
+    const next = kbFiles.filter(f => f.id !== id);
+    setKbFiles(next);
+    await saveCoachKbToDb({ arquivos: next });
+    toast.success("Arquivo removido");
+  };
+
+  const addKbItem = async () => {
+    if (!newKbTitle.trim()) { toast.error("Informe o título"); return; }
     const item: KBItem = {
       id: `kb_${Date.now()}`,
-      title, excerpt,
-      tags: tagsStr.split(",").map(t => t.trim()).filter(Boolean),
+      title: newKbTitle.trim(),
+      excerpt: newKbExcerpt.trim(),
+      tags: ["Manual"],
     };
-    saveKb([item, ...kb]);
-    toast.success("Adicionado à base de conhecimento");
+    const next = [item, ...kb];
+    saveKbLocal(next);
+    setNewKbTitle("");
+    setNewKbExcerpt("");
+    setShowAddKb(false);
+    await saveCoachKbToDb({ items: next });
+    toast.success("Conhecimento adicionado");
   };
+
+  const addKbPrompt = () => setShowAddKb(v => !v);
+
   const filteredKb = useMemo(() => {
     const q = kbQuery.trim().toLowerCase();
     if (!q) return kb;
@@ -298,7 +583,7 @@ export function CoachIAFloatingButton({
         body: {
           lead_id: leadId, phone: contactPhone, company_id: companyId,
           contact_name: contactName, lead_name: leadName,
-          knowledge_base: kb,
+          knowledge_base: kbForCoach,
           lead_memory: memory,
           tom_de_voz: tom,
           learnings,
@@ -366,7 +651,7 @@ export function CoachIAFloatingButton({
                 body: {
                   company_id: companyId, phone: contactPhone, lead_id: leadId,
                   lead_name: leadName, contact_name: contactName,
-                  knowledge_base: kb,
+                  knowledge_base: kbForCoach,
                   etapa_funil: report?.estagio_percebido,
                 },
               });
@@ -387,7 +672,7 @@ export function CoachIAFloatingButton({
       .subscribe();
     return () => { try { (supabase as any).removeChannel(ch); } catch {} };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [canRun, contactPhone, companyId, autoMode, kb, leadId, leadName, contactName, report?.estagio_percebido]);
+  }, [canRun, contactPhone, companyId, autoMode, kbForCoach, leadId, leadName, contactName, report?.estagio_percebido]);
 
 
   const scriptVariants = (): string[] => {
@@ -514,48 +799,59 @@ export function CoachIAFloatingButton({
   // ─────────── DADOS DO CRM (funis, etapas, tags, usuários) ───────────
   const [funis, setFunis] = useState<FunilRow[]>([]);
   const [etapas, setEtapas] = useState<EtapaRow[]>([]);
-  const [companyTags, setCompanyTags] = useState<string[]>([]);
   const [users, setUsers] = useState<UserRow[]>([]);
+  const [taskBoards, setTaskBoards] = useState<TaskBoardRow[]>([]);
+  const [taskColumns, setTaskColumns] = useState<TaskColumnRow[]>([]);
+  const [leadTags, setLeadTags] = useState<string[]>([]);
   const [crmLoading, setCrmLoading] = useState(false);
+  const [agendaModalOpen, setAgendaModalOpen] = useState(false);
 
   // form state
   const [selFunilId, setSelFunilId] = useState<string>("");
   const [selEtapaId, setSelEtapaId] = useState<string>("");
   const [selOwnerId, setSelOwnerId] = useState<string>("");
+  const [selBoardId, setSelBoardId] = useState<string>("");
+  const [selColumnId, setSelColumnId] = useState<string>("");
   const [newTagInput, setNewTagInput] = useState<string>("");
   const [taskTitle, setTaskTitle] = useState<string>("");
   const [taskDueDays, setTaskDueDays] = useState<number>(1);
-  const [apptTitle, setApptTitle] = useState<string>("");
-  const [apptWhen, setApptWhen] = useState<string>(""); // datetime-local
 
   const loadCrmData = useCallback(async () => {
     if (!companyId) return;
     setCrmLoading(true);
     try {
       const sb: any = supabase;
-      const [f, e, t, u] = await Promise.all([
+      const [f, e, u, b, c] = await Promise.all([
         sb.from("funis").select("id, nome").eq("company_id", companyId).order("nome"),
         sb.from("etapas").select("id, nome, funil_id, posicao").eq("company_id", companyId).order("posicao"),
-        sb.from("company_tags").select("tag_name").eq("company_id", companyId).order("tag_name"),
         sb.from("profiles").select("id, full_name, email").eq("company_id", companyId).order("full_name"),
+        sb.from("task_boards").select("id, nome").eq("company_id", companyId).order("criado_em"),
+        sb.from("task_columns").select("id, nome, board_id").order("posicao"),
       ]);
       setFunis((f.data || []) as FunilRow[]);
       setEtapas((e.data || []) as EtapaRow[]);
-      setCompanyTags(((t.data || []) as any[]).map(x => x.tag_name).filter(Boolean));
       setUsers((u.data || []) as UserRow[]);
+      const boards = (b.data || []) as TaskBoardRow[];
+      setTaskBoards(boards);
+      setTaskColumns((c.data || []) as TaskColumnRow[]);
+      setSelBoardId(prev => prev || (boards[0]?.id ?? ""));
+      await refreshTags();
       if (leadId) {
-        const { data: ld } = await supabase.from("leads").select("funil_id, etapa_id, owner_id").eq("id", leadId).maybeSingle();
+        const { data: ld } = await supabase.from("leads").select("funil_id, etapa_id, owner_id, tags").eq("id", leadId).maybeSingle();
         const v: any = ld;
         if (v) {
           setSelFunilId(v.funil_id || "");
           setSelEtapaId(v.etapa_id || "");
           setSelOwnerId(v.owner_id || "");
+          setLeadTags(v.tags || []);
         }
+      } else {
+        setLeadTags([]);
       }
     } catch (err: any) {
       console.error("[Coach] loadCrmData", err);
     } finally { setCrmLoading(false); }
-  }, [companyId, leadId]);
+  }, [companyId, leadId, refreshTags]);
 
   useEffect(() => { if (open) loadCrmData(); }, [open, loadCrmData]);
 
@@ -575,7 +871,8 @@ export function CoachIAFloatingButton({
       const { error } = await supabase.from("leads").update({ tags }).eq("id", leadId!);
       if (error) throw error;
       await supabase.from("lead_tag_history").insert({ lead_id: leadId, company_id: companyId, tag_name: tag, action: "added" });
-      setCompanyTags(prev => prev.includes(tag) ? prev : [...prev, tag].sort());
+      setLeadTags(tags);
+      await refreshTags();
       toast.success(`Tag "${tag}" adicionada ao lead`);
     } catch (e: any) { toast.error("Erro ao adicionar tag: " + (e?.message || "")); }
   };
@@ -613,6 +910,7 @@ export function CoachIAFloatingButton({
         due_date: due.toISOString(),
         lead_id: leadId || null, company_id: companyId,
         owner_id: user?.id || null, assigned_to: assignee || user?.id || null,
+        board_id: selBoardId || null, column_id: selColumnId || null,
       });
       if (error) throw error;
       toast.success(`Tarefa criada: "${title}" (vence em ${dueDays}d)`);
@@ -693,6 +991,17 @@ export function CoachIAFloatingButton({
   };
 
   const etapasDoFunil = useMemo(() => etapas.filter(e => !selFunilId || e.funil_id === selFunilId), [etapas, selFunilId]);
+  const colunasDoQuadro = useMemo(() => taskColumns.filter(c => c.board_id === selBoardId), [taskColumns, selBoardId]);
+
+  useEffect(() => {
+    if (!selBoardId || colunasDoQuadro.length === 0) {
+      setSelColumnId("");
+      return;
+    }
+    if (!colunasDoQuadro.some(c => c.id === selColumnId)) {
+      setSelColumnId(colunasDoQuadro[0].id);
+    }
+  }, [selBoardId, colunasDoQuadro, selColumnId]);
 
   return (
     <>
@@ -776,7 +1085,7 @@ export function CoachIAFloatingButton({
           </div>
 
           {/* Tabs */}
-          <div className="flex border-b border-border px-3 overflow-x-auto">
+          <div className="flex flex-wrap gap-x-1 gap-y-0 border-b border-border px-3 py-1 overflow-x-auto scrollbar-thin scrollbar-thumb-primary/30 scrollbar-track-transparent">
             {([
               { k: "now", label: "Agora" },
               { k: "cadencia", label: "Cadência" },
@@ -793,7 +1102,7 @@ export function CoachIAFloatingButton({
               <button
                 key={t.k}
                 onClick={() => setTab(t.k)}
-                className={`px-3 py-2.5 text-xs font-medium border-b-2 -mb-px whitespace-nowrap transition-colors ${
+                className={`flex-shrink-0 px-2.5 py-2 text-xs font-medium border-b-2 -mb-px whitespace-nowrap transition-colors ${
                   tab === t.k ? "border-violet-500 text-violet-400" : "border-transparent text-muted-foreground hover:text-foreground"
                 }`}
               >
@@ -1050,12 +1359,29 @@ export function CoachIAFloatingButton({
               <>
                 <Section label="Ações no CRM">
                   <p className="text-[11px] text-muted-foreground leading-relaxed">
-                    {crmLoading ? "Carregando dados do CRM..." : `${funis.length} funis · ${etapas.length} etapas · ${companyTags.length} tags · ${users.length} usuários`}
+                    {crmLoading ? "Carregando dados do CRM..." : `${funis.length} funis · ${etapas.length} etapas · ${allTags.length} tags · ${taskBoards.length} quadros · ${users.length} usuários`}
                   </p>
                 </Section>
 
                 {/* Mover etapa */}
                 <Section label="📍 Mover lead no funil">
+                  {funis.length > 0 && (
+                    <div className="flex flex-wrap gap-1 mb-2">
+                      {funis.map(f => (
+                        <button
+                          key={f.id}
+                          onClick={() => { setSelFunilId(f.id); setSelEtapaId(""); }}
+                          className={`px-2 py-0.5 rounded-full text-[10px] border transition-colors ${
+                            selFunilId === f.id
+                              ? "border-violet-500/50 bg-violet-500/20 text-violet-300"
+                              : "border-border bg-muted/40 text-muted-foreground hover:bg-muted"
+                          }`}
+                        >
+                          📊 {f.nome}
+                        </button>
+                      ))}
+                    </div>
+                  )}
                   <div className="grid grid-cols-2 gap-1.5 mb-1.5">
                     <select value={selFunilId} onChange={(e) => { setSelFunilId(e.target.value); setSelEtapaId(""); }} className="h-8 rounded-md bg-muted border border-border text-xs px-2 text-foreground">
                       <option value="">Funil...</option>
@@ -1090,21 +1416,51 @@ export function CoachIAFloatingButton({
 
                 {/* Tags */}
                 <Section label="🏷 Tags">
-                  <div className="flex flex-wrap gap-1 mb-2">
-                    {companyTags.slice(0, 12).map(t => (
-                      <button key={t} onClick={() => addTagToLead(t)}
-                        className="px-2 py-0.5 rounded-full text-[10px] border border-violet-500/30 bg-violet-500/10 text-violet-300 hover:bg-violet-500/20">
-                        + {t}
-                      </button>
-                    ))}
-                    {report?.objecoes_detectadas?.slice(0, 3).map((o, i) => (
-                      <button key={"obj"+i} onClick={() => addTagToLead(`Objeção: ${o}`.slice(0, 60))}
-                        className="px-2 py-0.5 rounded-full text-[10px] border border-amber-500/30 bg-amber-500/10 text-amber-300 hover:bg-amber-500/20">
-                        + Objeção: {o.slice(0,20)}
-                      </button>
-                    ))}
-                  </div>
-                  <div className="flex gap-1.5">
+                  {leadTags.length > 0 && (
+                    <div className="mb-2">
+                      <p className="text-[10px] text-muted-foreground mb-1">Tags do lead:</p>
+                      <div className="flex flex-wrap gap-1">
+                        {leadTags.map(t => (
+                          <span key={t} className="px-2 py-0.5 rounded-full text-[10px] border border-emerald-500/30 bg-emerald-500/10 text-emerald-300">
+                            ✓ {t}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  {allTags.length > 0 ? (
+                    <div className="max-h-[140px] overflow-y-auto scrollbar-thin border border-border rounded-md p-2 mb-2">
+                      <p className="text-[10px] text-muted-foreground mb-1.5">Tags disponíveis — clique para adicionar ao lead</p>
+                      <div className="flex flex-wrap gap-1">
+                        {allTags.map(t => {
+                          const onLead = leadTags.includes(t);
+                          return (
+                            <button
+                              key={t}
+                              onClick={() => !onLead && addTagToLead(t)}
+                              disabled={onLead}
+                              className={`px-2 py-0.5 rounded-full text-[10px] border transition-colors ${
+                                onLead
+                                  ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-300 cursor-default"
+                                  : "border-violet-500/30 bg-violet-500/10 text-violet-300 hover:bg-violet-500/20"
+                              }`}
+                            >
+                              {onLead ? "✓" : "+"} {t}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  ) : (
+                    <p className="text-[10px] text-muted-foreground mb-2">Nenhuma tag criada ainda.</p>
+                  )}
+                  {report?.objecoes_detectadas?.slice(0, 3).map((o, i) => (
+                    <button key={"obj"+i} onClick={() => addTagToLead(`Objeção: ${o}`.slice(0, 60))}
+                      className="mr-1 mb-1 px-2 py-0.5 rounded-full text-[10px] border border-amber-500/30 bg-amber-500/10 text-amber-300 hover:bg-amber-500/20">
+                      + Objeção: {o.slice(0,20)}
+                    </button>
+                  ))}
+                  <div className="flex gap-1.5 mt-2">
                     <input value={newTagInput} onChange={(e) => setNewTagInput(e.target.value)} placeholder="Nova tag..."
                       className="flex-1 h-8 rounded-md bg-muted border border-border text-xs px-2 text-foreground placeholder:text-muted-foreground" />
                     <button onClick={() => { if (newTagInput.trim()) { addTagToLead(newTagInput.trim()); setNewTagInput(""); } }}
@@ -1117,6 +1473,35 @@ export function CoachIAFloatingButton({
 
                 {/* Tarefa */}
                 <Section label="✅ Criar tarefa">
+                  {taskBoards.length > 0 ? (
+                    <div className="mb-2 space-y-1.5">
+                      <p className="text-[10px] text-muted-foreground">Quadros disponíveis</p>
+                      <div className="flex flex-wrap gap-1 mb-1.5">
+                        {taskBoards.map(b => (
+                          <button
+                            key={b.id}
+                            onClick={() => setSelBoardId(b.id)}
+                            className={`px-2 py-0.5 rounded-full text-[10px] border transition-colors ${
+                              selBoardId === b.id
+                                ? "border-violet-500/50 bg-violet-500/20 text-violet-300"
+                                : "border-border bg-muted/40 text-muted-foreground hover:bg-muted"
+                            }`}
+                          >
+                            📋 {b.nome}
+                          </button>
+                        ))}
+                      </div>
+                      {selBoardId && colunasDoQuadro.length > 0 && (
+                        <select value={selColumnId} onChange={(e) => setSelColumnId(e.target.value)}
+                          className="w-full h-8 rounded-md bg-muted border border-border text-xs px-2 text-foreground">
+                          <option value="">Etapa do quadro...</option>
+                          {colunasDoQuadro.map(c => <option key={c.id} value={c.id}>{c.nome}</option>)}
+                        </select>
+                      )}
+                    </div>
+                  ) : (
+                    <p className="text-[10px] text-muted-foreground mb-2">Nenhum quadro de tarefas criado.</p>
+                  )}
                   <input value={taskTitle} onChange={(e) => setTaskTitle(e.target.value)}
                     placeholder={`Ex: Ligar para ${leadName || contactName || "lead"}`}
                     className="w-full h-8 mb-1.5 rounded-md bg-muted border border-border text-xs px-2 text-foreground" />
@@ -1136,18 +1521,23 @@ export function CoachIAFloatingButton({
 
                 {/* Compromisso */}
                 <Section label="📅 Agendar compromisso">
-                  <input value={apptTitle} onChange={(e) => setApptTitle(e.target.value)}
-                    placeholder="Ex: Reunião de proposta"
-                    className="w-full h-8 mb-1.5 rounded-md bg-muted border border-border text-xs px-2 text-foreground" />
-                  <div className="flex gap-1.5">
-                    <input type="datetime-local" value={apptWhen} onChange={(e) => setApptWhen(e.target.value)}
-                      className="flex-1 h-8 rounded-md bg-muted border border-border text-xs px-2 text-foreground" />
-                    <button onClick={() => { createCompromisso(apptTitle.trim(), apptWhen); setApptTitle(""); setApptWhen(""); }}
-                      disabled={!apptTitle.trim() || !apptWhen}
-                      className="px-2.5 h-8 rounded-md bg-violet-600 hover:bg-violet-500 disabled:opacity-40 text-[11px] font-medium text-white inline-flex items-center gap-1">
-                      <CalendarCheck className="h-3 w-3" />
-                    </button>
-                  </div>
+                  <p className="text-[10px] text-muted-foreground mb-2">
+                    Abre o mesmo modal do módulo Agenda, com horários, profissional e lembretes.
+                  </p>
+                  <button
+                    onClick={() => {
+                      if (!requireLead()) return;
+                      setAgendaModalOpen(true);
+                    }}
+                    disabled={!leadId}
+                    className="w-full h-9 rounded-md bg-violet-600 hover:bg-violet-500 disabled:opacity-40 text-[11px] font-medium text-white inline-flex items-center justify-center gap-1.5"
+                  >
+                    <CalendarCheck className="h-3.5 w-3.5" />
+                    Abrir agenda — agendar compromisso
+                  </button>
+                  {!leadId && (
+                    <p className="text-[10px] text-amber-500 mt-1.5">Vincule um lead a este contato para agendar.</p>
+                  )}
                 </Section>
 
                 <Divider />
@@ -1162,7 +1552,126 @@ export function CoachIAFloatingButton({
             {/* BASE DE CONHECIMENTO */}
             {tab === "kb" && (
               <>
-                <Section label="Base de conhecimento da empresa">
+                <Section label="Banco de dados da empresa — treinamento da IA">
+                  <p className="text-[10px] text-muted-foreground leading-relaxed mb-2">
+                    Tudo aqui alimenta o Coach IA nas análises e respostas: textos, arquivos, site e informações da empresa.
+                  </p>
+                  {kbLoading && (
+                    <div className="flex items-center gap-2 text-[10px] text-muted-foreground mb-2">
+                      <Loader2 className="h-3 w-3 animate-spin" /> Carregando base...
+                    </div>
+                  )}
+                </Section>
+
+                {/* Site da empresa */}
+                <Section label="🌐 Site da empresa">
+                  <div className="flex gap-1.5">
+                    <input
+                      value={siteUrl}
+                      onChange={(e) => setSiteUrl(e.target.value)}
+                      placeholder="https://suaempresa.com.br"
+                      className="flex-1 h-8 rounded-md bg-muted border border-border text-xs px-2 text-foreground placeholder:text-muted-foreground"
+                    />
+                    <button
+                      onClick={async () => {
+                        if (!siteUrl.trim()) { toast.error("Informe a URL do site"); return; }
+                        const ok = await saveCoachKbToDb({ site_url: siteUrl.trim() });
+                        if (ok) toast.success("Site vinculado à base de treinamento");
+                      }}
+                      disabled={kbSaving}
+                      className="px-2.5 h-8 rounded-md bg-violet-600 hover:bg-violet-500 disabled:opacity-40 text-[11px] font-medium text-white inline-flex items-center gap-1"
+                    >
+                      <Globe className="h-3 w-3" />
+                    </button>
+                  </div>
+                </Section>
+                <Divider />
+
+                {/* Upload de arquivos */}
+                <Section label="📎 Arquivos para treinamento">
+                  <div
+                    onClick={() => kbFileInputRef.current?.click()}
+                    className="border-2 border-dashed border-border rounded-lg p-4 text-center hover:border-violet-500/40 hover:bg-muted/30 transition-colors cursor-pointer mb-2"
+                  >
+                    <input
+                      ref={kbFileInputRef}
+                      type="file"
+                      multiple
+                      accept=".txt,.csv,.md,.pdf,.jpg,.jpeg,.png,.gif,.webp,.mp3,.wav,.ogg,.mp4,.webm"
+                      onChange={handleKbFileUpload}
+                      className="hidden"
+                    />
+                    <Upload className="h-6 w-6 mx-auto text-muted-foreground mb-1.5" />
+                    <p className="text-[11px] font-medium text-foreground">Clique para anexar arquivos</p>
+                    <p className="text-[10px] text-muted-foreground mt-0.5">PDF · Imagens · Áudio · Vídeo · Documentos (máx. 50MB)</p>
+                  </div>
+                  {uploadingKb && (
+                    <div className="mb-2">
+                      <div className="flex justify-between text-[10px] text-muted-foreground mb-1">
+                        <span>Enviando...</span><span>{Math.round(uploadProgress)}%</span>
+                      </div>
+                      <div className="h-1.5 rounded-full bg-muted overflow-hidden">
+                        <div className="h-full bg-violet-500 transition-all" style={{ width: `${uploadProgress}%` }} />
+                      </div>
+                    </div>
+                  )}
+                  {kbFiles.length > 0 ? (
+                    <div className="space-y-1.5 max-h-[160px] overflow-y-auto scrollbar-thin">
+                      {kbFiles.map(f => (
+                        <div key={f.id} className="flex items-center gap-2 p-2 rounded-md bg-muted/40 border border-border">
+                          <div className="h-8 w-8 rounded bg-background border border-border flex items-center justify-center flex-shrink-0">
+                            {getKbFileIcon(f.tipo)}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-[11px] font-medium truncate">{f.nome}</p>
+                            <p className="text-[9px] text-muted-foreground">
+                              {formatKbFileSize(f.tamanho)} · {f.status === "pronto" ? "✓ Pronto" : f.status === "erro" ? "✗ Erro" : "⏳ Processando"}
+                            </p>
+                          </div>
+                          <div className="flex gap-0.5 flex-shrink-0">
+                            {f.url && (
+                              <button onClick={() => window.open(f.url, "_blank")} className="h-7 w-7 rounded hover:bg-muted flex items-center justify-center text-muted-foreground">
+                                <Eye className="h-3.5 w-3.5" />
+                              </button>
+                            )}
+                            <button onClick={() => removeKbFile(f.id)} className="h-7 w-7 rounded hover:bg-red-500/10 flex items-center justify-center text-red-400">
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-[10px] text-muted-foreground">Nenhum arquivo anexado ainda.</p>
+                  )}
+                </Section>
+                <Divider />
+
+                {/* Informações extras */}
+                <Section label="ℹ️ Informações da empresa">
+                  <textarea
+                    value={informacoesExtras}
+                    onChange={(e) => setInformacoesExtras(e.target.value)}
+                    placeholder="Serviços, diferenciais, políticas, horários, formas de pagamento..."
+                    rows={3}
+                    className="w-full rounded-md bg-muted border border-border text-xs px-2 py-1.5 text-foreground placeholder:text-muted-foreground resize-none"
+                  />
+                  <button
+                    onClick={async () => {
+                      const ok = await saveCoachKbToDb({ informacoes_extras: informacoesExtras });
+                      if (ok) toast.success("Informações salvas na base");
+                    }}
+                    disabled={kbSaving}
+                    className="mt-1.5 w-full py-1.5 rounded-md border border-border bg-muted/40 hover:bg-muted text-[11px] font-medium text-foreground inline-flex items-center justify-center gap-1"
+                  >
+                    {kbSaving ? <Loader2 className="h-3 w-3 animate-spin" /> : <Save className="h-3 w-3" />}
+                    Salvar informações
+                  </button>
+                </Section>
+                <Divider />
+
+                {/* Conhecimento em texto */}
+                <Section label="📚 Base de conhecimento">
                   <div className="relative mb-2">
                     <Search className="h-3.5 w-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
                     <input
@@ -1173,6 +1682,29 @@ export function CoachIAFloatingButton({
                     />
                   </div>
                 </Section>
+
+                {showAddKb && (
+                  <div className="rounded-lg border border-violet-500/30 bg-violet-500/5 p-3 space-y-2 mb-2">
+                    <input
+                      value={newKbTitle}
+                      onChange={(e) => setNewKbTitle(e.target.value)}
+                      placeholder="Título (ex: Objeção de preço)"
+                      className="w-full h-8 rounded-md bg-muted border border-border text-xs px-2 text-foreground"
+                    />
+                    <textarea
+                      value={newKbExcerpt}
+                      onChange={(e) => setNewKbExcerpt(e.target.value)}
+                      placeholder="Conteúdo / script / case..."
+                      rows={3}
+                      className="w-full rounded-md bg-muted border border-border text-xs px-2 py-1.5 text-foreground resize-none"
+                    />
+                    <button onClick={addKbItem}
+                      className="w-full py-1.5 rounded-md bg-violet-600 hover:bg-violet-500 text-[11px] font-medium text-white">
+                      Salvar conhecimento
+                    </button>
+                  </div>
+                )}
+
                 <div className="flex flex-col gap-1.5">
                   {filteredKb.length === 0 && (
                     <div className="text-[11px] text-muted-foreground text-center py-4">Nenhum item encontrado.</div>
@@ -1189,7 +1721,7 @@ export function CoachIAFloatingButton({
                           <span className="ml-auto text-[9px] px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">Usado pela IA ✓</span>
                         )}
                       </div>
-                      <div className="text-[11px] text-muted-foreground leading-relaxed">{k.excerpt}</div>
+                      <div className="text-[11px] text-muted-foreground leading-relaxed line-clamp-3">{k.excerpt}</div>
                       {k.tags.length > 0 && (
                         <div className="flex flex-wrap gap-1 mt-1.5">
                           {k.tags.map((t, i) => (
@@ -1200,12 +1732,29 @@ export function CoachIAFloatingButton({
                     </button>
                   ))}
                 </div>
-                <button
-                  onClick={addKbPrompt}
-                  className="w-full py-2 rounded-lg bg-gradient-to-r from-violet-600 to-indigo-600 hover:opacity-90 text-xs font-semibold text-white flex items-center justify-center gap-2"
-                >
-                  <Plus className="h-3.5 w-3.5" /> Adicionar ao conhecimento
-                </button>
+
+                <div className="flex gap-2 mt-2">
+                  <button
+                    onClick={addKbPrompt}
+                    className="flex-1 py-2 rounded-lg bg-gradient-to-r from-violet-600 to-indigo-600 hover:opacity-90 text-xs font-semibold text-white flex items-center justify-center gap-2"
+                  >
+                    <Plus className="h-3.5 w-3.5" /> {showAddKb ? "Fechar" : "Adicionar texto"}
+                  </button>
+                  <button
+                    onClick={async () => {
+                      const ok = await saveCoachKbToDb();
+                      if (ok) toast.success("Base sincronizada com o banco");
+                    }}
+                    disabled={kbSaving}
+                    className="px-3 py-2 rounded-lg border border-border bg-muted/40 hover:bg-muted text-xs font-medium text-foreground inline-flex items-center gap-1"
+                  >
+                    {kbSaving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <RefreshCw className="h-3.5 w-3.5" />}
+                  </button>
+                </div>
+
+                <p className="text-[9px] text-muted-foreground text-center mt-2">
+                  {kbForCoach.length} itens ativos · {kbFiles.length} arquivo(s) · {siteUrl ? "site vinculado" : "sem site"}
+                </p>
               </>
             )}
 
@@ -1565,6 +2114,22 @@ export function CoachIAFloatingButton({
             )}
           </div>
         </div>
+      )}
+
+      {leadId && (
+        <AgendaModal
+          open={agendaModalOpen}
+          onOpenChange={setAgendaModalOpen}
+          lead={{
+            id: leadId,
+            nome: leadName || contactName || "Lead",
+            telefone: contactPhone || "",
+          }}
+          onAgendamentoCriado={() => {
+            setAgendaModalOpen(false);
+            toast.success("Compromisso agendado com sucesso!");
+          }}
+        />
       )}
     </>
   );
