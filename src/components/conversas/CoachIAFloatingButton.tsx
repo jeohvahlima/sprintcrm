@@ -299,6 +299,9 @@ export function CoachIAFloatingButton({
           lead_id: leadId, phone: contactPhone, company_id: companyId,
           contact_name: contactName, lead_name: leadName,
           knowledge_base: kb,
+          lead_memory: memory,
+          tom_de_voz: tom,
+          learnings,
         },
       });
       if (err) throw err;
