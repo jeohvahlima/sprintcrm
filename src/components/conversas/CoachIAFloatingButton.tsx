@@ -759,6 +759,22 @@ export function CoachIAFloatingButton({
             </div>
           )}
 
+          {/* 🤫 Whisper bar — sugestão da IA em tempo real */}
+          <div className="flex items-center gap-2 px-3 py-1.5 border-b border-violet-500/20 bg-gradient-to-r from-indigo-500/10 to-violet-500/10">
+            <span className="h-1.5 w-1.5 rounded-full bg-violet-400 animate-pulse flex-shrink-0" />
+            <span className="text-[11px] flex-shrink-0">🤫</span>
+            <span className="text-[11px] text-violet-300 italic flex-1 truncate" title={whisper}>{whisper}</span>
+            {currentScript && (
+              <button
+                onClick={() => sendScript()}
+                className="text-[10px] px-2 py-0.5 rounded border border-violet-500/40 bg-violet-500/15 text-violet-200 hover:bg-violet-500/25 flex-shrink-0"
+                title="Inserir script no input"
+              >
+                Usar ↑
+              </button>
+            )}
+          </div>
+
           {/* Tabs */}
           <div className="flex border-b border-border px-3 overflow-x-auto">
             {([
@@ -768,6 +784,11 @@ export function CoachIAFloatingButton({
               { k: "acoes", label: "⚡ Ações CRM" },
               { k: "analise", label: "Análise" },
               { k: "kb", label: "📚 Base" },
+              { k: "memoria", label: "🧠 Memória" },
+              { k: "emocao", label: "😐 Emoção" },
+              { k: "aprende", label: "🎓 Aprende" },
+              { k: "prospeccao", label: "🎯 Prospecção" },
+              { k: "posmortem", label: "💀 Pós-mortem" },
             ] as { k: TabKey; label: string }[]).map((t) => (
               <button
                 key={t.k}
@@ -780,6 +801,7 @@ export function CoachIAFloatingButton({
               </button>
             ))}
           </div>
+
 
           {/* Body */}
           <div className="flex-1 overflow-y-auto p-5 space-y-4 text-sm">
