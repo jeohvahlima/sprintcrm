@@ -157,7 +157,122 @@ export function CoachIAFloatingButton({
     );
   }, [kb, kbQuery]);
 
+  // ───────── Memória do lead, Tom de voz, Emoção, Aprendizado, Prospecção, Pós-mortem ─────────
+  const memKey = `coach_mem_${companyId || "g"}_${leadId || contactPhone || "x"}`;
+  const tomKey = `coach_tom_${companyId || "global"}`;
+  const learnKey = `coach_learn_${companyId || "global"}`;
+  const postMortemKey = `coach_postmortem_${companyId || "global"}`;
+
+  const [memory, setMemory] = useState<LeadMemory>({
+    objecao_principal: "", decisor_real: "", maior_interesse: "", tom_preferido: "", melhor_horario: "", historico: [],
+  });
+  const [tom, setTom] = useState<TomVoz>({
+    empresa: "", setor: "", estilo: "consultivo", expressoes: "", evitar: "", emojis: "moderado",
+  });
+  const [whisper, setWhisper] = useState<string>("Coach IA pronto. Ao receber mensagens do lead, as sugestões aparecem aqui.");
+  const [emocao, setEmocao] = useState<EmocaoState>({
+    dominante: "hesitante",
+    scores: { animado: 20, hesitante: 45, com_pressa: 15, comparando: 20 },
+    sinais: [],
+    script_adaptado: "",
+  });
+  const [learnings, setLearnings] = useState<LearningItem[]>([]);
+  const [similarLeads, setSimilarLeads] = useState<SimilarLead[]>([]);
+  const [postMortems, setPostMortems] = useState<PostMortemCase[]>([]);
+
+  useEffect(() => {
+    try {
+      const m = localStorage.getItem(memKey); if (m) setMemory(JSON.parse(m));
+      const t = localStorage.getItem(tomKey); if (t) setTom(JSON.parse(t));
+      const l = localStorage.getItem(learnKey); if (l) setLearnings(JSON.parse(l));
+      const p = localStorage.getItem(postMortemKey); if (p) setPostMortems(JSON.parse(p));
+    } catch {}
+  }, [memKey, tomKey, learnKey, postMortemKey]);
+  const saveMemory = (m: LeadMemory) => { setMemory(m); try { localStorage.setItem(memKey, JSON.stringify(m)); } catch {} };
+  const saveTom = (t: TomVoz) => { setTom(t); try { localStorage.setItem(tomKey, JSON.stringify(t)); } catch {} };
+  const saveLearnings = (l: LearningItem[]) => { setLearnings(l); try { localStorage.setItem(learnKey, JSON.stringify(l)); } catch {} };
+  const savePostMortems = (p: PostMortemCase[]) => { setPostMortems(p); try { localStorage.setItem(postMortemKey, JSON.stringify(p)); } catch {} };
+
+  // Derivar emoção e similares a partir do report sempre que mudar
+  useEffect(() => {
+    if (!report) return;
+    const risco = report.risco_de_perda ?? 0;
+    const objQty = (report.objecoes_detectadas?.length || 0);
+    const eng = report.score_engajamento ?? 0;
+    const animado = Math.max(0, Math.min(100, eng - risco/2));
+    const hesitante = Math.max(0, Math.min(100, risco));
+    const comparando = Math.max(0, Math.min(100, objQty * 22));
+    const comPressa = Math.max(0, Math.min(100, 100 - risco - eng/2));
+    const total = animado + hesitante + comparando + comPressa || 1;
+    const norm = (n: number) => Math.round((n / total) * 100);
+    const scores = {
+      animado: norm(animado), hesitante: norm(hesitante),
+      com_pressa: norm(comPressa), comparando: norm(comparando),
+    };
+    const dom = (Object.entries(scores).sort((a, b) => b[1] - a[1])[0][0]) as EmocaoState["dominante"];
+    setEmocao({
+      dominante: dom,
+      scores,
+      sinais: (report.objecoes_detectadas || []).slice(0, 3),
+      script_adaptado: report.comunicacao_mais_assertiva || report.mensagem_sugerida || "",
+    });
+    // Whisper: usar próximo passo ou script reduzido
+    const tip = report.proximos_passos?.[0] || report.mensagem_sugerida || "";
+    if (tip) setWhisper(tip.length > 140 ? tip.slice(0, 137) + "..." : tip);
+  }, [report]);
+
+  const exportHistory = () => {
+    const lines = [
+      `Histórico do lead — ${leadName || contactName || ""}`,
+      `Telefone: ${contactPhone || ""}`,
+      ``,
+      `Objeção principal: ${memory.objecao_principal}`,
+      `Decisor real: ${memory.decisor_real}`,
+      `Maior interesse: ${memory.maior_interesse}`,
+      `Tom preferido: ${memory.tom_preferido}`,
+      `Melhor horário: ${memory.melhor_horario}`,
+      ``,
+      `Conversas anteriores:`,
+      ...memory.historico.map(h => `- [${h.data}] (${h.canal}) ${h.resumo} → ${h.resultado}`),
+    ].join("\n");
+    const blob = new Blob([lines], { type: "text/plain" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a"); a.href = url;
+    a.download = `historico-${(leadName || "lead").replace(/\s+/g, "_")}.txt`;
+    a.click(); URL.revokeObjectURL(url);
+    toast.success("Histórico exportado");
+  };
+
+  const markFechamento = () => {
+    const titulo = window.prompt("O que funcionou nesta venda? (resuma em 1 frase)"); if (!titulo) return;
+    const item: LearningItem = {
+      id: `l_${Date.now()}`,
+      tipo: "sucesso",
+      titulo,
+      descricao: `Aprendido com ${leadName || contactName || "lead"} em ${new Date().toLocaleDateString("pt-BR")}.`,
+      conversas: 1,
+    };
+    saveLearnings([item, ...learnings]);
+    toast.success("Padrão registrado para aprendizado da IA");
+  };
+
+  const registerPostMortem = () => {
+    const motivo = window.prompt("Motivo da perda (em poucas palavras):"); if (!motivo) return;
+    const erros = (window.prompt("Erros cometidos (separe por ';'):") || "").split(";").map(s=>s.trim()).filter(Boolean);
+    const positivos = (window.prompt("Pontos positivos (separe por ';'):") || "").split(";").map(s=>s.trim()).filter(Boolean);
+    const recomendacao = window.prompt("Recomendação para reativar:") || "";
+    const pm: PostMortemCase = {
+      id: `pm_${Date.now()}`,
+      nome: leadName || contactName || "Lead",
+      data: new Date().toLocaleDateString("pt-BR"),
+      motivo, erros, positivos, recomendacao,
+    };
+    savePostMortems([pm, ...postMortems]);
+    toast.success("Pós-mortem registrado");
+  };
+
   const canRun = !!companyId && (!!leadId || !!contactPhone);
+
 
   // Refs para debounce de re-análise e detecção de novas mensagens
   const debounceRef = useRef<number | null>(null);
