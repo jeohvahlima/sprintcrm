@@ -3667,12 +3667,18 @@ export type Database = {
         Row: {
           ativo: boolean
           avancar_proxima_etapa: boolean
+          cadencia_progressiva: boolean
           canal: string
           company_id: string
+          cooldown_dinamico: boolean
           created_at: string
           criar_tarefa: boolean
+          detectar_silencio_bilateral: boolean
+          dias_silencio_bilateral: number
+          escalar_gestor_em_dias: number
           etapa_id: string
           funil_id: string
+          gestor_id: string | null
           id: string
           mensagem_custom: string | null
           notificar_responsavel: boolean
@@ -3681,16 +3687,23 @@ export type Database = {
           tempo_unidade: string
           tempo_valor: number
           updated_at: string
+          usar_script_ia: boolean
         }
         Insert: {
           ativo?: boolean
           avancar_proxima_etapa?: boolean
+          cadencia_progressiva?: boolean
           canal?: string
           company_id: string
+          cooldown_dinamico?: boolean
           created_at?: string
           criar_tarefa?: boolean
+          detectar_silencio_bilateral?: boolean
+          dias_silencio_bilateral?: number
+          escalar_gestor_em_dias?: number
           etapa_id: string
           funil_id: string
+          gestor_id?: string | null
           id?: string
           mensagem_custom?: string | null
           notificar_responsavel?: boolean
@@ -3699,16 +3712,23 @@ export type Database = {
           tempo_unidade?: string
           tempo_valor?: number
           updated_at?: string
+          usar_script_ia?: boolean
         }
         Update: {
           ativo?: boolean
           avancar_proxima_etapa?: boolean
+          cadencia_progressiva?: boolean
           canal?: string
           company_id?: string
+          cooldown_dinamico?: boolean
           created_at?: string
           criar_tarefa?: boolean
+          detectar_silencio_bilateral?: boolean
+          dias_silencio_bilateral?: number
+          escalar_gestor_em_dias?: number
           etapa_id?: string
           funil_id?: string
+          gestor_id?: string | null
           id?: string
           mensagem_custom?: string | null
           notificar_responsavel?: boolean
@@ -3717,6 +3737,7 @@ export type Database = {
           tempo_unidade?: string
           tempo_valor?: number
           updated_at?: string
+          usar_script_ia?: boolean
         }
         Relationships: [
           {
@@ -5540,6 +5561,77 @@ export type Database = {
           },
         ]
       }
+      lead_coach_cache: {
+        Row: {
+          analisado_em: string
+          cadencia: Json | null
+          company_id: string
+          created_at: string
+          expires_at: string
+          id: string
+          lead_id: string
+          objecoes_detectadas: Json | null
+          proximos_passos: Json | null
+          resumo: string | null
+          risco_de_perda: number | null
+          score_engajamento: number | null
+          score_fit: number | null
+          score_intencao: number | null
+          script: string | null
+          scripts_alternativos: Json | null
+          temperatura: string | null
+          updated_at: string
+        }
+        Insert: {
+          analisado_em?: string
+          cadencia?: Json | null
+          company_id: string
+          created_at?: string
+          expires_at?: string
+          id?: string
+          lead_id: string
+          objecoes_detectadas?: Json | null
+          proximos_passos?: Json | null
+          resumo?: string | null
+          risco_de_perda?: number | null
+          score_engajamento?: number | null
+          score_fit?: number | null
+          score_intencao?: number | null
+          script?: string | null
+          scripts_alternativos?: Json | null
+          temperatura?: string | null
+          updated_at?: string
+        }
+        Update: {
+          analisado_em?: string
+          cadencia?: Json | null
+          company_id?: string
+          created_at?: string
+          expires_at?: string
+          id?: string
+          lead_id?: string
+          objecoes_detectadas?: Json | null
+          proximos_passos?: Json | null
+          resumo?: string | null
+          risco_de_perda?: number | null
+          score_engajamento?: number | null
+          score_fit?: number | null
+          score_intencao?: number | null
+          script?: string | null
+          scripts_alternativos?: Json | null
+          temperatura?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lead_coach_cache_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: true
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       lead_scores: {
         Row: {
           calculated_at: string
@@ -5729,7 +5821,9 @@ export type Database = {
           engagement_type: string | null
           etapa_id: string | null
           expected_close_date: string | null
+          follow_bilateral_silence_notified_at: string | null
           follow_count: number
+          follow_step: number
           form_id: string | null
           funil_id: string | null
           govbr_login: string | null
@@ -5741,6 +5835,7 @@ export type Database = {
           last_disparo_campaign: string | null
           last_engagement_at: string | null
           last_interaction_at: string | null
+          last_lead_reply_at: string | null
           last_movement_at: string | null
           last_prospected_at: string | null
           lead_origem_id: string | null
@@ -5809,7 +5904,9 @@ export type Database = {
           engagement_type?: string | null
           etapa_id?: string | null
           expected_close_date?: string | null
+          follow_bilateral_silence_notified_at?: string | null
           follow_count?: number
+          follow_step?: number
           form_id?: string | null
           funil_id?: string | null
           govbr_login?: string | null
@@ -5821,6 +5918,7 @@ export type Database = {
           last_disparo_campaign?: string | null
           last_engagement_at?: string | null
           last_interaction_at?: string | null
+          last_lead_reply_at?: string | null
           last_movement_at?: string | null
           last_prospected_at?: string | null
           lead_origem_id?: string | null
@@ -5889,7 +5987,9 @@ export type Database = {
           engagement_type?: string | null
           etapa_id?: string | null
           expected_close_date?: string | null
+          follow_bilateral_silence_notified_at?: string | null
           follow_count?: number
+          follow_step?: number
           form_id?: string | null
           funil_id?: string | null
           govbr_login?: string | null
@@ -5901,6 +6001,7 @@ export type Database = {
           last_disparo_campaign?: string | null
           last_engagement_at?: string | null
           last_interaction_at?: string | null
+          last_lead_reply_at?: string | null
           last_movement_at?: string | null
           last_prospected_at?: string | null
           lead_origem_id?: string | null

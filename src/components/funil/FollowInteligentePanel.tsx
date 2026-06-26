@@ -7,7 +7,7 @@ import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Sparkles, Zap, Clock, MessageSquare, CheckCircle2 } from "lucide-react";
+import { Sparkles, Zap, Clock, MessageSquare, CheckCircle2, Brain, AlertTriangle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -33,6 +33,13 @@ interface FollowConfig {
   tarefa_titulo: string | null;
   notificar_responsavel: boolean;
   avancar_proxima_etapa: boolean;
+  usar_script_ia: boolean;
+  cooldown_dinamico: boolean;
+  cadencia_progressiva: boolean;
+  detectar_silencio_bilateral: boolean;
+  dias_silencio_bilateral: number;
+  escalar_gestor_em_dias: number;
+  gestor_id: string | null;
 }
 
 interface Props {
@@ -52,6 +59,13 @@ const defaultCfg = (etapaId: string, funilId: string, tempoValor = 1): FollowCon
   tarefa_titulo: null,
   notificar_responsavel: false,
   avancar_proxima_etapa: false,
+  usar_script_ia: true,
+  cooldown_dinamico: true,
+  cadencia_progressiva: true,
+  detectar_silencio_bilateral: true,
+  dias_silencio_bilateral: 3,
+  escalar_gestor_em_dias: 7,
+  gestor_id: null,
 });
 
 export function FollowInteligentePanel({ funilId, etapas }: Props) {
@@ -261,6 +275,72 @@ export function FollowInteligentePanel({ funilId, etapas }: Props) {
                           onCheckedChange={(v) => updateCfg(e.id, { avancar_proxima_etapa: v })}
                         />
                       </div>
+                    </div>
+
+                    {/* IA Coach integrada */}
+                    <div className="space-y-3 rounded-lg border border-primary/30 bg-primary/5 p-3">
+                      <div className="flex items-center gap-2 font-semibold text-primary">
+                        <Brain className="h-4 w-4" />
+                        IA Coach — CMO Sênior integrado
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <Label htmlFor={`ia-${e.id}`}>Script gerado pela IA</Label>
+                          <p className="text-xs text-muted-foreground">Usa script personalizado da IA em vez de mensagem fixa.</p>
+                        </div>
+                        <Switch id={`ia-${e.id}`} checked={c.usar_script_ia} onCheckedChange={(v) => updateCfg(e.id, { usar_script_ia: v })} />
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <Label htmlFor={`cd-${e.id}`}>Cooldown dinâmico por temperatura</Label>
+                          <p className="text-xs text-muted-foreground">Quente: 4h · Morno: 48h · Frio: 72h (em vez de 24h fixo).</p>
+                        </div>
+                        <Switch id={`cd-${e.id}`} checked={c.cooldown_dinamico} onCheckedChange={(v) => updateCfg(e.id, { cooldown_dinamico: v })} />
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <Label htmlFor={`cad-${e.id}`}>Cadência progressiva D+1 → D+3 → D+7 → D+14</Label>
+                          <p className="text-xs text-muted-foreground">Steps automáticos com scripts diferentes por fase.</p>
+                        </div>
+                        <Switch id={`cad-${e.id}`} checked={c.cadencia_progressiva} onCheckedChange={(v) => updateCfg(e.id, { cadencia_progressiva: v })} />
+                      </div>
+                    </div>
+
+                    {/* Silêncio bilateral */}
+                    <div className="space-y-3 rounded-lg border border-amber-500/30 bg-amber-500/5 p-3">
+                      <div className="flex items-center gap-2 font-semibold text-amber-600 dark:text-amber-400">
+                        <AlertTriangle className="h-4 w-4" />
+                        Detector de leads abandonados
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <Label htmlFor={`sb-${e.id}`}>Detectar silêncio bilateral</Label>
+                          <p className="text-xs text-muted-foreground">Alerta quando nem o lead nem o atendente interagem.</p>
+                        </div>
+                        <Switch id={`sb-${e.id}`} checked={c.detectar_silencio_bilateral} onCheckedChange={(v) => updateCfg(e.id, { detectar_silencio_bilateral: v })} />
+                      </div>
+                      {c.detectar_silencio_bilateral && (
+                        <div className="grid grid-cols-2 gap-3">
+                          <div className="space-y-1">
+                            <Label>Alertar após (dias)</Label>
+                            <Input
+                              type="number"
+                              min={1}
+                              value={c.dias_silencio_bilateral}
+                              onChange={(ev) => updateCfg(e.id, { dias_silencio_bilateral: Math.max(1, parseInt(ev.target.value) || 3) })}
+                            />
+                          </div>
+                          <div className="space-y-1">
+                            <Label>Escalar gestor após (dias)</Label>
+                            <Input
+                              type="number"
+                              min={1}
+                              value={c.escalar_gestor_em_dias}
+                              onChange={(ev) => updateCfg(e.id, { escalar_gestor_em_dias: Math.max(1, parseInt(ev.target.value) || 7) })}
+                            />
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </TabsContent>
                 );
