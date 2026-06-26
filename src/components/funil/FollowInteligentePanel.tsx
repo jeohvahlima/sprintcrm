@@ -33,6 +33,13 @@ interface FollowConfig {
   tarefa_titulo: string | null;
   notificar_responsavel: boolean;
   avancar_proxima_etapa: boolean;
+  usar_script_ia: boolean;
+  cooldown_dinamico: boolean;
+  cadencia_progressiva: boolean;
+  detectar_silencio_bilateral: boolean;
+  dias_silencio_bilateral: number;
+  escalar_gestor_em_dias: number;
+  gestor_id: string | null;
 }
 
 interface Props {
@@ -52,6 +59,13 @@ const defaultCfg = (etapaId: string, funilId: string, tempoValor = 1): FollowCon
   tarefa_titulo: null,
   notificar_responsavel: false,
   avancar_proxima_etapa: false,
+  usar_script_ia: true,
+  cooldown_dinamico: true,
+  cadencia_progressiva: true,
+  detectar_silencio_bilateral: true,
+  dias_silencio_bilateral: 3,
+  escalar_gestor_em_dias: 7,
+  gestor_id: null,
 });
 
 export function FollowInteligentePanel({ funilId, etapas }: Props) {
