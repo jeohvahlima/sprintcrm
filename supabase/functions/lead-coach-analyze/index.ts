@@ -150,6 +150,12 @@ Deno.serve(async (req) => {
           (lead as any).source ? `Origem: ${(lead as any).source}` : "",
           (lead as any).notes ? `Anotacoes: ${String((lead as any).notes).slice(0, 500)}` : "",
           (lead as any).created_at ? `Lead criado em: ${(lead as any).created_at}` : "",
+          (lead as any).last_lead_reply_at
+            ? `Ultima resposta do lead: ${(lead as any).last_lead_reply_at}`
+            : "Lead nunca respondeu.",
+          (lead as any).follow_step != null
+            ? `Step atual da cadencia: ${[0, 1, 3, 7, 14][(lead as any).follow_step] != null ? "D+" + [0, 1, 3, 7, 14][(lead as any).follow_step] : "completo"}`
+            : "",
         ].filter(Boolean).join("\n");
       }
     }
