@@ -138,7 +138,7 @@ Deno.serve(async (req) => {
     if (lead_id) {
       const { data: lead } = await supabase
         .from("leads")
-        .select("name, value, status, source, notes, created_at")
+        .select("name, value, status, source, notes, created_at, last_lead_reply_at, follow_step")
         .eq("id", lead_id)
         .maybeSingle();
 
