@@ -189,13 +189,13 @@ export function CoachIAFloatingButton({
       if (current) {
         const { error } = await supabase
           .from("ia_configurations")
-          .update({ custom_prompts: prompts, updated_at: new Date().toISOString() })
+          .update({ custom_prompts: prompts as any, updated_at: new Date().toISOString() })
           .eq("company_id", companyId);
         if (error) throw error;
       } else {
         const { error } = await supabase
           .from("ia_configurations")
-          .insert({ company_id: companyId, custom_prompts: prompts });
+          .insert({ company_id: companyId, custom_prompts: prompts as any } as any);
         if (error) throw error;
       }
       return true;
