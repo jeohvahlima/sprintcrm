@@ -276,6 +276,72 @@ export function FollowInteligentePanel({ funilId, etapas }: Props) {
                         />
                       </div>
                     </div>
+
+                    {/* IA Coach integrada */}
+                    <div className="space-y-3 rounded-lg border border-primary/30 bg-primary/5 p-3">
+                      <div className="flex items-center gap-2 font-semibold text-primary">
+                        <Brain className="h-4 w-4" />
+                        IA Coach — CMO Sênior integrado
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <Label htmlFor={`ia-${e.id}`}>Script gerado pela IA</Label>
+                          <p className="text-xs text-muted-foreground">Usa script personalizado da IA em vez de mensagem fixa.</p>
+                        </div>
+                        <Switch id={`ia-${e.id}`} checked={c.usar_script_ia} onCheckedChange={(v) => updateCfg(e.id, { usar_script_ia: v })} />
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <Label htmlFor={`cd-${e.id}`}>Cooldown dinâmico por temperatura</Label>
+                          <p className="text-xs text-muted-foreground">Quente: 4h · Morno: 48h · Frio: 72h (em vez de 24h fixo).</p>
+                        </div>
+                        <Switch id={`cd-${e.id}`} checked={c.cooldown_dinamico} onCheckedChange={(v) => updateCfg(e.id, { cooldown_dinamico: v })} />
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <Label htmlFor={`cad-${e.id}`}>Cadência progressiva D+1 → D+3 → D+7 → D+14</Label>
+                          <p className="text-xs text-muted-foreground">Steps automáticos com scripts diferentes por fase.</p>
+                        </div>
+                        <Switch id={`cad-${e.id}`} checked={c.cadencia_progressiva} onCheckedChange={(v) => updateCfg(e.id, { cadencia_progressiva: v })} />
+                      </div>
+                    </div>
+
+                    {/* Silêncio bilateral */}
+                    <div className="space-y-3 rounded-lg border border-amber-500/30 bg-amber-500/5 p-3">
+                      <div className="flex items-center gap-2 font-semibold text-amber-600 dark:text-amber-400">
+                        <AlertTriangle className="h-4 w-4" />
+                        Detector de leads abandonados
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <Label htmlFor={`sb-${e.id}`}>Detectar silêncio bilateral</Label>
+                          <p className="text-xs text-muted-foreground">Alerta quando nem o lead nem o atendente interagem.</p>
+                        </div>
+                        <Switch id={`sb-${e.id}`} checked={c.detectar_silencio_bilateral} onCheckedChange={(v) => updateCfg(e.id, { detectar_silencio_bilateral: v })} />
+                      </div>
+                      {c.detectar_silencio_bilateral && (
+                        <div className="grid grid-cols-2 gap-3">
+                          <div className="space-y-1">
+                            <Label>Alertar após (dias)</Label>
+                            <Input
+                              type="number"
+                              min={1}
+                              value={c.dias_silencio_bilateral}
+                              onChange={(ev) => updateCfg(e.id, { dias_silencio_bilateral: Math.max(1, parseInt(ev.target.value) || 3) })}
+                            />
+                          </div>
+                          <div className="space-y-1">
+                            <Label>Escalar gestor após (dias)</Label>
+                            <Input
+                              type="number"
+                              min={1}
+                              value={c.escalar_gestor_em_dias}
+                              onChange={(ev) => updateCfg(e.id, { escalar_gestor_em_dias: Math.max(1, parseInt(ev.target.value) || 7) })}
+                            />
+                          </div>
+                        </div>
+                      )}
+                    </div>
                   </TabsContent>
                 );
               })}
