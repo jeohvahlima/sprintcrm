@@ -258,6 +258,34 @@ Deno.serve(async (req) => {
       });
     }
 
+    // Salvar no cache para o follow-inteligente-engine usar
+    if (lead_id) {
+      try {
+        await supabase.from("lead_coach_cache").upsert(
+          {
+            lead_id,
+            company_id,
+            temperatura: report.temperatura,
+            risco_de_perda: report.risco_de_perda,
+            score_engajamento: report.score_engajamento,
+            score_intencao: report.score_intencao,
+            score_fit: report.score_fit,
+            script: report.mensagem_sugerida || report.abordagem_ideal,
+            scripts_alternativos: report.scripts_alternativos ?? [],
+            cadencia: report.cadencia ?? [],
+            objecoes_detectadas: report.objecoes_detectadas ?? [],
+            proximos_passos: report.proximos_passos ?? [],
+            resumo: report.resumo_interacao,
+            analisado_em: new Date().toISOString(),
+            expires_at: new Date(Date.now() + 6 * 3_600_000).toISOString(),
+          },
+          { onConflict: "lead_id" },
+        );
+      } catch (cacheErr) {
+        console.error("[lead-coach-analyze] cache upsert", cacheErr);
+      }
+    }
+
     return new Response(JSON.stringify({ report, total_mensagens: mensagens.length }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
