@@ -465,9 +465,18 @@ export default function ConfirmarCompromisso() {
                     </div>
                   )}
 
-                  <div className="mx-5 mt-4 flex gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm leading-5 text-amber-800">
-                    <span className="font-bold">!</span>
-                    <span>Confirme sua presenca para garantir esse horario na agenda.</span>
+                  <div className="mx-5 mt-4 flex items-center gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm leading-5 text-amber-800">
+                    <Zap className="h-5 w-5 shrink-0 text-amber-600" />
+                    <span>
+                      {countdown ? (
+                        <>
+                          Confirme em ate <span className="font-bold text-amber-900">{countdown}</span> para garantir
+                          seu horario. Outros leads podem ocupar esta vaga.
+                        </>
+                      ) : (
+                        "Confirme sua presenca para garantir esse horario na agenda."
+                      )}
+                    </span>
                   </div>
 
                   <div className="space-y-3 px-5 py-5">
