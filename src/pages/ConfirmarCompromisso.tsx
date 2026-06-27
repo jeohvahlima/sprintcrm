@@ -514,6 +514,27 @@ export default function ConfirmarCompromisso() {
                       <CalendarSync className="h-4 w-4 mr-1.5" />
                       Quero remarcar para outro horario
                     </Button>
+
+                    <div className="flex items-center justify-center gap-2 pt-3">
+                      <div className="flex">
+                        {[
+                          { i: "MR", bg: "from-indigo-500 to-purple-500" },
+                          { i: "AC", bg: "from-emerald-500 to-emerald-700" },
+                          { i: "BL", bg: "from-amber-500 to-amber-700" },
+                        ].map((a, idx) => (
+                          <div
+                            key={a.i}
+                            className={`-ml-2 first:ml-0 flex h-6 w-6 items-center justify-center rounded-full border-2 border-white text-[9px] font-bold text-white bg-gradient-to-br ${a.bg}`}
+                          >
+                            {a.i}
+                          </div>
+                        ))}
+                      </div>
+                      <span className="text-xs text-slate-500">
+                        <strong className="text-slate-700">+128 pessoas</strong> ja confirmaram com{" "}
+                        {data.profissional_nome?.split(" ")[0] || "este consultor"}
+                      </span>
+                    </div>
                   </div>
                 </>
               )}
