@@ -28,7 +28,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { Checkbox } from "@/components/ui/checkbox";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { format, parseISO, addDays } from "date-fns";
+import { format, parseISO, addDays, startOfDay } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { ProfissionalSelector } from "./ProfissionalSelector";
@@ -180,6 +180,11 @@ export function AgendarRetornoDialog({
       const dataHoraInicio = new Date(`${dataFormatada}T${horaInicioCompleta}`);
       const duracao = parseInt(duracaoMinutos) || 30;
       const dataHoraFim = new Date(dataHoraInicio.getTime() + duracao * 60000);
+
+      if (isNaN(dataHoraInicio.getTime()) || dataHoraInicio < new Date()) {
+        toast.error("Não é possível agendar retorno em data ou horário que já passou.");
+        return;
+      }
 
       // Preparar dados do novo compromisso
       const novoCompromisso = {
@@ -375,7 +380,7 @@ export function AgendarRetornoDialog({
                   locale={ptBR}
                   initialFocus
                   className="pointer-events-auto"
-                  disabled={(date) => date < new Date()}
+                  disabled={(date) => startOfDay(date) < startOfDay(new Date())}
                 />
               </PopoverContent>
             </Popover>

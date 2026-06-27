@@ -27,7 +27,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { Switch } from "@/components/ui/switch";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { format, parseISO } from "date-fns";
+import { format, parseISO, startOfDay } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { useCompanySegmento } from "@/hooks/useCompanySegmento";
@@ -174,13 +174,22 @@ export function EditarCompromissoDialog({
     const newErrors: Record<string, string> = {};
 
     // Validar data
-    const hoje = new Date();
-    hoje.setHours(0, 0, 0, 0);
-    const dataSelecionada = new Date(data);
-    dataSelecionada.setHours(0, 0, 0, 0);
+    const dataSelecionada = startOfDay(data);
 
-    if (dataSelecionada < hoje && compromisso.status === 'agendado') {
-      newErrors.data = "A data não pode ser no passado para compromissos agendados";
+    if (dataSelecionada < startOfDay(new Date())) {
+      newErrors.data = "A data não pode ser no passado";
+    } else {
+      const dataFormatada = format(data, "yyyy-MM-dd");
+      const horaInicioCompleta = horaInicio.includes(':') && horaInicio.split(':').length === 2
+        ? `${horaInicio}:00`
+        : horaInicio;
+      const dataHoraInicio = new Date(`${dataFormatada}T${horaInicioCompleta}`);
+
+      if (isNaN(dataHoraInicio.getTime())) {
+        newErrors.horaInicio = "Horário de início inválido";
+      } else if (dataHoraInicio < new Date()) {
+        newErrors.horaInicio = "O horário não pode estar no passado";
+      }
     }
 
     // Validar duração
@@ -833,6 +842,7 @@ export function EditarCompromissoDialog({
                   locale={ptBR}
                   initialFocus
                   className="pointer-events-auto"
+                  disabled={(date) => startOfDay(date) < startOfDay(new Date())}
                 />
               </PopoverContent>
             </Popover>

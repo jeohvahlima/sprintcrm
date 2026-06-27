@@ -203,8 +203,11 @@
     }
     .view-toggle button.active { background: hsl(var(--info)); color: white; box-shadow: 0 2px 6px hsl(var(--info) / 0.3); }
 
+    .agenda-board-panel { overflow-x: auto; }
+    .agenda-board-panel .week-toolbar { min-width: 1260px; }
     .week-grid {
-      display: grid; grid-template-columns: 60px repeat(7, 1fr);
+      display: grid; grid-template-columns: 64px repeat(7, minmax(170px, 1fr));
+      min-width: 1260px;
       border-top: 1px solid hsl(var(--border));
     }
     .wh-cell { border-right: 1px solid hsl(var(--border)); border-bottom: 1px solid hsl(var(--border)); }
@@ -216,23 +219,47 @@
     }
     .wh-head .num { display: block; font-size: 18px; font-weight: 800; color: hsl(var(--text)); margin-top: 2px; letter-spacing: -0.02em; }
     .wh-head.today .num { display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 30px; border-radius: 999px; background: hsl(var(--info)); color: white; margin-top: 4px; }
-    .wh-time { font-size: 11px; font-weight: 600; color: hsl(var(--text-soft)); padding: 8px 6px; text-align: right; border-right: 1px solid hsl(var(--border)); }
-    .wh-slot { min-height: 56px; position: relative; }
+    .wh-time { font-size: 11px; font-weight: 600; color: hsl(var(--text-soft)); padding: 10px 8px; text-align: right; border-right: 1px solid hsl(var(--border)); }
+    .wh-slot { min-height: 76px; position: relative; }
     .wh-slot.today-col { background: hsl(var(--info) / 0.04); }
     .ev {
-      position: absolute; left: 4px; right: 4px; top: 4px; bottom: 4px;
-      border-radius: 6px; padding: 6px 8px; font-size: 12px;
+      position: absolute; left: 5px; right: 5px; top: 6px; bottom: 6px;
+      border-radius: 8px; padding: 7px 8px 6px 9px; font-size: 11px;
+      border: 1px solid var(--cb, hsl(var(--border)));
       border-left: 3px solid var(--c, hsl(var(--info)));
       background: var(--cs, hsl(var(--info-soft)));
-      color: hsl(var(--text)); overflow: hidden;
+      color: var(--ct, hsl(var(--text))); overflow: hidden;
+      box-shadow: 0 1px 2px hsl(160 20% 12% / 0.06);
+      transition: box-shadow .14s, transform .14s, border-color .14s;
     }
-    .ev .nm { font-weight: 700; font-size: 12px; }
-    .ev .tm { font-size: 11px; color: hsl(var(--text-muted)); margin-top: 2px; }
-    .ev.blue { --c: hsl(var(--info)); --cs: hsl(var(--info-soft)); }
-    .ev.green { --c: hsl(var(--success)); --cs: hsl(var(--success-soft)); }
-    .ev.red { --c: hsl(var(--danger)); --cs: hsl(var(--danger-soft)); }
-    .ev.purple { --c: hsl(var(--purple)); --cs: hsl(var(--purple-soft)); }
-    .ev.orange { --c: hsl(var(--warning)); --cs: hsl(var(--warning-soft)); }
+    .ev:hover { box-shadow: 0 8px 24px hsl(160 20% 12% / 0.13); transform: translateY(-1px); z-index: 20; }
+    .ev .ev-top { display: flex; align-items: flex-start; gap: 7px; min-width: 0; }
+    .ev .ev-avatar {
+      width: 24px; height: 24px; border-radius: 999px; flex-shrink: 0;
+      display: inline-flex; align-items: center; justify-content: center;
+      background: var(--c, hsl(var(--info))); color: #fff;
+      font-size: 10px; font-weight: 800; letter-spacing: .01em;
+      box-shadow: 0 0 0 2px hsl(var(--surface) / .75);
+    }
+    .ev .ev-main { min-width: 0; flex: 1; }
+    .ev .ev-line { display: flex; align-items: flex-start; justify-content: space-between; gap: 6px; min-width: 0; }
+    .ev .nm { font-weight: 800; font-size: 12px; line-height: 1.15; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+    .ev .tm { font-size: 10px; line-height: 1.2; margin-top: 2px; color: var(--cm, hsl(var(--text-muted))); overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+    .ev .ev-status {
+      flex-shrink: 0; display: inline-flex; align-items: center; gap: 3px;
+      border-radius: 999px; padding: 1px 6px; font-size: 9px; font-weight: 800;
+      background: var(--sb, hsl(var(--surface))); color: var(--st, hsl(var(--text-muted)));
+      border: 1px solid hsl(var(--surface) / 0.55);
+    }
+    .ev .ev-note { font-size: 10px; line-height: 1.2; margin-top: 4px; color: var(--cm, hsl(var(--text-muted))); overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+    .ev.pending { --c:#f59e0b; --cs:#fffbeb; --cb:#fde68a; --ct:#92400e; --cm:#b45309; --sb:#fef3c7; --st:#92400e; }
+    .ev.confirmed { --c:#10b981; --cs:#f0fdf4; --cb:#bbf7d0; --ct:#065f46; --cm:#047857; --sb:#d1fae5; --st:#065f46; }
+    .ev.no-answer { --c:#ef4444; --cs:#fef2f2; --cb:#fecaca; --ct:#991b1b; --cm:#b91c1c; --sb:#fee2e2; --st:#991b1b; }
+    .ev.blue { --c: hsl(var(--info)); --cs: hsl(var(--info-soft)); --cb:hsl(217 92% 86%); }
+    .ev.green { --c: hsl(var(--success)); --cs: hsl(var(--success-soft)); --cb:hsl(142 70% 82%); }
+    .ev.red { --c: hsl(var(--danger)); --cs: hsl(var(--danger-soft)); --cb:hsl(0 86% 84%); }
+    .ev.purple { --c: hsl(var(--purple)); --cs: hsl(var(--purple-soft)); --cb:hsl(265 90% 86%); }
+    .ev.orange { --c: hsl(var(--warning)); --cs: hsl(var(--warning-soft)); --cb:hsl(38 92% 82%); }
 
     /* LEMBRETES PANEL */
     .lem-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
@@ -480,7 +507,7 @@
         <!-- RIGHT COLUMN -->
         <div style="display: flex; flex-direction: column; gap: 18px;">
           <!-- Week view -->
-          <div class="panel">
+          <div class="panel agenda-board-panel">
             <div class="panel-head week-toolbar">
               <div class="panel-title"><i class="ti ti-calendar-week"></i> <span id="week_title">Visão semanal</span></div>
               <div class="view-toggle" id="view_toggle">
@@ -694,7 +721,7 @@
         </div>
         <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px;">
           <label style="display:flex; flex-direction:column; gap:6px; font-size:12px; color:hsl(var(--text-muted)); font-weight:600;">Data
-            <input id="f_date" type="date" style="padding:9px 12px; border:1px solid hsl(var(--border)); border-radius:8px; font-size:13px;"/>
+            <input id="f_date" type="date" min="" style="padding:9px 12px; border:1px solid hsl(var(--border)); border-radius:8px; font-size:13px;"/>
           </label>
           <label style="display:flex; flex-direction:column; gap:6px; font-size:12px; color:hsl(var(--text-muted)); font-weight:600;">Início
             <input id="f_start" type="time" style="padding:9px 12px; border:1px solid hsl(var(--border)); border-radius:8px; font-size:13px;"/>
@@ -1097,6 +1124,29 @@
       function fmtDateISO(d){ return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate()); }
       function parseISO(s){ const [y,m,d]=s.split('-').map(Number); return new Date(y,m-1,d); }
       function sameDay(a,b){ return a.getFullYear()===b.getFullYear()&&a.getMonth()===b.getMonth()&&a.getDate()===b.getDate(); }
+      function apptState(ev){
+        const st = String(ev?.status || 'agendado').toLowerCase();
+        if(['confirmado','concluido','confirmed'].includes(st)) return 'confirmed';
+        if(['cancelado','sem_resposta','sem resposta','no_answer','no-answer','falha'].includes(st)) return 'no-answer';
+        return 'pending';
+      }
+      function apptStatusLabel(ev){
+        const state = apptState(ev);
+        if(state === 'confirmed') return 'Confirmado';
+        if(state === 'no-answer') return String(ev?.status || '').toLowerCase().includes('cancel') ? 'Cancelado' : 'Sem resposta';
+        return 'Pendente';
+      }
+      function apptWppLine(ev){
+        const state = apptState(ev);
+        if(state === 'confirmed') return 'Confirmado via WhatsApp';
+        if(state === 'no-answer') return ev?.status === 'cancelado' ? 'Compromisso cancelado' : 'Sem resposta do lead';
+        if(ev?.confirmNow || ev?.remWa || ev?.phone) return 'Aguardando confirmacao';
+        return 'Link de confirmacao pendente';
+      }
+      function apptTypeLabel(type){
+        const t = String(type || 'Compromisso');
+        return t.charAt(0).toUpperCase() + t.slice(1);
+      }
 
       // ---------- Calendar render ----------
       function renderCalendar(){
@@ -1167,7 +1217,6 @@
           wg.appendChild(h);
         }
         const items = load();
-        const colorOf = t => ({Consulta:'blue', Retorno:'green', Procedimento:'orange', 'Reunião':'purple'}[t] || 'blue');
         const _bh = (function(){ try { return JSON.parse(localStorage.getItem('agenda_business_hours')) || {start:7,end:21}; } catch(_) { return {start:7,end:21}; } })();
         for(let h=_bh.start; h<=_bh.end; h++){
           const time = document.createElement('div'); time.className='wh-time'; time.textContent = pad(h)+':00'; wg.appendChild(time);
@@ -1179,13 +1228,23 @@
             cell.addEventListener('click', () => openModal(null, {date: fmtDateISO(d), start: pad(h)+':00'}));
             const ev = items.find(it => it.date===fmtDateISO(d) && it.start && parseInt(it.start)===h);
             if(ev){
-              const e = document.createElement('div'); e.className='ev '+colorOf(ev.type);
-              const subt = [ev.type, ev.prof].filter(Boolean).join(' • ');
-              const tip = [ev.name, ev.start+' – '+(ev.end||''), ev.type, ev.agenda, ev.prof, ev.phone, ev.email, ev.notes].filter(Boolean).join('\n');
+              const state = apptState(ev);
+              const e = document.createElement('div'); e.className='ev '+state;
+              const typeText = apptTypeLabel(ev.type);
+              const initials = (ev.name||'?').split(/\s+/).slice(0,2).map(s=>s[0]||'').join('').toUpperCase();
+              const tip = [ev.name, ev.start+' - '+(ev.end||''), ev.type, ev.agenda, ev.prof, ev.phone, ev.email, ev.notes].filter(Boolean).join('\n');
               e.title = tip;
-              e.innerHTML = '<div class="nm">'+escapeHTML(ev.name)+'</div>'
-                + '<div class="tm">'+ev.start+' – '+(ev.end||'')+'</div>'
-                + (subt ? '<div class="tm" style="opacity:.85;">'+escapeHTML(subt)+'</div>' : '');
+              e.innerHTML = '<div class="ev-top">'
+                + '<div class="ev-avatar">'+escapeHTML(initials)+'</div>'
+                + '<div class="ev-main">'
+                + '<div class="ev-line">'
+                + '<div class="nm">'+escapeHTML(ev.name)+'</div>'
+                + '<span class="ev-status">'+(state === 'confirmed' ? '&check;' : state === 'no-answer' ? '&times;' : '&#9203;')+' '+escapeHTML(apptStatusLabel(ev))+'</span>'
+                + '</div>'
+                + '<div class="tm"><i class="ti ti-clock"></i> '+ev.start+' - '+(ev.end||'')+' &middot; '+escapeHTML(typeText)+'</div>'
+                + '</div>'
+                + '</div>'
+                + '<div class="ev-note"><i class="ti ti-message"></i> '+escapeHTML(apptWppLine(ev))+'</div>';
               e.addEventListener('click', (evt) => { evt.stopPropagation(); openModal(ev.id); });
               cell.appendChild(e);
             }
@@ -1332,6 +1391,7 @@
         document.getElementById('apptTitle').textContent = ev ? 'Editar compromisso' : 'Novo compromisso';
         document.getElementById('f_name').value = ev?.name || '';
         document.getElementById('f_date').value = ev?.date || prefill?.date || fmtDateISO(selectedDate);
+        document.getElementById('f_date').min = fmtDateISO(new Date());
         document.getElementById('f_start').value = ev?.start || prefill?.start || '09:00';
         document.getElementById('f_end').value = ev?.end || '09:30';
         document.getElementById('f_type').value = ev?.type || 'Consulta';
@@ -1382,6 +1442,7 @@
         const items = load().filter(i => i.date === date && i.id !== editingId);
         const now = new Date();
         const isToday = date === fmtDateISO(now);
+        const datePassed = date && parseISO(date) < parseISO(fmtDateISO(now));
         const nowMin = now.getHours()*60 + now.getMinutes();
         const _cfg = (typeof getCfg==='function') ? getCfg() : null;
         const _r = (typeof cfgHourRange==='function') ? cfgHourRange() : { start:7, end:21 };
@@ -1390,7 +1451,7 @@
         let html = '';
         for(let t = START_MIN; t + dur <= END_MIN; t += STEP){
           const slotStart = t, slotEnd = t + dur;
-          const past = isToday && slotEnd <= nowMin;
+          const past = datePassed || (isToday && slotEnd <= nowMin);
           const blocked = (typeof cfgIsBlocked==='function') ? cfgIsBlocked(date, slotStart, slotEnd) : false;
           const occupied = items.some(i => {
             const s = hhmmToMin(i.start), e = hhmmToMin(i.end || minToHHMM(s+30));
@@ -1444,6 +1505,11 @@
         const date = document.getElementById('f_date').value;
         const start = document.getElementById('f_start').value;
         if(!name || !date || !start){ toast('Preencha cliente, data e início'); return; }
+        const startDateTime = new Date(date + 'T' + start);
+        if(Number.isNaN(startDateTime.getTime()) || startDateTime < new Date()){
+          toast('Nao e possivel salvar compromisso em data ou horario passado');
+          return;
+        }
         const items = load();
         const payload = {
           id: editingId || ('a_'+Date.now()),

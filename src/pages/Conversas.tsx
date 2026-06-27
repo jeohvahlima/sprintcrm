@@ -2258,6 +2258,12 @@ function Conversas() {
   const [meetingTitle, setMeetingTitle] = useState("");
   const [meetingData, setMeetingData] = useState(format(new Date(), "yyyy-MM-dd"));
   const [meetingHoraInicio, setMeetingHoraInicio] = useState("");
+  const meetingDataMin = format(new Date(), "yyyy-MM-dd");
+  const meetingHorarioExpirado = useMemo(() => {
+    if (!meetingData || !meetingHoraInicio) return false;
+    const dataHoraInicio = new Date(`${meetingData}T${meetingHoraInicio}`);
+    return !isNaN(dataHoraInicio.getTime()) && dataHoraInicio < new Date();
+  }, [meetingData, meetingHoraInicio]);
   const [meetingDatetime, setMeetingDatetime] = useState("");
   const [meetingNotes, setMeetingNotes] = useState("");
   const [meetingTipoServico, setMeetingTipoServico] = useState("reuniao");
@@ -7052,6 +7058,10 @@ function Conversas() {
 
       // Criar compromisso/reunião com parse correto da data e hora
       const dataHoraInicio = new Date(`${meetingData}T${meetingHoraInicio}`);
+      if (isNaN(dataHoraInicio.getTime()) || dataHoraInicio < new Date()) {
+        toast.error("Não é possível agendar compromisso em data ou horário que já passou.");
+        return;
+      }
       const duracaoMinutos = parseInt(meetingDuracao) || 30;
       const dataHoraFim = new Date(dataHoraInicio.getTime() + duracaoMinutos * 60 * 1000);
       const emailConvidadoFinal = (emailConvidadoReuniao?.trim() || leadVinculado?.email || '').trim();
@@ -11562,7 +11572,18 @@ function Conversas() {
                                 <div className="grid grid-cols-2 gap-3">
                                   <div>
                                     <Label htmlFor="data">Data do Compromisso *</Label>
-                                    <Input id="data" type="date" value={meetingData} onChange={e => setMeetingData(e.target.value)} className="h-9" />
+                                    <Input
+                                      id="data"
+                                      type="date"
+                                      min={meetingDataMin}
+                                      value={meetingData}
+                                      onChange={e => {
+                                        setMeetingData(e.target.value);
+                                        setMeetingHoraInicio("");
+                                        setMeetingDatetime("");
+                                      }}
+                                      className="h-9"
+                                    />
                                   </div>
                                   <div>
                                     <Label htmlFor="duracao">Duração (min)</Label>
@@ -11718,7 +11739,7 @@ function Conversas() {
                               setSyncStatus('idle');
                             }
                             await scheduleMeeting();
-                          }} className="w-full" disabled={!meetingTipoServico.trim() || !meetingData || !meetingHoraInicio}>
+                          }} className="w-full" disabled={!meetingTipoServico.trim() || !meetingData || !meetingHoraInicio || meetingHorarioExpirado}>
                                   Agendar Compromisso
                                 </Button>
                               </TabsContent>

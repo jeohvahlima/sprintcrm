@@ -1,6 +1,5 @@
 import { useMemo } from "react";
-import { format, parse, isAfter, isBefore, addMinutes, isToday, isSameDay, getDay } from "date-fns";
-import { ptBR } from "date-fns/locale";
+import { format, parse, isAfter, isBefore, addMinutes, isSameDay, getDay, startOfDay } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
@@ -80,6 +79,7 @@ export function HorarioSeletor({
 
     const agora = new Date();
     const ehHoje = isSameDay(dataBase, agora);
+    const dataInteiraPassou = isBefore(startOfDay(dataBase), startOfDay(agora));
 
     // Função para adicionar horários de um período
     const adicionarHorariosPeriodo = (inicio: string, fim: string) => {
@@ -94,8 +94,8 @@ export function HorarioSeletor({
         const inicioCompromisso = parse(`${data} ${horarioStr}`, "yyyy-MM-dd HH:mm", new Date());
         const fimCompromisso = addMinutes(inicioCompromisso, duracaoMinutos);
 
-        // Verificar se o horário já passou (apenas se for hoje)
-        const horarioPassou = ehHoje && isBefore(inicioCompromisso, agora);
+        // Verificar se o horário já passou.
+        const horarioPassou = dataInteiraPassou || (ehHoje && isBefore(inicioCompromisso, agora));
 
         const compromissosNoHorario = compromissosExistentes.filter((comp) => {
           const compInicio = new Date(comp.data_hora_inicio);

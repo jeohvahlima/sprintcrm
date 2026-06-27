@@ -29,6 +29,7 @@ interface AgendaModalProps {
 export function AgendaModal({ open, onOpenChange, lead, onAgendamentoCriado }: AgendaModalProps) {
   const [loading, setLoading] = useState(false);
   const { isClinica } = useCompanySegmento();
+  const hojeInput = format(new Date(), "yyyy-MM-dd");
   const [horarioComercial, setHorarioComercial] = useState<HorarioComercial>(criarHorarioPadrao());
   const [compromissosExistentes, setCompromissosExistentes] = useState<any[]>([]);
   const [agendaSelecionada, setAgendaSelecionada] = useState<any>(null);
@@ -301,6 +302,11 @@ export function AgendaModal({ open, onOpenChange, lead, onAgendamentoCriado }: A
         "yyyy-MM-dd HH:mm",
         new Date()
       );
+
+      if (dataHoraInicio < new Date()) {
+        toast.error("Não é possível agendar compromisso em data ou horário que já passou.");
+        return;
+      }
 
       // Calcular data/hora fim baseada na duração
       const duracaoMin = parseInt(formData.duracao_minutos) || 30;
@@ -710,8 +716,9 @@ export function AgendaModal({ open, onOpenChange, lead, onAgendamentoCriado }: A
               <Input
                 id="data"
                 type="date"
+                min={hojeInput}
                 value={formData.data}
-                onChange={(e) => setFormData({ ...formData, data: e.target.value })}
+                onChange={(e) => setFormData({ ...formData, data: e.target.value, hora_inicio: "" })}
                 required
                 className="h-9"
               />
