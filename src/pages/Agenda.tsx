@@ -1,31 +1,113 @@
-// 🔒 LOCKED: Render the official GROW OS Agenda mockup inside the app layout.
-// Visual changes must be made in public/agenda.html — do NOT replace with old React components.
+// Locked: render the official GROW OS Agenda mockup inside the app layout.
+// Visual changes must be made in public/agenda.html instead of replacing with old React components.
 import { useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
+
+function toDatePart(value?: string | null) {
+  if (!value) return "";
+  return value.slice(0, 10);
+}
+
+function toTimePart(value?: string | null) {
+  if (!value) return "";
+  return new Date(value).toLocaleTimeString("pt-BR", {
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  });
+}
 
 export default function Agenda() {
   const iframeRef = useRef<HTMLIFrameElement>(null);
 
   useEffect(() => {
     let cancelled = false;
+    let currentCompanyId: string | null = null;
+
+    const sendToIframe = (payload: Record<string, unknown>) => {
+      iframeRef.current?.contentWindow?.postMessage(payload, "*");
+    };
 
     async function loadAndSend() {
-      const [{ data: agendas }, { data: profs }, { data: leads }] = await Promise.all([
-        supabase.from("agendas").select("id, nome").order("nome"),
-        supabase.from("profissionais").select("id, nome, especialidade").order("nome"),
-        supabase
-          .from("leads")
-          .select("id, name, phone, email")
-          .order("name")
-          .range(0, 999),
+      const { data: userData } = await supabase.auth.getUser();
+      const user = userData?.user;
+
+      let companyId = currentCompanyId;
+      if (user && !companyId) {
+        const { data: role } = await supabase
+          .from("user_roles")
+          .select("company_id")
+          .eq("user_id", user.id)
+          .maybeSingle();
+        companyId = role?.company_id || null;
+        currentCompanyId = companyId;
+      }
+
+      const agendasQuery = supabase.from("agendas").select("id, nome").order("nome");
+      const profsQuery = supabase.from("profissionais").select("id, nome, especialidade").order("nome");
+      const leadsQuery = supabase
+        .from("leads")
+        .select("id, name, phone, email")
+        .order("name")
+        .range(0, 999);
+      const compromissosQuery = supabase
+        .from("compromissos")
+        .select(`
+          *,
+          lead:leads(id, name, phone, email),
+          agenda:agendas(id, nome, tipo)
+        `)
+        .order("data_hora_inicio", { ascending: true })
+        .limit(1000);
+      const lembretesQuery = supabase
+        .from("lembretes")
+        .select(`
+          *,
+          compromisso:compromissos(
+            id,
+            data_hora_inicio,
+            data_hora_fim,
+            tipo_servico,
+            titulo,
+            paciente,
+            lead:leads(id, name, phone, email)
+          )
+        `)
+        .order("data_envio", { ascending: true, nullsFirst: false })
+        .limit(1000);
+
+      if (companyId) {
+        agendasQuery.eq("company_id", companyId);
+        profsQuery.eq("company_id", companyId);
+        leadsQuery.eq("company_id", companyId);
+        compromissosQuery.eq("company_id", companyId);
+        lembretesQuery.eq("company_id", companyId);
+      }
+
+      const [
+        { data: agendas },
+        { data: profs },
+        { data: leads },
+        { data: compromissos, error: compromissosError },
+        { data: lembretes, error: lembretesError },
+      ] = await Promise.all([
+        agendasQuery,
+        profsQuery,
+        leadsQuery,
+        compromissosQuery,
+        lembretesQuery,
       ]);
+
+      if (compromissosError) console.error("[Agenda] erro ao carregar compromissos", compromissosError);
+      if (lembretesError) console.error("[Agenda] erro ao carregar lembretes", lembretesError);
       if (cancelled) return;
-      const payload = {
+
+      sendToIframe({
         type: "agenda:data",
         agendas: (agendas || []).map((a: any) => ({ id: a.id, label: a.nome })),
         profissionais: (profs || []).map((p: any) => ({
           id: p.id,
-          label: p.especialidade ? `${p.nome} — ${p.especialidade}` : p.nome,
+          label: p.especialidade ? `${p.nome} - ${p.especialidade}` : p.nome,
         })),
         leads: (leads || []).map((l: any) => ({
           id: l.id,
@@ -33,22 +115,57 @@ export default function Agenda() {
           phone: l.phone || "",
           email: l.email || "",
         })),
-      };
-      iframeRef.current?.contentWindow?.postMessage(payload, "*");
+        compromissos: (compromissos || []).map((c: any) => ({
+          id: c.id,
+          date: toDatePart(c.data_hora_inicio),
+          start: toTimePart(c.data_hora_inicio),
+          end: toTimePart(c.data_hora_fim),
+          type: c.tipo_servico || c.titulo || "Compromisso",
+          title: c.titulo || c.tipo_servico || "Compromisso",
+          name: c.lead?.name || c.paciente || c.titulo || c.tipo_servico || "Compromisso",
+          client: c.lead?.name || c.paciente || "",
+          agenda: c.agenda?.nome || "",
+          prof: "",
+          phone: c.lead?.phone || c.telefone || "",
+          email: c.lead?.email || c.email_convidado || "",
+          notes: c.observacoes || "",
+          status: c.status || "agendado",
+          remote: true,
+        })),
+        lembretes: (lembretes || []).map((l: any) => {
+          const compromisso = l.compromisso || {};
+          const envio = l.data_hora_envio || l.data_envio || l.proxima_data_envio || compromisso.data_hora_inicio;
+          return {
+            id: l.id,
+            compromisso_id: l.compromisso_id,
+            date: toDatePart(envio),
+            time: toTimePart(envio),
+            name: compromisso.lead?.name || compromisso.paciente || compromisso.titulo || compromisso.tipo_servico || "Lembrete",
+            type: l.tipo_lembrete || "lembrete",
+            channel: l.canal || "whatsapp",
+            destinatario: l.destinatario || "",
+            phone: l.telefone_responsavel || compromisso.lead?.phone || "",
+            message: l.mensagem || "",
+            status: l.status_envio || "pendente",
+            appointmentDate: toDatePart(compromisso.data_hora_inicio),
+            appointmentTime: toTimePart(compromisso.data_hora_inicio),
+          };
+        }),
+      });
     }
 
     async function createAgenda(data: any) {
       try {
         const { data: userData } = await supabase.auth.getUser();
         const user = userData?.user;
-        if (!user) throw new Error("Usuário não autenticado");
+        if (!user) throw new Error("Usuario nao autenticado");
         const { data: role } = await supabase
           .from("user_roles")
           .select("company_id")
           .eq("user_id", user.id)
           .maybeSingle();
         const company_id = role?.company_id;
-        if (!company_id) throw new Error("Empresa não encontrada para o usuário");
+        if (!company_id) throw new Error("Empresa nao encontrada para o usuario");
 
         const slug = String(data.nome || "agenda")
           .toLowerCase()
@@ -81,17 +198,11 @@ export default function Agenda() {
           throw error;
         }
 
-        iframeRef.current?.contentWindow?.postMessage(
-          { type: "agenda:create-agenda-result", ok: true },
-          "*"
-        );
+        sendToIframe({ type: "agenda:create-agenda-result", ok: true });
         await loadAndSend();
       } catch (e: any) {
         console.error("[createAgenda]", e);
-        iframeRef.current?.contentWindow?.postMessage(
-          { type: "agenda:create-agenda-result", ok: false, error: e?.message || "Erro ao criar agenda" },
-          "*"
-        );
+        sendToIframe({ type: "agenda:create-agenda-result", ok: false, error: e?.message || "Erro ao criar agenda" });
       }
     }
 
@@ -100,12 +211,23 @@ export default function Agenda() {
       if (d?.type === "agenda:ready") loadAndSend();
       if (d?.type === "agenda:create-agenda") createAgenda(d);
     }
+
+    const compromissosChannel = supabase
+      .channel("agenda-page-compromissos")
+      .on("postgres_changes", { event: "*", schema: "public", table: "compromissos" }, loadAndSend)
+      .subscribe();
+    const lembretesChannel = supabase
+      .channel("agenda-page-lembretes")
+      .on("postgres_changes", { event: "*", schema: "public", table: "lembretes" }, loadAndSend)
+      .subscribe();
+
     window.addEventListener("message", onMessage);
-    // tenta também após load do iframe
     const t = setTimeout(loadAndSend, 800);
     return () => {
       cancelled = true;
       window.removeEventListener("message", onMessage);
+      supabase.removeChannel(compromissosChannel);
+      supabase.removeChannel(lembretesChannel);
       clearTimeout(t);
     };
   }, []);
@@ -115,7 +237,7 @@ export default function Agenda() {
       <iframe
         ref={iframeRef}
         src="/agenda.html"
-        title="Agenda — GROW OS"
+        title="Agenda - GROW OS"
         className="w-full h-full border-0 block"
       />
     </div>

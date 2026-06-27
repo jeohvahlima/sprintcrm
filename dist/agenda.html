@@ -274,6 +274,13 @@
     }
 
     .compromisso-list { display: flex; flex-direction: column; }
+    .empty-state {
+      padding: 24px 16px;
+      color: hsl(var(--text-muted));
+      font-size: 13px;
+      text-align: center;
+      border-top: 1px solid hsl(var(--border));
+    }
     .item {
       display: grid; grid-template-columns: 44px 1fr auto;
       gap: 14px; padding: 16px;
@@ -443,27 +450,27 @@
           </div>
 
           <!-- Lembretes automáticos -->
-          <div class="panel">
+          <div class="panel" id="lembretesPanel" style="cursor:pointer;">
             <div class="panel-head">
               <div class="panel-title"><i class="ti ti-bell-ringing"></i> Lembretes automáticos</div>
-              <span class="pill success">88% sucesso</span>
+              <span class="pill success" id="lemSuccessRate">0% sucesso</span>
             </div>
             <div class="panel-body">
               <div class="lem-grid">
                 <div class="lem-card g">
-                  <div class="lem-num">34</div>
+                  <div class="lem-num" id="lemSentCount">0</div>
                   <div class="lem-label">Enviados</div>
-                  <div class="lem-bar"><i style="width: 88%"></i></div>
+                  <div class="lem-bar"><i id="lemSentBar" style="width: 0%"></i></div>
                 </div>
                 <div class="lem-card o">
-                  <div class="lem-num">5</div>
+                  <div class="lem-num" id="lemPendingCount">0</div>
                   <div class="lem-label">Pendentes</div>
-                  <div class="lem-bar"><i style="width: 40%"></i></div>
+                  <div class="lem-bar"><i id="lemPendingBar" style="width: 0%"></i></div>
                 </div>
                 <div class="lem-card b">
-                  <div class="lem-num">3</div>
+                  <div class="lem-num" id="lemTodayCount">0</div>
                   <div class="lem-label">Para hoje</div>
-                  <div class="lem-bar"><i style="width: 60%"></i></div>
+                  <div class="lem-bar"><i id="lemTodayBar" style="width: 0%"></i></div>
                 </div>
               </div>
             </div>
@@ -546,7 +553,11 @@
                   if(titleEl) titleEl.innerHTML = `<i class="ti ti-calendar-month"></i> Visão mensal — ${MES_FULL[m]} ${y}`;
                   // load appointments
                   let items = [];
-                  try { items = JSON.parse(localStorage.getItem('agenda_appointments_v1')) || []; } catch(_){ items = []; }
+                  try {
+                    items = typeof window.__agendaLoad === 'function'
+                      ? window.__agendaLoad()
+                      : (JSON.parse(localStorage.getItem('agenda_appointments_v1')) || []);
+                  } catch(_){ items = []; }
                   const byDate = {};
                   items.forEach(it => { if(!it || !it.date) return; (byDate[it.date] = byDate[it.date] || []).push(it); });
                   const first = new Date(y, m, 1);
@@ -636,9 +647,9 @@
 
           <!-- Tabs + list -->
           <div class="panel">
-            <div class="tabs">
-              <div class="tab active"><i class="ti ti-list-details"></i> Compromissos <span class="badge">18</span></div>
-              <div class="tab"><i class="ti ti-bell"></i> Lembretes <span class="badge">5</span></div>
+            <div class="tabs" id="agendaTabs">
+              <div class="tab active" data-tab="compromissos"><i class="ti ti-list-details"></i> Compromissos <span class="badge" id="compromissosBadge">0</span></div>
+              <div class="tab" data-tab="lembretes"><i class="ti ti-bell"></i> Lembretes <span class="badge" id="lembretesBadge">0</span></div>
             </div>
             <div class="filters">
               <div class="search">
@@ -937,6 +948,10 @@
   <script>
     (function(){
       const STORAGE_KEY = 'agenda_appointments_v1';
+      let CRM_APPOINTMENTS = [];
+      let CRM_REMINDERS = [];
+      let activeListTab = 'compromissos';
+      window.__agendaLoad = () => load();
 
       // Recebe agendas/profissionais reais do CRM via postMessage do React wrapper
       function populateSelect(id, items, placeholder){
@@ -966,6 +981,9 @@
           populateSelect('f_agenda', d.agendas, 'Nenhuma agenda cadastrada');
           populateSelect('f_prof', d.profissionais, 'Nenhum profissional cadastrado');
           if(Array.isArray(d.leads)) CRM_LEADS = d.leads;
+          if(Array.isArray(d.compromissos)) CRM_APPOINTMENTS = d.compromissos;
+          if(Array.isArray(d.lembretes)) CRM_REMINDERS = d.lembretes;
+          renderAll();
         }
         if(d.type === 'agenda:create-agenda-result'){
           const t = document.getElementById('toast');
@@ -1065,14 +1083,15 @@
         try {
           const arr = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
           // sanitiza: remove UUIDs salvos antigamente em agenda/prof
-          return arr.map(it => ({
+          const localItems = arr.map(it => ({
             ...it,
             agenda: isUuidLike(it.agenda) ? '' : it.agenda,
             prof: isUuidLike(it.prof) ? '' : it.prof,
           }));
+          return [...CRM_APPOINTMENTS, ...localItems];
         } catch { return []; }
       }
-      function save(list){ localStorage.setItem(STORAGE_KEY, JSON.stringify(list)); }
+      function save(list){ localStorage.setItem(STORAGE_KEY, JSON.stringify((list || []).filter(i => !i.remote))); }
       function toast(msg){ const t=document.getElementById('toast'); t.textContent=msg; t.style.display='block'; clearTimeout(t._h); t._h=setTimeout(()=>t.style.display='none',2500); }
       function pad(n){ return String(n).padStart(2,'0'); }
       function fmtDateISO(d){ return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate()); }
@@ -1184,7 +1203,56 @@
           list.appendChild(extra);
         }
         extra.innerHTML = '';
+        updateBadgesAndReminderStats();
+        document.querySelectorAll('#agendaTabs .tab').forEach(tab => {
+          tab.classList.toggle('active', tab.dataset.tab === activeListTab);
+        });
+        if(activeListTab === 'lembretes'){
+          const reminders = [...CRM_REMINDERS].sort((a,b)=> ((a.date||'')+(a.time||'')).localeCompare((b.date||'')+(b.time||'')));
+          if(!reminders.length){
+            extra.innerHTML = '<div class="empty-state">Nenhum lembrete encontrado.</div>';
+            return;
+          }
+          reminders.forEach(rem => {
+            const initials = (rem.name||'?').split(/\s+/).slice(0,2).map(s=>s[0]||'').join('').toUpperCase();
+            const status = String(rem.status || 'pendente').toLowerCase();
+            const sent = ['enviado','enviada','sucesso','sent'].includes(status);
+            const failed = ['erro','falha','failed','cancelado'].includes(status);
+            const colorClass = failed ? 'c-danger' : sent ? 'c-success' : 'c-warning';
+            const pillClass = failed ? 'danger' : sent ? 'success' : 'warning';
+            const label = sent ? 'Enviado' : failed ? 'Falha' : 'Pendente';
+            const [y,m,d] = String(rem.date||'').split('-');
+            const dateText = d && m && y ? `${d}/${m}/${y}` : 'Sem data';
+            const wa = rem.phone ? '<button class="iconbtn green" data-wa="'+escapeAttr(rem.phone)+'" title="WhatsApp"><i class="ti ti-brand-whatsapp"></i></button>' : '';
+            const div = document.createElement('div');
+            div.className = 'item '+colorClass;
+            div.innerHTML = `
+              <div class="avatar">${escapeHTML(initials)}</div>
+              <div class="item-main">
+                <div class="item-head">
+                  <span class="item-name">${escapeHTML(rem.name || 'Lembrete')}</span>
+                  <span class="pill ${pillClass}"><i class="ti ti-bell"></i> ${label}</span>
+                </div>
+                <div class="item-meta-row">
+                  <div class="item-meta">
+                    <span><i class="ti ti-send"></i> ${dateText}${rem.time ? ' as '+escapeHTML(rem.time) : ''}</span>
+                    <span class="pill neutral">${escapeHTML(rem.channel || 'whatsapp')}</span>
+                    ${rem.destinatario ? '<span class="pill neutral">'+escapeHTML(rem.destinatario)+'</span>' : ''}
+                  </div>
+                  ${rem.appointmentDate ? '<div class="item-meta"><span><i class="ti ti-calendar-event"></i> Compromisso: '+escapeHTML(rem.appointmentDate)+(rem.appointmentTime ? ' '+escapeHTML(rem.appointmentTime) : '')+'</span></div>' : ''}
+                  ${rem.message ? '<div class="item-meta"><span>'+escapeHTML(rem.message).slice(0, 180)+'</span></div>' : ''}
+                </div>
+              </div>
+              <div class="item-actions">${wa}</div>`;
+            extra.appendChild(div);
+          });
+          return;
+        }
         const items = load().sort((a,b)=> (a.date+a.start).localeCompare(b.date+b.start));
+        if(!items.length){
+          extra.innerHTML = '<div class="empty-state">Nenhum compromisso encontrado.</div>';
+          return;
+        }
         items.forEach(ev => {
           const initials = (ev.name||'?').split(/\s+/).slice(0,2).map(s=>s[0]||'').join('').toUpperCase();
           const colorClass = ev.status==='cancelado' ? 'c-danger' : ev.status==='concluido' ? 'c-success' : 'c-info';
@@ -1195,6 +1263,9 @@
               : '<span class="pill info"><i class="ti ti-calendar-time"></i> Agendado</span>';
           const [y,m,d] = ev.date.split('-');
           const wa = ev.phone ? '<button class="iconbtn green" data-wa="'+escapeAttr(ev.phone)+'" title="WhatsApp"><i class="ti ti-brand-whatsapp"></i></button>' : '';
+          const localActions = ev.remote ? '' : `
+              <button class="iconbtn" data-edit="${ev.id}" title="Editar"><i class="ti ti-pencil"></i></button>
+              <button class="iconbtn" data-del="${ev.id}" title="Excluir"><i class="ti ti-trash"></i></button>`;
           const div = document.createElement('div');
           div.className = 'item '+colorClass;
           div.innerHTML = `
@@ -1216,8 +1287,7 @@
             </div>
             <div class="item-actions">
               ${wa}
-              <button class="iconbtn" data-edit="${ev.id}" title="Editar"><i class="ti ti-pencil"></i></button>
-              <button class="iconbtn" data-del="${ev.id}" title="Excluir"><i class="ti ti-trash"></i></button>
+              ${localActions}
             </div>`;
           extra.appendChild(div);
         });
@@ -1225,6 +1295,34 @@
 
       function escapeHTML(s){ return String(s||'').replace(/[&<>"]/g, c=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;' }[c])); }
       function escapeAttr(s){ return escapeHTML(s); }
+
+      function updateBadgesAndReminderStats(){
+        const appointments = load();
+        const reminders = CRM_REMINDERS;
+        const setText = (id, value) => { const el = document.getElementById(id); if(el) el.textContent = String(value); };
+        setText('compromissosBadge', appointments.length);
+        setText('lembretesBadge', reminders.length);
+
+        const todayIso = fmtDateISO(new Date());
+        const sentStatuses = ['enviado','enviada','sucesso','sent'];
+        const failedStatuses = ['erro','falha','failed','cancelado'];
+        const sent = reminders.filter(r => sentStatuses.includes(String(r.status || '').toLowerCase())).length;
+        const pending = reminders.filter(r => {
+          const st = String(r.status || 'pendente').toLowerCase();
+          return !sentStatuses.includes(st) && !failedStatuses.includes(st);
+        }).length;
+        const today = reminders.filter(r => r.date === todayIso).length;
+        const total = Math.max(reminders.length, 1);
+        const successRate = Math.round((sent / total) * 100);
+        setText('lemSentCount', sent);
+        setText('lemPendingCount', pending);
+        setText('lemTodayCount', today);
+        setText('lemSuccessRate', `${successRate}% sucesso`);
+        const setWidth = (id, value) => { const el = document.getElementById(id); if(el) el.style.width = `${Math.min(100, Math.round((value / total) * 100))}%`; };
+        setWidth('lemSentBar', sent);
+        setWidth('lemPendingBar', pending);
+        setWidth('lemTodayBar', today);
+      }
 
       // ---------- Modal ----------
       function openModal(id, prefill){
@@ -1518,6 +1616,17 @@
       if(navBtns[1]) navBtns[1].addEventListener('click', () => { viewDate.setMonth(viewDate.getMonth()+1); renderAll(); });
       const todayBtn = document.querySelector('.panel-head .btn');
       if(todayBtn) todayBtn.addEventListener('click', () => { const t=new Date(); viewDate=new Date(t); selectedDate=new Date(t); renderAll(); });
+
+      function activateListTab(tab){
+        activeListTab = tab === 'lembretes' ? 'lembretes' : 'compromissos';
+        renderList();
+        document.querySelector('.compromisso-list')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }
+      document.getElementById('agendaTabs')?.addEventListener('click', (e) => {
+        const tab = e.target.closest('[data-tab]');
+        if(tab) activateListTab(tab.dataset.tab);
+      });
+      document.getElementById('lembretesPanel')?.addEventListener('click', () => activateListTab('lembretes'));
 
       // delegated clicks on list (works for static items too)
       document.addEventListener('click', (e) => {

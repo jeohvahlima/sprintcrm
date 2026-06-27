@@ -1313,6 +1313,18 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
 </div>
 
 <script>
+// ─── LIMPAR MOCKUP ESTÁTICO (mostra somente dados reais do Lovable Cloud) ───
+(function clearMockup(){
+  try {
+    const bt = document.getElementById('boardTabs'); if (bt) bt.innerHTML = '';
+    const kv = document.getElementById('kanbanView'); if (kv) kv.innerHTML = '<div style="padding:40px;color:var(--text3);font-size:13px">Carregando seus quadros…</div>';
+    const lb = document.getElementById('listBody'); if (lb) lb.innerHTML = '';
+    const ob = document.getElementById('overdueBanner'); if (ob) ob.style.display = 'none';
+    ['statTotal','statDone','overdueCount','statDueToday','statReview','statHigh'].forEach(id=>{ const el=document.getElementById(id); if(el) el.textContent='0'; });
+    ['statTotalTrend','statDoneTrend'].forEach(id=>{ const el=document.getElementById(id); if(el) el.textContent=''; });
+  } catch(e) { console.warn('clearMockup', e); }
+})();
+
 // ─── STATE ─────────────────────────────────────────────────────────────
 let dragSrcId = null;
 let selectedCards = new Set();

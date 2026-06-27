@@ -439,123 +439,49 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
 
     <!-- Agent Cards -->
     <div class="grid2" style="margin-bottom:20px">
-      <!-- Agente Atendimento -->
-      <div class="agent-card ac-blue">
+      <!-- Coach IA (único agente ativo) -->
+      <div class="agent-card ac-purple">
         <div class="agent-header">
-          <div class="agent-icon" style="background:var(--blue-d);color:var(--blue)"><i class="ti ti-robot"></i></div>
+          <div class="agent-icon" style="background:var(--purple-d);color:var(--purple)"><i class="ti ti-brain"></i></div>
           <div class="agent-meta">
-            <div class="agent-name">IA de Atendimento</div>
-            <div class="agent-desc">Pré-atendimento, qualificação, vendas, suporte e gestão de leads em tempo real</div>
+            <div class="agent-name">Coach IA</div>
+            <div class="agent-desc">Agente unificado: atende, qualifica, agenda, vende e orienta a equipe em tempo real com base no histórico real da conversa</div>
           </div>
           <div class="toggle on" onclick="this.classList.toggle('on');this.classList.toggle('off')"></div>
         </div>
         <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px">
           <span class="badge b-green"><i class="ti ti-circle-check" style="font-size:10px"></i>Ativo</span>
-          <span class="badge b-blue">Vendas</span>
-          <span class="badge b-teal">Suporte</span>
-          <span class="badge b-purple">Qualificação</span>
+          <span class="badge b-purple">Análise real</span>
+          <span class="badge b-blue">Cadência automática</span>
+          <span class="badge b-teal">Modo autônomo</span>
+          <span class="badge b-amber">Base de conhecimento</span>
         </div>
         <div class="agent-status">
           <div class="agent-stat">
-            <div class="agent-stat-num" style="color:var(--blue)">23</div>
-            <div class="agent-stat-label">Conversas hoje</div>
+            <div class="agent-stat-num" style="color:var(--purple)">247</div>
+            <div class="agent-stat-label">Atendimentos hoje</div>
           </div>
           <div class="agent-divider"></div>
           <div class="agent-stat">
-            <div class="agent-stat-num" style="color:var(--green)">8s</div>
+            <div class="agent-stat-num" style="color:var(--green)">6s</div>
             <div class="agent-stat-label">Resp. média</div>
           </div>
           <div class="agent-divider"></div>
           <div class="agent-stat">
             <div class="agent-stat-num" style="color:var(--amber)">94%</div>
-            <div class="agent-stat-label">Sucesso</div>
+            <div class="agent-stat-label">Resolução</div>
           </div>
         </div>
         <div class="agent-actions">
-          <button class="btn btn-ghost"><i class="ti ti-settings"></i>Configurar</button>
-          <button class="btn btn-ghost"><i class="ti ti-book"></i>Base de conhecimento</button>
+          <button class="btn btn-ghost" onclick="window.parent.postMessage({__growos:true,type:'overlay',module:'base'},'*')"><i class="ti ti-book"></i>Base de conhecimento</button>
+          <button class="btn btn-ghost" onclick="window.parent.postMessage({__growos:true,type:'navigate',path:'/conversas'},'*')"><i class="ti ti-message-circle"></i>Abrir BatePapo</button>
           <button class="btn btn-ghost"><i class="ti ti-activity"></i>Logs</button>
-        </div>
-      </div>
-
-      <!-- Agente Agendamento -->
-      <div class="agent-card ac-green">
-        <div class="agent-header">
-          <div class="agent-icon" style="background:var(--green-d);color:var(--green)"><i class="ti ti-calendar-bolt"></i></div>
-          <div class="agent-meta">
-            <div class="agent-name">IA de Agendamento</div>
-            <div class="agent-desc">Agenda, remarca e cancela compromissos automaticamente via WhatsApp</div>
-          </div>
-          <div class="toggle on" onclick="this.classList.toggle('on');this.classList.toggle('off')"></div>
-        </div>
-        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px">
-          <span class="badge b-green"><i class="ti ti-circle-check" style="font-size:10px"></i>Ativo</span>
-          <span class="badge b-teal">Agendas integradas</span>
-          <span class="badge b-blue">Confirmações auto</span>
-        </div>
-        <div class="agent-status">
-          <div class="agent-stat">
-            <div class="agent-stat-num" style="color:var(--green)">18</div>
-            <div class="agent-stat-label">Agendamentos hoje</div>
-          </div>
-          <div class="agent-divider"></div>
-          <div class="agent-stat">
-            <div class="agent-stat-num" style="color:var(--green)">5s</div>
-            <div class="agent-stat-label">Resp. média</div>
-          </div>
-          <div class="agent-divider"></div>
-          <div class="agent-stat">
-            <div class="agent-stat-num" style="color:var(--green)">98%</div>
-            <div class="agent-stat-label">Sucesso</div>
-          </div>
-        </div>
-        <div class="agent-actions">
-          <button class="btn btn-ghost"><i class="ti ti-settings"></i>Configurar</button>
-          <button class="btn btn-ghost"><i class="ti ti-calendar"></i>Ver agendas</button>
-          <button class="btn btn-ghost"><i class="ti ti-activity"></i>Logs</button>
-        </div>
-      </div>
-
-      <!-- Agente Vendedora (novo) -->
-      <div class="agent-card ac-purple">
-        <div class="agent-header">
-          <div class="agent-icon" style="background:var(--purple-d);color:var(--purple)"><i class="ti ti-sparkles"></i></div>
-          <div class="agent-meta">
-            <div class="agent-name">IA Vendedora</div>
-            <div class="agent-desc">Conduz negociações, apresenta produtos e fecha vendas autonomamente</div>
-          </div>
-          <div class="toggle off" onclick="this.classList.toggle('on');this.classList.toggle('off')"></div>
-        </div>
-        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px">
-          <span class="badge b-gray">Desativada</span>
-          <span class="badge b-purple">Scripts de venda</span>
-          <span class="badge b-amber">Funil integrado</span>
-        </div>
-        <div class="agent-status">
-          <div class="agent-stat">
-            <div class="agent-stat-num" style="color:var(--text3)">—</div>
-            <div class="agent-stat-label">Conversas hoje</div>
-          </div>
-          <div class="agent-divider"></div>
-          <div class="agent-stat">
-            <div class="agent-stat-num" style="color:var(--text3)">—</div>
-            <div class="agent-stat-label">Resp. média</div>
-          </div>
-          <div class="agent-divider"></div>
-          <div class="agent-stat">
-            <div class="agent-stat-num" style="color:var(--text3)">—</div>
-            <div class="agent-stat-label">Conversão</div>
-          </div>
-        </div>
-        <div class="agent-actions">
-          <button class="btn btn-ghost"><i class="ti ti-settings"></i>Configurar</button>
-          <button class="btn btn-purple"><i class="ti ti-player-play"></i>Ativar agente</button>
         </div>
       </div>
 
       <!-- Modo Híbrido -->
       <div class="card" style="border-style:dashed;border-color:var(--border2)">
-        <div class="section-title" style="margin-bottom:14px"><i class="ti ti-users-group" style="color:var(--teal)"></i>Modo Híbrido: IA + Humano</div>
+        <div class="section-title" style="margin-bottom:14px"><i class="ti ti-users-group" style="color:var(--teal)"></i>Modo Híbrido: Coach IA + Humano</div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
           <div class="card-sm" style="border-color:rgba(239,68,68,.2)">
             <div style="font-size:12px;font-weight:700;color:var(--red);margin-bottom:8px"><i class="ti ti-user-x"></i> Transferência auto</div>
@@ -569,7 +495,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
           <div class="card-sm" style="border-color:rgba(61,135,245,.2)">
             <div style="font-size:12px;font-weight:700;color:var(--blue);margin-bottom:8px"><i class="ti ti-wand"></i> Sugestões ao humano</div>
             <ul style="font-size:11px;color:var(--text2);line-height:2;list-style:none">
-              <li>• IA sugere respostas</li>
+              <li>• Coach sugere respostas</li>
               <li>• Humano aceita ou edita</li>
               <li>• Histórico completo</li>
               <li>• Transição suave</li>
@@ -579,6 +505,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
         <button class="btn btn-ghost" style="width:100%;justify-content:center"><i class="ti ti-settings"></i>Configurar transferências</button>
       </div>
     </div>
+
 
     <!-- n8n integration banner -->
     <div class="card" style="background:linear-gradient(135deg,rgba(255,102,0,.06),rgba(255,102,0,.02));border-color:rgba(255,102,0,.2)">
@@ -1294,6 +1221,10 @@ window.addEventListener('message', function (ev) {
     if (st) st.textContent = data.published ? 'Site publicado e online' : 'Site em rascunho (modo preview)';
     window.__growosSiteUrl = data.url;
     window.__growosSitePublished = !!data.published;
+    if (data.url && window.__growosPendingOpenSite) {
+      window.__growosPendingOpenSite = false;
+      growosOpenSite();
+    }
   }
 });
 
@@ -1303,7 +1234,7 @@ document.getElementById('waIframe')?.addEventListener('load', function () {
 
 function growosOpenSite() {
   const url = window.__growosSiteUrl;
-  if (!url) { post({ type: 'toast', message: 'Carregando URL do site…' }); post({ type: 'requestSiteInfo' }); return; }
+  if (!url) { window.__growosPendingOpenSite = true; post({ type: 'toast', message: 'Carregando URL do site…' }); post({ type: 'requestSiteInfo' }); return; }
   const open = window.__growosSitePublished ? url : url + (url.includes('?') ? '&' : '?') + 'preview=1';
   window.open(open, '_blank', 'noopener');
 }
