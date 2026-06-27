@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -11,6 +11,7 @@ import {
   Stethoscope,
   User,
   XCircle,
+  Zap,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -234,8 +235,27 @@ export default function ConfirmarCompromisso() {
     slotsPorDia[key].push(s);
   }
 
+  // Countdown até 30 minutos antes do compromisso (ou até o início, se já estiver perto)
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    const id = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(id);
+  }, []);
+  const countdown = useMemo(() => {
+    if (!data) return null;
+    const target = new Date(data.data_hora_inicio).getTime() - 30 * 60 * 1000;
+    const diff = Math.max(0, target - now);
+    if (diff === 0 && new Date(data.data_hora_inicio).getTime() < now) return null;
+    const totalSec = Math.floor(diff / 1000);
+    const hh = String(Math.floor(totalSec / 3600)).padStart(2, "0");
+    const mm = String(Math.floor((totalSec % 3600) / 60)).padStart(2, "0");
+    const ss = String(totalSec % 60).padStart(2, "0");
+    return Number(hh) > 0 ? `${hh}:${mm}:${ss}` : `${mm}:${ss}`;
+  }, [data, now]);
+
   return (
     <div className="min-h-screen bg-slate-100 text-slate-950">
+      <style>{`@keyframes confirmPulse{0%,100%{opacity:1}50%{opacity:.55}} .confirm-pulse{animation:confirmPulse 2s ease-in-out infinite}`}</style>
       <div className="relative overflow-hidden bg-gradient-to-br from-emerald-950 via-emerald-800 to-emerald-700 px-4 pb-24 pt-8 text-white">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_0%,rgba(74,222,128,.28),transparent_45%)]" />
         <div className="relative mx-auto flex max-w-lg flex-col items-center text-center">
@@ -420,8 +440,8 @@ export default function ConfirmarCompromisso() {
                       </div>
                       <div>
                         <p className="text-[11px] text-slate-400">Status atual</p>
-                        <span className="mt-1 inline-flex items-center rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-xs font-bold text-amber-800">
-                          Aguardando sua confirmacao
+                        <span className="confirm-pulse mt-1 inline-flex items-center rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-xs font-bold text-amber-800">
+                          ⏳ Aguardando sua confirmacao
                         </span>
                       </div>
                     </div>
@@ -445,9 +465,18 @@ export default function ConfirmarCompromisso() {
                     </div>
                   )}
 
-                  <div className="mx-5 mt-4 flex gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm leading-5 text-amber-800">
-                    <span className="font-bold">!</span>
-                    <span>Confirme sua presenca para garantir esse horario na agenda.</span>
+                  <div className="mx-5 mt-4 flex items-center gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm leading-5 text-amber-800">
+                    <Zap className="h-5 w-5 shrink-0 text-amber-600" />
+                    <span>
+                      {countdown ? (
+                        <>
+                          Confirme em ate <span className="font-bold text-amber-900">{countdown}</span> para garantir
+                          seu horario. Outros leads podem ocupar esta vaga.
+                        </>
+                      ) : (
+                        "Confirme sua presenca para garantir esse horario na agenda."
+                      )}
+                    </span>
                   </div>
 
                   <div className="space-y-3 px-5 py-5">
@@ -485,6 +514,27 @@ export default function ConfirmarCompromisso() {
                       <CalendarSync className="h-4 w-4 mr-1.5" />
                       Quero remarcar para outro horario
                     </Button>
+
+                    <div className="flex items-center justify-center gap-2 pt-3">
+                      <div className="flex">
+                        {[
+                          { i: "MR", bg: "from-indigo-500 to-purple-500" },
+                          { i: "AC", bg: "from-emerald-500 to-emerald-700" },
+                          { i: "BL", bg: "from-amber-500 to-amber-700" },
+                        ].map((a, idx) => (
+                          <div
+                            key={a.i}
+                            className={`-ml-2 first:ml-0 flex h-6 w-6 items-center justify-center rounded-full border-2 border-white text-[9px] font-bold text-white bg-gradient-to-br ${a.bg}`}
+                          >
+                            {a.i}
+                          </div>
+                        ))}
+                      </div>
+                      <span className="text-xs text-slate-500">
+                        <strong className="text-slate-700">+128 pessoas</strong> ja confirmaram com{" "}
+                        {data.profissional_nome?.split(" ")[0] || "este consultor"}
+                      </span>
+                    </div>
                   </div>
                 </>
               )}
