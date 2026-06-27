@@ -17,6 +17,29 @@ function toTimePart(value?: string | null) {
   });
 }
 
+function normalizePhoneBR(phone?: string | null) {
+  const cleaned = String(phone || "").replace(/\D/g, "");
+  if (!cleaned) return "";
+  if (cleaned.startsWith("55")) return cleaned;
+  return `55${cleaned}`;
+}
+
+function buildDateTime(date: string, time: string) {
+  return new Date(`${date}T${time || "00:00"}`).toISOString();
+}
+
+function addMinutes(date: string, time: string, minutes: number) {
+  const d = new Date(`${date}T${time || "00:00"}`);
+  d.setMinutes(d.getMinutes() + minutes);
+  return d.toISOString();
+}
+
+function reminderDate(startIso: string, minutesBefore: number) {
+  const d = new Date(startIso);
+  d.setMinutes(d.getMinutes() - minutesBefore);
+  return d.toISOString();
+}
+
 export default function Agenda() {
   const iframeRef = useRef<HTMLIFrameElement>(null);
 
@@ -47,9 +70,8 @@ export default function Agenda() {
       const profsQuery = supabase.from("profissionais").select("id, nome, especialidade").order("nome");
       const leadsQuery = supabase
         .from("leads")
-        .select("id, name, phone, email")
-        .order("name")
-        .range(0, 999);
+        .select("id, name, phone, telefone, email")
+        .order("name");
       const compromissosQuery = supabase
         .from("compromissos")
         .select(`
@@ -87,16 +109,26 @@ export default function Agenda() {
       const [
         { data: agendas },
         { data: profs },
-        { data: leads },
         { data: compromissos, error: compromissosError },
         { data: lembretes, error: lembretesError },
       ] = await Promise.all([
         agendasQuery,
         profsQuery,
-        leadsQuery,
         compromissosQuery,
         lembretesQuery,
       ]);
+
+      const allLeads: any[] = [];
+      const pageSize = 1000;
+      for (let from = 0; ; from += pageSize) {
+        const { data: leadsPage, error: leadsError } = await leadsQuery.range(from, from + pageSize - 1);
+        if (leadsError) {
+          console.error("[Agenda] erro ao carregar contatos", leadsError);
+          break;
+        }
+        allLeads.push(...(leadsPage || []));
+        if (!leadsPage || leadsPage.length < pageSize) break;
+      }
 
       if (compromissosError) console.error("[Agenda] erro ao carregar compromissos", compromissosError);
       if (lembretesError) console.error("[Agenda] erro ao carregar lembretes", lembretesError);
@@ -109,10 +141,10 @@ export default function Agenda() {
           id: p.id,
           label: p.especialidade ? `${p.nome} - ${p.especialidade}` : p.nome,
         })),
-        leads: (leads || []).map((l: any) => ({
+        leads: allLeads.map((l: any) => ({
           id: l.id,
           name: l.name || "",
-          phone: l.phone || "",
+          phone: l.phone || l.telefone || "",
           email: l.email || "",
         })),
         compromissos: (compromissos || []).map((c: any) => ({
@@ -122,6 +154,7 @@ export default function Agenda() {
           end: toTimePart(c.data_hora_fim),
           type: c.tipo_servico || c.titulo || "Compromisso",
           title: c.titulo || c.tipo_servico || "Compromisso",
+          leadId: c.lead_id || null,
           name: c.lead?.name || c.paciente || c.titulo || c.tipo_servico || "Compromisso",
           client: c.lead?.name || c.paciente || "",
           agenda: c.agenda?.nome || "",
@@ -157,6 +190,188 @@ export default function Agenda() {
           };
         }),
       });
+    }
+
+    async function sendAppointmentConfirmation({
+      compromisso,
+      payload,
+      companyId,
+    }: {
+      compromisso: any;
+      payload: any;
+      companyId: string;
+    }) {
+      const phone = normalizePhoneBR(payload.phone);
+      if (!phone) return { skipped: "sem telefone" };
+
+      const [year, month, day] = String(payload.date || "").split("-");
+      const dateText = day && month && year ? `${day}/${month}/${year}` : payload.date;
+      const confirmToken = compromisso?.confirmation_token;
+      const link = confirmToken ? `${window.location.origin}/c/${confirmToken}` : "";
+      const serviceLine = payload.type ? `\n*Tipo:* ${payload.type}` : "";
+      const notesLine = payload.notes ? `\n\n*Observacoes:*\n${payload.notes}` : "";
+      const linkLine = link ? `\n\nConfirme seu agendamento pelo link:\n${link}` : "";
+      const mensagem =
+        `*Compromisso Agendado!*\n\n` +
+        `Ola ${payload.name}! Seu compromisso foi agendado com sucesso.\n\n` +
+        `*Data:* ${dateText}\n` +
+        `*Horario:* ${payload.start} as ${payload.end || ""}` +
+        serviceLine +
+        notesLine +
+        `\n\n*Status:* Aguardando sua confirmacao` +
+        linkLine +
+        `\n\n_Esta e uma mensagem automatica do seu agendamento._`;
+
+      const { data, error } = await supabase.functions.invoke("enviar-whatsapp", {
+        body: {
+          numero: phone,
+          mensagem,
+          company_id: companyId,
+          lead_id: payload.leadId || null,
+        },
+      });
+
+      if (error || !(data as any)?.success) {
+        console.error("[Agenda] falha ao enviar confirmacao WhatsApp", error || data);
+        return { error: error?.message || "Falha ao enviar WhatsApp" };
+      }
+      return { success: true };
+    }
+
+    async function createReminder(compromissoId: string, payload: any, companyId: string, userId: string, startIso: string) {
+      const minutesBefore = Number(payload.remTime || 60);
+      const reminders: any[] = [];
+      const message =
+        `Lembrete: ${payload.name}, voce tem um compromisso ` +
+        `${payload.date} as ${payload.start}${payload.type ? ` (${payload.type})` : ""}.`;
+
+      if (payload.remWa && payload.phone) {
+        reminders.push({
+          compromisso_id: compromissoId,
+          canal: "whatsapp",
+          destinatario: "lead",
+          horas_antecedencia: Math.max(1, Math.round(minutesBefore / 60)),
+          data_envio: reminderDate(startIso, minutesBefore),
+          data_hora_envio: reminderDate(startIso, minutesBefore),
+          status_envio: "pendente",
+          telefone_responsavel: payload.phone,
+          mensagem: message,
+          tipo_lembrete: "compromisso",
+          company_id: companyId,
+          created_by: userId,
+          ativo: true,
+        });
+      }
+
+      if (payload.remEmail && payload.email) {
+        reminders.push({
+          compromisso_id: compromissoId,
+          canal: "email",
+          destinatario: "lead",
+          horas_antecedencia: Math.max(1, Math.round(minutesBefore / 60)),
+          data_envio: reminderDate(startIso, minutesBefore),
+          data_hora_envio: reminderDate(startIso, minutesBefore),
+          status_envio: "pendente",
+          mensagem: message,
+          tipo_lembrete: "compromisso",
+          company_id: companyId,
+          created_by: userId,
+          ativo: true,
+        });
+      }
+
+      if (reminders.length) {
+        const { error } = await supabase.from("lembretes").insert(reminders);
+        if (error) console.warn("[Agenda] falha ao criar lembretes", error);
+      }
+    }
+
+    async function saveCompromisso(data: any) {
+      try {
+        const payload = data.payload || data;
+        const { data: userData } = await supabase.auth.getUser();
+        const user = userData?.user;
+        if (!user) throw new Error("Usuario nao autenticado");
+
+        const { data: role } = await supabase
+          .from("user_roles")
+          .select("company_id")
+          .eq("user_id", user.id)
+          .maybeSingle();
+        const companyId = role?.company_id;
+        if (!companyId) throw new Error("Empresa nao encontrada para o usuario");
+
+        const startIso = buildDateTime(payload.date, payload.start);
+        const endIso = payload.end
+          ? buildDateTime(payload.date, payload.end)
+          : addMinutes(payload.date, payload.start, 30);
+        const duration = Math.max(
+          1,
+          Math.round((new Date(endIso).getTime() - new Date(startIso).getTime()) / 60000)
+        );
+
+        const dbPayload: any = {
+          agenda_id: payload.agendaId || null,
+          profissional_id: payload.profId || null,
+          lead_id: payload.leadId || null,
+          paciente: payload.name || null,
+          telefone: payload.phone || null,
+          email_convidado: payload.email || null,
+          tipo_servico: payload.type || "Compromisso",
+          titulo: payload.type || "Compromisso",
+          observacoes: payload.notes || null,
+          custo_estimado: Number(payload.value || 0) || null,
+          data_hora_inicio: startIso,
+          data_hora_fim: endIso,
+          duracao: duration,
+          status: payload.status || "agendado",
+          status_confirmacao: "pendente",
+          convidar_lead_email: Boolean(payload.confirmEmail),
+          lembretes_config: {
+            whatsapp: Boolean(payload.remWa),
+            email: Boolean(payload.remEmail),
+            antecedencia_minutos: Number(payload.remTime || 60),
+            confirmacao_imediata_whatsapp: Boolean(payload.confirmNow),
+          },
+          owner_id: user.id,
+          usuario_responsavel_id: user.id,
+          company_id: companyId,
+        };
+
+        const isRemoteId = payload.id && !String(payload.id).startsWith("a_");
+        const query = isRemoteId
+          ? supabase.from("compromissos").update(dbPayload).eq("id", payload.id).select("id, confirmation_token").single()
+          : supabase.from("compromissos").insert(dbPayload).select("id, confirmation_token").single();
+
+        const { data: compromisso, error } = await query;
+        if (error) throw error;
+
+        if (!isRemoteId) {
+          await createReminder(compromisso.id, payload, companyId, user.id, startIso);
+        }
+
+        const confirmation = payload.confirmNow
+          ? await sendAppointmentConfirmation({ compromisso, payload, companyId })
+          : { skipped: "nao solicitado" };
+
+        sendToIframe({
+          type: "agenda:save-result",
+          ok: true,
+          id: compromisso.id,
+          confirmation,
+          message: confirmation?.success
+            ? "Compromisso salvo e confirmacao WhatsApp enviada"
+            : "Compromisso salvo",
+        });
+        await loadAndSend();
+      } catch (e: any) {
+        console.error("[Agenda] erro ao salvar compromisso", e);
+        sendToIframe({
+          type: "agenda:save-result",
+          ok: false,
+          error: e?.message || "Erro ao salvar compromisso",
+        });
+      }
     }
 
     async function createAgenda(data: any) {
@@ -215,6 +430,7 @@ export default function Agenda() {
       const d: any = e.data || {};
       if (d?.type === "agenda:ready") loadAndSend();
       if (d?.type === "agenda:create-agenda") createAgenda(d);
+      if (d?.type === "agenda:save-compromisso") saveCompromisso(d);
     }
 
     const compromissosChannel = supabase

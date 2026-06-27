@@ -1115,6 +1115,7 @@
 
       // ---------- Autocomplete de contatos do CRM ----------
       function normalize(s){ return String(s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,''); }
+      let selectedLeadId = '';
       function renderLeadSuggestions(q){
         const box = document.getElementById('f_name_suggest');
         if(!box) return;
@@ -1123,7 +1124,7 @@
         if(qn){
           list = CRM_LEADS.filter(l => normalize(l.name).includes(qn) || normalize(l.phone).includes(qn) || normalize(l.email).includes(qn));
         }
-        list = list.slice(0, 20);
+        list = list.slice(0, 80);
         if(!list.length){ box.style.display='none'; box.innerHTML=''; return; }
         box.innerHTML = list.map(l => (
           '<div class="lead-opt" data-id="'+escapeAttr(l.id)+'" style="padding:8px 12px; cursor:pointer; border-bottom:1px solid hsl(var(--border)); font-size:13px;">'
@@ -1138,6 +1139,7 @@
             const id = el.getAttribute('data-id');
             const lead = CRM_LEADS.find(x => String(x.id) === String(id));
             if(lead){
+              selectedLeadId = lead.id || '';
               document.getElementById('f_name').value = lead.name || '';
               if(lead.phone) document.getElementById('f_phone').value = lead.phone;
               if(lead.email) document.getElementById('f_email').value = lead.email;
@@ -1147,7 +1149,11 @@
         });
       }
       document.addEventListener('input', (e) => {
-        if(e.target && e.target.id === 'f_name'){ renderLeadSuggestions(e.target.value); }
+        if(e.target && e.target.id === 'f_name'){
+          const current = CRM_LEADS.find(l => normalize(l.name) === normalize(e.target.value));
+          selectedLeadId = current?.id || '';
+          renderLeadSuggestions(e.target.value);
+        }
       });
       document.addEventListener('focusin', (e) => {
         if(e.target && e.target.id === 'f_name'){ renderLeadSuggestions(e.target.value); }
@@ -1588,6 +1594,7 @@
         const items = load();
         const ev = id ? items.find(i=>i.id===id) : null;
         document.getElementById('apptTitle').textContent = ev ? 'Editar compromisso' : 'Novo compromisso';
+        selectedLeadId = ev?.leadId || ev?.lead_id || '';
         document.getElementById('f_name').value = ev?.name || '';
         document.getElementById('f_date').value = ev?.date || prefill?.date || fmtDateISO(selectedDate);
         document.getElementById('f_date').min = fmtDateISO(new Date());
@@ -1700,6 +1707,23 @@
       document.getElementById('apptCancel').addEventListener('click', closeModal);
       document.getElementById('apptModal').addEventListener('click', (e)=>{ if(e.target.id==='apptModal') closeModal(); });
       document.getElementById('apptInfoModal').addEventListener('click', (e)=>{ if(e.target.id==='apptInfoModal') closeInfoPanel(); });
+      function setSaveBusy(busy){
+        const btn = document.getElementById('apptSave');
+        if(!btn) return;
+        btn.disabled = !!busy;
+        btn.innerHTML = busy ? '<i class="ti ti-loader"></i> Salvando...' : '<i class="ti ti-check"></i> Salvar';
+      }
+      window.addEventListener('message', (e) => {
+        const d = e.data || {};
+        if(d.type !== 'agenda:save-result') return;
+        setSaveBusy(false);
+        if(!d.ok){
+          toast('Erro ao salvar compromisso: ' + (d.error || 'tente novamente'));
+          return;
+        }
+        closeModal();
+        toast(d.message || 'Compromisso salvo');
+      });
       document.getElementById('apptSave').addEventListener('click', () => {
         const name = document.getElementById('f_name').value.trim();
         const date = document.getElementById('f_date').value;
@@ -1710,14 +1734,18 @@
           toast('Nao e possivel salvar compromisso em data ou horario passado');
           return;
         }
-        const items = load();
+        const agendaEl = document.getElementById('f_agenda');
+        const profEl = document.getElementById('f_prof');
         const payload = {
           id: editingId || ('a_'+Date.now()),
           name, date, start,
           end: document.getElementById('f_end').value,
           type: document.getElementById('f_type').value,
-          agenda: (document.getElementById('f_agenda').selectedOptions[0]?.textContent || '').trim(),
-          prof: (document.getElementById('f_prof').selectedOptions[0]?.textContent || '').trim(),
+          agendaId: agendaEl.value || null,
+          profId: profEl.value || null,
+          leadId: selectedLeadId || null,
+          agenda: (agendaEl.selectedOptions[0]?.textContent || '').trim(),
+          prof: (profEl.selectedOptions[0]?.textContent || '').trim(),
           value: parseFloat(document.getElementById('f_value').value) || 0,
           phone: document.getElementById('f_phone').value.trim(),
           email: document.getElementById('f_email').value.trim(),
@@ -1729,6 +1757,15 @@
           notes: document.getElementById('f_notes').value.trim(),
           status: 'agendado'
         };
+        selectedDate = parseISO(date);
+        const hasParent = window.parent && window.parent !== window;
+        if(hasParent){
+          setSaveBusy(true);
+          try { window.parent.postMessage({ type: 'agenda:save-compromisso', payload }, '*'); }
+          catch(_){ setSaveBusy(false); toast('Erro ao enviar compromisso para salvar'); }
+          return;
+        }
+        const items = load();
         if(editingId){
           const idx = items.findIndex(i=>i.id===editingId);
           if(idx>=0) items[idx] = { ...items[idx], ...payload };
