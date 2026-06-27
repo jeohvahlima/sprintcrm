@@ -235,8 +235,27 @@ export default function ConfirmarCompromisso() {
     slotsPorDia[key].push(s);
   }
 
+  // Countdown até 30 minutos antes do compromisso (ou até o início, se já estiver perto)
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    const id = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(id);
+  }, []);
+  const countdown = useMemo(() => {
+    if (!data) return null;
+    const target = new Date(data.data_hora_inicio).getTime() - 30 * 60 * 1000;
+    const diff = Math.max(0, target - now);
+    if (diff === 0 && new Date(data.data_hora_inicio).getTime() < now) return null;
+    const totalSec = Math.floor(diff / 1000);
+    const hh = String(Math.floor(totalSec / 3600)).padStart(2, "0");
+    const mm = String(Math.floor((totalSec % 3600) / 60)).padStart(2, "0");
+    const ss = String(totalSec % 60).padStart(2, "0");
+    return Number(hh) > 0 ? `${hh}:${mm}:${ss}` : `${mm}:${ss}`;
+  }, [data, now]);
+
   return (
     <div className="min-h-screen bg-slate-100 text-slate-950">
+      <style>{`@keyframes confirmPulse{0%,100%{opacity:1}50%{opacity:.55}} .confirm-pulse{animation:confirmPulse 2s ease-in-out infinite}`}</style>
       <div className="relative overflow-hidden bg-gradient-to-br from-emerald-950 via-emerald-800 to-emerald-700 px-4 pb-24 pt-8 text-white">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_0%,rgba(74,222,128,.28),transparent_45%)]" />
         <div className="relative mx-auto flex max-w-lg flex-col items-center text-center">
