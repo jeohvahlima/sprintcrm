@@ -1,11 +1,18 @@
 // Locked: render the official GROW OS Agenda mockup inside the app layout.
 // Visual changes must be made in public/agenda.html instead of replacing with old React components.
-import { useEffect, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+
+const AGENDA_HTML_VERSION = "agenda-fix-20260627-1938";
 
 function toDatePart(value?: string | null) {
   if (!value) return "";
-  return value.slice(0, 10);
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return value.slice(0, 10);
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
 }
 
 function toTimePart(value?: string | null) {
@@ -42,8 +49,46 @@ function reminderDate(startIso: string, minutesBefore: number) {
 
 export default function Agenda() {
   const iframeRef = useRef<HTMLIFrameElement>(null);
+  const [iframeReady, setIframeReady] = useState(false);
+  const iframeSrc = useMemo(
+    () => `/agenda.html?v=${AGENDA_HTML_VERSION}`,
+    []
+  );
 
   useEffect(() => {
+    let active = true;
+
+    async function clearStaleAgendaCache() {
+      try {
+        if ("serviceWorker" in navigator) {
+          const regs = await navigator.serviceWorker.getRegistrations();
+          await Promise.all(regs.map((reg) => reg.unregister()));
+        }
+
+        if ("caches" in window) {
+          const keys = await caches.keys();
+          await Promise.all(
+            keys
+              .filter((key) => key.toLowerCase().includes("workbox") || key.toLowerCase().includes("precache"))
+              .map((key) => caches.delete(key))
+          );
+        }
+      } catch (error) {
+        console.warn("[Agenda] nao foi possivel limpar cache antigo", error);
+      } finally {
+        if (active) setIframeReady(true);
+      }
+    }
+
+    clearStaleAgendaCache();
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!iframeReady) return;
+
     let cancelled = false;
     let currentCompanyId: string | null = null;
 
@@ -102,8 +147,12 @@ export default function Agenda() {
         agendasQuery.eq("company_id", companyId);
         profsQuery.eq("company_id", companyId);
         leadsQuery.eq("company_id", companyId);
-        compromissosQuery.eq("company_id", companyId);
+        compromissosQuery.or(
+          `company_id.eq.${companyId},owner_id.eq.${user?.id},usuario_responsavel_id.eq.${user?.id}`
+        );
         lembretesQuery.eq("company_id", companyId);
+      } else if (user) {
+        compromissosQuery.or(`owner_id.eq.${user.id},usuario_responsavel_id.eq.${user.id}`);
       }
 
       const [
@@ -455,12 +504,19 @@ export default function Agenda() {
 
   return (
     <div className="w-full h-[calc(100vh-7rem)] min-h-[640px] overflow-hidden rounded-lg border border-border bg-background">
-      <iframe
-        ref={iframeRef}
-        src="/agenda.html"
-        title="Agenda - GROW OS"
-        className="w-full h-full border-0 block"
-      />
+      {iframeReady ? (
+        <iframe
+          key={iframeSrc}
+          ref={iframeRef}
+          src={iframeSrc}
+          title="Agenda - GROW OS"
+          className="w-full h-full border-0 block"
+        />
+      ) : (
+        <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
+          Carregando agenda...
+        </div>
+      )}
     </div>
   );
 }

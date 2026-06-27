@@ -3,7 +3,13 @@
 > vite --port 4000 --strictPort
 
 
-  [32m[1mVITE[22m v5.4.21[39m  [2mready in [0m[1m782[22m[2m[0m ms[22m
+  [32m[1mVITE[22m v5.4.21[39m  [2mready in [0m[1m946[22m[2m[0m ms[22m
 
   [32m➜[39m  [1mLocal[22m:   [36mhttp://localhost:[1m4000[22m/[39m
   [32m➜[39m  [1mNetwork[22m: [36mhttp://192.168.1.244:[1m4000[22m/[39m
+[2m19:26:55[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/Agenda.tsx, /src/index.css[22m
+[2m19:27:57[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2mpublic/agenda.html[22m
+[2m19:28:08[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2mpublic/agenda.html[22m
+[2m19:35:08[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/Agenda.tsx, /src/index.css[22m
+[2m19:35:28[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/Agenda.tsx, /src/index.css[22m
+[2m19:35:44[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/Agenda.tsx, /src/index.css[22m

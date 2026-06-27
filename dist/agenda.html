@@ -1038,6 +1038,7 @@
       let CRM_APPOINTMENTS = [];
       let CRM_REMINDERS = [];
       let activeListTab = 'compromissos';
+      let didAutoSelectAppointmentWeek = false;
       window.__agendaLoad = () => load();
 
       // Recebe agendas/profissionais reais do CRM via postMessage do React wrapper
@@ -1068,8 +1069,9 @@
           populateSelect('f_agenda', d.agendas, 'Nenhuma agenda cadastrada');
           populateSelect('f_prof', d.profissionais, 'Nenhum profissional cadastrado');
           if(Array.isArray(d.leads)) CRM_LEADS = d.leads;
-          if(Array.isArray(d.compromissos)) CRM_APPOINTMENTS = d.compromissos;
+          if(Array.isArray(d.compromissos)) CRM_APPOINTMENTS = d.compromissos.map(normalizeAppointment).filter(i => i.date && i.start);
           if(Array.isArray(d.lembretes)) CRM_REMINDERS = d.lembretes;
+          maybeSelectAppointmentWeek(CRM_APPOINTMENTS);
           renderAll();
         }
         if(d.type === 'agenda:create-agenda-result'){
@@ -1221,6 +1223,80 @@
       function remTimeLabel(v){
         const map = { '15':'15 minutos antes', '30':'30 minutos antes', '60':'1 hora antes', '180':'3 horas antes', '1440':'1 dia antes', '2880':'2 dias antes' };
         return map[String(v)] || `${v} min antes`;
+      }
+      function normalizeDatePart(value){
+        if(!value) return '';
+        const str = String(value);
+        if(/^\d{4}-\d{2}-\d{2}$/.test(str)) return str;
+        const d = new Date(str);
+        if(Number.isNaN(d.getTime())) return str.slice(0, 10);
+        return fmtDateISO(d);
+      }
+      function normalizeTimePart(value){
+        if(!value) return '';
+        const str = String(value);
+        const match = str.match(/\b(\d{1,2}):(\d{2})/);
+        if(match) return pad(parseInt(match[1], 10)) + ':' + match[2];
+        const d = new Date(str);
+        if(Number.isNaN(d.getTime())) return '';
+        return pad(d.getHours()) + ':' + pad(d.getMinutes());
+      }
+      function normalizeAppointment(item){
+        const startSource = item.data_hora_inicio || item.start_at || item.inicio || item.start || '';
+        const endSource = item.data_hora_fim || item.end_at || item.fim || item.end || '';
+        const date = normalizeDatePart(item.date || startSource);
+        const start = normalizeTimePart(item.start || startSource);
+        const end = normalizeTimePart(item.end || endSource) || (start ? minToHHMM(hhmmToMin(start) + 30) : '');
+        return {
+          ...item,
+          id: item.id || ('crm_' + date + '_' + start + '_' + Math.random().toString(36).slice(2)),
+          date,
+          start,
+          end,
+          name: item.name || item.client || item.paciente || item.title || item.tipo_servico || 'Compromisso',
+          type: item.type || item.tipo_servico || item.title || 'Compromisso',
+          status: item.status || 'agendado',
+        };
+      }
+      function weekStartOf(date){
+        const d = new Date(date);
+        d.setHours(0,0,0,0);
+        d.setDate(d.getDate() - d.getDay());
+        return d;
+      }
+      function isInSelectedWeek(item){
+        if(!item?.date) return false;
+        const start = weekStartOf(selectedDate);
+        const end = new Date(start); end.setDate(start.getDate() + 7);
+        const d = parseISO(item.date);
+        return d >= start && d < end;
+      }
+      function maybeSelectAppointmentWeek(items){
+        if(didAutoSelectAppointmentWeek || !items?.length || items.some(isInSelectedWeek)) return;
+        const todayIso = fmtDateISO(new Date());
+        const sorted = [...items].sort((a,b) => ((a.date||'')+(a.start||'')).localeCompare((b.date||'')+(b.start||'')));
+        const next = sorted.find(i => i.date >= todayIso) || sorted[0];
+        if(next?.date){
+          selectedDate = parseISO(next.date);
+          viewDate = new Date(selectedDate);
+          didAutoSelectAppointmentWeek = true;
+        }
+      }
+      function updateAppointmentStats(){
+        const appointments = load();
+        const stateOf = (ev) => apptState(ev);
+        const total = appointments.length;
+        const agendados = appointments.filter(ev => {
+          const st = String(ev.status || '').toLowerCase();
+          return !['cancelado','concluido','concluído'].includes(st);
+        }).length;
+        const concluidos = appointments.filter(ev => stateOf(ev) === 'confirmed' || ['concluido','concluído'].includes(String(ev.status || '').toLowerCase())).length;
+        const cancelados = appointments.filter(ev => stateOf(ev) === 'no-answer' || String(ev.status || '').toLowerCase() === 'cancelado').length;
+        const retornos = appointments.filter(ev => normalize(ev.type).includes('retorno') || normalize(ev.title).includes('retorno')).length;
+        const values = [total, agendados, concluidos, cancelados, retornos];
+        document.querySelectorAll('.stats .stat-num').forEach((el, idx) => {
+          if(values[idx] !== undefined) el.textContent = String(values[idx]);
+        });
       }
 
       let viewingId = null;
@@ -1410,20 +1486,38 @@
             const slotStart = h * 60;
             const slotEnd = (h + 1) * 60;
             const blockReason = (typeof cfgBlockReason === 'function') ? cfgBlockReason(dateIso, slotStart, slotEnd) : null;
-            const ev = items.find(it => it.date===dateIso && it.start && parseInt(it.start.split(':')[0], 10)===h);
-            if(blockReason && !ev){
+            const slotEvents = items.filter(it => {
+              if(it.date !== dateIso || !it.start) return false;
+              const startMin = hhmmToMin(it.start);
+              return startMin >= slotStart && startMin < slotEnd;
+            });
+            if(blockReason && !slotEvents.length){
               cell.classList.add('wh-blocked');
               if(blockReason === 'lunch') cell.classList.add('wh-lunch');
               cell.innerHTML = `<div class="wh-blocked-label">${blockReason === 'lunch' ? 'Almoço' : 'Fechado'}</div>`;
-            } else if(!ev) {
+            } else if(!slotEvents.length) {
               cell.addEventListener('click', () => openModal(null, {date: dateIso, start: pad(h)+':00'}));
             }
-            if(ev){
+            slotEvents.forEach((ev, evIdx) => {
               const state = apptState(ev);
               const e = document.createElement('div'); e.className='ev '+state;
+              const startMin = hhmmToMin(ev.start);
+              const endMin = hhmmToMin(ev.end || minToHHMM(startMin + 30));
+              const eventTop = Math.max(4, Math.round(((startMin - slotStart) / 60) * 76) + 4);
+              const eventHeight = Math.max(32, Math.min(68, Math.round(((Math.max(endMin, startMin + 15) - startMin) / 60) * 76) - 8));
+              e.style.top = eventTop + 'px';
+              e.style.bottom = 'auto';
+              e.style.height = eventHeight + 'px';
+              if(slotEvents.length > 1){
+                const width = 100 / slotEvents.length;
+                e.style.left = `calc(${evIdx * width}% + 5px)`;
+                e.style.right = 'auto';
+                e.style.width = `calc(${width}% - 10px)`;
+              }
               const typeText = apptTypeLabel(ev.type);
               const initials = (ev.name||'?').split(/\s+/).slice(0,2).map(s=>s[0]||'').join('').toUpperCase();
-              const tip = [ev.name, ev.start+' - '+(ev.end||''), ev.type, ev.agenda, ev.prof, ev.phone, ev.email, ev.notes].filter(Boolean).join('\n');
+              const tip = [ev.name, ev.start+' - '+(ev.end||''), ev.type, ev.agenda, ev.prof, ev.phone, ev.email, ev.notes].filter(Boolean).join('
+');
               e.title = tip;
               e.innerHTML = '<div class="ev-top">'
                 + '<div class="ev-avatar">'+escapeHTML(initials)+'</div>'
@@ -1438,7 +1532,7 @@
                 + '<div class="ev-note"><i class="ti ti-message"></i> '+escapeHTML(apptWppLine(ev))+'</div>';
               e.addEventListener('click', (evt) => { evt.stopPropagation(); openInfoPanel(ev.id); });
               cell.appendChild(e);
-            }
+            });
             wg.appendChild(cell);
           }
         }
@@ -1563,6 +1657,7 @@
       function updateBadgesAndReminderStats(){
         const appointments = load();
         const reminders = CRM_REMINDERS;
+        updateAppointmentStats();
         const setText = (id, value) => { const el = document.getElementById(id); if(el) el.textContent = String(value); };
         setText('compromissosBadge', appointments.length);
         setText('lembretesBadge', reminders.length);
@@ -1964,4 +2059,3 @@
   </script>
 </body>
 </html>
-
