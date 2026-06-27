@@ -1314,12 +1314,24 @@
         }
         items.forEach(ev => {
           const initials = (ev.name||'?').split(/\s+/).slice(0,2).map(s=>s[0]||'').join('').toUpperCase();
-          const colorClass = ev.status==='cancelado' ? 'c-danger' : ev.status==='concluido' ? 'c-success' : 'c-info';
+          const state = apptState(ev);
+          const colorClass = ev.status==='cancelado' ? 'c-danger'
+            : ev.status==='concluido' ? 'c-success'
+            : state==='confirmed' ? 'c-success'
+            : state==='no-answer' ? 'c-danger'
+            : 'c-warning';
           const statusPill = ev.status==='cancelado'
             ? '<span class="pill danger"><i class="ti ti-x"></i> Cancelado</span>'
             : ev.status==='concluido'
               ? '<span class="pill success"><i class="ti ti-circle-check"></i> Concluído</span>'
-              : '<span class="pill info"><i class="ti ti-calendar-time"></i> Agendado</span>';
+              : state==='confirmed'
+                ? '<span class="pill success"><i class="ti ti-circle-check"></i> Confirmado</span>'
+                : state==='no-answer'
+                  ? '<span class="pill danger"><i class="ti ti-alert-triangle"></i> Sem resposta</span>'
+                  : '<span class="pill warning"><i class="ti ti-hourglass"></i> Aguardando</span>';
+          const wppLine = apptWppLine(ev);
+          const wppPillClass = state==='confirmed' ? 'success' : state==='no-answer' ? 'danger' : 'warning';
+          const wppIcon = state==='confirmed' ? 'ti-circle-check' : state==='no-answer' ? 'ti-x' : 'ti-hourglass';
           const [y,m,d] = ev.date.split('-');
           const wa = ev.phone ? '<button class="iconbtn green" data-wa="'+escapeAttr(ev.phone)+'" title="WhatsApp"><i class="ti ti-brand-whatsapp"></i></button>' : '';
           const localActions = ev.remote ? '' : `
@@ -1342,6 +1354,7 @@
                   <span class="pill neutral">${escapeHTML(ev.type||'Consulta')}</span>
                 </div>
                 ${ev.prof ? '<div class="item-meta"><span><i class="ti ti-user"></i> '+escapeHTML(ev.prof)+'</span></div>' : ''}
+                <div class="item-meta"><span><i class="ti ti-brand-whatsapp"></i> ${escapeHTML(wppLine)}</span><span class="pill ${wppPillClass}"><i class="ti ${wppIcon}"></i> ${escapeHTML(apptStatusLabel(ev))}</span></div>
               </div>
             </div>
             <div class="item-actions">
