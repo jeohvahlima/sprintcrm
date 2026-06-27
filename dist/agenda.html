@@ -203,8 +203,11 @@
     }
     .view-toggle button.active { background: hsl(var(--info)); color: white; box-shadow: 0 2px 6px hsl(var(--info) / 0.3); }
 
+    .agenda-board-panel { overflow-x: auto; }
+    .agenda-board-panel .week-toolbar { min-width: 1260px; }
     .week-grid {
-      display: grid; grid-template-columns: 60px repeat(7, 1fr);
+      display: grid; grid-template-columns: 64px repeat(7, minmax(170px, 1fr));
+      min-width: 1260px;
       border-top: 1px solid hsl(var(--border));
     }
     .wh-cell { border-right: 1px solid hsl(var(--border)); border-bottom: 1px solid hsl(var(--border)); }
@@ -216,23 +219,61 @@
     }
     .wh-head .num { display: block; font-size: 18px; font-weight: 800; color: hsl(var(--text)); margin-top: 2px; letter-spacing: -0.02em; }
     .wh-head.today .num { display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 30px; border-radius: 999px; background: hsl(var(--info)); color: white; margin-top: 4px; }
-    .wh-time { font-size: 11px; font-weight: 600; color: hsl(var(--text-soft)); padding: 8px 6px; text-align: right; border-right: 1px solid hsl(var(--border)); }
-    .wh-slot { min-height: 56px; position: relative; }
+    .wh-time { font-size: 11px; font-weight: 600; color: hsl(var(--text-soft)); padding: 10px 8px; text-align: right; border-right: 1px solid hsl(var(--border)); }
+    .wh-slot { min-height: 76px; position: relative; }
     .wh-slot.today-col { background: hsl(var(--info) / 0.04); }
+    .wh-slot.wh-blocked {
+      background: hsl(var(--danger-soft));
+      cursor: not-allowed;
+    }
+    .wh-slot.wh-lunch {
+      background: repeating-linear-gradient(135deg, hsl(0 86% 96%) 0, hsl(0 86% 96%) 5px, hsl(0 86% 90%) 5px, hsl(0 86% 90%) 10px);
+      border-color: hsl(0 86% 84%);
+    }
+    .wh-blocked-label {
+      position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+      font-size: 10px; font-weight: 800; color: hsl(var(--danger)); text-transform: uppercase; letter-spacing: .05em;
+      pointer-events: none;
+    }
     .ev {
-      position: absolute; left: 4px; right: 4px; top: 4px; bottom: 4px;
-      border-radius: 6px; padding: 6px 8px; font-size: 12px;
+      position: absolute; left: 5px; right: 5px; top: 6px; bottom: 6px;
+      border-radius: 8px; padding: 7px 8px 6px 9px; font-size: 11px;
+      border: 1px solid var(--cb, hsl(var(--border)));
       border-left: 3px solid var(--c, hsl(var(--info)));
       background: var(--cs, hsl(var(--info-soft)));
-      color: hsl(var(--text)); overflow: hidden;
+      color: var(--ct, hsl(var(--text))); overflow: hidden;
+      box-shadow: 0 1px 2px hsl(160 20% 12% / 0.06);
+      transition: box-shadow .14s, transform .14s, border-color .14s;
+      cursor: pointer;
     }
-    .ev .nm { font-weight: 700; font-size: 12px; }
-    .ev .tm { font-size: 11px; color: hsl(var(--text-muted)); margin-top: 2px; }
-    .ev.blue { --c: hsl(var(--info)); --cs: hsl(var(--info-soft)); }
-    .ev.green { --c: hsl(var(--success)); --cs: hsl(var(--success-soft)); }
-    .ev.red { --c: hsl(var(--danger)); --cs: hsl(var(--danger-soft)); }
-    .ev.purple { --c: hsl(var(--purple)); --cs: hsl(var(--purple-soft)); }
-    .ev.orange { --c: hsl(var(--warning)); --cs: hsl(var(--warning-soft)); }
+    .ev:hover { box-shadow: 0 8px 24px hsl(160 20% 12% / 0.13); transform: translateY(-1px); z-index: 20; }
+    .ev .ev-top { display: flex; align-items: flex-start; gap: 7px; min-width: 0; }
+    .ev .ev-avatar {
+      width: 24px; height: 24px; border-radius: 999px; flex-shrink: 0;
+      display: inline-flex; align-items: center; justify-content: center;
+      background: var(--c, hsl(var(--info))); color: #fff;
+      font-size: 10px; font-weight: 800; letter-spacing: .01em;
+      box-shadow: 0 0 0 2px hsl(var(--surface) / .75);
+    }
+    .ev .ev-main { min-width: 0; flex: 1; }
+    .ev .ev-line { display: flex; align-items: flex-start; justify-content: space-between; gap: 6px; min-width: 0; }
+    .ev .nm { font-weight: 800; font-size: 12px; line-height: 1.15; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+    .ev .tm { font-size: 10px; line-height: 1.2; margin-top: 2px; color: var(--cm, hsl(var(--text-muted))); overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+    .ev .ev-status {
+      flex-shrink: 0; display: inline-flex; align-items: center; gap: 3px;
+      border-radius: 999px; padding: 1px 6px; font-size: 9px; font-weight: 800;
+      background: var(--sb, hsl(var(--surface))); color: var(--st, hsl(var(--text-muted)));
+      border: 1px solid hsl(var(--surface) / 0.55);
+    }
+    .ev .ev-note { font-size: 10px; line-height: 1.2; margin-top: 4px; color: var(--cm, hsl(var(--text-muted))); overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+    .ev.pending { --c:#f59e0b; --cs:#fffbeb; --cb:#fde68a; --ct:#92400e; --cm:#b45309; --sb:#fef3c7; --st:#92400e; }
+    .ev.confirmed { --c:#10b981; --cs:#f0fdf4; --cb:#bbf7d0; --ct:#065f46; --cm:#047857; --sb:#d1fae5; --st:#065f46; }
+    .ev.no-answer { --c:#ef4444; --cs:#fef2f2; --cb:#fecaca; --ct:#991b1b; --cm:#b91c1c; --sb:#fee2e2; --st:#991b1b; }
+    .ev.blue { --c: hsl(var(--info)); --cs: hsl(var(--info-soft)); --cb:hsl(217 92% 86%); }
+    .ev.green { --c: hsl(var(--success)); --cs: hsl(var(--success-soft)); --cb:hsl(142 70% 82%); }
+    .ev.red { --c: hsl(var(--danger)); --cs: hsl(var(--danger-soft)); --cb:hsl(0 86% 84%); }
+    .ev.purple { --c: hsl(var(--purple)); --cs: hsl(var(--purple-soft)); --cb:hsl(265 90% 86%); }
+    .ev.orange { --c: hsl(var(--warning)); --cs: hsl(var(--warning-soft)); --cb:hsl(38 92% 82%); }
 
     /* LEMBRETES PANEL */
     .lem-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
@@ -287,7 +328,41 @@
       border-top: 1px solid hsl(var(--border));
       border-left: 3px solid var(--c, hsl(var(--info)));
       align-items: start;
+      cursor: pointer;
     }
+    .item .item-actions { cursor: default; }
+    /* INFO PANEL — detalhes do compromisso */
+    .info-panel-wrap {
+      background: hsl(var(--surface)); border-radius: 14px; width: 100%; max-width: 480px;
+      max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+    }
+    .info-panel-head {
+      padding: 18px 20px; border-bottom: 1px solid hsl(var(--border));
+      display: flex; align-items: flex-start; gap: 12px;
+    }
+    .info-panel-head.pending { background: linear-gradient(180deg, #fffbeb 0%, hsl(var(--surface)) 100%); border-left: 4px solid #f59e0b; }
+    .info-panel-head.confirmed { background: linear-gradient(180deg, #f0fdf4 0%, hsl(var(--surface)) 100%); border-left: 4px solid #10b981; }
+    .info-panel-head.no-answer { background: linear-gradient(180deg, #fef2f2 0%, hsl(var(--surface)) 100%); border-left: 4px solid #ef4444; }
+    .info-avatar {
+      width: 44px; height: 44px; border-radius: 999px; flex-shrink: 0;
+      display: inline-flex; align-items: center; justify-content: center;
+      font-size: 14px; font-weight: 800; color: #fff;
+    }
+    .info-avatar.pending { background: #f59e0b; }
+    .info-avatar.confirmed { background: #10b981; }
+    .info-avatar.no-answer { background: #ef4444; }
+    .info-row { display: flex; gap: 10px; padding: 10px 0; border-bottom: 1px dashed hsl(var(--border)); font-size: 13px; }
+    .info-row:last-child { border-bottom: 0; }
+    .info-row i { color: hsl(var(--text-soft)); margin-top: 2px; flex-shrink: 0; }
+    .info-row .lbl { font-size: 11px; color: hsl(var(--text-muted)); font-weight: 600; display: block; margin-bottom: 2px; }
+    .info-status-box {
+      margin: 0 20px 12px; padding: 12px 14px; border-radius: 10px; border: 1px solid hsl(var(--border));
+      display: flex; align-items: center; justify-content: space-between; gap: 10px; font-size: 13px;
+    }
+    .info-status-box.pending { background: #fffbeb; border-color: #fde68a; }
+    .info-status-box.confirmed { background: #f0fdf4; border-color: #bbf7d0; }
+    .info-status-box.no-answer { background: #fef2f2; border-color: #fecaca; }
+    .info-actions { padding: 14px 20px; border-top: 1px solid hsl(var(--border)); display: flex; flex-wrap: wrap; gap: 8px; }
     .item:first-child { border-top: 0; }
     .avatar {
       width: 40px; height: 40px; border-radius: 999px;
@@ -480,7 +555,7 @@
         <!-- RIGHT COLUMN -->
         <div style="display: flex; flex-direction: column; gap: 18px;">
           <!-- Week view -->
-          <div class="panel">
+          <div class="panel agenda-board-panel">
             <div class="panel-head week-toolbar">
               <div class="panel-title"><i class="ti ti-calendar-week"></i> <span id="week_title">Visão semanal</span></div>
               <div class="view-toggle" id="view_toggle">
@@ -581,8 +656,8 @@
                     // event chips (max 2)
                     dayItems.slice(0,2).forEach(ev => {
                       const t = (ev.start||'').slice(0,5);
-                      const label = (ev.client || ev.title || 'Compromisso');
-                      inner += `<div style="margin-top:3px; font-size:10px; font-weight:600; padding:2px 4px; border-radius:4px; background:${isToday?'rgba(255,255,255,0.2)':'hsl(var(--info) / 0.15)'}; color:${isToday?'white':'hsl(var(--info))'}; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${t} ${label}</div>`;
+                      const label = (ev.client || ev.name || ev.title || 'Compromisso');
+                      inner += `<div data-view-ev="${ev.id}" style="margin-top:3px; font-size:10px; font-weight:600; padding:2px 4px; border-radius:4px; background:${isToday?'rgba(255,255,255,0.2)':'hsl(var(--info) / 0.15)'}; color:${isToday?'white':'hsl(var(--info))'}; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; cursor:pointer;">${t} ${label}</div>`;
                     });
                     if(dayItems.length>2){
                       inner += `<div style="font-size:9px; opacity:0.75; margin-top:2px;">+${dayItems.length-2} mais</div>`;
@@ -592,7 +667,13 @@
                   html += '</div>';
                   mg.innerHTML = html;
                   mg.querySelectorAll('[data-month-day]').forEach(cell => {
-                    cell.addEventListener('click', () => {
+                    cell.addEventListener('click', (e) => {
+                      const evChip = e.target.closest('[data-view-ev]');
+                      if(evChip && typeof window.openInfoPanel === 'function'){
+                        e.stopPropagation();
+                        window.openInfoPanel(evChip.getAttribute('data-view-ev'));
+                        return;
+                      }
                       const iso = cell.getAttribute('data-month-day');
                       try {
                         if(typeof window.openModal === 'function'){
@@ -630,7 +711,8 @@
                     } else {
                       mg.style.display = 'none';
                       wg.style.display = '';
-                      render();
+                      if(typeof window.renderWeek === 'function') window.renderWeek();
+                      else render();
                     }
                   });
                 }
@@ -694,7 +776,7 @@
         </div>
         <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px;">
           <label style="display:flex; flex-direction:column; gap:6px; font-size:12px; color:hsl(var(--text-muted)); font-weight:600;">Data
-            <input id="f_date" type="date" style="padding:9px 12px; border:1px solid hsl(var(--border)); border-radius:8px; font-size:13px;"/>
+            <input id="f_date" type="date" min="" style="padding:9px 12px; border:1px solid hsl(var(--border)); border-radius:8px; font-size:13px;"/>
           </label>
           <label style="display:flex; flex-direction:column; gap:6px; font-size:12px; color:hsl(var(--text-muted)); font-weight:600;">Início
             <input id="f_start" type="time" style="padding:9px 12px; border:1px solid hsl(var(--border)); border-radius:8px; font-size:13px;"/>
@@ -796,6 +878,11 @@
         <button id="apptSave" class="btn primary"><i class="ti ti-check"></i> Salvar</button>
       </div>
     </div>
+  </div>
+
+  <!-- PAINEL Informações do Compromisso (somente leitura) -->
+  <div id="apptInfoModal" style="display:none; position:fixed; inset:0; background:rgba(15,23,42,0.55); z-index:9998; align-items:center; justify-content:center; padding:20px;">
+    <div class="info-panel-wrap" id="apptInfoContent"></div>
   </div>
 
   <!-- Config Modal -->
@@ -1097,8 +1184,146 @@
       function fmtDateISO(d){ return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate()); }
       function parseISO(s){ const [y,m,d]=s.split('-').map(Number); return new Date(y,m-1,d); }
       function sameDay(a,b){ return a.getFullYear()===b.getFullYear()&&a.getMonth()===b.getMonth()&&a.getDate()===b.getDate(); }
+      function apptState(ev){
+        const st = String(ev?.status || 'agendado').toLowerCase().replace(/\s+/g, '_');
+        if(['confirmado','concluido','confirmed','confirmado_pelo_lead'].includes(st)) return 'confirmed';
+        if(['cancelado','sem_resposta','sem_resposta','no_answer','no-answer','falha'].includes(st)) return 'no-answer';
+        return 'pending';
+      }
+      function apptStatusLabel(ev){
+        const state = apptState(ev);
+        if(state === 'confirmed') return 'Confirmado';
+        if(state === 'no-answer') return String(ev?.status || '').toLowerCase().includes('cancel') ? 'Cancelado' : 'Sem resposta';
+        return 'Aguardando';
+      }
+      function apptWppLine(ev){
+        const state = apptState(ev);
+        if(state === 'confirmed') return 'Confirmado via WhatsApp';
+        if(state === 'no-answer') return ev?.status === 'cancelado' ? 'Compromisso cancelado' : 'Sem resposta do lead';
+        if(ev?.confirmNow || ev?.remWa || ev?.phone) return 'Aguardando confirmacao';
+        return 'Link de confirmacao pendente';
+      }
+      function apptTypeLabel(type){
+        const t = String(type || 'Compromisso');
+        return t.charAt(0).toUpperCase() + t.slice(1);
+      }
+      function formatDateBR(iso){
+        if(!iso) return '—';
+        const [y,m,d] = String(iso).split('-');
+        return d && m && y ? `${d}/${m}/${y}` : iso;
+      }
+      function remTimeLabel(v){
+        const map = { '15':'15 minutos antes', '30':'30 minutos antes', '60':'1 hora antes', '180':'3 horas antes', '1440':'1 dia antes', '2880':'2 dias antes' };
+        return map[String(v)] || `${v} min antes`;
+      }
 
-      // ---------- Calendar render ----------
+      let viewingId = null;
+      function closeInfoPanel(){
+        viewingId = null;
+        document.getElementById('apptInfoModal').style.display = 'none';
+      }
+      function updateApptStatus(id, status){
+        const items = load();
+        const idx = items.findIndex(i => i.id === id);
+        if(idx < 0) return;
+        items[idx] = { ...items[idx], status };
+        if(items[idx].remote){
+          const crmIdx = CRM_APPOINTMENTS.findIndex(i => i.id === id);
+          if(crmIdx >= 0) CRM_APPOINTMENTS[crmIdx] = { ...CRM_APPOINTMENTS[crmIdx], status };
+        } else {
+          save(items.filter(i => !i.remote));
+        }
+        renderAll();
+      }
+      function openInfoPanel(id){
+        if(!id) return;
+        const ev = load().find(i => i.id === id);
+        if(!ev) { toast('Compromisso não encontrado'); return; }
+        viewingId = id;
+        const state = apptState(ev);
+        const initials = (ev.name||'?').split(/\s+/).slice(0,2).map(s=>s[0]||'').join('').toUpperCase();
+        const [y,m,d] = (ev.date||'').split('-');
+        const dateText = d && m && y ? `${d}/${m}/${y}` : (ev.date || '—');
+        const wppLine = apptWppLine(ev);
+        const statusLabel = apptStatusLabel(ev);
+        const pillClass = state === 'confirmed' ? 'success' : state === 'no-answer' ? 'danger' : 'warning';
+        const box = document.getElementById('apptInfoContent');
+        box.innerHTML = `
+          <div style="display:flex; align-items:center; justify-content:space-between; padding:14px 20px; border-bottom:1px solid hsl(var(--border));">
+            <div style="font-size:15px; font-weight:700;">Informações do compromisso</div>
+            <button id="infoClose" class="iconbtn" title="Fechar"><i class="ti ti-x"></i></button>
+          </div>
+          <div class="info-panel-head ${state}">
+            <div class="info-avatar ${state}">${escapeHTML(initials)}</div>
+            <div style="flex:1; min-width:0;">
+              <div style="font-size:17px; font-weight:800; line-height:1.2;">${escapeHTML(ev.name || 'Cliente')}</div>
+              <div style="font-size:13px; color:hsl(var(--text-muted)); margin-top:4px;">
+                <i class="ti ti-clock"></i> ${escapeHTML(ev.start||'')} – ${escapeHTML(ev.end||'')} · ${escapeHTML(apptTypeLabel(ev.type))}
+              </div>
+              <div style="font-size:12px; color:hsl(var(--text-soft)); margin-top:2px;">
+                <i class="ti ti-calendar"></i> ${dateText}
+              </div>
+            </div>
+            <span class="pill ${pillClass}">${escapeHTML(statusLabel)}</span>
+          </div>
+          <div class="info-status-box ${state}">
+            <span><i class="ti ti-brand-whatsapp"></i> ${escapeHTML(wppLine)}</span>
+            ${ev.phone && state !== 'confirmed' ? '<button class="btn" id="infoResendWpp" style="padding:6px 10px; font-size:11px;"><i class="ti ti-send"></i> Reenviar</button>' : ''}
+          </div>
+          <div style="padding:0 20px 8px;">
+            ${ev.agenda ? `<div class="info-row"><i class="ti ti-calendar-event"></i><div><span class="lbl">Agenda</span>${escapeHTML(ev.agenda)}</div></div>` : ''}
+            ${ev.prof ? `<div class="info-row"><i class="ti ti-user"></i><div><span class="lbl">Profissional</span>${escapeHTML(ev.prof)}</div></div>` : ''}
+            ${ev.phone ? `<div class="info-row"><i class="ti ti-phone"></i><div><span class="lbl">WhatsApp</span>${escapeHTML(ev.phone)}</div></div>` : ''}
+            ${ev.email ? `<div class="info-row"><i class="ti ti-mail"></i><div><span class="lbl">E-mail</span>${escapeHTML(ev.email)}</div></div>` : ''}
+            ${ev.value ? `<div class="info-row"><i class="ti ti-currency-real"></i><div><span class="lbl">Valor estimado</span>R$ ${Number(ev.value).toFixed(2).replace('.', ',')}</div></div>` : ''}
+            <div class="info-row"><i class="ti ti-bell"></i><div>
+              <span class="lbl">Lembretes e confirmações</span>
+              ${ev.remWa ? 'WhatsApp' : ''}${ev.remWa && ev.remEmail ? ' · ' : ''}${ev.remEmail ? 'E-mail' : ''}${!ev.remWa && !ev.remEmail ? 'Nenhum configurado' : ''}
+              ${ev.remWa || ev.remEmail ? `<br><span style="font-size:11px;color:hsl(var(--text-muted));">Antecedência: ${remTimeLabel(ev.remTime)}</span>` : ''}
+              ${ev.confirmNow ? '<br><span style="font-size:11px;color:hsl(var(--text-muted));">Confirmação imediata via WhatsApp</span>' : ''}
+            </div></div>
+            ${ev.notes ? `<div class="info-row"><i class="ti ti-notes"></i><div><span class="lbl">Observações</span>${escapeHTML(ev.notes)}</div></div>` : ''}
+          </div>
+          <div class="info-actions">
+            ${state !== 'confirmed' ? `<button class="btn primary" id="infoConfirm"><i class="ti ti-circle-check"></i> Marcar confirmado</button>` : ''}
+            ${ev.phone ? `<button class="btn" id="infoWpp" style="color:#16a34a;border-color:#bbf7d0;"><i class="ti ti-brand-whatsapp"></i> WhatsApp</button>` : ''}
+            <button class="btn" id="infoEdit"><i class="ti ti-pencil"></i> Editar</button>
+            <button class="btn" id="infoReschedule"><i class="ti ti-calendar-event"></i> Remarcar</button>
+            ${!ev.remote ? `<button class="btn" id="infoDelete" style="color:hsl(var(--danger));"><i class="ti ti-trash"></i> Excluir</button>` : ''}
+            <button class="btn" id="infoClose2">Fechar</button>
+          </div>`;
+        document.getElementById('apptInfoModal').style.display = 'flex';
+        document.getElementById('infoClose').addEventListener('click', closeInfoPanel);
+        document.getElementById('infoClose2').addEventListener('click', closeInfoPanel);
+        document.getElementById('infoEdit').addEventListener('click', () => { closeInfoPanel(); openModal(id); });
+        document.getElementById('infoReschedule').addEventListener('click', () => { closeInfoPanel(); openModal(id); document.getElementById('apptReschedule')?.click(); });
+        if(document.getElementById('infoConfirm')){
+          document.getElementById('infoConfirm').addEventListener('click', () => {
+            updateApptStatus(id, 'confirmado');
+            toast('Compromisso marcado como confirmado');
+            openInfoPanel(id);
+          });
+        }
+        if(document.getElementById('infoWpp') && ev.phone){
+          document.getElementById('infoWpp').addEventListener('click', () => {
+            window.open('https://wa.me/'+String(ev.phone).replace(/\D/g,''), '_blank');
+          });
+        }
+        if(document.getElementById('infoResendWpp') && ev.phone){
+          document.getElementById('infoResendWpp').addEventListener('click', () => {
+            window.open('https://wa.me/'+String(ev.phone).replace(/\D/g,'')+'?text='+encodeURIComponent('Olá! Confirmando nosso compromisso em '+dateText+' às '+ev.start+'.'), '_blank');
+            toast('Link de confirmação reenviado');
+          });
+        }
+        if(document.getElementById('infoDelete')){
+          document.getElementById('infoDelete').addEventListener('click', () => {
+            if(!confirm('Excluir este compromisso?')) return;
+            save(load().filter(i => i.id !== id && !i.remote));
+            closeInfoPanel(); renderAll(); toast('Compromisso excluído');
+          });
+        }
+      }
+      window.openInfoPanel = openInfoPanel;
       function renderCalendar(){
         const grid = document.querySelector('.cal-grid');
         const head = document.querySelector('.cal-head span');
@@ -1167,8 +1392,7 @@
           wg.appendChild(h);
         }
         const items = load();
-        const colorOf = t => ({Consulta:'blue', Retorno:'green', Procedimento:'orange', 'Reunião':'purple'}[t] || 'blue');
-        const _bh = (function(){ try { return JSON.parse(localStorage.getItem('agenda_business_hours')) || {start:7,end:21}; } catch(_) { return {start:7,end:21}; } })();
+        const _bh = (function(){ try { if(typeof cfgHourRange==='function') return cfgHourRange(); return JSON.parse(localStorage.getItem('agenda_business_hours')) || {start:7,end:21}; } catch(_) { return {start:7,end:21}; } })();
         for(let h=_bh.start; h<=_bh.end; h++){
           const time = document.createElement('div'); time.className='wh-time'; time.textContent = pad(h)+':00'; wg.appendChild(time);
           for(let i=0;i<7;i++){
@@ -1176,17 +1400,37 @@
             const cell = document.createElement('div'); cell.className='wh-slot wh-cell';
             if(sameDay(d, selectedDate)) cell.classList.add('today-col');
             cell.style.cursor='pointer';
-            cell.addEventListener('click', () => openModal(null, {date: fmtDateISO(d), start: pad(h)+':00'}));
-            const ev = items.find(it => it.date===fmtDateISO(d) && it.start && parseInt(it.start)===h);
+            const dateIso = fmtDateISO(d);
+            const slotStart = h * 60;
+            const slotEnd = (h + 1) * 60;
+            const blockReason = (typeof cfgBlockReason === 'function') ? cfgBlockReason(dateIso, slotStart, slotEnd) : null;
+            const ev = items.find(it => it.date===dateIso && it.start && parseInt(it.start.split(':')[0], 10)===h);
+            if(blockReason && !ev){
+              cell.classList.add('wh-blocked');
+              if(blockReason === 'lunch') cell.classList.add('wh-lunch');
+              cell.innerHTML = `<div class="wh-blocked-label">${blockReason === 'lunch' ? 'Almoço' : 'Fechado'}</div>`;
+            } else if(!ev) {
+              cell.addEventListener('click', () => openModal(null, {date: dateIso, start: pad(h)+':00'}));
+            }
             if(ev){
-              const e = document.createElement('div'); e.className='ev '+colorOf(ev.type);
-              const subt = [ev.type, ev.prof].filter(Boolean).join(' • ');
-              const tip = [ev.name, ev.start+' – '+(ev.end||''), ev.type, ev.agenda, ev.prof, ev.phone, ev.email, ev.notes].filter(Boolean).join('\n');
+              const state = apptState(ev);
+              const e = document.createElement('div'); e.className='ev '+state;
+              const typeText = apptTypeLabel(ev.type);
+              const initials = (ev.name||'?').split(/\s+/).slice(0,2).map(s=>s[0]||'').join('').toUpperCase();
+              const tip = [ev.name, ev.start+' - '+(ev.end||''), ev.type, ev.agenda, ev.prof, ev.phone, ev.email, ev.notes].filter(Boolean).join('\n');
               e.title = tip;
-              e.innerHTML = '<div class="nm">'+escapeHTML(ev.name)+'</div>'
-                + '<div class="tm">'+ev.start+' – '+(ev.end||'')+'</div>'
-                + (subt ? '<div class="tm" style="opacity:.85;">'+escapeHTML(subt)+'</div>' : '');
-              e.addEventListener('click', (evt) => { evt.stopPropagation(); openModal(ev.id); });
+              e.innerHTML = '<div class="ev-top">'
+                + '<div class="ev-avatar">'+escapeHTML(initials)+'</div>'
+                + '<div class="ev-main">'
+                + '<div class="ev-line">'
+                + '<div class="nm">'+escapeHTML(ev.name)+'</div>'
+                + '<span class="ev-status">'+(state === 'confirmed' ? '&check;' : state === 'no-answer' ? '&times;' : '&#9203;')+' '+escapeHTML(apptStatusLabel(ev))+'</span>'
+                + '</div>'
+                + '<div class="tm"><i class="ti ti-clock"></i> '+ev.start+' - '+(ev.end||'')+' &middot; '+escapeHTML(typeText)+'</div>'
+                + '</div>'
+                + '</div>'
+                + '<div class="ev-note"><i class="ti ti-message"></i> '+escapeHTML(apptWppLine(ev))+'</div>';
+              e.addEventListener('click', (evt) => { evt.stopPropagation(); openInfoPanel(ev.id); });
               cell.appendChild(e);
             }
             wg.appendChild(cell);
@@ -1255,12 +1499,24 @@
         }
         items.forEach(ev => {
           const initials = (ev.name||'?').split(/\s+/).slice(0,2).map(s=>s[0]||'').join('').toUpperCase();
-          const colorClass = ev.status==='cancelado' ? 'c-danger' : ev.status==='concluido' ? 'c-success' : 'c-info';
+          const state = apptState(ev);
+          const colorClass = ev.status==='cancelado' ? 'c-danger'
+            : ev.status==='concluido' ? 'c-success'
+            : state==='confirmed' ? 'c-success'
+            : state==='no-answer' ? 'c-danger'
+            : 'c-warning';
           const statusPill = ev.status==='cancelado'
             ? '<span class="pill danger"><i class="ti ti-x"></i> Cancelado</span>'
             : ev.status==='concluido'
               ? '<span class="pill success"><i class="ti ti-circle-check"></i> Concluído</span>'
-              : '<span class="pill info"><i class="ti ti-calendar-time"></i> Agendado</span>';
+              : state==='confirmed'
+                ? '<span class="pill success"><i class="ti ti-circle-check"></i> Confirmado</span>'
+                : state==='no-answer'
+                  ? '<span class="pill danger"><i class="ti ti-alert-triangle"></i> Sem resposta</span>'
+                  : '<span class="pill warning"><i class="ti ti-hourglass"></i> Aguardando</span>';
+          const wppLine = apptWppLine(ev);
+          const wppPillClass = state==='confirmed' ? 'success' : state==='no-answer' ? 'danger' : 'warning';
+          const wppIcon = state==='confirmed' ? 'ti-circle-check' : state==='no-answer' ? 'ti-x' : 'ti-hourglass';
           const [y,m,d] = ev.date.split('-');
           const wa = ev.phone ? '<button class="iconbtn green" data-wa="'+escapeAttr(ev.phone)+'" title="WhatsApp"><i class="ti ti-brand-whatsapp"></i></button>' : '';
           const localActions = ev.remote ? '' : `
@@ -1268,6 +1524,7 @@
               <button class="iconbtn" data-del="${ev.id}" title="Excluir"><i class="ti ti-trash"></i></button>`;
           const div = document.createElement('div');
           div.className = 'item '+colorClass;
+          div.dataset.view = ev.id;
           div.innerHTML = `
             <div class="avatar">${escapeHTML(initials)}</div>
             <div class="item-main">
@@ -1283,6 +1540,7 @@
                   <span class="pill neutral">${escapeHTML(ev.type||'Consulta')}</span>
                 </div>
                 ${ev.prof ? '<div class="item-meta"><span><i class="ti ti-user"></i> '+escapeHTML(ev.prof)+'</span></div>' : ''}
+                <div class="item-meta"><span><i class="ti ti-brand-whatsapp"></i> ${escapeHTML(wppLine)}</span><span class="pill ${wppPillClass}"><i class="ti ${wppIcon}"></i> ${escapeHTML(apptStatusLabel(ev))}</span></div>
               </div>
             </div>
             <div class="item-actions">
@@ -1332,6 +1590,7 @@
         document.getElementById('apptTitle').textContent = ev ? 'Editar compromisso' : 'Novo compromisso';
         document.getElementById('f_name').value = ev?.name || '';
         document.getElementById('f_date').value = ev?.date || prefill?.date || fmtDateISO(selectedDate);
+        document.getElementById('f_date').min = fmtDateISO(new Date());
         document.getElementById('f_start').value = ev?.start || prefill?.start || '09:00';
         document.getElementById('f_end').value = ev?.end || '09:30';
         document.getElementById('f_type').value = ev?.type || 'Consulta';
@@ -1382,6 +1641,7 @@
         const items = load().filter(i => i.date === date && i.id !== editingId);
         const now = new Date();
         const isToday = date === fmtDateISO(now);
+        const datePassed = date && parseISO(date) < parseISO(fmtDateISO(now));
         const nowMin = now.getHours()*60 + now.getMinutes();
         const _cfg = (typeof getCfg==='function') ? getCfg() : null;
         const _r = (typeof cfgHourRange==='function') ? cfgHourRange() : { start:7, end:21 };
@@ -1390,7 +1650,7 @@
         let html = '';
         for(let t = START_MIN; t + dur <= END_MIN; t += STEP){
           const slotStart = t, slotEnd = t + dur;
-          const past = isToday && slotEnd <= nowMin;
+          const past = datePassed || (isToday && slotEnd <= nowMin);
           const blocked = (typeof cfgIsBlocked==='function') ? cfgIsBlocked(date, slotStart, slotEnd) : false;
           const occupied = items.some(i => {
             const s = hhmmToMin(i.start), e = hhmmToMin(i.end || minToHHMM(s+30));
@@ -1439,11 +1699,17 @@
       document.getElementById('apptClose').addEventListener('click', closeModal);
       document.getElementById('apptCancel').addEventListener('click', closeModal);
       document.getElementById('apptModal').addEventListener('click', (e)=>{ if(e.target.id==='apptModal') closeModal(); });
+      document.getElementById('apptInfoModal').addEventListener('click', (e)=>{ if(e.target.id==='apptInfoModal') closeInfoPanel(); });
       document.getElementById('apptSave').addEventListener('click', () => {
         const name = document.getElementById('f_name').value.trim();
         const date = document.getElementById('f_date').value;
         const start = document.getElementById('f_start').value;
         if(!name || !date || !start){ toast('Preencha cliente, data e início'); return; }
+        const startDateTime = new Date(date + 'T' + start);
+        if(Number.isNaN(startDateTime.getTime()) || startDateTime < new Date()){
+          toast('Nao e possivel salvar compromisso em data ou horario passado');
+          return;
+        }
         const items = load();
         const payload = {
           id: editingId || ('a_'+Date.now()),
@@ -1532,22 +1798,26 @@
       }
       window.cfgHourRange = cfgHourRange;
       function cfgIsBlocked(date, slotStartMin, slotEndMin){
+        return cfgBlockReason(date, slotStartMin, slotEndMin) !== null;
+      }
+      function cfgBlockReason(date, slotStartMin, slotEndMin){
         const c = getCfg();
         const d = (typeof date === 'string') ? parseISO(date) : date;
-        if(!c.days[d.getDay()]) return true;
+        if(!c.days[d.getDay()]) return 'closed';
+        if(c.lunch.ativo){
+          const a = hhmmToMin(c.lunch.ini), b = hhmmToMin(c.lunch.fim);
+          if(slotStartMin < b && slotEndMin > a) return 'lunch';
+        }
         const inAny = [c.manha, c.tarde, c.noite].some(p => {
           if(!p.ativo) return false;
           const a = hhmmToMin(p.ini), b = hhmmToMin(p.fim);
           return slotStartMin >= a && slotEndMin <= b;
         });
-        if(!inAny) return true;
-        if(c.lunch.ativo){
-          const a = hhmmToMin(c.lunch.ini), b = hhmmToMin(c.lunch.fim);
-          if(slotStartMin < b && slotEndMin > a) return true;
-        }
-        return false;
+        if(!inAny) return 'closed';
+        return null;
       }
       window.cfgIsBlocked = cfgIsBlocked;
+      window.cfgBlockReason = cfgBlockReason;
 
       function renderCfgDays(active){
         const labels = ['D','S','T','Q','Q','S','S'];
@@ -1632,6 +1902,10 @@
       document.addEventListener('click', (e) => {
         const wa = e.target.closest('[data-wa]');
         if(wa){ const ph=wa.getAttribute('data-wa').replace(/\D/g,''); window.open('https://wa.me/'+ph,'_blank'); return; }
+        const view = e.target.closest('[data-view]');
+        if(view && !e.target.closest('.item-actions') && !e.target.closest('[data-edit]') && !e.target.closest('[data-del]')){
+          openInfoPanel(view.getAttribute('data-view')); return;
+        }
         const ed = e.target.closest('[data-edit]');
         if(ed){ openModal(ed.getAttribute('data-edit')); return; }
         const dl = e.target.closest('[data-del]');
@@ -1647,6 +1921,7 @@
 
       function renderAll(){ renderCalendar(); renderWeek(); renderList(); try { if(typeof window.__renderAgendaMonth === 'function') window.__renderAgendaMonth(); } catch(_){} document.dispatchEvent(new CustomEvent('agenda:data-changed')); }
       window.openModal = openModal;
+      window.renderWeek = renderWeek;
       renderAll();
     })();
   </script>

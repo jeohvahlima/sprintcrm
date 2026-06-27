@@ -129,7 +129,12 @@ export default function Agenda() {
           phone: c.lead?.phone || c.telefone || "",
           email: c.lead?.email || c.email_convidado || "",
           notes: c.observacoes || "",
-          status: c.status || "agendado",
+          status: c.status_confirmacao || c.status || "agendado",
+          value: c.custo_estimado || c.valor || 0,
+          remWa: c.lembrete_whatsapp_24h ?? true,
+          remEmail: c.lembrete_email_24h ?? false,
+          confirmNow: c.enviar_confirmacao ?? true,
+          remTime: "60",
           remote: true,
         })),
         lembretes: (lembretes || []).map((l: any) => {

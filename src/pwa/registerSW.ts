@@ -17,13 +17,17 @@ export async function setupPWA() {
   })();
 
   const host = window.location.hostname;
+  const path = window.location.pathname;
+  const isPublicConfirmRoute =
+    path.startsWith("/c/") || path.startsWith("/confirmar/");
+
   const isPreviewHost =
     host.includes("id-preview--") ||
     host.includes("lovableproject.com") ||
     host === "localhost" ||
     host === "127.0.0.1";
 
-  if (isInIframe || isPreviewHost) {
+  if (isInIframe || isPreviewHost || isPublicConfirmRoute) {
     try {
       const regs = await navigator.serviceWorker.getRegistrations();
       await Promise.all(regs.map((r) => r.unregister()));
