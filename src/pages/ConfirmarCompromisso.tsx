@@ -440,8 +440,8 @@ export default function ConfirmarCompromisso() {
                       </div>
                       <div>
                         <p className="text-[11px] text-slate-400">Status atual</p>
-                        <span className="mt-1 inline-flex items-center rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-xs font-bold text-amber-800">
-                          Aguardando sua confirmacao
+                        <span className="confirm-pulse mt-1 inline-flex items-center rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-xs font-bold text-amber-800">
+                          ⏳ Aguardando sua confirmacao
                         </span>
                       </div>
                     </div>
