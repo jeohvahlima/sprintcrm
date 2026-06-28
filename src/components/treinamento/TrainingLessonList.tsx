@@ -9,19 +9,80 @@ interface TrainingLessonListProps {
   selectedLessonId?: string;
   onSelectLesson: (lesson: TrainingLesson) => void;
   onMarkComplete?: (lessonId: string) => void;
+  variant?: "default" | "dark";
 }
 
-export function TrainingLessonList({ 
-  lessons, 
-  selectedLessonId, 
+export function TrainingLessonList({
+  lessons,
+  selectedLessonId,
   onSelectLesson,
-  onMarkComplete 
+  onMarkComplete,
+  variant = "default",
 }: TrainingLessonListProps) {
   if (lessons.length === 0) {
     return (
-      <div className="text-center py-8 text-muted-foreground">
-        <p>Nenhuma aula disponível neste módulo</p>
+      <div className={cn("py-8 text-center", variant === "dark" ? "text-[#5c5d68]" : "text-muted-foreground")}>
+        <p>Nenhuma aula disponivel neste modulo</p>
       </div>
+    );
+  }
+
+  if (variant === "dark") {
+    return (
+      <ScrollArea className="h-[470px] pr-3">
+        <div className="space-y-2">
+          {lessons.map((lesson, index) => {
+            const active = selectedLessonId === lesson.id;
+            return (
+              <button
+                type="button"
+                key={lesson.id}
+                className={cn(
+                  "flex w-full items-start gap-3 rounded-lg border p-3 text-left transition hover:bg-white/[.04]",
+                  active ? "border-[#6c63ff]/50 bg-[#6c63ff]/10" : "border-white/10 bg-white/[.02]"
+                )}
+                onClick={() => onSelectLesson(lesson)}
+              >
+                <span className="mt-0.5 shrink-0">
+                  {lesson.completed ? (
+                    <CheckCircle2 className="h-5 w-5 text-[#22c97d]" />
+                  ) : active ? (
+                    <Play className="h-5 w-5 text-[#8b84ff]" />
+                  ) : (
+                    <Circle className="h-5 w-5 text-[#5c5d68]" />
+                  )}
+                </span>
+
+                <span className="min-w-0 flex-1">
+                  <span className="flex flex-wrap items-center gap-2 text-xs text-[#5c5d68]">
+                    Aula {index + 1}
+                    {lesson.duration_minutes && (
+                      <span className="inline-flex items-center gap-1">
+                        <Clock className="h-3 w-3" />
+                        {lesson.duration_minutes} min
+                      </span>
+                    )}
+                  </span>
+                  <span className="mt-1 block line-clamp-2 text-sm font-medium text-white">{lesson.title}</span>
+                  {lesson.description && <span className="mt-1 block line-clamp-2 text-xs leading-5 text-[#9a9ba5]">{lesson.description}</span>}
+                </span>
+
+                {!lesson.completed && onMarkComplete && active && (
+                  <span
+                    className="shrink-0 rounded-md border border-white/10 px-2 py-1 text-xs font-semibold text-[#d7d7dc]"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onMarkComplete(lesson.id);
+                    }}
+                  >
+                    Concluir
+                  </span>
+                )}
+              </button>
+            );
+          })}
+        </div>
+      </ScrollArea>
     );
   }
 
@@ -32,12 +93,12 @@ export function TrainingLessonList({
           <div
             key={lesson.id}
             className={cn(
-              "flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition-all hover:bg-accent/50",
-              selectedLessonId === lesson.id && "bg-accent border-primary"
+              "flex cursor-pointer items-start gap-3 rounded-lg border p-3 transition-all hover:bg-accent/50",
+              selectedLessonId === lesson.id && "border-primary bg-accent"
             )}
             onClick={() => onSelectLesson(lesson)}
           >
-            <div className="flex-shrink-0 mt-0.5">
+            <div className="mt-0.5 flex-shrink-0">
               {lesson.completed ? (
                 <CheckCircle2 className="h-5 w-5 text-green-500" />
               ) : selectedLessonId === lesson.id ? (
@@ -46,12 +107,10 @@ export function TrainingLessonList({
                 <Circle className="h-5 w-5 text-muted-foreground" />
               )}
             </div>
-            
-            <div className="flex-1 min-w-0">
+
+            <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2">
-                <span className="text-xs text-muted-foreground font-medium">
-                  Aula {index + 1}
-                </span>
+                <span className="text-xs font-medium text-muted-foreground">Aula {index + 1}</span>
                 {lesson.duration_minutes && (
                   <span className="flex items-center gap-1 text-xs text-muted-foreground">
                     <Clock className="h-3 w-3" />
@@ -59,14 +118,10 @@ export function TrainingLessonList({
                   </span>
                 )}
               </div>
-              <h4 className="font-medium text-sm line-clamp-1">{lesson.title}</h4>
-              {lesson.description && (
-                <p className="text-xs text-muted-foreground line-clamp-2 mt-1">
-                  {lesson.description}
-                </p>
-              )}
+              <h4 className="line-clamp-1 text-sm font-medium">{lesson.title}</h4>
+              {lesson.description && <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">{lesson.description}</p>}
             </div>
-            
+
             {!lesson.completed && onMarkComplete && selectedLessonId === lesson.id && (
               <Button
                 size="sm"

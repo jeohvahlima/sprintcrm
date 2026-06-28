@@ -140,6 +140,7 @@ export const NvoipAccountPanel: React.FC = () => {
       toast.success('Central conectada com sucesso');
       setConnectionError(null);
       setShowForm(false);
+      window.dispatchEvent(new CustomEvent('webphone-config-updated'));
       await load();
     } catch (e: any) {
       const message = e.message || 'Erro ao salvar';

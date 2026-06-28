@@ -1,9 +1,9 @@
-﻿// Locked: render the official GROW OS Agenda mockup inside the app layout.
+// Locked: render the official GROW OS Agenda mockup inside the app layout.
 // Visual changes must be made in public/agenda.html instead of replacing with old React components.
 import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
-const AGENDA_HTML_VERSION = "agenda-fix-20260627-appointments-ready";
+const AGENDA_HTML_VERSION = "agenda-fix-20260628-professional-agenda-button";
 
 function toDatePart(value?: string | null) {
   if (!value) return "";

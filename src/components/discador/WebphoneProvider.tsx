@@ -7,7 +7,7 @@ type Ctx = ReturnType<typeof useWebphoneSIP> & {
   mode: 'webphone' | 'callback' | 'microsip' | null;
   configured: boolean;
   sipNumber: string;
-  reload: () => Promise<void>;
+  reload: (forceRegister?: boolean) => Promise<void>;
 };
 
 const WebphoneCtx = createContext<Ctx | null>(null);
@@ -25,7 +25,7 @@ export const WebphoneProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const [sipNumber, setSipNumber] = useState('');
   const lastRegisterKey = useRef<string>('');
 
-  const load = async () => {
+  const load = async (forceRegister = false) => {
     try {
       const { data: u } = await supabase.auth.getUser();
       if (!u.user) {
@@ -62,8 +62,8 @@ export const WebphoneProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
       if (m === 'webphone' && hasWebphoneCredentials) {
         setConfigured(true);
-        const key = `${numberSip}|${wsUri}|${domain}|${sipPassword.length}`;
-        if (key !== lastRegisterKey.current) {
+        const key = `${numberSip}|${wsUri}|${domain}|${sipPassword}`;
+        if (forceRegister || key !== lastRegisterKey.current) {
           lastRegisterKey.current = key;
           webphone.register({
             number_sip: numberSip,
@@ -88,6 +88,9 @@ export const WebphoneProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   useEffect(() => {
     load();
+    const onConfigUpdated = () => load(true);
+    window.addEventListener('webphone-config-updated', onConfigUpdated);
+
     const sub = supabase.auth.onAuthStateChange((event) => {
       if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') load();
       if (event === 'SIGNED_OUT') {
@@ -96,7 +99,11 @@ export const WebphoneProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         setSipNumber('');
       }
     });
-    return () => { sub.data.subscription.unsubscribe(); };
+
+    return () => {
+      window.removeEventListener('webphone-config-updated', onConfigUpdated);
+      sub.data.subscription.unsubscribe();
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

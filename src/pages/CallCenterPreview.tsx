@@ -37,8 +37,22 @@ const nvoipDialogTheme = {
 
 const dialerKeys = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "*", "0", "#"];
 
+type ApiCallRef = {
+  callId: string | null;
+  recordId: string | null;
+  startedAt: string | null;
+};
+
+function normalizePhoneForNvoip(raw: string): string {
+  let digits = String(raw || "").replace(/\D/g, "");
+  if ((digits.length === 12 || digits.length === 13) && digits.startsWith("55")) digits = digits.slice(2);
+  if ((digits.length === 11 || digits.length === 12) && digits.startsWith("0")) digits = digits.slice(1);
+  return digits;
+}
+
 const CallCenterPreview = () => {
   const iframeRef = useRef<HTMLIFrameElement>(null);
+  const apiCallRef = useRef<ApiCallRef>({ callId: null, recordId: null, startedAt: null });
   const [nvoipOpen, setNvoipOpen] = useState(false);
   const [dialerOpen, setDialerOpen] = useState(false);
   const [dialerNumber, setDialerNumber] = useState("");
@@ -77,6 +91,92 @@ const CallCenterPreview = () => {
     iframe.contentWindow.postMessage({ type: "call-center-leads", leads }, "*");
   }, []);
 
+  const startNvoipApiCall = useCallback(async (rawNumber: string, leadName: string, leadId?: string | null) => {
+    const cleanPhone = normalizePhoneForNvoip(rawNumber);
+    if (cleanPhone.length < 10 || cleanPhone.length > 11) {
+      throw new Error("Numero invalido para ligacao. Use DDD + numero do contato.");
+    }
+
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error("Usuario nao autenticado.");
+
+    const { data: role } = await supabase
+      .from("user_roles")
+      .select("company_id")
+      .eq("user_id", user.id)
+      .maybeSingle();
+
+    if (!role?.company_id) throw new Error("Empresa nao encontrada.");
+
+    const { data: callRecord, error: recordError } = await supabase
+      .from("call_history")
+      .insert({
+        company_id: role.company_id,
+        lead_id: leadId || null,
+        user_id: user.id,
+        phone_number: cleanPhone,
+        lead_name: leadName,
+        status: "iniciando",
+      })
+      .select("id")
+      .single();
+
+    if (recordError) throw recordError;
+
+    const { data, error } = await supabase.functions.invoke("nvoip-call", {
+      body: { action: "make-call", called: cleanPhone },
+    });
+
+    if (error) throw new Error(error.message || "Erro na Nvoip");
+    if (data?.success === false || data?.error) throw new Error(data?.error || "A Nvoip recusou a ligacao.");
+
+    const callId = data?.callId || data?.id || data?.data?.callId || null;
+    apiCallRef.current = {
+      callId,
+      recordId: callRecord?.id || null,
+      startedAt: new Date().toISOString(),
+    };
+
+    if (callRecord?.id) {
+      await supabase
+        .from("call_history")
+        .update({ nvoip_call_id: callId, status: "chamando" })
+        .eq("id", callRecord.id);
+    }
+
+    toast.success("Ligacao iniciada pela Nvoip.");
+  }, []);
+
+  const finishNvoipApiCall = useCallback(async () => {
+    const current = apiCallRef.current;
+    apiCallRef.current = { callId: null, recordId: null, startedAt: null };
+
+    if (current.callId) {
+      try {
+        await supabase.functions.invoke("nvoip-call", {
+          body: { action: "end-call", callId: current.callId },
+        });
+      } catch (error) {
+        console.error("Erro ao encerrar chamada Nvoip:", error);
+      }
+    }
+
+    if (current.recordId) {
+      const duration = current.startedAt
+        ? Math.max(0, Math.round((Date.now() - new Date(current.startedAt).getTime()) / 1000))
+        : 0;
+      await supabase
+        .from("call_history")
+        .update({
+          status: "finalizado",
+          call_end: new Date().toISOString(),
+          duration_seconds: duration,
+          call_result: duration > 0 ? "encerrada" : "nao_atendida",
+        })
+        .eq("id", current.recordId);
+    }
+  }, []);
+
   useEffect(() => {
     const onMsg = async (event: MessageEvent) => {
       if (event.data?.type === "call-center-ready") sendLeads();
@@ -89,21 +189,22 @@ const CallCenterPreview = () => {
         let ok = false;
 
         try {
-          if (webphone.mode !== "webphone" || !webphone.configured) {
-            await webphone.reload();
+          if (!webphoneReady && (webphone.mode !== "webphone" || !webphone.configured || webphone.regStatus === "error")) {
+            await webphone.reload(webphone.regStatus === "error");
           }
 
-          if (webphone.mode !== "webphone" || !webphone.configured) {
-            toast.error("Configure a Conta Nvoip no modo Webphone para ligar pelo navegador.");
-            setNvoipOpen(true);
-          } else if (webphone.regStatus !== "registered") {
-            toast.error("Webphone SIP ainda não está conectado. Aguarde o status Online e tente novamente.");
-          } else {
+          if (webphoneReady) {
             webphone.call(number, name);
-            ok = true;
+          } else {
+            await startNvoipApiCall(number, name, leadId || null);
           }
+          ok = true;
         } catch (error: any) {
-          toast.error(error?.message || "Não foi possível iniciar a ligação pelo Webphone.");
+          const message = error?.message || "Nao foi possivel iniciar a ligacao pela Nvoip.";
+          toast.error(message);
+          if (/Conta Nvoip|NumberSIP|User Token|configur/i.test(message)) {
+            setNvoipOpen(true);
+          }
         }
 
         iframeRef.current?.contentWindow?.postMessage({
@@ -115,6 +216,7 @@ const CallCenterPreview = () => {
       }
       if (event.data?.type === "call-center-end-call") {
         webphone.hangup();
+        await finishNvoipApiCall();
       }
     };
 
@@ -127,8 +229,7 @@ const CallCenterPreview = () => {
       window.removeEventListener("message", onMsg);
       iframe?.removeEventListener("load", sendLeads);
     };
-  }, [sendLeads, webphone]);
-
+  }, [finishNvoipApiCall, sendLeads, startNvoipApiCall, webphone, webphoneReady]);
   useEffect(() => {
     if (webphone.callState === "ended" || webphone.callState === "idle") {
       iframeRef.current?.contentWindow?.postMessage({ type: "call-center-call-ended" }, "*");
@@ -150,31 +251,28 @@ const CallCenterPreview = () => {
   const handleDialerCall = async () => {
     const number = dialerNumber.replace(/\D/g, "");
     if (number.length < 10) {
-      toast.error("Informe DDD + número para realizar a ligação.");
+      toast.error("Informe DDD + numero para realizar a ligacao.");
       return;
     }
 
     try {
-      if (webphone.mode !== "webphone" || !webphone.configured) {
-        await webphone.reload();
+      if (!webphoneReady && (webphone.mode !== "webphone" || !webphone.configured || webphone.regStatus === "error")) {
+        await webphone.reload(webphone.regStatus === "error");
       }
 
-      if (webphone.mode !== "webphone" || !webphone.configured) {
-        toast.error("Configure a Conta Nvoip no modo Webphone para ligar pelo navegador.");
-        setDialerOpen(false);
-        setNvoipOpen(true);
-        return;
+      if (webphoneReady) {
+        webphone.call(number, number);
+      } else {
+        await startNvoipApiCall(number, number, null);
       }
-
-      if (webphone.regStatus !== "registered") {
-        toast.error("Webphone SIP ainda não está conectado. Aguarde o status Pronto e tente novamente.");
-        return;
-      }
-
-      webphone.call(number, number);
       setDialerOpen(false);
     } catch (error: any) {
-      toast.error(error?.message || "Não foi possível iniciar a ligação pelo Webphone.");
+      const message = error?.message || "Nao foi possivel iniciar a ligacao pela Nvoip.";
+      toast.error(message);
+      if (/Conta Nvoip|NumberSIP|User Token|configur/i.test(message)) {
+        setDialerOpen(false);
+        setNvoipOpen(true);
+      }
     }
   };
 

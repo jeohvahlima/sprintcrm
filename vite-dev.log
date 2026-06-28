@@ -3,26 +3,15 @@
 > vite --port 4000 --strictPort
 
 
-  [32m[1mVITE[22m v5.4.21[39m  [2mready in [0m[1m946[22m[2m[0m ms[22m
+  [32m[1mVITE[22m v5.4.21[39m  [2mready in [0m[1m1167[22m[2m[0m ms[22m
 
   [32m➜[39m  [1mLocal[22m:   [36mhttp://localhost:[1m4000[22m/[39m
   [32m➜[39m  [1mNetwork[22m: [36mhttp://192.168.1.244:[1m4000[22m/[39m
-[2m19:26:55[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/Agenda.tsx, /src/index.css[22m
-[2m19:27:57[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2mpublic/agenda.html[22m
-[2m19:28:08[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2mpublic/agenda.html[22m
-[2m19:35:08[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/Agenda.tsx, /src/index.css[22m
-[2m19:35:28[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/Agenda.tsx, /src/index.css[22m
-[2m19:35:44[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/Agenda.tsx, /src/index.css[22m
-[2m20:08:49[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2mpublic/agenda.html[22m
-[2m20:08:50[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2mpublic/agenda.html[22m
-[2m20:08:52[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/Agenda.tsx, /src/index.css[22m
-[2m20:17:37[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2mpublic/agenda.html[22m
-[2m20:17:39[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/Agenda.tsx, /src/index.css[22m
-[2m20:25:10[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2mpublic/agenda.html[22m
-[2m20:28:46[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2mpublic/agenda.html[22m
-[2m20:31:49[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2mpublic/agenda.html[22m
-[2m20:34:12[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2mpublic/agenda.html[22m
-[2m20:34:24[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/Agenda.tsx, /src/index.css[22m
-[2m20:38:17[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2msrc/hooks/useAIProcessing.ts[22m
-[2m20:43:04[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2msrc/components/agenda/AgendaColaboradores.tsx[22m
-[2m20:44:18[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2msrc/components/agenda/AgendaColaboradores.tsx[22m
+[2m08:22:09[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/Treinamento.tsx, /src/index.css[22m
+[2m08:22:40[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/treinamento/TrainingModuleCard.tsx, /src/index.css[22m
+[2m08:23:12[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/treinamento/TrainingLessonList.tsx, /src/index.css[22m
+[2m08:25:10[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/Treinamento.tsx, /src/index.css[22m
+[2m08:25:10[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/Treinamento.tsx, /src/index.css[22m
+[2m08:25:10[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/treinamento/TrainingModuleCard.tsx, /src/index.css[22m
+[2m08:25:10[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/treinamento/TrainingLessonList.tsx, /src/index.css[22m
+[2m08:25:45[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/Treinamento.tsx, /src/index.css[22m
