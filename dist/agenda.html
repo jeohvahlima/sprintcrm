@@ -274,6 +274,19 @@
     .ev.red { --c: hsl(var(--danger)); --cs: hsl(var(--danger-soft)); --cb:hsl(0 86% 84%); }
     .ev.purple { --c: hsl(var(--purple)); --cs: hsl(var(--purple-soft)); --cb:hsl(265 90% 86%); }
     .ev.orange { --c: hsl(var(--warning)); --cs: hsl(var(--warning-soft)); --cb:hsl(38 92% 82%); }
+    .ev.compact-stack {
+      left: 6px;
+      right: 6px;
+      height: 34px;
+      padding: 5px 7px;
+    }
+    .ev.compact-stack .ev-top { align-items: center; gap: 6px; }
+    .ev.compact-stack .ev-avatar { width: 22px; height: 22px; font-size: 9px; }
+    .ev.compact-stack .ev-line { align-items: center; }
+    .ev.compact-stack .nm { font-size: 11px; }
+    .ev.compact-stack .tm { font-size: 9px; margin-top: 1px; }
+    .ev.compact-stack .ev-status { font-size: 8px; padding: 1px 5px; max-width: 86px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+    .ev.compact-stack .ev-note { display: none; }
 
     /* LEMBRETES PANEL */
     .lem-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
@@ -363,6 +376,82 @@
     .info-status-box.confirmed { background: #f0fdf4; border-color: #bbf7d0; }
     .info-status-box.no-answer { background: #fef2f2; border-color: #fecaca; }
     .info-actions { padding: 14px 20px; border-top: 1px solid hsl(var(--border)); display: flex; flex-wrap: wrap; gap: 8px; }
+    .info-tabs {
+      display: flex; align-items: center; gap: 4px; padding: 0 20px;
+      border-bottom: 1px solid hsl(var(--border));
+      background: hsl(var(--surface));
+    }
+    .info-tab {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 11px 9px; border: 0; border-bottom: 2px solid transparent;
+      background: transparent; color: hsl(var(--text-muted));
+      font-size: 12px; font-weight: 600; cursor: pointer;
+    }
+    .info-tab.active {
+      color: hsl(var(--text)); border-bottom-color: hsl(var(--text));
+    }
+    .info-tab .mini-badge {
+      min-width: 18px; height: 18px; padding: 0 6px; border-radius: 999px;
+      display: inline-flex; align-items: center; justify-content: center;
+      background: hsl(var(--success-soft)); color: hsl(142 71% 30%);
+      font-size: 10px; font-weight: 800;
+    }
+    .info-body { padding: 14px 20px 16px; min-height: 230px; }
+    .info-card-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+    .info-card {
+      background: hsl(var(--surface-soft)); border: 1px solid hsl(var(--border));
+      border-radius: 8px; padding: 10px 11px; min-height: 64px;
+    }
+    .info-card.full { grid-column: 1 / -1; min-height: auto; }
+    .info-card .lbl {
+      display: block; margin-bottom: 4px; font-size: 10px; font-weight: 800;
+      color: hsl(var(--text-soft)); text-transform: uppercase;
+    }
+    .info-card .val { font-size: 13px; font-weight: 700; color: hsl(var(--text)); }
+    .info-card .sub { margin-top: 2px; font-size: 11px; color: hsl(var(--text-muted)); line-height: 1.35; }
+    .quick-tags { display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 10px; }
+    .quick-tag {
+      border: 1px solid hsl(var(--border)); border-radius: 999px; padding: 5px 9px;
+      background: hsl(var(--surface)); color: hsl(var(--text));
+      font-size: 11px; font-weight: 700; cursor: pointer;
+    }
+    .quick-tag.active { background: hsl(var(--success-soft)); border-color: hsl(142 70% 72%); color: hsl(142 71% 28%); }
+    .notes-area {
+      width: 100%; min-height: 118px; resize: vertical; padding: 10px 12px;
+      border: 1px solid hsl(var(--border)); border-radius: 8px;
+      font-size: 13px; line-height: 1.45; color: hsl(var(--text));
+      background: hsl(var(--surface)); outline: none;
+    }
+    .notes-area:focus { border-color: hsl(var(--info)); box-shadow: 0 0 0 3px hsl(var(--info) / 0.12); }
+    .task-progress { display: flex; align-items: center; justify-content: space-between; gap: 12px; font-size: 12px; color: hsl(var(--text-muted)); margin-bottom: 8px; }
+    .task-bar { height: 5px; background: hsl(var(--border)); border-radius: 999px; overflow: hidden; margin-bottom: 10px; }
+    .task-bar i { display: block; height: 100%; background: hsl(var(--success)); border-radius: inherit; }
+    .task-add { display: grid; grid-template-columns: 1fr auto; gap: 8px; margin-bottom: 10px; }
+    .task-add input {
+      min-width: 0; padding: 9px 11px; border: 1px solid hsl(var(--border));
+      border-radius: 7px; font-size: 13px; outline: none;
+    }
+    .task-row {
+      display: grid; grid-template-columns: auto 1fr auto; gap: 9px; align-items: start;
+      padding: 10px 9px; border-radius: 8px; background: hsl(var(--surface-soft));
+      border: 1px solid hsl(var(--border)); margin-bottom: 7px;
+    }
+    .task-row.done .task-title { color: hsl(var(--text-soft)); text-decoration: line-through; }
+    .task-check {
+      width: 18px; height: 18px; margin-top: 1px; border-radius: 5px;
+      border: 1px solid hsl(var(--border-strong)); display: inline-flex; align-items: center; justify-content: center;
+      background: hsl(var(--surface)); color: hsl(var(--surface)); cursor: pointer;
+    }
+    .task-row.done .task-check { background: hsl(var(--success)); border-color: hsl(var(--success)); color: white; }
+    .task-title { font-size: 13px; font-weight: 600; line-height: 1.3; }
+    .task-meta { margin-top: 3px; display: flex; flex-wrap: wrap; gap: 6px; font-size: 11px; color: hsl(var(--text-muted)); }
+    .task-del { border: 0; background: transparent; color: hsl(var(--text-soft)); cursor: pointer; padding: 2px; }
+    .task-empty { padding: 20px 12px; text-align: center; color: hsl(var(--text-muted)); font-size: 13px; border: 1px dashed hsl(var(--border)); border-radius: 8px; }
+    @media (max-width: 640px) {
+      .info-card-grid { grid-template-columns: 1fr; }
+      .info-card.full { grid-column: auto; }
+      .task-add { grid-template-columns: 1fr; }
+    }
     .item:first-child { border-top: 0; }
     .avatar {
       width: 40px; height: 40px; border-radius: 999px;
@@ -1317,7 +1406,32 @@
         }
         renderAll();
       }
-      function openInfoPanel(id){
+      const APPT_META_KEY = 'agenda_appointment_meta_v1';
+      const quickNoteTags = ['Lead quente', 'Orcamento aprovado', 'Objecao de preco', 'Remarcar', 'Pronto pra fechar', 'Baixo potencial'];
+      function loadApptMeta(){
+        try { return JSON.parse(localStorage.getItem(APPT_META_KEY)) || {}; }
+        catch(_) { return {}; }
+      }
+      function getApptMeta(id){
+        const all = loadApptMeta();
+        return all[id] || { notes: '', tags: [], tasks: [] };
+      }
+      function saveApptMeta(id, meta){
+        const all = loadApptMeta();
+        all[id] = {
+          notes: meta.notes || '',
+          tags: Array.isArray(meta.tags) ? meta.tags : [],
+          tasks: Array.isArray(meta.tasks) ? meta.tasks : [],
+        };
+        localStorage.setItem(APPT_META_KEY, JSON.stringify(all));
+      }
+      function metaTaskStats(meta){
+        const tasks = Array.isArray(meta.tasks) ? meta.tasks : [];
+        const done = tasks.filter(t => t.done).length;
+        const pct = tasks.length ? Math.round((done / tasks.length) * 100) : 0;
+        return { tasks, done, pct };
+      }
+      function openInfoPanelLegacy(id){
         if(!id) return;
         const ev = load().find(i => i.id === id);
         if(!ev) { toast('Compromisso não encontrado'); return; }
@@ -1404,6 +1518,186 @@
             closeInfoPanel(); renderAll(); toast('Compromisso excluído');
           });
         }
+      }
+      function openInfoPanel(id){
+        if(!id) return;
+        const ev = load().find(i => i.id === id);
+        if(!ev) { toast('Compromisso nao encontrado'); return; }
+        viewingId = id;
+        const state = apptState(ev);
+        const initials = (ev.name||'?').split(/\s+/).slice(0,2).map(s=>s[0]||'').join('').toUpperCase();
+        const [y,m,d] = (ev.date||'').split('-');
+        const dateText = d && m && y ? `${d}/${m}/${y}` : (ev.date || '-');
+        const wppLine = apptWppLine(ev);
+        const statusLabel = apptStatusLabel(ev);
+        const pillClass = state === 'confirmed' ? 'success' : state === 'no-answer' ? 'danger' : 'warning';
+        let meta = getApptMeta(id);
+        const taskStats = metaTaskStats(meta);
+        const box = document.getElementById('apptInfoContent');
+        box.innerHTML = `
+          <div style="display:flex; align-items:center; justify-content:space-between; padding:12px 16px 10px 20px;">
+            <div style="display:flex; align-items:center; gap:10px; min-width:0;">
+              <div class="info-avatar ${state}" style="width:38px;height:38px;font-size:13px;">${escapeHTML(initials)}</div>
+              <div style="min-width:0;">
+                <div style="font-size:15px; font-weight:800; line-height:1.2; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escapeHTML(ev.name || 'Cliente')}</div>
+                <div style="font-size:12px; color:hsl(var(--text-muted)); margin-top:3px;">
+                  <i class="ti ti-clock"></i> ${escapeHTML(ev.start||'')} - ${escapeHTML(ev.end||'')} · ${escapeHTML(apptTypeLabel(ev.type))} · <i class="ti ti-calendar"></i> ${dateText}
+                </div>
+                <div style="margin-top:5px;"><span class="pill ${pillClass}" style="padding:2px 8px;">${escapeHTML(statusLabel)}</span></div>
+              </div>
+            </div>
+            <button id="infoClose" class="iconbtn" title="Fechar"><i class="ti ti-x"></i></button>
+          </div>
+          <div class="info-tabs">
+            <button class="info-tab active" data-info-tab="details"><i class="ti ti-clipboard-list"></i> Detalhes</button>
+            <button class="info-tab" data-info-tab="notes"><i class="ti ti-notes"></i> Anotacoes</button>
+            <button class="info-tab" data-info-tab="tasks"><i class="ti ti-checkbox"></i> Tarefas <span class="mini-badge" id="infoTaskBadge">${taskStats.tasks.length}</span></button>
+          </div>
+          <div class="info-body" id="infoTabContent"></div>
+          <div class="info-actions">
+            ${ev.phone ? `<button class="btn" id="infoWpp" style="color:#16a34a;border-color:#bbf7d0;"><i class="ti ti-brand-whatsapp"></i> WhatsApp</button>` : ''}
+            <button class="btn" id="infoEdit"><i class="ti ti-pencil"></i> Editar</button>
+            <button class="btn" id="infoReschedule"><i class="ti ti-calendar-event"></i> Remarcar</button>
+            ${state !== 'confirmed' ? `<button class="btn primary" id="infoConfirm"><i class="ti ti-check"></i> Salvar e fechar</button>` : `<button class="btn primary" id="infoCloseSave"><i class="ti ti-check"></i> Salvar e fechar</button>`}
+            ${!ev.remote ? `<button class="btn" id="infoDelete" style="color:hsl(var(--danger));"><i class="ti ti-trash"></i> Excluir</button>` : ''}
+            <button class="btn" id="infoClose2"><i class="ti ti-x"></i> Cancelar</button>
+          </div>`;
+
+        function updateMeta(next){
+          meta = { ...meta, ...next };
+          saveApptMeta(id, meta);
+          const badge = document.getElementById('infoTaskBadge');
+          if(badge) badge.textContent = String(metaTaskStats(meta).tasks.length);
+        }
+        function renderDetailsTab(){
+          const reminders = `${ev.remWa ? 'WhatsApp' : ''}${ev.remWa && ev.remEmail ? ' · ' : ''}${ev.remEmail ? 'E-mail' : ''}${!ev.remWa && !ev.remEmail ? 'Nenhum configurado' : ''}`;
+          document.getElementById('infoTabContent').innerHTML = `
+            <div class="info-status-box ${state}" style="margin:0 0 10px;">
+              <span><i class="ti ti-brand-whatsapp"></i> ${escapeHTML(wppLine)}<br><small style="color:hsl(var(--text-muted));">Lead confirmou o link ou aguarda retorno.</small></span>
+              ${ev.phone && state !== 'confirmed' ? '<button class="btn" id="infoResendWpp" style="padding:6px 10px; font-size:11px;"><i class="ti ti-send"></i> Reenviar</button>' : ''}
+            </div>
+            <div class="info-card-grid">
+              <div class="info-card"><span class="lbl">Lead / cliente</span><div class="val">${escapeHTML(ev.name || 'Cliente')}</div><div class="sub">${escapeHTML(ev.agenda || 'Agenda do CRM')}</div></div>
+              <div class="info-card"><span class="lbl">Responsavel</span><div class="val">${escapeHTML(ev.prof || 'Nao informado')}</div><div class="sub">${escapeHTML(ev.agenda || 'Agenda')}</div></div>
+              <div class="info-card"><span class="lbl">Data e horario</span><div class="val">${dateText}</div><div class="sub"><i class="ti ti-clock"></i> ${escapeHTML(ev.start||'')} - ${escapeHTML(ev.end||'')} · ${ev.end ? Math.max(1, hhmmToMin(ev.end) - hhmmToMin(ev.start)) : 30} min</div></div>
+              <div class="info-card"><span class="lbl">Tipo</span><div class="val">${escapeHTML(apptTypeLabel(ev.type))}</div><div class="sub">${escapeHTML(ev.notes || 'Compromisso comercial')}</div></div>
+              <div class="info-card"><span class="lbl">WhatsApp</span><div class="val">${escapeHTML(ev.phone || 'Nao informado')}</div>${ev.phone ? '<div class="sub" style="color:hsl(142 71% 30%);"><i class="ti ti-brand-whatsapp"></i> Abrir conversa</div>' : ''}</div>
+              <div class="info-card"><span class="lbl">Lembretes</span><div class="val">${escapeHTML(reminders)}</div><div class="sub">${ev.remWa || ev.remEmail ? remTimeLabel(ev.remTime) : 'Sem lembrete'}${ev.confirmNow ? ' · Confirmacao imediata' : ''}</div></div>
+              <div class="info-card full"><span class="lbl">Link de confirmacao</span><div class="sub">${escapeHTML(window.location.origin + '/c/' + (ev.id || '').slice(0, 8))}...</div><div style="display:flex;gap:6px;margin-top:7px;"><button class="btn" id="infoCopyLink" style="padding:5px 9px;font-size:11px;"><i class="ti ti-copy"></i> Copiar</button>${ev.phone ? '<button class="btn" id="infoResendWpp2" style="padding:5px 9px;font-size:11px;color:#16a34a;"><i class="ti ti-message"></i> Reenviar</button>' : ''}</div></div>
+            </div>`;
+          const wireResend = (el) => {
+            if(!el || !ev.phone) return;
+            el.addEventListener('click', () => {
+              window.open('https://wa.me/'+String(ev.phone).replace(/\D/g,'')+'?text='+encodeURIComponent('Ola! Confirmando nosso compromisso em '+dateText+' as '+ev.start+'.'), '_blank');
+              toast('Link de confirmacao reenviado');
+            });
+          };
+          wireResend(document.getElementById('infoResendWpp'));
+          wireResend(document.getElementById('infoResendWpp2'));
+          document.getElementById('infoCopyLink')?.addEventListener('click', async () => {
+            try { await navigator.clipboard.writeText(window.location.origin + '/c/' + (ev.id || '')); toast('Link copiado'); }
+            catch(_) { toast('Nao foi possivel copiar'); }
+          });
+        }
+        function renderNotesTab(){
+          const selected = new Set(meta.tags || []);
+          document.getElementById('infoTabContent').innerHTML = `
+            <div style="font-size:11px;font-weight:800;color:hsl(var(--text-soft));margin-bottom:8px;">Tags rapidas</div>
+            <div class="quick-tags">
+              ${quickNoteTags.map(tag => `<button class="quick-tag ${selected.has(tag) ? 'active' : ''}" data-note-tag="${escapeAttr(tag)}">${escapeHTML(tag)}</button>`).join('')}
+            </div>
+            <textarea class="notes-area" id="infoNotesArea" placeholder="Anotacoes do compromisso...">${escapeHTML(meta.notes || ev.notes || '')}</textarea>
+            <div style="font-size:11px;color:hsl(var(--text-muted));margin-top:8px;"><i class="ti ti-bulb"></i> Estas anotacoes ficam vinculadas ao compromisso no CRM.</div>`;
+          document.querySelectorAll('[data-note-tag]').forEach(btn => {
+            btn.addEventListener('click', () => {
+              const tag = btn.getAttribute('data-note-tag');
+              const tags = new Set(meta.tags || []);
+              tags.has(tag) ? tags.delete(tag) : tags.add(tag);
+              updateMeta({ tags: Array.from(tags) });
+              renderNotesTab();
+            });
+          });
+          document.getElementById('infoNotesArea').addEventListener('input', (e) => {
+            updateMeta({ notes: e.target.value });
+          });
+        }
+        function renderTasksTab(){
+          const { tasks, done, pct } = metaTaskStats(meta);
+          document.getElementById('infoTabContent').innerHTML = `
+            <div class="task-progress"><span>${done} de ${tasks.length} tarefas concluidas</span><strong style="color:hsl(var(--success));">${pct}%</strong></div>
+            <div class="task-bar"><i style="width:${pct}%"></i></div>
+            <div class="task-add"><input id="infoTaskInput" placeholder="Adicionar tarefa..." /><button class="btn primary" id="infoTaskAdd"><i class="ti ti-plus"></i> Adicionar</button></div>
+            <div id="infoTaskList">
+              ${tasks.length ? tasks.map(task => `
+                <div class="task-row ${task.done ? 'done' : ''}" data-task-id="${escapeAttr(task.id)}">
+                  <button class="task-check" data-task-toggle="${escapeAttr(task.id)}"><i class="ti ti-check"></i></button>
+                  <div>
+                    <div class="task-title">${escapeHTML(task.title)}</div>
+                    <div class="task-meta"><span><i class="ti ti-calendar"></i> ${task.date || dateText}</span><span class="pill ${task.priority === 'Alta' ? 'danger' : task.priority === 'Media' ? 'warning' : 'neutral'}" style="padding:1px 6px;">${escapeHTML(task.priority || 'Media')}</span></div>
+                  </div>
+                  <button class="task-del" data-task-del="${escapeAttr(task.id)}"><i class="ti ti-trash"></i></button>
+                </div>`).join('') : '<div class="task-empty">Nenhuma tarefa criada para este compromisso.</div>'}
+            </div>`;
+          const addTask = () => {
+            const input = document.getElementById('infoTaskInput');
+            const title = (input.value || '').trim();
+            if(!title){ toast('Digite a tarefa'); return; }
+            updateMeta({ tasks: [...tasks, { id: 'task_' + Date.now(), title, done: false, date: dateText, priority: 'Media' }] });
+            renderTasksTab();
+          };
+          document.getElementById('infoTaskAdd').addEventListener('click', addTask);
+          document.getElementById('infoTaskInput').addEventListener('keydown', (e) => { if(e.key === 'Enter') addTask(); });
+          document.querySelectorAll('[data-task-toggle]').forEach(btn => {
+            btn.addEventListener('click', () => {
+              const tid = btn.getAttribute('data-task-toggle');
+              updateMeta({ tasks: tasks.map(t => t.id === tid ? { ...t, done: !t.done } : t) });
+              renderTasksTab();
+            });
+          });
+          document.querySelectorAll('[data-task-del]').forEach(btn => {
+            btn.addEventListener('click', () => {
+              const tid = btn.getAttribute('data-task-del');
+              updateMeta({ tasks: tasks.filter(t => t.id !== tid) });
+              renderTasksTab();
+            });
+          });
+        }
+        function activateInfoTab(tab){
+          document.querySelectorAll('.info-tab').forEach(btn => btn.classList.toggle('active', btn.dataset.infoTab === tab));
+          if(tab === 'notes') renderNotesTab();
+          else if(tab === 'tasks') renderTasksTab();
+          else renderDetailsTab();
+        }
+
+        document.getElementById('apptInfoModal').style.display = 'flex';
+        document.getElementById('infoClose').addEventListener('click', closeInfoPanel);
+        document.getElementById('infoClose2').addEventListener('click', closeInfoPanel);
+        document.getElementById('infoCloseSave')?.addEventListener('click', closeInfoPanel);
+        document.getElementById('infoEdit').addEventListener('click', () => { closeInfoPanel(); openModal(id); });
+        document.getElementById('infoReschedule').addEventListener('click', () => { closeInfoPanel(); openModal(id); document.getElementById('apptReschedule')?.click(); });
+        if(document.getElementById('infoConfirm')){
+          document.getElementById('infoConfirm').addEventListener('click', () => {
+            updateApptStatus(id, 'confirmado');
+            toast('Compromisso salvo e confirmado');
+            closeInfoPanel();
+          });
+        }
+        if(document.getElementById('infoWpp') && ev.phone){
+          document.getElementById('infoWpp').addEventListener('click', () => {
+            window.open('https://wa.me/'+String(ev.phone).replace(/\D/g,''), '_blank');
+          });
+        }
+        if(document.getElementById('infoDelete')){
+          document.getElementById('infoDelete').addEventListener('click', () => {
+            if(!confirm('Excluir este compromisso?')) return;
+            save(load().filter(i => i.id !== id && !i.remote));
+            closeInfoPanel(); renderAll(); toast('Compromisso excluido');
+          });
+        }
+        document.querySelectorAll('.info-tab').forEach(btn => {
+          btn.addEventListener('click', () => activateInfoTab(btn.dataset.infoTab || 'details'));
+        });
+        renderDetailsTab();
       }
       window.openInfoPanel = openInfoPanel;
       function renderCalendar(){
@@ -1498,26 +1792,26 @@
             } else if(!slotEvents.length) {
               cell.addEventListener('click', () => openModal(null, {date: dateIso, start: pad(h)+':00'}));
             }
+            const hasStack = slotEvents.length > 1;
+            if(hasStack){
+              cell.style.minHeight = Math.max(76, 8 + (slotEvents.length * 38)) + 'px';
+            }
             slotEvents.forEach((ev, evIdx) => {
               const state = apptState(ev);
               const e = document.createElement('div'); e.className='ev '+state;
               const startMin = hhmmToMin(ev.start);
               const endMin = hhmmToMin(ev.end || minToHHMM(startMin + 30));
-              const eventTop = Math.max(4, Math.round(((startMin - slotStart) / 60) * 76) + 4);
-              const eventHeight = Math.max(32, Math.min(68, Math.round(((Math.max(endMin, startMin + 15) - startMin) / 60) * 76) - 8));
+              const eventTop = hasStack ? (5 + evIdx * 38) : Math.max(4, Math.round(((startMin - slotStart) / 60) * 76) + 4);
+              const eventHeight = hasStack ? 34 : Math.max(32, Math.min(68, Math.round(((Math.max(endMin, startMin + 15) - startMin) / 60) * 76) - 8));
               e.style.top = eventTop + 'px';
               e.style.bottom = 'auto';
               e.style.height = eventHeight + 'px';
-              if(slotEvents.length > 1){
-                const width = 100 / slotEvents.length;
-                e.style.left = `calc(${evIdx * width}% + 5px)`;
-                e.style.right = 'auto';
-                e.style.width = `calc(${width}% - 10px)`;
+              if(hasStack){
+                e.classList.add('compact-stack');
               }
               const typeText = apptTypeLabel(ev.type);
               const initials = (ev.name||'?').split(/\s+/).slice(0,2).map(s=>s[0]||'').join('').toUpperCase();
-              const tip = [ev.name, ev.start+' - '+(ev.end||''), ev.type, ev.agenda, ev.prof, ev.phone, ev.email, ev.notes].filter(Boolean).join('
-');
+              const tip = [ev.name, ev.start+' - '+(ev.end||''), ev.type, ev.agenda, ev.prof, ev.phone, ev.email, ev.notes].filter(Boolean).join('\n');
               e.title = tip;
               e.innerHTML = '<div class="ev-top">'
                 + '<div class="ev-avatar">'+escapeHTML(initials)+'</div>'
