@@ -1265,6 +1265,7 @@ function switchTab(id, el) {
     fluxos: { type: 'overlay', module: 'fluxos' },
     base: { type: 'overlay', module: 'base' },
     diagnostico: { type: 'navigate', path: '/automacoes/diagnostico' },
+    'whatsapp-nao-oficial': { type: 'overlay', module: 'disparo-nao-oficial' },
   };
   if (overlayTabs[id]) post(overlayTabs[id]);
 }
