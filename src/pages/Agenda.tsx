@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
-const AGENDA_HTML_VERSION = "agenda-fix-20260628-professional-agenda-button";
+const AGENDA_HTML_VERSION = "agenda-fix-20260629-professional-agenda-modal";
 
 function toDatePart(value?: string | null) {
   if (!value) return "";

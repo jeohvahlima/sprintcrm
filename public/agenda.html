@@ -492,6 +492,15 @@
     .item.c-danger { --c: hsl(var(--danger)); --cs: hsl(var(--danger-soft)); }
     .item.c-purple { --c: hsl(var(--purple)); --cs: hsl(var(--purple-soft)); }
 
+
+    /* Professional agenda modal */
+    .btn-agenda-pro{background:linear-gradient(135deg,hsl(var(--success)),hsl(var(--primary-dark)))!important;color:#fff!important;border-color:hsl(var(--success))!important;box-shadow:0 6px 18px hsl(var(--success) / .32)!important;padding:10px 16px!important;border-radius:10px!important}.btn-agenda-pro:hover{transform:translateY(-1px);box-shadow:0 10px 24px hsl(var(--success) / .36)!important}.btn-agenda-pro-icon{width:22px;height:22px;border-radius:7px;background:rgba(255,255,255,.18);display:inline-flex;align-items:center;justify-content:center}
+    .na-overlay{display:none;position:fixed;inset:0;background:rgba(15,23,42,.58);z-index:9999;align-items:flex-start;justify-content:center;padding:24px 16px;overflow-y:auto}.na-modal{width:min(620px,96vw);background:hsl(var(--surface));border-radius:18px;overflow:hidden;box-shadow:0 24px 70px rgba(0,0,0,.28);animation:na-pop .22s cubic-bezier(.34,1.4,.64,1)}@keyframes na-pop{from{opacity:0;transform:scale(.96) translateY(10px)}to{opacity:1;transform:scale(1) translateY(0)}}
+    .na-hero{position:relative;overflow:hidden;padding:24px 24px 28px;background:linear-gradient(135deg,#14532d,#166534 58%,#16a34a);color:#fff}.na-hero:before{content:'';position:absolute;top:-52px;right:-48px;width:188px;height:188px;border-radius:50%;background:rgba(255,255,255,.07)}.na-hero:after{content:'';position:absolute;bottom:-72px;left:-32px;width:160px;height:160px;border-radius:50%;background:rgba(255,255,255,.045)}.na-hero-top{position:relative;z-index:1;display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px}.na-label{display:inline-flex;align-items:center;gap:8px;font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,.72)}.na-label-dot{width:6px;height:6px;border-radius:999px;background:#4ade80;box-shadow:0 0 0 4px rgba(74,222,128,.22)}.na-close{width:32px;height:32px;border-radius:9px;border:1px solid rgba(255,255,255,.22);background:rgba(255,255,255,.09);color:rgba(255,255,255,.78);cursor:pointer;display:inline-flex;align-items:center;justify-content:center}.na-close:hover{background:rgba(255,255,255,.18);color:#fff}.na-avatar-preview{position:absolute;z-index:1;top:28px;right:72px;width:54px;height:54px;border-radius:15px;border:2px solid rgba(255,255,255,.26);background:rgba(255,255,255,.14);display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:800}.na-title{position:relative;z-index:1;margin:0;font-size:23px;font-weight:800;letter-spacing:-.02em}.na-sub{position:relative;z-index:1;margin-top:5px;font-size:13px;color:rgba(255,255,255,.68)}
+    .na-type-row{position:relative;z-index:1;display:flex;gap:7px;flex-wrap:wrap;margin-top:17px}.na-type-pill{display:inline-flex;align-items:center;gap:7px;padding:7px 14px;border-radius:999px;border:1.5px solid rgba(255,255,255,.22);background:rgba(255,255,255,.08);color:rgba(255,255,255,.75);font-size:12.5px;font-weight:700;cursor:pointer}.na-type-pill:hover,.na-type-pill.active{background:rgba(255,255,255,.2);border-color:rgba(255,255,255,.55);color:#fff}
+    .na-body{padding:20px 24px;max-height:62vh;overflow-y:auto}.na-steps{display:flex;align-items:center;gap:9px;margin-bottom:20px}.na-step{display:flex;align-items:center;gap:7px;color:hsl(var(--text-soft));font-size:12px;font-weight:800;white-space:nowrap}.na-step-num{width:23px;height:23px;border-radius:999px;border:2px solid currentColor;display:inline-flex;align-items:center;justify-content:center;font-size:10px}.na-step.active{color:hsl(var(--success))}.na-step.active .na-step-num{background:hsl(var(--success));border-color:hsl(var(--success));color:#fff}.na-step.done{color:hsl(var(--success))}.na-line{flex:1;height:1px;background:hsl(var(--border))}.na-line.done{background:hsl(var(--success) / .45)}.na-panel{display:none}.na-panel.active{display:block}.na-section{margin-bottom:19px}.na-section-title{display:flex;align-items:center;gap:8px;padding-bottom:10px;margin-bottom:13px;border-bottom:1px solid hsl(var(--border));color:hsl(var(--text-soft));font-size:11.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase}.na-grid-2{display:grid;grid-template-columns:1fr 1fr;gap:12px}.na-field{display:flex;flex-direction:column;gap:6px;min-width:0}.na-field.full{grid-column:1/-1}.na-field label{font-size:12px;color:hsl(var(--text-muted));font-weight:700}.na-req{color:hsl(var(--danger))}.na-field input,.na-field select{width:100%;padding:9px 12px;border:1.5px solid hsl(var(--border));border-radius:8px;background:hsl(var(--surface));color:hsl(var(--text));font-size:13.5px;outline:none}.na-field input:focus,.na-field select:focus{border-color:hsl(var(--success));box-shadow:0 0 0 3px hsl(var(--success) / .11)}.na-hint{color:hsl(var(--text-soft));font-size:11px}
+    .na-number{display:flex;align-items:center;border:1.5px solid hsl(var(--border));border-radius:8px;overflow:hidden;background:hsl(var(--surface))}.na-num-btn{width:40px;height:38px;border:0;background:hsl(var(--surface-soft));color:hsl(var(--text-muted));cursor:pointer;font-size:17px}.na-num-btn:hover{background:hsl(var(--success-soft));color:hsl(var(--success))}.na-number input{border:0;box-shadow:none!important;text-align:center;font-weight:800;border-radius:0;padding:8px}.na-creds{padding:15px;border:1.5px solid hsl(142 70% 76%);border-radius:12px;background:linear-gradient(135deg,hsl(142 70% 96%),hsl(142 70% 90%))}.na-creds-title{display:flex;align-items:center;gap:8px;color:hsl(142 71% 30%);font-size:13px;font-weight:800;margin-bottom:12px}.na-creds-badge{margin-left:auto;padding:2px 8px;border-radius:999px;background:hsl(142 71% 30%);color:#fff;font-size:10px}.na-days{display:flex;gap:5px;flex-wrap:wrap}.na-day{flex:1;min-width:54px;padding:8px 6px;border-radius:8px;border:1.5px solid hsl(var(--border));background:hsl(var(--surface));color:hsl(var(--text-soft));font-size:11.5px;font-weight:800;cursor:pointer}.na-day.active{background:hsl(var(--success));border-color:hsl(var(--success));color:#fff}.na-period{display:flex;align-items:center;gap:12px;padding:12px 14px;border:1.5px solid hsl(var(--border));border-radius:10px;background:hsl(var(--surface-soft));margin-bottom:9px}.na-period.active{border-color:hsl(142 70% 76%);background:hsl(var(--success-soft))}.na-switch{width:38px;height:22px;border-radius:999px;border:0;background:hsl(var(--border-strong));cursor:pointer;position:relative;flex-shrink:0}.na-switch:after{content:'';position:absolute;width:18px;height:18px;top:2px;left:2px;border-radius:999px;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.22);transition:transform .15s}.na-period.active .na-switch{background:hsl(var(--success))}.na-period.active .na-switch:after{transform:translateX(16px)}.na-period-main{flex:1;min-width:0}.na-period-name{font-size:13px;font-weight:800;color:hsl(var(--text))}.na-time-row{display:flex;align-items:center;gap:7px;margin-top:6px}.na-time-row input{width:92px;padding:5px 8px;border:1.5px solid hsl(var(--border));border-radius:8px;background:hsl(var(--surface));color:hsl(var(--text))}.na-foot{display:flex;align-items:center;gap:10px;padding:16px 24px;border-top:1px solid hsl(var(--border));background:hsl(var(--surface))}.na-foot .btn{padding:10px 18px}.na-submit{flex:1;justify-content:center;background:linear-gradient(135deg,hsl(var(--success)),hsl(var(--primary-dark)))!important;border-color:hsl(var(--success))!important;color:#fff!important;box-shadow:0 6px 18px hsl(var(--success) / .27)!important}.na-submit:disabled{opacity:.65;cursor:wait;transform:none}@media(max-width:680px){.na-modal{width:100%;border-radius:14px}.na-grid-2{grid-template-columns:1fr}.na-avatar-preview{display:none}.na-steps{align-items:flex-start;gap:6px}.na-step{font-size:11px}.na-line{display:none}.na-body{padding:18px}.na-foot{padding:14px 18px}}
+
     @media (max-width: 1100px) {
       .stats { grid-template-columns: repeat(3, 1fr); }
       .main-grid { grid-template-columns: 1fr; }
@@ -505,7 +514,7 @@
       <div class="title-row">
         <h1 class="page-title">Agenda</h1>
         <span class="chip-pill"><i class="ti ti-calendar-event"></i> Multi-agendas</span>
-        <button class="btn primary" id="btnNovaAgenda" title="Criar agenda para profissional"><i class="ti ti-calendar-plus"></i> Agenda profissional</button>
+        <button class="btn btn-agenda-pro" id="btnNovaAgenda" title="Criar agenda para profissional"><span class="btn-agenda-pro-icon"><i class="ti ti-calendar-plus"></i></span> Agenda profissional</button>
       </div>
       <div class="actions">
         <span class="status-chip"><span class="dot"></span> <strong>Google Calendar</strong> <span class="conn">conectado</span></span>
@@ -1056,66 +1065,16 @@
 
   <!-- Toast -->
   <!-- Modal Nova Agenda -->
-  <div id="novaAgendaModal" style="display:none; position:fixed; inset:0; background:rgba(15,23,42,0.55); z-index:9999; align-items:center; justify-content:center; padding:20px;">
-    <div style="background:hsl(var(--surface)); border-radius:14px; width:100%; max-width:560px; max-height:92vh; overflow-y:auto; box-shadow:0 20px 60px rgba(0,0,0,0.25);">
-      <div style="display:flex; align-items:center; justify-content:space-between; padding:16px 20px; border-bottom:1px solid hsl(var(--border)); position:sticky; top:0; background:hsl(var(--surface)); z-index:2;">
-        <h3 style="margin:0; font-size:16px; font-weight:700;">Nova agenda profissional</h3>
-        <button id="naClose" class="iconbtn" title="Fechar"><i class="ti ti-x"></i></button>
+  <div id="novaAgendaModal" class="na-overlay" aria-hidden="true">
+    <div class="na-modal" role="dialog" aria-modal="true" aria-labelledby="naTitle">
+      <div class="na-hero"><div class="na-hero-top"><div class="na-label"><span class="na-label-dot"></span> Nova agenda - GROW OS</div><button id="naClose" class="na-close" title="Fechar"><i class="ti ti-x"></i></button></div><div class="na-avatar-preview" id="na_avatar">?</div><h3 class="na-title" id="naTitle">Criar nova agenda</h3><div class="na-sub">Configure o especialista, horarios e credenciais de acesso</div><div class="na-type-row" id="na_type_pills"><button class="na-type-pill active" data-type="colaborador"><i class="ti ti-user"></i> Colaborador</button><button class="na-type-pill" data-type="recurso"><i class="ti ti-settings"></i> Recurso</button><button class="na-type-pill" data-type="sala"><i class="ti ti-building"></i> Sala</button></div></div>
+      <div class="na-body">
+        <div class="na-steps"><div class="na-step active" data-step-indicator="1"><span class="na-step-num">1</span> Identificacao</div><div class="na-line" data-line="1"></div><div class="na-step" data-step-indicator="2"><span class="na-step-num">2</span> Acesso</div><div class="na-line" data-line="2"></div><div class="na-step" data-step-indicator="3"><span class="na-step-num">3</span> Disponibilidade</div></div>
+        <div class="na-panel active" data-panel="1"><div class="na-section"><div class="na-section-title"><i class="ti ti-user"></i> Dados do especialista</div><div class="na-grid-2"><div class="na-field full"><label>Nome completo <span class="na-req">*</span></label><input id="na_nome" type="text" placeholder="Ex: Dr. Joao Silva" autocomplete="off" /></div><div class="na-field"><label>Especialidade / Cargo</label><input id="na_especialidade" type="text" placeholder="Ex: Consultor Comercial" /></div><div class="na-field"><label>Telefone / WhatsApp</label><input id="na_telefone" type="text" placeholder="(00) 00000-0000" /></div></div></div><div class="na-section"><div class="na-section-title"><i class="ti ti-adjustments"></i> Configuracao de atendimento</div><div class="na-grid-2"><div class="na-field"><label>Capacidade simultanea</label><div class="na-number"><button class="na-num-btn" data-num="na_capacidade" data-delta="-1">-</button><input id="na_capacidade" type="number" min="1" value="1" /><button class="na-num-btn" data-num="na_capacidade" data-delta="1">+</button></div><div class="na-hint">Quantos atendimentos ao mesmo tempo</div></div><div class="na-field"><label>Duracao padrao (min)</label><div class="na-number"><button class="na-num-btn" data-num="na_duracao" data-delta="-5">-</button><input id="na_duracao" type="number" min="5" step="5" value="30" /><button class="na-num-btn" data-num="na_duracao" data-delta="5">+</button></div><div class="na-hint">Duracao de cada atendimento</div></div></div></div></div>
+        <div class="na-panel" data-panel="2"><div class="na-section" id="na_creds_section"><div class="na-creds"><div class="na-creds-title"><i class="ti ti-lock"></i> Credenciais de acesso ao app <span class="na-creds-badge">GROW OS App</span></div><div class="na-grid-2"><div class="na-field full"><label>E-mail de login</label><input id="na_email" type="email" placeholder="profissional@email.com" /><div class="na-hint">O profissional usara este e-mail para acessar a agenda pelo app.</div></div><div class="na-field full"><label>Senha inicial</label><input id="na_senha_login" type="password" placeholder="Minimo 6 caracteres" autocomplete="new-password" /><div class="na-hint">Opcional neste cadastro. Se preenchida, use ao menos 6 caracteres.</div></div></div></div></div><div class="na-section"><div class="na-section-title"><i class="ti ti-link"></i> Acesso publico</div><div class="na-field"><label>Senha para acessar o link publico</label><input id="na_senha" type="text" placeholder="Deixe em branco para acesso livre" autocomplete="off" /><div class="na-hint">Quando preenchida, sera solicitada ao abrir o link publico desta agenda.</div></div></div></div>
+        <div class="na-panel" data-panel="3"><div class="na-section"><div class="na-section-title"><i class="ti ti-calendar-week"></i> Dias de atendimento</div><div class="na-days" id="na_dias"><button class="na-day" data-dia="dom">Dom</button><button class="na-day active" data-dia="seg">Seg</button><button class="na-day active" data-dia="ter">Ter</button><button class="na-day active" data-dia="qua">Qua</button><button class="na-day active" data-dia="qui">Qui</button><button class="na-day active" data-dia="sex">Sex</button><button class="na-day" data-dia="sab">Sab</button></div></div><div class="na-section"><div class="na-section-title"><i class="ti ti-clock"></i> Periodos de atendimento</div><div class="na-period active" data-period="manha"><button class="na-switch" data-toggle-period="manha"></button><div class="na-period-main"><div class="na-period-name"><i class="ti ti-sun"></i> Manha</div><div class="na-time-row"><input id="na_manha_ini" type="time" value="08:00" /><span>ate</span><input id="na_manha_fim" type="time" value="12:00" /></div></div></div><div class="na-period" data-period="almoco"><button class="na-switch" data-toggle-period="almoco"></button><div class="na-period-main"><div class="na-period-name"><i class="ti ti-coffee"></i> Intervalo de almoco</div><div class="na-time-row"><input id="na_almoco_ini" type="time" value="12:00" /><span>ate</span><input id="na_almoco_fim" type="time" value="13:00" /></div></div></div><div class="na-period active" data-period="tarde"><button class="na-switch" data-toggle-period="tarde"></button><div class="na-period-main"><div class="na-period-name"><i class="ti ti-clock"></i> Tarde</div><div class="na-time-row"><input id="na_tarde_ini" type="time" value="13:00" /><span>ate</span><input id="na_tarde_fim" type="time" value="18:00" /></div></div></div><div class="na-period" data-period="noite"><button class="na-switch" data-toggle-period="noite"></button><div class="na-period-main"><div class="na-period-name"><i class="ti ti-moon"></i> Noite</div><div class="na-time-row"><input id="na_noite_ini" type="time" value="18:00" /><span>ate</span><input id="na_noite_fim" type="time" value="22:00" /></div></div></div></div></div>
       </div>
-      <div style="padding:18px 20px; display:flex; flex-direction:column; gap:12px;">
-        <label style="display:flex; flex-direction:column; gap:6px; font-size:12px; color:hsl(var(--text-muted)); font-weight:600;">Nome do profissional / agenda
-          <input id="na_nome" type="text" placeholder="Ex.: Dr. João, Sala 2, Clínica Centro..." style="padding:9px 12px; border:1px solid hsl(var(--border)); border-radius:8px; font-size:13px;"/>
-        </label>
-        <label style="display:flex; flex-direction:column; gap:6px; font-size:12px; color:hsl(var(--text-muted)); font-weight:600;">Tipo
-          <select id="na_tipo" style="padding:9px 12px; border:1px solid hsl(var(--border)); border-radius:8px; font-size:13px; background:hsl(var(--surface));">
-            <option value="colaborador">Colaborador / Profissional</option>
-            <option value="recurso">Recurso / Sala</option>
-            <option value="unidade">Unidade</option>
-            <option value="geral">Geral</option>
-          </select>
-        </label>
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
-          <label style="display:flex; flex-direction:column; gap:6px; font-size:12px; color:hsl(var(--text-muted)); font-weight:600;">Duração padrão (min)
-            <input id="na_duracao" type="number" min="5" value="30" style="padding:9px 12px; border:1px solid hsl(var(--border)); border-radius:8px; font-size:13px;"/>
-          </label>
-          <label style="display:flex; flex-direction:column; gap:6px; font-size:12px; color:hsl(var(--text-muted)); font-weight:600;">Capacidade simultânea
-            <input id="na_capacidade" type="number" min="1" value="1" style="padding:9px 12px; border:1px solid hsl(var(--border)); border-radius:8px; font-size:13px;"/>
-          </label>
-        </div>
-
-        <div style="border:1px solid hsl(var(--border)); border-radius:10px; padding:12px;">
-          <div style="font-size:12px; font-weight:700; margin-bottom:8px; display:flex; align-items:center; gap:6px;"><i class="ti ti-clock"></i> Horário de atendimento</div>
-          <div style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:10px;" id="na_dias">
-            <label style="display:inline-flex; align-items:center; gap:4px; font-size:12px;"><input type="checkbox" value="seg" checked/> Seg</label>
-            <label style="display:inline-flex; align-items:center; gap:4px; font-size:12px;"><input type="checkbox" value="ter" checked/> Ter</label>
-            <label style="display:inline-flex; align-items:center; gap:4px; font-size:12px;"><input type="checkbox" value="qua" checked/> Qua</label>
-            <label style="display:inline-flex; align-items:center; gap:4px; font-size:12px;"><input type="checkbox" value="qui" checked/> Qui</label>
-            <label style="display:inline-flex; align-items:center; gap:4px; font-size:12px;"><input type="checkbox" value="sex" checked/> Sex</label>
-            <label style="display:inline-flex; align-items:center; gap:4px; font-size:12px;"><input type="checkbox" value="sab"/> Sáb</label>
-            <label style="display:inline-flex; align-items:center; gap:4px; font-size:12px;"><input type="checkbox" value="dom"/> Dom</label>
-          </div>
-          <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
-            <label style="display:flex; flex-direction:column; gap:6px; font-size:12px; color:hsl(var(--text-muted)); font-weight:600;">Início
-              <input id="na_hini" type="time" value="08:00" style="padding:9px 12px; border:1px solid hsl(var(--border)); border-radius:8px; font-size:13px;"/>
-            </label>
-            <label style="display:flex; flex-direction:column; gap:6px; font-size:12px; color:hsl(var(--text-muted)); font-weight:600;">Fim
-              <input id="na_hfim" type="time" value="18:00" style="padding:9px 12px; border:1px solid hsl(var(--border)); border-radius:8px; font-size:13px;"/>
-            </label>
-          </div>
-        </div>
-
-        <div style="border:1px solid hsl(var(--border)); border-radius:10px; padding:12px;">
-          <div style="font-size:12px; font-weight:700; margin-bottom:8px; display:flex; align-items:center; gap:6px;"><i class="ti ti-lock"></i> Acesso público (opcional)</div>
-          <label style="display:flex; flex-direction:column; gap:6px; font-size:12px; color:hsl(var(--text-muted)); font-weight:600;">Senha para o usuário acessar a agenda
-            <input id="na_senha" type="text" placeholder="Deixe em branco para acesso livre" autocomplete="off" style="padding:9px 12px; border:1px solid hsl(var(--border)); border-radius:8px; font-size:13px;"/>
-          </label>
-          <div style="font-size:11px; color:hsl(var(--text-muted)); margin-top:6px;">Quando preenchida, será solicitada ao abrir o link público desta agenda.</div>
-        </div>
-      </div>
-      <div style="padding:14px 20px; border-top:1px solid hsl(var(--border)); display:flex; gap:8px; justify-content:flex-end; position:sticky; bottom:0; background:hsl(var(--surface));">
-        <button id="naCancel" class="btn">Cancelar</button>
-        <button id="naSave" class="btn primary"><i class="ti ti-check"></i> Criar agenda profissional</button>
-      </div>
+      <div class="na-foot"><button id="naCancel" class="btn">Cancelar</button><button id="naBack" class="btn" style="display:none;">Voltar</button><button id="naNext" class="btn na-submit">Proximo passo <i class="ti ti-arrow-right"></i></button><button id="naSave" class="btn na-submit" style="display:none;"><i class="ti ti-check"></i> Criar agenda</button></div>
     </div>
   </div>
 
@@ -1176,32 +1135,61 @@
       try { window.parent.postMessage({ type: 'agenda:ready' }, '*'); } catch(_) {}
 
       // ---------- Nova Agenda ----------
-      function openNovaAgenda(){ const m=document.getElementById('novaAgendaModal'); if(m){ m.style.display='flex'; setTimeout(()=>document.getElementById('na_nome')?.focus(), 50);} }
-      function closeNovaAgenda(){ const m=document.getElementById('novaAgendaModal'); if(m) m.style.display='none'; }
+      let naStep = 1;
+      let naTipo = 'colaborador';
+      function naEl(id){ return document.getElementById(id); }
+      function naVal(id){ return (naEl(id)?.value || '').trim(); }
+      function naSetStep(step){
+        naStep = Math.max(1, Math.min(3, step));
+        document.querySelectorAll('[data-panel]').forEach(p => p.classList.toggle('active', p.getAttribute('data-panel') === String(naStep)));
+        document.querySelectorAll('[data-step-indicator]').forEach(s => { const n = Number(s.getAttribute('data-step-indicator')); s.classList.toggle('active', n === naStep); s.classList.toggle('done', n < naStep); });
+        document.querySelectorAll('[data-line]').forEach(l => l.classList.toggle('done', Number(l.getAttribute('data-line')) < naStep));
+        naEl('naBack').style.display = naStep > 1 ? 'inline-flex' : 'none';
+        naEl('naNext').style.display = naStep < 3 ? 'inline-flex' : 'none';
+        naEl('naSave').style.display = naStep === 3 ? 'inline-flex' : 'none';
+      }
+      function naInitials(name){ const parts = String(name || '').trim().split(/\s+/).filter(Boolean).slice(0, 2); return parts.map(p => p[0]).join('').toUpperCase() || '?'; }
+      function naUpdateAvatar(){ const av = naEl('na_avatar'); if(av) av.textContent = naInitials(naVal('na_nome')); }
+      function naSetTipo(tipo){
+        naTipo = tipo || 'colaborador';
+        document.querySelectorAll('#na_type_pills .na-type-pill').forEach(btn => btn.classList.toggle('active', btn.getAttribute('data-type') === naTipo));
+        const creds = naEl('na_creds_section'); if(creds) creds.style.display = naTipo === 'colaborador' ? 'block' : 'none';
+        const title = naEl('naTitle'); if(title) title.textContent = naTipo === 'sala' ? 'Criar nova sala' : naTipo === 'recurso' ? 'Criar novo recurso' : 'Criar nova agenda';
+      }
+      function naReset(){
+        ['na_nome','na_especialidade','na_telefone','na_email','na_senha_login','na_senha'].forEach(id => { const el=naEl(id); if(el) el.value=''; });
+        if(naEl('na_duracao')) naEl('na_duracao').value='30'; if(naEl('na_capacidade')) naEl('na_capacidade').value='1';
+        ['dom','sab'].forEach(d => document.querySelector('#na_dias [data-dia="'+d+'"]')?.classList.remove('active'));
+        ['seg','ter','qua','qui','sex'].forEach(d => document.querySelector('#na_dias [data-dia="'+d+'"]')?.classList.add('active'));
+        document.querySelectorAll('[data-period]').forEach(p => p.classList.toggle('active', ['manha','tarde'].includes(p.getAttribute('data-period'))));
+        const defs = { na_manha_ini:'08:00',na_manha_fim:'12:00',na_almoco_ini:'12:00',na_almoco_fim:'13:00',na_tarde_ini:'13:00',na_tarde_fim:'18:00',na_noite_ini:'18:00',na_noite_fim:'22:00' };
+        Object.keys(defs).forEach(id => { const el=naEl(id); if(el) el.value=defs[id]; });
+        naSetTipo('colaborador'); naSetStep(1); naUpdateAvatar();
+      }
+      function openNovaAgenda(){ const m=naEl('novaAgendaModal'); if(m){ m.style.display='flex'; m.setAttribute('aria-hidden','false'); naReset(); setTimeout(()=>naEl('na_nome')?.focus(), 50);} }
+      function closeNovaAgenda(){ const m=naEl('novaAgendaModal'); if(m){ m.style.display='none'; m.setAttribute('aria-hidden','true'); } }
+      function naValidateStep(){ if(naStep === 1 && !naVal('na_nome')){ alert('Informe o nome da agenda'); naEl('na_nome')?.focus(); return false; } const s=naVal('na_senha_login'); if(naStep === 2 && s && s.length < 6){ alert('A senha inicial deve ter no minimo 6 caracteres'); naEl('na_senha_login')?.focus(); return false; } return true; }
+      function naPeriodPayload(name){ const active = document.querySelector('[data-period="'+name+'"]')?.classList.contains('active'); const prefix = name === 'almoco' ? 'almoco' : name; return { ativo: !!active, inicio: naVal('na_' + prefix + '_ini'), fim: naVal('na_' + prefix + '_fim') }; }
       document.getElementById('btnNovaAgenda')?.addEventListener('click', openNovaAgenda);
       document.getElementById('naClose')?.addEventListener('click', closeNovaAgenda);
       document.getElementById('naCancel')?.addEventListener('click', closeNovaAgenda);
+      document.getElementById('novaAgendaModal')?.addEventListener('mousedown', (e) => { if(e.target?.id === 'novaAgendaModal') closeNovaAgenda(); });
+      document.getElementById('naBack')?.addEventListener('click', () => naSetStep(naStep - 1));
+      document.getElementById('naNext')?.addEventListener('click', () => { if(naValidateStep()) naSetStep(naStep + 1); });
+      document.getElementById('na_nome')?.addEventListener('input', naUpdateAvatar);
+      document.querySelectorAll('#na_type_pills .na-type-pill').forEach(btn => btn.addEventListener('click', () => naSetTipo(btn.getAttribute('data-type'))));
+      document.querySelectorAll('#na_dias .na-day').forEach(btn => btn.addEventListener('click', () => btn.classList.toggle('active')));
+      document.querySelectorAll('[data-toggle-period]').forEach(btn => btn.addEventListener('click', () => document.querySelector('[data-period="'+btn.getAttribute('data-toggle-period')+'"]')?.classList.toggle('active')));
+      document.querySelectorAll('.na-num-btn').forEach(btn => btn.addEventListener('click', () => { const el=naEl(btn.getAttribute('data-num')); const delta=Number(btn.getAttribute('data-delta')||0); const min=Number(el?.getAttribute('min')||1); if(el) el.value=String(Math.max(min, Number(el.value||min)+delta)); }));
       document.getElementById('naSave')?.addEventListener('click', () => {
-        const nome = (document.getElementById('na_nome').value||'').trim();
-        if(!nome){ alert('Informe o nome da agenda'); return; }
-        const dias = Array.from(document.querySelectorAll('#na_dias input[type=checkbox]:checked')).map(i => i.value);
-        const payload = {
-          type: 'agenda:create-agenda',
-          nome,
-          tipo: document.getElementById('na_tipo').value || 'colaborador',
-          tempo_medio_servico: parseInt(document.getElementById('na_duracao').value||'30',10),
-          capacidade_simultanea: parseInt(document.getElementById('na_capacidade').value||'1',10),
-          disponibilidade: {
-            dias: dias.length ? dias : ['seg','ter','qua','qui','sex'],
-            horario_inicio: document.getElementById('na_hini').value || '08:00',
-            horario_fim: document.getElementById('na_hfim').value || '18:00',
-          },
-          senha_acesso: (document.getElementById('na_senha').value||'').trim() || null,
-        };
-        const btn = document.getElementById('naSave');
-        if(btn){ btn.disabled = true; btn.innerHTML = '<i class="ti ti-loader"></i> Criando...'; }
+        if(!naValidateStep()) return;
+        const dias = Array.from(document.querySelectorAll('#na_dias .na-day.active')).map(i => i.getAttribute('data-dia')).filter(Boolean);
+        if(!dias.length){ alert('Selecione ao menos um dia de atendimento'); return; }
+        const manha = naPeriodPayload('manha'); const tarde = naPeriodPayload('tarde');
+        const payload = { type:'agenda:create-agenda', nome:naVal('na_nome'), tipo:naTipo, especialidade:naVal('na_especialidade')||null, telefone:naVal('na_telefone')||null, email:naVal('na_email')||null, senha_login:naVal('na_senha_login')||null, tempo_medio_servico:parseInt(naVal('na_duracao')||'30',10), capacidade_simultanea:parseInt(naVal('na_capacidade')||'1',10), disponibilidade:{ dias, horario_inicio:(manha.ativo?manha.inicio:tarde.inicio)||'08:00', horario_fim:(tarde.ativo?tarde.fim:manha.fim)||'18:00', periodos:{ manha, intervalo_almoco:naPeriodPayload('almoco'), tarde, noite:naPeriodPayload('noite') } }, senha_acesso:naVal('na_senha')||null };
+        const btn = naEl('naSave'); if(btn){ btn.disabled = true; btn.innerHTML = '<i class="ti ti-loader-2"></i> Criando...'; }
         try { window.parent.postMessage(payload, '*'); } catch(_){}
-        setTimeout(() => { if(btn){ btn.disabled = false; btn.innerHTML = '<i class="ti ti-check"></i> Criar agenda profissional'; } }, 4000);
+        setTimeout(() => { if(btn){ btn.disabled = false; btn.innerHTML = '<i class="ti ti-check"></i> Criar agenda'; } }, 4000);
       });
 
       // ---------- Autocomplete de contatos do CRM ----------

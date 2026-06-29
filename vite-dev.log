@@ -3,15 +3,7 @@
 > vite --port 4000 --strictPort
 
 
-  [32m[1mVITE[22m v5.4.21[39m  [2mready in [0m[1m1167[22m[2m[0m ms[22m
+  [32m[1mVITE[22m v5.4.21[39m  [2mready in [0m[1m1528[22m[2m[0m ms[22m
 
   [32m➜[39m  [1mLocal[22m:   [36mhttp://localhost:[1m4000[22m/[39m
   [32m➜[39m  [1mNetwork[22m: [36mhttp://192.168.1.244:[1m4000[22m/[39m
-[2m08:22:09[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/Treinamento.tsx, /src/index.css[22m
-[2m08:22:40[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/treinamento/TrainingModuleCard.tsx, /src/index.css[22m
-[2m08:23:12[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/treinamento/TrainingLessonList.tsx, /src/index.css[22m
-[2m08:25:10[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/Treinamento.tsx, /src/index.css[22m
-[2m08:25:10[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/Treinamento.tsx, /src/index.css[22m
-[2m08:25:10[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/treinamento/TrainingModuleCard.tsx, /src/index.css[22m
-[2m08:25:10[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/treinamento/TrainingLessonList.tsx, /src/index.css[22m
-[2m08:25:45[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/Treinamento.tsx, /src/index.css[22m
