@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
-const AGENDA_HTML_VERSION = "agenda-fix-20260629-professional-agenda-modal";
+const AGENDA_HTML_VERSION = "agenda-fix-20260629-app-agenda-top-button";
 
 function toDatePart(value?: string | null) {
   if (!value) return "";
@@ -111,7 +111,7 @@ export default function Agenda() {
         currentCompanyId = companyId;
       }
 
-      const agendasQuery = supabase.from("agendas").select("id, nome").order("nome");
+      const agendasQuery = supabase.from("agendas").select("id, nome, tipo, status, capacidade_simultanea, tempo_medio_servico, disponibilidade, senha_acesso, slug, responsavel_id, created_at, updated_at").order("nome");
       const profsQuery = supabase.from("profissionais").select("id, nome, especialidade").order("nome");
       const leadsQuery = supabase
         .from("leads")
@@ -185,7 +185,19 @@ export default function Agenda() {
 
       sendToIframe({
         type: "agenda:data",
-        agendas: (agendas || []).map((a: any) => ({ id: a.id, label: a.nome })),
+        agendas: (agendas || []).map((a: any) => ({
+          id: a.id,
+          label: a.nome,
+          nome: a.nome,
+          tipo: a.tipo || "colaborador",
+          status: a.status || "ativo",
+          capacidade_simultanea: a.capacidade_simultanea || 1,
+          tempo_medio_servico: a.tempo_medio_servico || 30,
+          disponibilidade: a.disponibilidade || null,
+          senha_acesso: a.senha_acesso || null,
+          slug: a.slug || null,
+          responsavel_id: a.responsavel_id || null,
+        })),
         profissionais: (profs || []).map((p: any) => ({
           id: p.id,
           label: p.especialidade ? `${p.nome} - ${p.especialidade}` : p.nome,
@@ -475,10 +487,84 @@ export default function Agenda() {
       }
     }
 
+    async function updateAgenda(data: any) {
+      try {
+        const { data: userData } = await supabase.auth.getUser();
+        const user = userData?.user;
+        if (!user) throw new Error("Usuario nao autenticado");
+        const { data: role } = await supabase
+          .from("user_roles")
+          .select("company_id")
+          .eq("user_id", user.id)
+          .maybeSingle();
+        const company_id = role?.company_id;
+        if (!company_id) throw new Error("Empresa nao encontrada para o usuario");
+        if (!data.id) throw new Error("Agenda nao informada");
+
+        const updatePayload: any = {
+          nome: data.nome,
+          tipo: data.tipo || "colaborador",
+          tempo_medio_servico: data.tempo_medio_servico || 30,
+          capacidade_simultanea: data.capacidade_simultanea || 1,
+          disponibilidade: data.disponibilidade || {
+            dias: ["seg", "ter", "qua", "qui", "sex"],
+            horario_inicio: "08:00",
+            horario_fim: "18:00",
+          },
+          senha_acesso: data.senha_acesso || null,
+          updated_at: new Date().toISOString(),
+        };
+
+        const { error } = await supabase
+          .from("agendas")
+          .update(updatePayload)
+          .eq("id", data.id)
+          .eq("company_id", company_id);
+        if (error) throw error;
+
+        sendToIframe({ type: "agenda:agenda-result", action: "update", ok: true });
+        await loadAndSend();
+      } catch (e: any) {
+        console.error("[updateAgenda]", e);
+        sendToIframe({ type: "agenda:agenda-result", action: "update", ok: false, error: e?.message || "Erro ao atualizar agenda" });
+      }
+    }
+
+    async function deleteAgenda(data: any) {
+      try {
+        const { data: userData } = await supabase.auth.getUser();
+        const user = userData?.user;
+        if (!user) throw new Error("Usuario nao autenticado");
+        const { data: role } = await supabase
+          .from("user_roles")
+          .select("company_id")
+          .eq("user_id", user.id)
+          .maybeSingle();
+        const company_id = role?.company_id;
+        if (!company_id) throw new Error("Empresa nao encontrada para o usuario");
+        if (!data.id) throw new Error("Agenda nao informada");
+
+        const { error } = await supabase
+          .from("agendas")
+          .delete()
+          .eq("id", data.id)
+          .eq("company_id", company_id);
+        if (error) throw error;
+
+        sendToIframe({ type: "agenda:agenda-result", action: "delete", ok: true });
+        await loadAndSend();
+      } catch (e: any) {
+        console.error("[deleteAgenda]", e);
+        sendToIframe({ type: "agenda:agenda-result", action: "delete", ok: false, error: e?.message || "Erro ao excluir agenda" });
+      }
+    }
+
     function onMessage(e: MessageEvent) {
       const d: any = e.data || {};
       if (d?.type === "agenda:ready") loadAndSend();
       if (d?.type === "agenda:create-agenda") createAgenda(d);
+      if (d?.type === "agenda:update-agenda") updateAgenda(d);
+      if (d?.type === "agenda:delete-agenda") deleteAgenda(d);
       if (d?.type === "agenda:save-compromisso") saveCompromisso(d);
     }
 
@@ -490,6 +576,10 @@ export default function Agenda() {
       .channel("agenda-page-lembretes")
       .on("postgres_changes", { event: "*", schema: "public", table: "lembretes" }, loadAndSend)
       .subscribe();
+    const agendasChannel = supabase
+      .channel("agenda-page-agendas")
+      .on("postgres_changes", { event: "*", schema: "public", table: "agendas" }, loadAndSend)
+      .subscribe();
 
     window.addEventListener("message", onMessage);
     const t = setTimeout(loadAndSend, 800);
@@ -498,6 +588,7 @@ export default function Agenda() {
       window.removeEventListener("message", onMessage);
       supabase.removeChannel(compromissosChannel);
       supabase.removeChannel(lembretesChannel);
+      supabase.removeChannel(agendasChannel);
       clearTimeout(t);
     };
   }, [iframeReady]);

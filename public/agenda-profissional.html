@@ -1,0 +1,1572 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Minha Agenda — GROW OS</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --green: #1a7a4a;
+  --green-mid: #22a460;
+  --green-light: #d4f1e3;
+  --green-glow: #e8f8ef;
+  --ink: #0f1a14;
+  --ink2: #2d3b34;
+  --muted: #6b7d74;
+  --muted2: #9aada4;
+  --border: #dde8e3;
+  --border2: #c8d8d0;
+  --surface: #f7fcf9;
+  --card: #ffffff;
+  --red: #d63b3b;
+  --red-light: #fdf0f0;
+  --amber: #c07a1a;
+  --amber-light: #fdf6e8;
+  --blue: #1a65a8;
+  --blue-light: #eaf2fc;
+  --radius: 12px;
+  --shadow: 0 2px 12px rgba(15,26,20,.07);
+  --shadow-lg: 0 8px 32px rgba(15,26,20,.12);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--surface);
+  color: var(--ink);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── TOPBAR ── */
+.topbar {
+  background: var(--green);
+  color: #fff;
+  padding: 0 24px;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 2px 16px rgba(15,26,20,.2);
+}
+.topbar-brand {
+  display: flex; align-items: center; gap: 10px;
+}
+.topbar-logo {
+  width: 28px; height: 28px;
+  background: rgba(255,255,255,.2);
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px;
+}
+.topbar-name { font-weight: 600; font-size: 15px; }
+.topbar-sub { font-size: 12px; opacity: .7; }
+.topbar-right { display: flex; align-items: center; gap: 12px; }
+.topbar-date {
+  font-family: 'DM Mono', monospace;
+  font-size: 12px;
+  opacity: .8;
+  background: rgba(255,255,255,.12);
+  padding: 4px 10px;
+  border-radius: 6px;
+}
+.avatar {
+  width: 34px; height: 34px;
+  background: rgba(255,255,255,.2);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 600; font-size: 14px;
+  cursor: pointer;
+}
+
+/* ── LAYOUT ── */
+.layout {
+  display: flex;
+  flex: 1;
+  max-width: 1280px;
+  margin: 0 auto;
+  width: 100%;
+  gap: 0;
+}
+
+/* ── SIDEBAR ── */
+.sidebar {
+  width: 260px;
+  flex-shrink: 0;
+  padding: 20px 16px;
+  border-right: 1px solid var(--border);
+  background: var(--card);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.sidebar-section { margin-top: 8px; }
+.sidebar-label {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--muted2);
+  padding: 0 10px;
+  margin-bottom: 6px;
+  display: block;
+}
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 12px;
+  border-radius: 10px;
+  cursor: pointer;
+  color: var(--ink2);
+  font-size: 14px;
+  font-weight: 400;
+  transition: background .15s, color .15s;
+  position: relative;
+}
+.nav-item:hover { background: var(--green-glow); color: var(--green); }
+.nav-item.active { background: var(--green-light); color: var(--green); font-weight: 500; }
+.nav-icon { font-size: 17px; width: 22px; text-align: center; }
+.nav-badge {
+  margin-left: auto;
+  background: var(--red);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 1px 6px;
+  border-radius: 10px;
+}
+.nav-badge.green { background: var(--green); }
+
+.mini-calendar { padding: 8px 0; }
+.mini-cal-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 10px;
+  margin-bottom: 10px;
+}
+.mini-cal-month { font-size: 13px; font-weight: 600; }
+.mini-cal-nav {
+  background: none; border: none; cursor: pointer;
+  color: var(--muted); font-size: 16px;
+  width: 24px; height: 24px;
+  border-radius: 6px;
+  display: flex; align-items: center; justify-content: center;
+}
+.mini-cal-nav:hover { background: var(--border); color: var(--ink); }
+.mini-cal-grid { display: grid; grid-template-columns: repeat(7,1fr); gap: 2px; }
+.mini-cal-day-name {
+  text-align: center; font-size: 10px;
+  font-weight: 600; color: var(--muted2);
+  padding: 2px 0;
+}
+.mini-cal-day {
+  text-align: center; font-size: 12px;
+  padding: 4px 2px; border-radius: 6px;
+  cursor: pointer; color: var(--ink2);
+}
+.mini-cal-day:hover { background: var(--green-light); color: var(--green); }
+.mini-cal-day.today { background: var(--green); color: #fff; font-weight: 600; }
+.mini-cal-day.selected { background: var(--green-light); color: var(--green); font-weight: 600; }
+.mini-cal-day.has-event::after {
+  content: '';
+  display: block;
+  width: 4px; height: 4px;
+  background: var(--green-mid);
+  border-radius: 50%;
+  margin: 1px auto 0;
+}
+.mini-cal-day.today.has-event::after { background: rgba(255,255,255,.6); }
+.mini-cal-day.other-month { color: var(--muted2); }
+
+/* ── MAIN ── */
+.main {
+  flex: 1;
+  padding: 24px 28px;
+  overflow-y: auto;
+  min-width: 0;
+}
+
+/* ── VIEWS ── */
+.view { display: none; }
+.view.active { display: block; }
+
+/* ── STATS ROW ── */
+.stats-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+  margin-bottom: 24px;
+}
+.stat-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px 18px;
+  box-shadow: var(--shadow);
+  cursor: default;
+  transition: transform .2s, box-shadow .2s;
+}
+.stat-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); }
+.stat-label { font-size: 12px; color: var(--muted); font-weight: 500; margin-bottom: 6px; }
+.stat-value { font-size: 28px; font-weight: 600; color: var(--ink); line-height: 1; }
+.stat-sub { font-size: 11px; color: var(--muted); margin-top: 4px; }
+.stat-card.green-card { border-color: var(--green-light); background: var(--green-glow); }
+.stat-card.green-card .stat-value { color: var(--green); }
+.stat-card.red-card { border-color: #f8dada; background: var(--red-light); }
+.stat-card.red-card .stat-value { color: var(--red); }
+.stat-card.amber-card { border-color: #f5e6c8; background: var(--amber-light); }
+.stat-card.amber-card .stat-value { color: var(--amber); }
+
+/* ── SECTION HEADER ── */
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+.section-title { font-size: 16px; font-weight: 600; }
+.section-sub { font-size: 13px; color: var(--muted); margin-top: 1px; }
+
+/* ── BOTÕES ── */
+.btn {
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 8px 16px;
+  border-radius: 9px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  border: none;
+  transition: background .15s, transform .1s, box-shadow .15s;
+}
+.btn:active { transform: scale(.97); }
+.btn-primary {
+  background: var(--green);
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(26,122,74,.3);
+}
+.btn-primary:hover { background: #15663e; }
+.btn-outline {
+  background: transparent;
+  color: var(--ink2);
+  border: 1px solid var(--border2);
+}
+.btn-outline:hover { background: var(--green-glow); border-color: var(--green); color: var(--green); }
+.btn-danger {
+  background: var(--red-light);
+  color: var(--red);
+  border: 1px solid #f0c8c8;
+}
+.btn-danger:hover { background: #f9e0e0; }
+.btn-sm { padding: 5px 11px; font-size: 12px; border-radius: 7px; }
+.btn-icon {
+  width: 34px; height: 34px; padding: 0;
+  display: inline-flex; align-items: center; justify-content: center;
+  border-radius: 9px;
+}
+
+/* ── TABS ── */
+.tabs {
+  display: flex;
+  gap: 4px;
+  background: var(--border);
+  padding: 4px;
+  border-radius: 10px;
+  margin-bottom: 20px;
+}
+.tab {
+  flex: 1; text-align: center;
+  padding: 7px 14px;
+  border-radius: 7px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  color: var(--muted);
+  transition: all .15s;
+  border: none;
+  background: none;
+  font-family: 'DM Sans', sans-serif;
+}
+.tab.active {
+  background: var(--card);
+  color: var(--ink);
+  box-shadow: 0 1px 4px rgba(0,0,0,.1);
+}
+
+/* ── COMPROMISSO CARD ── */
+.agenda-list { display: flex; flex-direction: column; gap: 8px; }
+.comp-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  cursor: pointer;
+  transition: border-color .15s, box-shadow .15s, transform .15s;
+  position: relative;
+  overflow: hidden;
+}
+.comp-card:hover {
+  border-color: var(--green-mid);
+  box-shadow: var(--shadow);
+  transform: translateX(2px);
+}
+.comp-card::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 4px;
+  background: var(--green-mid);
+  border-radius: 4px 0 0 4px;
+}
+.comp-card.cancelado::before { background: var(--red); }
+.comp-card.concluido::before { background: var(--muted2); }
+.comp-card.confirmado::before { background: var(--blue); }
+
+.comp-time {
+  min-width: 54px;
+  text-align: center;
+  padding-top: 2px;
+}
+.comp-hour {
+  font-family: 'DM Mono', monospace;
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--ink);
+  line-height: 1.1;
+}
+.comp-duration {
+  font-size: 10px;
+  color: var(--muted);
+  margin-top: 2px;
+}
+.comp-divider {
+  width: 1px;
+  background: var(--border);
+  align-self: stretch;
+  margin: 2px 0;
+}
+.comp-info { flex: 1; min-width: 0; }
+.comp-service {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink);
+  margin-bottom: 3px;
+}
+.comp-patient {
+  font-size: 13px;
+  color: var(--ink2);
+  display: flex; align-items: center; gap: 5px;
+}
+.comp-obs {
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 4px;
+  font-style: italic;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.comp-tags { display: flex; gap: 5px; margin-top: 6px; flex-wrap: wrap; }
+.comp-actions {
+  display: flex; gap: 6px; align-items: center;
+  flex-shrink: 0;
+}
+
+/* ── BADGE ── */
+.badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 2px 8px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 500;
+}
+.badge-green { background: var(--green-light); color: var(--green); }
+.badge-red { background: var(--red-light); color: var(--red); }
+.badge-amber { background: var(--amber-light); color: var(--amber); }
+.badge-blue { background: var(--blue-light); color: var(--blue); }
+.badge-gray { background: var(--border); color: var(--muted); }
+
+/* ── EMPTY STATE ── */
+.empty {
+  text-align: center;
+  padding: 48px 24px;
+  color: var(--muted);
+}
+.empty-icon { font-size: 40px; margin-bottom: 12px; }
+.empty-title { font-size: 15px; font-weight: 500; color: var(--ink2); margin-bottom: 4px; }
+.empty-sub { font-size: 13px; }
+
+/* ── DAY HEADER ── */
+.day-group { margin-bottom: 20px; }
+.day-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  margin-bottom: 8px;
+  padding: 0 2px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.day-label::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
+/* ── PAINEL LATERAL (DRAWER) ── */
+.drawer-overlay {
+  display: none;
+  position: fixed; inset: 0;
+  background: rgba(15,26,20,.3);
+  z-index: 200;
+  backdrop-filter: blur(2px);
+}
+.drawer-overlay.open { display: block; }
+.drawer {
+  position: fixed;
+  top: 0; right: -480px; bottom: 0;
+  width: 460px;
+  background: var(--card);
+  box-shadow: -8px 0 48px rgba(15,26,20,.15);
+  z-index: 201;
+  transition: right .28s cubic-bezier(.25,.8,.25,1);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.drawer.open { right: 0; }
+.drawer-header {
+  padding: 20px 24px 16px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  background: var(--green-glow);
+}
+.drawer-title { font-size: 17px; font-weight: 600; }
+.drawer-sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
+.drawer-close {
+  background: none; border: none; cursor: pointer;
+  color: var(--muted); font-size: 20px;
+  width: 32px; height: 32px;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 8px;
+}
+.drawer-close:hover { background: var(--border); color: var(--ink); }
+.drawer-body { flex: 1; overflow-y: auto; padding: 20px 24px; }
+.drawer-footer {
+  padding: 16px 24px;
+  border-top: 1px solid var(--border);
+  display: flex; gap: 8px;
+}
+
+/* ── DETALHES ── */
+.detail-group { margin-bottom: 20px; }
+.detail-label {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .07em;
+  color: var(--muted2);
+  margin-bottom: 6px;
+}
+.detail-value { font-size: 14px; color: var(--ink); line-height: 1.5; }
+.detail-block {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px 14px;
+}
+.lead-card {
+  background: var(--green-glow);
+  border: 1px solid var(--green-light);
+  border-radius: 10px;
+  padding: 14px;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  margin-bottom: 16px;
+}
+.lead-avatar {
+  width: 42px; height: 42px;
+  background: var(--green-mid);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  color: #fff; font-weight: 700; font-size: 16px;
+  flex-shrink: 0;
+}
+.lead-name { font-size: 15px; font-weight: 600; }
+.lead-phone { font-size: 12px; color: var(--muted); font-family: 'DM Mono', monospace; }
+
+.obs-area {
+  width: 100%;
+  min-height: 80px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+  color: var(--ink);
+  resize: vertical;
+  outline: none;
+  transition: border-color .15s;
+}
+.obs-area:focus { border-color: var(--green-mid); }
+
+/* ── MODAL ── */
+.modal-overlay {
+  display: none;
+  position: fixed; inset: 0;
+  background: rgba(15,26,20,.4);
+  z-index: 300;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(3px);
+}
+.modal-overlay.open { display: flex; }
+.modal {
+  background: var(--card);
+  border-radius: 16px;
+  padding: 28px;
+  width: 440px;
+  max-width: 94vw;
+  box-shadow: var(--shadow-lg);
+  animation: slideUp .25s ease;
+}
+@keyframes slideUp {
+  from { transform: translateY(16px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+.modal-title { font-size: 17px; font-weight: 600; margin-bottom: 6px; }
+.modal-sub { font-size: 13px; color: var(--muted); margin-bottom: 20px; }
+.modal-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 24px; }
+
+/* ── FORM ── */
+.field { margin-bottom: 14px; }
+.field label {
+  display: block;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--muted);
+  margin-bottom: 5px;
+}
+.field input, .field select, .field textarea {
+  width: 100%;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  padding: 9px 12px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+  color: var(--ink);
+  outline: none;
+  transition: border-color .15s;
+}
+.field input:focus, .field select:focus, .field textarea:focus {
+  border-color: var(--green-mid);
+  background: #fff;
+}
+.field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+/* ── GESTÃO TAB ── */
+.gestao-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin-bottom: 24px;
+}
+.gestao-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 18px;
+  cursor: pointer;
+  transition: all .15s;
+}
+.gestao-card:hover {
+  border-color: var(--green-mid);
+  box-shadow: var(--shadow);
+}
+.gestao-icon {
+  font-size: 28px;
+  margin-bottom: 10px;
+}
+.gestao-title { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
+.gestao-desc { font-size: 12px; color: var(--muted); line-height: 1.5; }
+.gestao-card.danger { border-color: #f0c8c8; }
+.gestao-card.danger:hover { border-color: var(--red); background: var(--red-light); }
+
+/* ── LEMBRETE ROW ── */
+.lembrete-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  background: var(--amber-light);
+  border: 1px solid #f5e6c8;
+  border-radius: 8px;
+  font-size: 12px;
+  color: var(--amber);
+  margin-bottom: 6px;
+}
+.lembrete-icon { font-size: 14px; }
+
+/* ── TOAST ── */
+.toast-container {
+  position: fixed; bottom: 24px; right: 24px;
+  z-index: 1000;
+  display: flex; flex-direction: column; gap: 8px;
+  pointer-events: none;
+}
+.toast {
+  background: var(--ink);
+  color: #fff;
+  padding: 12px 16px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 500;
+  box-shadow: var(--shadow-lg);
+  animation: toastIn .25s ease;
+  pointer-events: auto;
+  display: flex; align-items: center; gap: 8px;
+}
+.toast.success { background: var(--green); }
+.toast.error { background: var(--red); }
+@keyframes toastIn { from { transform: translateY(12px); opacity:0; } to { transform: translateY(0); opacity:1; } }
+
+/* ── BADGE STATUS ── */
+.status-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+}
+.status-dot.agendado { background: var(--green-mid); }
+.status-dot.confirmado { background: var(--blue); }
+.status-dot.cancelado { background: var(--red); }
+.status-dot.concluido { background: var(--muted2); }
+
+/* ── WEEK VIEW ── */
+.week-grid {
+  display: grid;
+  grid-template-columns: 50px repeat(7,1fr);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  background: var(--card);
+}
+.week-day-header {
+  text-align: center;
+  padding: 10px 4px;
+  border-bottom: 1px solid var(--border);
+  border-left: 1px solid var(--border);
+  background: var(--surface);
+}
+.week-day-name { font-size: 10px; font-weight: 600; color: var(--muted); text-transform: uppercase; }
+.week-day-num {
+  font-size: 18px; font-weight: 600; color: var(--ink);
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  margin: 4px auto 0;
+}
+.week-day-num.today { background: var(--green); color: #fff; }
+.week-corner { background: var(--surface); border-bottom: 1px solid var(--border); }
+.week-hour-col { border-top: 1px solid var(--border); }
+.week-hour-label {
+  height: 48px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-end;
+  padding: 2px 8px 0 0;
+  font-size: 10px;
+  font-family: 'DM Mono', monospace;
+  color: var(--muted2);
+  border-bottom: 1px solid var(--border);
+}
+.week-cell {
+  height: 48px;
+  border-left: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  position: relative;
+  padding: 2px;
+}
+.week-event {
+  position: absolute;
+  left: 2px; right: 2px;
+  background: var(--green-light);
+  border-left: 3px solid var(--green-mid);
+  border-radius: 4px;
+  padding: 2px 4px;
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--green);
+  overflow: hidden;
+  cursor: pointer;
+  transition: opacity .15s;
+}
+.week-event:hover { opacity: .8; }
+.week-event.confirmado { background: var(--blue-light); border-color: var(--blue); color: var(--blue); }
+.week-event.cancelado { background: #fdf0f0; border-color: var(--red); color: var(--red); }
+
+/* ── LINK CARD ── */
+.link-card {
+  background: var(--green-glow);
+  border: 1px solid var(--green-light);
+  border-radius: var(--radius);
+  padding: 16px 18px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+.link-url {
+  flex: 1;
+  font-family: 'DM Mono', monospace;
+  font-size: 12px;
+  color: var(--green);
+  word-break: break-all;
+}
+
+/* ── SPINNER ── */
+.spinner {
+  width: 20px; height: 20px;
+  border: 2px solid var(--border);
+  border-top-color: var(--green);
+  border-radius: 50%;
+  animation: spin .7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── PROGRESS BAR ── */
+.prog-bar { background: var(--border); border-radius: 4px; height: 6px; }
+.prog-fill { background: var(--green-mid); border-radius: 4px; height: 100%; transition: width .4s; }
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<header class="topbar">
+  <div class="topbar-brand">
+    <div class="topbar-logo">📅</div>
+    <div>
+      <div class="topbar-name">Dr. João Silva</div>
+      <div class="topbar-sub">Ortopedista · GROW OS</div>
+    </div>
+  </div>
+  <div class="topbar-right">
+    <div class="topbar-date" id="topbar-date"></div>
+    <div class="avatar" title="Perfil">JS</div>
+  </div>
+</header>
+
+<!-- LAYOUT -->
+<div class="layout">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <span class="sidebar-label">Menu</span>
+    <div class="nav-item active" onclick="showView('dashboard')">
+      <span class="nav-icon">🏠</span> Dashboard
+    </div>
+    <div class="nav-item" onclick="showView('agenda')">
+      <span class="nav-icon">📋</span> Minha Agenda
+      <span class="nav-badge green">3</span>
+    </div>
+    <div class="nav-item" onclick="showView('semana')">
+      <span class="nav-icon">📆</span> Semana
+    </div>
+    <div class="nav-item" onclick="showView('gestao')">
+      <span class="nav-icon">⚙️</span> Gestão
+    </div>
+    <div class="nav-item" onclick="showView('link')">
+      <span class="nav-icon">🔗</span> Link Público
+    </div>
+
+    <div class="sidebar-section">
+      <span class="sidebar-label">Calendário</span>
+      <div class="mini-calendar">
+        <div class="mini-cal-header">
+          <button class="mini-cal-nav" onclick="prevMonth()">‹</button>
+          <span class="mini-cal-month" id="mini-month"></span>
+          <button class="mini-cal-nav" onclick="nextMonth()">›</button>
+        </div>
+        <div class="mini-cal-grid" id="mini-cal-grid"></div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main">
+
+    <!-- VIEW: DASHBOARD -->
+    <div class="view active" id="view-dashboard">
+      <div class="section-header" style="margin-bottom:20px">
+        <div>
+          <div class="section-title">Bom dia, Dr. João 👋</div>
+          <div class="section-sub" id="dash-date-sub"></div>
+        </div>
+        <button class="btn btn-primary" onclick="openNovoCompromisso()">
+          + Novo compromisso
+        </button>
+      </div>
+
+      <div class="stats-row">
+        <div class="stat-card green-card">
+          <div class="stat-label">Hoje</div>
+          <div class="stat-value">5</div>
+          <div class="stat-sub">compromissos</div>
+          <div style="margin-top:10px"><div class="prog-bar"><div class="prog-fill" style="width:60%"></div></div></div>
+          <div style="font-size:10px;color:var(--muted);margin-top:3px">3 de 5 realizados</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Esta semana</div>
+          <div class="stat-value">18</div>
+          <div class="stat-sub">compromissos</div>
+        </div>
+        <div class="stat-card amber-card">
+          <div class="stat-label">Aguardando</div>
+          <div class="stat-value">4</div>
+          <div class="stat-sub">confirmação</div>
+        </div>
+        <div class="stat-card red-card">
+          <div class="stat-label">Cancelados</div>
+          <div class="stat-value">2</div>
+          <div class="stat-sub">este mês</div>
+        </div>
+      </div>
+
+      <div class="section-header">
+        <div class="section-title">Próximos de hoje</div>
+        <button class="btn btn-outline btn-sm" onclick="showView('agenda')">Ver todos →</button>
+      </div>
+      <div class="agenda-list" id="dash-list"></div>
+    </div>
+
+    <!-- VIEW: AGENDA -->
+    <div class="view" id="view-agenda">
+      <div class="section-header">
+        <div>
+          <div class="section-title">Minha Agenda</div>
+          <div class="section-sub" id="agenda-day-label"></div>
+        </div>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-outline btn-sm" onclick="navDay(-1)">← Ontem</button>
+          <button class="btn btn-outline btn-sm" onclick="navDay(0)">Hoje</button>
+          <button class="btn btn-outline btn-sm" onclick="navDay(1)">Amanhã →</button>
+          <button class="btn btn-primary btn-sm" onclick="openNovoCompromisso()">+ Novo</button>
+        </div>
+      </div>
+
+      <div class="tabs">
+        <button class="tab active" onclick="setAgendaTab('todos',this)">Todos</button>
+        <button class="tab" onclick="setAgendaTab('agendado',this)">Agendados</button>
+        <button class="tab" onclick="setAgendaTab('confirmado',this)">Confirmados</button>
+        <button class="tab" onclick="setAgendaTab('concluido',this)">Concluídos</button>
+        <button class="tab" onclick="setAgendaTab('cancelado',this)">Cancelados</button>
+      </div>
+
+      <div class="agenda-list" id="agenda-list"></div>
+    </div>
+
+    <!-- VIEW: SEMANA -->
+    <div class="view" id="view-semana">
+      <div class="section-header" style="margin-bottom:16px">
+        <div class="section-title">Visão da Semana</div>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-outline btn-sm">← Semana anterior</button>
+          <button class="btn btn-outline btn-sm">Esta semana</button>
+          <button class="btn btn-outline btn-sm">Próxima semana →</button>
+        </div>
+      </div>
+      <div id="week-grid-container"></div>
+    </div>
+
+    <!-- VIEW: GESTÃO -->
+    <div class="view" id="view-gestao">
+      <div class="section-header" style="margin-bottom:20px">
+        <div class="section-title">Gestão da Agenda</div>
+      </div>
+
+      <div class="gestao-grid">
+        <div class="gestao-card" onclick="openModal('modal-bloquear')">
+          <div class="gestao-icon">🚫</div>
+          <div class="gestao-title">Bloquear período</div>
+          <div class="gestao-desc">Bloqueie datas para férias, feriados ou compromissos pessoais</div>
+        </div>
+        <div class="gestao-card" onclick="openModal('modal-horarios')">
+          <div class="gestao-icon">⏰</div>
+          <div class="gestao-title">Horários de atendimento</div>
+          <div class="gestao-desc">Configure os dias e horários disponíveis para agendamento</div>
+        </div>
+        <div class="gestao-card" onclick="openModal('modal-esvaziar')">
+          <div class="gestao-icon">🗑️</div>
+          <div class="gestao-title">Esvaziar dia</div>
+          <div class="gestao-desc">Cancela todos os compromissos de uma data com aviso automático</div>
+        </div>
+        <div class="gestao-card" onclick="openModal('modal-avisos')">
+          <div class="gestao-icon">📢</div>
+          <div class="gestao-title">Enviar aviso em massa</div>
+          <div class="gestao-desc">Notifique todos os pacientes de um período via WhatsApp</div>
+        </div>
+        <div class="gestao-card" onclick="openModal('modal-duracao')">
+          <div class="gestao-icon">⏳</div>
+          <div class="gestao-title">Duração padrão</div>
+          <div class="gestao-desc">Altere o tempo de cada atendimento</div>
+        </div>
+        <div class="gestao-card danger" onclick="openModal('modal-cancelar-todos')">
+          <div class="gestao-icon">⚠️</div>
+          <div class="gestao-title">Cancelar todos do mês</div>
+          <div class="gestao-desc">Cancela todos os compromissos futuros do mês atual</div>
+        </div>
+      </div>
+
+      <div class="section-header" style="margin-bottom:12px">
+        <div class="section-title">Períodos bloqueados</div>
+        <button class="btn btn-outline btn-sm" onclick="openModal('modal-bloquear')">+ Adicionar</button>
+      </div>
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden">
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:0;font-size:12px;font-weight:600;color:var(--muted);padding:10px 16px;border-bottom:1px solid var(--border);background:var(--surface)">
+          <span>Período</span><span>Motivo</span><span>Status</span><span></span>
+        </div>
+        <div id="bloqueios-list"></div>
+      </div>
+    </div>
+
+    <!-- VIEW: LINK -->
+    <div class="view" id="view-link">
+      <div class="section-header" style="margin-bottom:20px">
+        <div class="section-title">Link Público da Agenda</div>
+      </div>
+
+      <div class="link-card">
+        <div style="font-size:24px">🔗</div>
+        <div class="link-url" id="public-link">https://app.growos.online/agenda/dr-joao-silva</div>
+        <button class="btn btn-primary btn-sm" onclick="copyLink()">Copiar</button>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:20px">
+        <div style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:18px">
+          <div style="font-size:13px;font-weight:600;margin-bottom:12px">Configurações do link</div>
+          <div class="field">
+            <label>Slug (nome no link)</label>
+            <input type="text" value="dr-joao-silva">
+          </div>
+          <div class="field">
+            <label>Status</label>
+            <select>
+              <option>Ativo — aceita agendamentos</option>
+              <option>Pausado — só visualização</option>
+              <option>Inativo</option>
+            </select>
+          </div>
+          <button class="btn btn-primary" style="width:100%" onclick="showToast('Link atualizado!','success')">Salvar configurações</button>
+        </div>
+        <div style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:18px;display:flex;flex-direction:column;align-items:center;justify-content:center">
+          <div style="font-size:12px;font-weight:500;color:var(--muted);margin-bottom:12px">QR Code para compartilhar</div>
+          <div style="width:130px;height:130px;background:repeating-linear-gradient(0deg,var(--border) 0,var(--border) 1px,transparent 1px,transparent 6px),repeating-linear-gradient(90deg,var(--border) 0,var(--border) 1px,transparent 1px,transparent 6px);border:3px solid var(--ink);border-radius:8px;display:flex;align-items:center;justify-content:center">
+            <div style="font-size:11px;color:var(--muted);text-align:center;padding:8px">QR Code<br>(demo)</div>
+          </div>
+          <button class="btn btn-outline btn-sm" style="margin-top:12px">Baixar QR Code</button>
+        </div>
+      </div>
+
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:18px">
+        <div style="font-size:13px;font-weight:600;margin-bottom:4px">Estatísticas do link</div>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:16px">Últimos 30 dias</div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px">
+          <div style="text-align:center"><div style="font-size:24px;font-weight:600;color:var(--green)">142</div><div style="font-size:12px;color:var(--muted)">Visitas</div></div>
+          <div style="text-align:center"><div style="font-size:24px;font-weight:600;color:var(--blue)">38</div><div style="font-size:12px;color:var(--muted)">Agendamentos</div></div>
+          <div style="text-align:center"><div style="font-size:24px;font-weight:600">27%</div><div style="font-size:12px;color:var(--muted)">Conversão</div></div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- DRAWER: DETALHES DO COMPROMISSO -->
+<div class="drawer-overlay" id="drawer-overlay" onclick="closeDrawer()"></div>
+<div class="drawer" id="drawer">
+  <div class="drawer-header">
+    <div>
+      <div class="drawer-title" id="drawer-title">Consulta de Ortopedia</div>
+      <div class="drawer-sub" id="drawer-sub">Hoje · 09:00 – 09:30</div>
+    </div>
+    <button class="drawer-close" onclick="closeDrawer()">✕</button>
+  </div>
+  <div class="drawer-body" id="drawer-body">
+    <!-- conteúdo dinâmico -->
+  </div>
+  <div class="drawer-footer">
+    <button class="btn btn-outline" onclick="closeDrawer()">Fechar</button>
+    <button class="btn btn-danger btn-sm" id="drawer-btn-cancel" onclick="cancelarCompromisso()">✕ Cancelar</button>
+    <button class="btn btn-outline btn-sm" id="drawer-btn-confirm" onclick="confirmarCompromisso()">✔ Confirmar</button>
+    <button class="btn btn-primary" id="drawer-btn-save" onclick="salvarObs()">Salvar anotações</button>
+  </div>
+</div>
+
+<!-- MODAL: NOVO COMPROMISSO -->
+<div class="modal-overlay" id="modal-novo">
+  <div class="modal">
+    <div class="modal-title">Novo Compromisso</div>
+    <div class="modal-sub">Preencha os dados para criar um agendamento</div>
+    <div class="field">
+      <label>Tipo / serviço *</label>
+      <input type="text" placeholder="Ex: Consulta de Ortopedia">
+    </div>
+    <div class="field">
+      <label>Paciente</label>
+      <input type="text" placeholder="Nome do paciente">
+    </div>
+    <div class="field">
+      <label>Telefone / WhatsApp</label>
+      <input type="tel" placeholder="(00) 00000-0000">
+    </div>
+    <div class="field-row">
+      <div class="field">
+        <label>Data *</label>
+        <input type="date" id="novo-data">
+      </div>
+      <div class="field">
+        <label>Horário *</label>
+        <input type="time" value="09:00">
+      </div>
+    </div>
+    <div class="field">
+      <label>Observações</label>
+      <textarea style="min-height:60px;resize:none" placeholder="Anotações sobre o compromisso..."></textarea>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted);margin-top:4px">
+      <input type="checkbox" id="send-whats" checked>
+      <label for="send-whats">Enviar confirmação por WhatsApp</label>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal('modal-novo')">Cancelar</button>
+      <button class="btn btn-primary" onclick="criarCompromisso()">Criar compromisso</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: BLOQUEAR PERÍODO -->
+<div class="modal-overlay" id="modal-bloquear">
+  <div class="modal">
+    <div class="modal-title">🚫 Bloquear período</div>
+    <div class="modal-sub">Os horários bloqueados não aceitam novos agendamentos</div>
+    <div class="field-row">
+      <div class="field">
+        <label>Data inicial *</label>
+        <input type="date">
+      </div>
+      <div class="field">
+        <label>Data final *</label>
+        <input type="date">
+      </div>
+    </div>
+    <div class="field">
+      <label>Motivo</label>
+      <select>
+        <option>Férias</option>
+        <option>Feriado</option>
+        <option>Congresso / evento</option>
+        <option>Compromisso pessoal</option>
+        <option>Outro</option>
+      </select>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted)">
+      <input type="checkbox" id="notif-block" checked>
+      <label for="notif-block">Notificar pacientes com compromissos neste período</label>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal('modal-bloquear')">Cancelar</button>
+      <button class="btn btn-primary" onclick="addBloqueio()">Bloquear período</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: ESVAZIAR DIA -->
+<div class="modal-overlay" id="modal-esvaziar">
+  <div class="modal">
+    <div class="modal-title">🗑️ Esvaziar dia</div>
+    <div class="modal-sub">Todos os compromissos do dia serão cancelados e os pacientes notificados</div>
+    <div class="field">
+      <label>Data *</label>
+      <input type="date">
+    </div>
+    <div class="field">
+      <label>Motivo para o paciente</label>
+      <textarea style="min-height:60px;resize:none" placeholder="Ex: Imprevisto médico. Entraremos em contato para reagendar."></textarea>
+    </div>
+    <div style="background:var(--red-light);border:1px solid #f0c8c8;border-radius:8px;padding:10px 12px;font-size:12px;color:var(--red);margin-top:4px">
+      ⚠️ Esta ação não pode ser desfeita. Os pacientes receberão aviso via WhatsApp.
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal('modal-esvaziar')">Cancelar</button>
+      <button class="btn btn-danger" onclick="esvaziarDia()">Esvaziar e notificar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: HORÁRIOS -->
+<div class="modal-overlay" id="modal-horarios">
+  <div class="modal">
+    <div class="modal-title">⏰ Horários de atendimento</div>
+    <div class="modal-sub">Configure os dias e horários disponíveis</div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px" id="dias-semana">
+      <span class="badge badge-green" style="cursor:pointer;padding:5px 12px">Seg</span>
+      <span class="badge badge-green" style="cursor:pointer;padding:5px 12px">Ter</span>
+      <span class="badge badge-green" style="cursor:pointer;padding:5px 12px">Qua</span>
+      <span class="badge badge-green" style="cursor:pointer;padding:5px 12px">Qui</span>
+      <span class="badge badge-green" style="cursor:pointer;padding:5px 12px">Sex</span>
+      <span class="badge badge-gray" style="cursor:pointer;padding:5px 12px">Sáb</span>
+      <span class="badge badge-gray" style="cursor:pointer;padding:5px 12px">Dom</span>
+    </div>
+    <div class="field-row">
+      <div class="field">
+        <label>Início</label>
+        <input type="time" value="08:00">
+      </div>
+      <div class="field">
+        <label>Fim</label>
+        <input type="time" value="18:00">
+      </div>
+    </div>
+    <div class="field-row">
+      <div class="field">
+        <label>Duração de cada atendimento</label>
+        <select><option>30 minutos</option><option>45 minutos</option><option>60 minutos</option><option>20 minutos</option></select>
+      </div>
+      <div class="field">
+        <label>Intervalo entre atendimentos</label>
+        <select><option>Sem intervalo</option><option>5 minutos</option><option>10 minutos</option><option>15 minutos</option></select>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal('modal-horarios')">Cancelar</button>
+      <button class="btn btn-primary" onclick="closeModal('modal-horarios');showToast('Horários salvos!','success')">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: AVISO MASSA -->
+<div class="modal-overlay" id="modal-avisos">
+  <div class="modal">
+    <div class="modal-title">📢 Aviso em massa</div>
+    <div class="modal-sub">Envie uma mensagem via WhatsApp para todos os pacientes do período</div>
+    <div class="field-row">
+      <div class="field"><label>De</label><input type="date"></div>
+      <div class="field"><label>Até</label><input type="date"></div>
+    </div>
+    <div class="field">
+      <label>Mensagem *</label>
+      <textarea style="min-height:100px;resize:none" placeholder="Digite a mensagem que será enviada...">Prezado paciente, informamos que haverá alteração em nossos atendimentos. Entraremos em contato para reagendar. Pedimos desculpas pelo inconveniente.</textarea>
+    </div>
+    <div style="font-size:12px;color:var(--muted)">Será enviada para <strong style="color:var(--ink)">6 pacientes</strong> com agendamentos no período</div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal('modal-avisos')">Cancelar</button>
+      <button class="btn btn-primary" onclick="closeModal('modal-avisos');showToast('Avisos enviados para 6 pacientes!','success')">Enviar avisos</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: DURACAO -->
+<div class="modal-overlay" id="modal-duracao">
+  <div class="modal">
+    <div class="modal-title">⏳ Duração padrão</div>
+    <div class="modal-sub">Tempo padrão de cada consulta</div>
+    <div class="field">
+      <label>Duração (minutos)</label>
+      <input type="number" value="30" min="5" step="5">
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal('modal-duracao')">Cancelar</button>
+      <button class="btn btn-primary" onclick="closeModal('modal-duracao');showToast('Duração atualizada!','success')">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: CANCELAR TODOS -->
+<div class="modal-overlay" id="modal-cancelar-todos">
+  <div class="modal">
+    <div class="modal-title" style="color:var(--red)">⚠️ Cancelar todos do mês</div>
+    <div class="modal-sub">Esta ação é irreversível. Digite <strong>CONFIRMAR</strong> para continuar</div>
+    <div style="background:var(--red-light);border:1px solid #f0c8c8;border-radius:8px;padding:10px 12px;font-size:12px;color:var(--red);margin-bottom:16px">
+      Todos os <strong>12 compromissos futuros</strong> deste mês serão cancelados e os pacientes notificados automaticamente via WhatsApp.
+    </div>
+    <div class="field">
+      <label>Digite CONFIRMAR para prosseguir</label>
+      <input type="text" id="cancel-confirm-input" placeholder="CONFIRMAR">
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal('modal-cancelar-todos')">Voltar</button>
+      <button class="btn btn-danger" onclick="cancelarTodos()">Cancelar todos</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST CONTAINER -->
+<div class="toast-container" id="toast-container"></div>
+
+<script>
+// ── DADOS MOCK ──
+const hoje = new Date();
+const pad = n => String(n).padStart(2,'0');
+const fmtDate = d => `${pad(d.getDate())}/${pad(d.getMonth()+1)}/${d.getFullYear()}`;
+const fmtHour = d => `${pad(d.getHours())}:${pad(d.getMinutes())}`;
+
+const nomesStatus = { agendado:'Agendado', confirmado:'Confirmado', cancelado:'Cancelado', concluido:'Concluído' };
+const badgeStatus = { agendado:'badge-green', confirmado:'badge-blue', cancelado:'badge-red', concluido:'badge-gray' };
+
+const compromissos = [
+  { id:1, hora:'08:00', fim:'08:30', servico:'Consulta de Ortopedia', paciente:'Maria Silva', telefone:'(81) 99821-3344', status:'concluido', obs:'Dor no joelho direito. Encaminhar para fisioterapia.', lembretes:[] },
+  { id:2, hora:'08:30', fim:'09:00', servico:'Retorno — Coluna', paciente:'José Ferreira', telefone:'(81) 98855-1122', status:'concluido', obs:'Melhorou 70%. Manter medicação.', lembretes:[{horas:24}] },
+  { id:3, hora:'09:00', fim:'09:30', servico:'Consulta de Ortopedia', paciente:'Ana Paula Costa', telefone:'(81) 99100-5533', status:'confirmado', obs:'Primeira consulta. Dor no ombro há 3 meses.', lembretes:[{horas:2}] },
+  { id:4, hora:'10:00', fim:'10:30', servico:'Avaliação pré-cirúrgica', paciente:'Carlos Mendes', telefone:'(81) 97744-8899', status:'agendado', obs:'', lembretes:[] },
+  { id:5, hora:'10:30', fim:'11:00', servico:'Consulta de Ortopedia', paciente:'Fernanda Lima', telefone:'(81) 99234-6677', status:'agendado', obs:'Torção no tornozelo.', lembretes:[{horas:24}] },
+  { id:6, hora:'14:00', fim:'14:30', servico:'Retorno pós-op', paciente:'Roberto Santos', telefone:'(81) 98100-2211', status:'agendado', obs:'Verificar cicatrização. 30 dias de cirurgia.', lembretes:[] },
+  { id:7, hora:'15:00', fim:'15:30', servico:'Consulta de Ortopedia', paciente:'Lucia Gomes', telefone:'(81) 99800-4455', status:'cancelado', obs:'Paciente desmarcou.', lembretes:[] },
+  { id:8, hora:'16:00', fim:'16:30', servico:'Consulta de Ortopedia', paciente:'Paulo Alves', telefone:'(81) 97601-9988', status:'agendado', obs:'', lembretes:[{horas:1}] },
+];
+
+let currentFilter = 'todos';
+let currentDayOffset = 0;
+let selectedComp = null;
+
+// ── TOPBAR ──
+function updateTopbar() {
+  const d = new Date();
+  document.getElementById('topbar-date').textContent = fmtDate(d);
+  const dias = ['Domingo','Segunda','Terça','Quarta','Quinta','Sexta','Sábado'];
+  const meses = ['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
+  const el = document.getElementById('dash-date-sub');
+  if(el) el.textContent = `${dias[d.getDay()]}, ${d.getDate()} de ${meses[d.getMonth()]} de ${d.getFullYear()}`;
+  const al = document.getElementById('agenda-day-label');
+  if(al) al.textContent = `${dias[d.getDay()]}, ${fmtDate(d)}`;
+}
+updateTopbar();
+setInterval(updateTopbar, 60000);
+
+// ── VIEWS ──
+function showView(v) {
+  document.querySelectorAll('.view').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+  document.getElementById('view-' + v).classList.add('active');
+  const navMap = {dashboard:0, agenda:1, semana:2, gestao:3, link:4};
+  document.querySelectorAll('.nav-item')[navMap[v]]?.classList.add('active');
+  if(v === 'agenda') renderAgenda();
+  if(v === 'semana') renderWeek();
+  if(v === 'gestao') renderBloqueios();
+}
+
+// ── CARD COMP ──
+function renderCard(c, showDate) {
+  const dur = (() => {
+    const [h1,m1] = c.hora.split(':').map(Number);
+    const [h2,m2] = c.fim.split(':').map(Number);
+    return (h2*60+m2)-(h1*60+m1);
+  })();
+  return `<div class="comp-card ${c.status}" onclick="openDrawer(${c.id})">
+    <div class="comp-time">
+      <div class="comp-hour">${c.hora}</div>
+      <div class="comp-duration">${dur}min</div>
+    </div>
+    <div class="comp-divider"></div>
+    <div class="comp-info">
+      <div class="comp-service">${c.servico}</div>
+      <div class="comp-patient">👤 ${c.paciente}</div>
+      ${c.obs ? `<div class="comp-obs">${c.obs}</div>` : ''}
+      <div class="comp-tags">
+        <span class="badge ${badgeStatus[c.status]}"><span class="status-dot ${c.status}"></span>${nomesStatus[c.status]}</span>
+        ${c.lembretes.length ? `<span class="badge badge-amber">🔔 ${c.lembretes.length} lembrete${c.lembretes.length>1?'s':''}</span>` : ''}
+      </div>
+    </div>
+    <div class="comp-actions" onclick="event.stopPropagation()">
+      ${c.status==='agendado' ? `<button class="btn btn-outline btn-sm btn-icon" title="Confirmar" onclick="quickConfirm(${c.id})">✔</button>` : ''}
+      ${c.status!=='cancelado' && c.status!=='concluido' ? `<button class="btn btn-danger btn-sm btn-icon" title="Cancelar" onclick="quickCancel(${c.id})">✕</button>` : ''}
+    </div>
+  </div>`;
+}
+
+// ── DASHBOARD LIST ──
+function renderDash() {
+  const list = document.getElementById('dash-list');
+  const proximos = compromissos.filter(c => c.status !== 'cancelado' && c.status !== 'concluido').slice(0,4);
+  list.innerHTML = proximos.map(c => renderCard(c)).join('') ||
+    `<div class="empty"><div class="empty-icon">🎉</div><div class="empty-title">Sem compromissos pendentes</div></div>`;
+}
+
+// ── AGENDA ──
+function renderAgenda() {
+  const list = document.getElementById('agenda-list');
+  const filtered = compromissos.filter(c => currentFilter === 'todos' || c.status === currentFilter);
+  if(!filtered.length) {
+    list.innerHTML = `<div class="empty"><div class="empty-icon">📅</div><div class="empty-title">Nenhum compromisso</div><div class="empty-sub">Não há registros para este filtro</div></div>`;
+    return;
+  }
+  const manha = filtered.filter(c => parseInt(c.hora) < 12);
+  const tarde = filtered.filter(c => parseInt(c.hora) >= 12);
+  let html = '';
+  if(manha.length) html += `<div class="day-group"><div class="day-label">Manhã</div><div class="agenda-list">${manha.map(c=>renderCard(c)).join('')}</div></div>`;
+  if(tarde.length) html += `<div class="day-group"><div class="day-label">Tarde</div><div class="agenda-list">${tarde.map(c=>renderCard(c)).join('')}</div></div>`;
+  list.innerHTML = html;
+}
+
+function setAgendaTab(filter, btn) {
+  currentFilter = filter;
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  renderAgenda();
+}
+
+function navDay(d) { currentDayOffset = d; renderAgenda(); }
+
+// ── WEEK VIEW ──
+function renderWeek() {
+  const days = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+  const todayIdx = hoje.getDay();
+  const startOfWeek = new Date(hoje);
+  startOfWeek.setDate(hoje.getDate() - todayIdx);
+
+  let html = `<div class="week-grid">
+    <div class="week-corner"></div>`;
+
+  for(let i=0;i<7;i++){
+    const d = new Date(startOfWeek);
+    d.setDate(startOfWeek.getDate()+i);
+    const isToday = d.toDateString()===hoje.toDateString();
+    html += `<div class="week-day-header">
+      <div class="week-day-name">${days[i]}</div>
+      <div class="week-day-num${isToday?' today':''}">${d.getDate()}</div>
+    </div>`;
+  }
+
+  const hours = [8,9,10,11,12,13,14,15,16,17,18];
+  hours.forEach(h => {
+    html += `<div class="week-hour-col"><div class="week-hour-label">${pad(h)}:00</div></div>`;
+    for(let i=0;i<7;i++){
+      const eventsHere = i===todayIdx ? compromissos.filter(c=>parseInt(c.hora)===h) : [];
+      html += `<div class="week-cell">`;
+      eventsHere.forEach(ev => {
+        html += `<div class="week-event ${ev.status}" onclick="openDrawer(${ev.id})" title="${ev.paciente}">${ev.servico.slice(0,16)}…</div>`;
+      });
+      html += `</div>`;
+    }
+  });
+
+  html += `</div>`;
+  document.getElementById('week-grid-container').innerHTML = html;
+}
+
+// ── BLOQUEIOS ──
+const bloqueios = [
+  { de:'15/07/2025', ate:'22/07/2025', motivo:'Férias', status:'ativo' },
+  { de:'14/07/2025', ate:'14/07/2025', motivo:'Feriado', status:'ativo' },
+];
+function renderBloqueios() {
+  const el = document.getElementById('bloqueios-list');
+  if(!bloqueios.length) { el.innerHTML = `<div class="empty" style="padding:24px"><div class="empty-sub">Nenhum bloqueio cadastrado</div></div>`; return; }
+  el.innerHTML = bloqueios.map((b,i) => `
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:0;align-items:center;padding:10px 16px;border-bottom:1px solid var(--border);font-size:13px">
+      <span style="font-family:'DM Mono',monospace;font-size:12px">${b.de} → ${b.ate}</span>
+      <span>${b.motivo}</span>
+      <span><span class="badge badge-amber">${b.status}</span></span>
+      <button class="btn btn-danger btn-sm" onclick="removeBloqueio(${i})">Remover</button>
+    </div>`).join('');
+}
+function removeBloqueio(i) {
+  bloqueios.splice(i,1);
+  renderBloqueios();
+  showToast('Bloqueio removido','success');
+}
+function addBloqueio() {
+  bloqueios.push({ de:'01/08/2025', ate:'05/08/2025', motivo:'Congresso / evento', status:'ativo' });
+  closeModal('modal-bloquear');
+  showToast('Período bloqueado com sucesso!','success');
+  renderBloqueios();
+}
+
+// ── DRAWER ──
+function openDrawer(id) {
+  selectedComp = compromissos.find(c => c.id===id);
+  const c = selectedComp;
+  document.getElementById('drawer-title').textContent = c.servico;
+  document.getElementById('drawer-sub').textContent = `Hoje · ${c.hora} – ${c.fim}`;
+
+  const leadInit = c.paciente.split(' ').slice(0,2).map(p=>p[0]).join('').toUpperCase();
+
+  document.getElementById('drawer-body').innerHTML = `
+    <div class="lead-card">
+      <div class="lead-avatar">${leadInit}</div>
+      <div>
+        <div class="lead-name">${c.paciente}</div>
+        <div class="lead-phone">${c.telefone}</div>
+        <div style="margin-top:6px;display:flex;gap:6px">
+          <a href="https://wa.me/55${c.telefone.replace(/\D/g,'')}" target="_blank" class="btn btn-outline btn-sm">💬 WhatsApp</a>
+          <a href="tel:${c.telefone}" class="btn btn-outline btn-sm">📞 Ligar</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="detail-group">
+      <div class="detail-label">Status atual</div>
+      <span class="badge ${badgeStatus[c.status]}" style="font-size:13px;padding:4px 12px">
+        <span class="status-dot ${c.status}"></span>${nomesStatus[c.status]}
+      </span>
+    </div>
+
+    <div class="detail-group">
+      <div class="detail-label">Horário</div>
+      <div class="detail-value detail-block" style="font-family:'DM Mono',monospace">
+        ${c.hora} – ${c.fim}&nbsp;&nbsp;|&nbsp;&nbsp;30 minutos
+      </div>
+    </div>
+
+    ${c.lembretes.length ? `
+    <div class="detail-group">
+      <div class="detail-label">Lembretes ativos</div>
+      ${c.lembretes.map(l=>`<div class="lembrete-row"><span class="lembrete-icon">🔔</span>Lembrete ${l.horas}h antes — WhatsApp</div>`).join('')}
+    </div>` : ''}
+
+    <div class="detail-group">
+      <div class="detail-label">Anotações e observações</div>
+      <textarea class="obs-area" id="obs-input" placeholder="Adicione anotações sobre esta consulta…">${c.obs}</textarea>
+    </div>
+
+    <div class="detail-group">
+      <div class="detail-label">Histórico do paciente</div>
+      <div class="detail-block" style="font-size:13px;color:var(--muted)">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+          <span>2 consultas anteriores</span>
+          <span class="badge badge-green">Ativo</span>
+        </div>
+        <div style="font-size:12px">Última consulta: 15/05/2025 · Retorno de coluna</div>
+      </div>
+    </div>
+  `;
+
+  document.getElementById('drawer-btn-cancel').style.display = (c.status==='cancelado'||c.status==='concluido')?'none':'inline-flex';
+  document.getElementById('drawer-btn-confirm').style.display = (c.status==='agendado')?'inline-flex':'none';
+
+  document.getElementById('drawer-overlay').classList.add('open');
+  document.getElementById('drawer').classList.add('open');
+}
+function closeDrawer() {
+  document.getElementById('drawer-overlay').classList.remove('open');
+  document.getElementById('drawer').classList.remove('open');
+}
+function salvarObs() {
+  if(selectedComp) { selectedComp.obs = document.getElementById('obs-input').value; }
+  showToast('Anotações salvas!','success');
+  renderDash(); renderAgenda();
+}
+function cancelarCompromisso() {
+  if(!selectedComp) return;
+  selectedComp.status = 'cancelado';
+  closeDrawer();
+  showToast('Compromisso cancelado','error');
+  renderDash(); renderAgenda();
+}
+function confirmarCompromisso() {
+  if(!selectedComp) return;
+  selectedComp.status = 'confirmado';
+  closeDrawer();
+  showToast('Compromisso confirmado ✓','success');
+  renderDash(); renderAgenda();
+}
+function quickCancel(id) {
+  compromissos.find(c=>c.id===id).status='cancelado';
+  showToast('Cancelado','error');
+  renderDash(); renderAgenda();
+}
+function quickConfirm(id) {
+  compromissos.find(c=>c.id===id).status='confirmado';
+  showToast('Confirmado ✓','success');
+  renderDash(); renderAgenda();
+}
+
+// ── MODAIS ──
+function openModal(id) { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+function openNovoCompromisso() {
+  document.getElementById('novo-data').valueAsDate = hoje;
+  openModal('modal-novo');
+}
+function criarCompromisso() {
+  compromissos.push({ id: Date.now(), hora:'11:00', fim:'11:30', servico:'Consulta', paciente:'Novo Paciente', telefone:'', status:'agendado', obs:'', lembretes:[] });
+  closeModal('modal-novo');
+  showToast('Compromisso criado! WhatsApp enviado ✓','success');
+  renderDash(); renderAgenda();
+}
+function esvaziarDia() {
+  compromissos.forEach(c => { if(c.status!=='cancelado'&&c.status!=='concluido') c.status='cancelado'; });
+  closeModal('modal-esvaziar');
+  showToast('Agenda esvaziada. Pacientes notificados.','success');
+  renderDash(); renderAgenda();
+}
+function cancelarTodos() {
+  const inp = document.getElementById('cancel-confirm-input').value;
+  if(inp !== 'CONFIRMAR') { showToast('Digite CONFIRMAR para continuar','error'); return; }
+  closeModal('modal-cancelar-todos');
+  showToast('Todos os compromissos futuros cancelados.','error');
+}
+
+// ── MINI CAL ──
+let calYear = hoje.getFullYear(), calMonth = hoje.getMonth();
+const mesesPT = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+function renderMiniCal() {
+  document.getElementById('mini-month').textContent = `${mesesPT[calMonth].slice(0,3)} ${calYear}`;
+  const grid = document.getElementById('mini-cal-grid');
+  const firstDay = new Date(calYear, calMonth, 1).getDay();
+  const daysInMonth = new Date(calYear, calMonth+1, 0).getDate();
+  const daysInPrev = new Date(calYear, calMonth, 0).getDate();
+  let html = ['D','S','T','Q','Q','S','S'].map(d=>`<div class="mini-cal-day-name">${d}</div>`).join('');
+  for(let i=0;i<firstDay;i++) html += `<div class="mini-cal-day other-month">${daysInPrev-firstDay+1+i}</div>`;
+  const daysWithEvent = [hoje.getDate(), hoje.getDate()+2, hoje.getDate()-1].filter(d=>d>0&&d<=daysInMonth);
+  for(let d=1;d<=daysInMonth;d++) {
+    const isToday = d===hoje.getDate()&&calMonth===hoje.getMonth()&&calYear===hoje.getFullYear();
+    const hasEv = daysWithEvent.includes(d);
+    html += `<div class="mini-cal-day${isToday?' today':''}${hasEv?' has-event':''}" onclick="showView('agenda')">${d}</div>`;
+  }
+  grid.innerHTML = html;
+}
+function prevMonth() { calMonth--; if(calMonth<0){calMonth=11;calYear--;} renderMiniCal(); }
+function nextMonth() { calMonth++; if(calMonth>11){calMonth=0;calYear++;} renderMiniCal(); }
+
+// ── LINK ──
+function copyLink() {
+  const txt = document.getElementById('public-link').textContent;
+  navigator.clipboard.writeText(txt).then(()=>showToast('Link copiado!','success')).catch(()=>showToast('Link: '+txt));
+}
+
+// ── TOAST ──
+function showToast(msg, type='') {
+  const tc = document.getElementById('toast-container');
+  const t = document.createElement('div');
+  t.className = `toast ${type}`;
+  t.textContent = msg;
+  tc.appendChild(t);
+  setTimeout(() => { t.style.opacity='0'; t.style.transition='opacity .3s'; setTimeout(()=>t.remove(),300); }, 3000);
+}
+
+// ── INIT ──
+renderMiniCal();
+renderDash();
+renderAgenda();
+</script>
+</body>
+</html>
