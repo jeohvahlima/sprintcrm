@@ -112,7 +112,7 @@ export default function IA() {
     };
   }, [navigate, sendSiteInfo, loadSiteInfo]);
 
-  const overlayTitle = overlay === "fluxos" ? "Fluxos de Automação" : overlay === "base" ? "Base de Conhecimento" : "Site Institucional";
+  const overlayTitle = overlay === "fluxos" ? "Fluxos de Automação" : overlay === "base" ? "Base de Conhecimento" : overlay === "disparo-nao-oficial" ? "WhatsApp Não Oficial — Disparo em Massa" : "Site Institucional";
 
   return (
     <div className="w-full h-[calc(100vh-7rem)] min-h-[640px] overflow-hidden rounded-lg border border-border bg-background">
