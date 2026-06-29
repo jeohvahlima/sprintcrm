@@ -13,9 +13,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { FluxoAutomacaoBuilder } from "@/components/fluxos/FluxoAutomacaoBuilder";
 import { BaseConhecimentoIA } from "@/components/ia/BaseConhecimentoIA";
 import { SiteInstitucionalConfig } from "@/components/ia/SiteInstitucionalConfig";
+import DisparoEmMassaWhatsAppNormal from "@/components/campanhas/DisparoEmMassaWhatsAppNormal";
 import { supabase } from "@/integrations/supabase/client";
 
-type OverlayModule = "fluxos" | "base" | "site" | null;
+type OverlayModule = "fluxos" | "base" | "site" | "disparo-nao-oficial" | null;
 
 export default function IA() {
   const navigate = useNavigate();
@@ -81,7 +82,7 @@ export default function IA() {
           if (typeof data.path === "string") navigate(data.path);
           break;
         case "overlay":
-          if (data.module === "fluxos" || data.module === "base" || data.module === "site") {
+          if (data.module === "fluxos" || data.module === "base" || data.module === "site" || data.module === "disparo-nao-oficial") {
             if (data.module === "site") await loadSiteInfo();
             setOverlay(data.module);
           }
@@ -111,7 +112,7 @@ export default function IA() {
     };
   }, [navigate, sendSiteInfo, loadSiteInfo]);
 
-  const overlayTitle = overlay === "fluxos" ? "Fluxos de Automação" : overlay === "base" ? "Base de Conhecimento" : "Site Institucional";
+  const overlayTitle = overlay === "fluxos" ? "Fluxos de Automação" : overlay === "base" ? "Base de Conhecimento" : overlay === "disparo-nao-oficial" ? "WhatsApp Não Oficial — Disparo em Massa" : "Site Institucional";
 
   return (
     <div className="w-full h-[calc(100vh-7rem)] min-h-[640px] overflow-hidden rounded-lg border border-border bg-background">
@@ -130,6 +131,7 @@ export default function IA() {
           {overlay === "fluxos" && <FluxoAutomacaoBuilder />}
           {overlay === "base" && <BaseConhecimentoIA />}
           {overlay === "site" && companyId && <SiteInstitucionalConfig companyId={companyId} />}
+          {overlay === "disparo-nao-oficial" && <DisparoEmMassaWhatsAppNormal />}
         </DialogContent>
       </Dialog>
     </div>

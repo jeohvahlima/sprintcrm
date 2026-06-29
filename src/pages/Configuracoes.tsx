@@ -33,7 +33,6 @@ import {
 import { WhatsAppDashboard } from "@/components/whatsapp/WhatsAppDashboard";
 import { WhatsAppTemplatesManager } from "@/components/whatsapp/WhatsAppTemplatesManager";
 import { DisparoEmMassa } from "@/components/campanhas/DisparoEmMassa";
-import DisparoEmMassaWhatsAppNormal from "@/components/campanhas/DisparoEmMassaWhatsAppNormal";
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { WhatsAppQRCode } from "@/components/configuracoes/WhatsAppQRCode";
@@ -1140,11 +1139,6 @@ export default function Configuracoes() {
 
               <WhatsAppDashboard companyId={currentCompany.id} />
               <DisparoEmMassa />
-              <div className="pt-4">
-                <h3 className="text-lg font-semibold">WhatsApp (via cliente)</h3>
-                <p className="text-sm text-muted-foreground">Enviar disparos em massa usando o cliente/API não oficial (WhatsApp normal).</p>
-                <DisparoEmMassaWhatsAppNormal />
-              </div>
             </div>
           )}
 

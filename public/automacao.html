@@ -366,6 +366,12 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
     </div>
   </div>
 
+  <div class="tab-item" onclick="switchTab('whatsapp-nao-oficial',this)">
+    <i class="ti ti-brand-whatsapp"></i>WhatsApp Não Oficial
+    <span class="tab-badge tb-amber">disparo</span>
+  </div>
+
+
   <div class="tab-section">Presença Digital</div>
   <div class="tab-item" onclick="switchTab('captura',this)">
     <i class="ti ti-capture"></i>Página de Captura
@@ -942,6 +948,9 @@ Att, Rafael</textarea>
   <iframe id="waIframe" src="/whatsapp-oficial.html" title="WhatsApp Oficial — Central Meta" style="width:100%;height:100%;border:0;display:block;min-height:calc(100vh - 7rem)"></iframe>
 </div>
 
+<!-- ═══════════════════ WHATSAPP NÃO OFICIAL ═══════════════════ -->
+<div class="tab-panel" id="tab-whatsapp-nao-oficial"></div>
+
 <!-- ═══════════════════ PÁGINA DE CAPTURA ═══════════════════ -->
 <div class="tab-panel" id="tab-captura">
   <div class="panel-hdr">
@@ -1256,6 +1265,7 @@ function switchTab(id, el) {
     fluxos: { type: 'overlay', module: 'fluxos' },
     base: { type: 'overlay', module: 'base' },
     diagnostico: { type: 'navigate', path: '/automacoes/diagnostico' },
+    'whatsapp-nao-oficial': { type: 'overlay', module: 'disparo-nao-oficial' },
   };
   if (overlayTabs[id]) post(overlayTabs[id]);
 }
