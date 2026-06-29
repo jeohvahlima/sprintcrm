@@ -82,7 +82,7 @@ export default function IA() {
           if (typeof data.path === "string") navigate(data.path);
           break;
         case "overlay":
-          if (data.module === "fluxos" || data.module === "base" || data.module === "site") {
+          if (data.module === "fluxos" || data.module === "base" || data.module === "site" || data.module === "disparo-nao-oficial") {
             if (data.module === "site") await loadSiteInfo();
             setOverlay(data.module);
           }
