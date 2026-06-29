@@ -13,9 +13,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { FluxoAutomacaoBuilder } from "@/components/fluxos/FluxoAutomacaoBuilder";
 import { BaseConhecimentoIA } from "@/components/ia/BaseConhecimentoIA";
 import { SiteInstitucionalConfig } from "@/components/ia/SiteInstitucionalConfig";
+import DisparoEmMassaWhatsAppNormal from "@/components/campanhas/DisparoEmMassaWhatsAppNormal";
 import { supabase } from "@/integrations/supabase/client";
 
-type OverlayModule = "fluxos" | "base" | "site" | null;
+type OverlayModule = "fluxos" | "base" | "site" | "disparo-nao-oficial" | null;
 
 export default function IA() {
   const navigate = useNavigate();
