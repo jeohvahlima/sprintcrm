@@ -33,7 +33,6 @@ import {
 import { WhatsAppDashboard } from "@/components/whatsapp/WhatsAppDashboard";
 import { WhatsAppTemplatesManager } from "@/components/whatsapp/WhatsAppTemplatesManager";
 import { DisparoEmMassa } from "@/components/campanhas/DisparoEmMassa";
-import DisparoEmMassaWhatsAppNormal from "@/components/campanhas/DisparoEmMassaWhatsAppNormal";
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { WhatsAppQRCode } from "@/components/configuracoes/WhatsAppQRCode";
