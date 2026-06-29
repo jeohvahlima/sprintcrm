@@ -1035,7 +1035,7 @@
         tabCsv.style.cssText = ((active)=>`flex:1;padding:10px;border:1px solid hsl(var(--border));border-bottom:${active?'2px solid hsl(var(--primary))':'1px solid hsl(var(--border))'};background:${active?'hsl(var(--background))':'hsl(var(--muted))'};color:hsl(var(--foreground));font-weight:600;font-size:13px;cursor:pointer;font-family:inherit;`)(!isText);
         panelText.style.display = isText ? '' : 'none';
         panelCsv.style.display = isText ? 'none' : '';
-        parsed = []; preview.textContent = ''; submitBtn.disabled = true;
+        parsed = []; preview.textContent = '';
       };
       tabText.addEventListener('click', () => setTab('text'));
       tabCsv.addEventListener('click', () => setTab('csv'));
