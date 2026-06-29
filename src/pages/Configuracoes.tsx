@@ -1140,11 +1140,6 @@ export default function Configuracoes() {
 
               <WhatsAppDashboard companyId={currentCompany.id} />
               <DisparoEmMassa />
-              <div className="pt-4">
-                <h3 className="text-lg font-semibold">WhatsApp (via cliente)</h3>
-                <p className="text-sm text-muted-foreground">Enviar disparos em massa usando o cliente/API não oficial (WhatsApp normal).</p>
-                <DisparoEmMassaWhatsAppNormal />
-              </div>
             </div>
           )}
 
