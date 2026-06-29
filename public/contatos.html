@@ -960,6 +960,21 @@
       } else {
         idx.name = 0; idx.phone = 1; idx.email = 2;
       }
+      // Fallback: se há cabeçalho mas a coluna nome não foi identificada,
+      // use a primeira coluna que não seja telefone/email
+      if (hasHeader && idx.name < 0) {
+        for (let i = 0; i < header.length; i++) {
+          if (i !== idx.phone && i !== idx.email) { idx.name = i; break; }
+        }
+      }
+      // Fallback: se não detectou coluna telefone, procura coluna com dígitos
+      if (idx.phone < 0 && rows.length > 1) {
+        const sample = rows[hasHeader ? 1 : 0].split(sep);
+        for (let i = 0; i < sample.length; i++) {
+          const d = String(sample[i] || '').replace(/\D/g, '');
+          if (d.length >= 10 && d.length <= 13) { idx.phone = i; break; }
+        }
+      }
       const start = hasHeader ? 1 : 0;
       const out = [];
       for (let i = start; i < rows.length; i++) {
