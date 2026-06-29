@@ -131,6 +131,7 @@ export default function IA() {
           {overlay === "fluxos" && <FluxoAutomacaoBuilder />}
           {overlay === "base" && <BaseConhecimentoIA />}
           {overlay === "site" && companyId && <SiteInstitucionalConfig companyId={companyId} />}
+          {overlay === "disparo-nao-oficial" && <DisparoEmMassaWhatsAppNormal />}
         </DialogContent>
       </Dialog>
     </div>
