@@ -38,7 +38,7 @@ Deno.serve(async (req) => {
 
     // Parse do body
     const body: CriarProfissionalRequest = await req.json()
-    const { nome, email, senha, telefone, especialidade, valor_consulta, duracao_consulta, company_id } = body
+    const { nome, email, senha, telefone, especialidade, valor_consulta, duracao_consulta, avatar_url, bio, company_id } = body
 
     console.log('[criar-profissional] Iniciando criação de profissional:', { email, nome })
 
