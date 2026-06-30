@@ -2044,7 +2044,7 @@
           const wppPillClass = state==='confirmed' ? 'success' : state==='no-answer' ? 'danger' : 'warning';
           const wppIcon = state==='confirmed' ? 'ti-circle-check' : state==='no-answer' ? 'ti-x' : 'ti-hourglass';
           const [y,m,d] = ev.date.split('-');
-          const wa = ev.phone ? '<button class="iconbtn green" data-wa="'+escapeAttr(ev.phone)+'" title="WhatsApp"><i class="ti ti-brand-whatsapp"></i></button>' : '';
+          const wa = ev.phone ? '<button class="iconbtn green" data-wa="'+escapeAttr(ev.phone)+'" data-wa-lead="'+escapeAttr(ev.leadId||'')+'" data-wa-name="'+escapeAttr(ev.name||'')+'" title="WhatsApp"><i class="ti ti-brand-whatsapp"></i></button>' : '';
           const localActions = ev.remote ? '' : `
               <button class="iconbtn" data-edit="${ev.id}" title="Editar"><i class="ti ti-pencil"></i></button>
               <button class="iconbtn" data-del="${ev.id}" title="Excluir"><i class="ti ti-trash"></i></button>`;
