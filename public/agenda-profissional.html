@@ -1558,6 +1558,146 @@ function showToast(msg, type='') {
 renderMiniCal();
 renderDash();
 renderAgenda();
+
+// ── REAL DATA LOADER (Supabase) ──
+(function loadRealAgenda(){
+  const SB_URL = 'https://dteppsfseusqixuppglh.supabase.co';
+  const SB_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR0ZXBwc2ZzZXVzcWl4dXBwZ2xoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA4MzY0OTgsImV4cCI6MjA3NjQxMjQ5OH0.eEz5cyfwi5chae1U9S0Yt1FBwglyuVnm_Fzg9HVrV_Q';
+  const params = new URLSearchParams(window.location.search);
+  const agendaId = params.get('agenda');
+  if(!agendaId) {
+    document.getElementById('topbar-name').textContent = 'Agenda não informada';
+    document.getElementById('topbar-sub').textContent = 'Adicione ?agenda=<id> na URL';
+    return;
+  }
+
+  function statusFromCompromisso(c){
+    if(c.status === 'cancelado') return 'cancelado';
+    if(c.status === 'concluido' || c.status === 'realizado') return 'concluido';
+    if(c.status_confirmacao === 'confirmado') return 'confirmado';
+    return 'agendado';
+  }
+
+  function fmtHM(iso){
+    const d = new Date(iso);
+    return pad(d.getHours()) + ':' + pad(d.getMinutes());
+  }
+
+  function initials(name){
+    if(!name) return '··';
+    return name.trim().split(/\s+/).slice(0,2).map(p=>p[0]||'').join('').toUpperCase();
+  }
+
+  function applyAgenda(data){
+    const ag = data.agenda || {};
+    const prof = data.profissional || {};
+    const nome = prof.nome || ag.nome || 'Profissional';
+    const esp = prof.especialidade || '';
+    document.getElementById('topbar-name').textContent = nome;
+    document.getElementById('topbar-sub').textContent = (esp ? esp + ' · ' : '') + 'GROW OS';
+    document.title = nome + ' — Agenda';
+    const ava = document.getElementById('topbar-avatar');
+    const avatarUrl = prof.avatar_url || ag.avatar_url;
+    if(avatarUrl){
+      ava.textContent = '';
+      ava.style.backgroundImage = 'url("' + avatarUrl + '")';
+      ava.style.backgroundSize = 'cover';
+      ava.style.backgroundPosition = 'center';
+    } else {
+      ava.textContent = initials(nome);
+    }
+    const greet = document.getElementById('dash-greeting');
+    const h = new Date().getHours();
+    const saudacao = h < 12 ? 'Bom dia' : (h < 18 ? 'Boa tarde' : 'Boa noite');
+    const primeiro = nome.split(' ')[0];
+    greet.textContent = `${saudacao}, ${primeiro} 👋`;
+
+    // Link público (se houver)
+    const slug = ag.slug || ag.id;
+    const linkEl = document.getElementById('public-link');
+    if(linkEl && slug){
+      linkEl.textContent = window.location.origin + '/agenda/' + slug;
+    }
+
+    // Compromissos
+    const list = (data.compromissos || []).map((c, idx) => {
+      const lembretes = Array.isArray(c.lembretes_config) ? c.lembretes_config :
+        (c.lembretes_config && typeof c.lembretes_config === 'object' ? (c.lembretes_config.itens || []) : []);
+      return {
+        _real_id: c.id,
+        _iso_inicio: c.data_hora_inicio,
+        _iso_fim: c.data_hora_fim,
+        id: idx + 1,
+        hora: fmtHM(c.data_hora_inicio),
+        fim: fmtHM(c.data_hora_fim),
+        servico: c.titulo || c.tipo_servico || 'Compromisso',
+        paciente: c.paciente || '—',
+        telefone: c.telefone || '',
+        status: statusFromCompromisso(c),
+        obs: c.observacoes || '',
+        lembretes: (lembretes || []).map(l => ({ horas: l.horas || l.hours || l.h || 1 })),
+      };
+    });
+
+    compromissos.length = 0;
+    list.forEach(x => compromissos.push(x));
+
+    // Stats
+    const todayStr = new Date().toDateString();
+    const today = compromissos.filter(c => new Date(c._iso_inicio).toDateString() === todayStr);
+    const realizadosHoje = today.filter(c => c.status === 'concluido').length;
+    document.getElementById('stat-hoje').textContent = today.length;
+    document.getElementById('stat-hoje-sub').textContent = `${realizadosHoje} de ${today.length} realizados`;
+    document.getElementById('stat-hoje-prog').style.width = (today.length ? Math.round(realizadosHoje/today.length*100) : 0) + '%';
+
+    const now = new Date();
+    const startWeek = new Date(now); startWeek.setDate(now.getDate() - now.getDay()); startWeek.setHours(0,0,0,0);
+    const endWeek = new Date(startWeek); endWeek.setDate(startWeek.getDate() + 7);
+    document.getElementById('stat-semana').textContent = compromissos.filter(c => {
+      const d = new Date(c._iso_inicio); return d >= startWeek && d < endWeek;
+    }).length;
+
+    document.getElementById('stat-aguardando').textContent = compromissos.filter(c => c.status === 'agendado').length;
+
+    const m = now.getMonth(), y = now.getFullYear();
+    document.getElementById('stat-cancelados').textContent = compromissos.filter(c => {
+      const d = new Date(c._iso_inicio); return c.status === 'cancelado' && d.getMonth() === m && d.getFullYear() === y;
+    }).length;
+
+    // Nav badge
+    const badge = document.querySelector('.nav-item .nav-badge');
+    if(badge) badge.textContent = today.filter(c => c.status !== 'cancelado' && c.status !== 'concluido').length;
+
+    renderDash();
+    renderAgenda();
+    if(typeof renderWeek === 'function') renderWeek();
+  }
+
+  fetch(SB_URL + '/rest/v1/rpc/get_public_agenda_profissional', {
+    method: 'POST',
+    headers: {
+      'apikey': SB_ANON,
+      'Authorization': 'Bearer ' + SB_ANON,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ p_agenda_id: agendaId }),
+  })
+    .then(r => r.json())
+    .then(data => {
+      if(!data || data.ok === false){
+        document.getElementById('topbar-name').textContent = 'Agenda não encontrada';
+        document.getElementById('topbar-sub').textContent = '';
+        return;
+      }
+      applyAgenda(data);
+    })
+    .catch(err => {
+      console.error('Falha ao carregar agenda:', err);
+      document.getElementById('topbar-name').textContent = 'Erro ao carregar agenda';
+      document.getElementById('topbar-sub').textContent = String(err && err.message || err);
+    });
+})();
+
 </script>
 </body>
 </html>
