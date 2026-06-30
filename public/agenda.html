@@ -1190,9 +1190,25 @@
         const title = naEl('naTitle'); if(title && !editingAgendaId) title.textContent = naTipo === 'sala' ? 'Criar nova sala' : naTipo === 'recurso' ? 'Criar novo recurso' : 'Criar nova agenda';
         naUpdateModeLabels();
       }
+      let naAvatarDataUrl = null; // base64 nova foto a enviar
+      let naAvatarUrl = null;     // URL atual (edição)
+      function naRenderAvatar(){
+        const box = naEl('na_avatar_preview'); if(!box) return;
+        const src = naAvatarDataUrl || naAvatarUrl;
+        const rm = naEl('na_avatar_remove');
+        if(src){
+          box.innerHTML = '<img src="'+src+'" style="width:100%;height:100%;object-fit:cover;" alt="avatar" />';
+          if(rm) rm.style.display = 'inline-flex';
+        } else {
+          box.innerHTML = '<i class="ti ti-user"></i>';
+          if(rm) rm.style.display = 'none';
+        }
+      }
       function naReset(){
         editingAgendaId = null;
-        ['na_nome','na_especialidade','na_telefone','na_email','na_senha_login','na_senha'].forEach(id => { const el=naEl(id); if(el) el.value=''; });
+        naAvatarDataUrl = null; naAvatarUrl = null; naRenderAvatar();
+        ['na_nome','na_especialidade','na_telefone','na_email','na_senha_login','na_senha','na_bio'].forEach(id => { const el=naEl(id); if(el) el.value=''; });
+        if(naEl('na_avatar_file')) naEl('na_avatar_file').value='';
         if(naEl('na_duracao')) naEl('na_duracao').value='30'; if(naEl('na_capacidade')) naEl('na_capacidade').value='1';
         ['dom','sab'].forEach(d => document.querySelector('#na_dias [data-dia="'+d+'"]')?.classList.remove('active'));
         ['seg','ter','qua','qui','sex'].forEach(d => document.querySelector('#na_dias [data-dia="'+d+'"]')?.classList.add('active'));
