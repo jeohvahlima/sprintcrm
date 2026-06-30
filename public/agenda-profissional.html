@@ -1685,6 +1685,10 @@ renderAgenda();
     const list = (data.compromissos || []).map((c, idx) => {
       const lembretes = Array.isArray(c.lembretes_config) ? c.lembretes_config :
         (c.lembretes_config && typeof c.lembretes_config === 'object' ? (c.lembretes_config.itens || []) : []);
+      const tarefas = Array.isArray(c.tarefas) ? c.tarefas :
+        (c.tarefas && typeof c.tarefas === 'object' ? (c.tarefas.itens || []) : []);
+      const tags = Array.isArray(c.tags_rapidas) ? c.tags_rapidas :
+        (c.tags_rapidas && typeof c.tags_rapidas === 'object' ? (c.tags_rapidas.itens || []) : []);
       return {
         _real_id: c.id,
         _iso_inicio: c.data_hora_inicio,
@@ -1697,9 +1701,12 @@ renderAgenda();
         telefone: c.telefone || '',
         status: statusFromCompromisso(c),
         obs: c.observacoes || '',
+        tags: tags,
+        tarefas: tarefas,
         lembretes: (lembretes || []).map(l => ({ horas: l.horas || l.hours || l.h || 1 })),
       };
     });
+
 
     compromissos.length = 0;
     list.forEach(x => compromissos.push(x));
