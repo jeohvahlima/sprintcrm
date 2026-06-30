@@ -1232,16 +1232,7 @@ const fmtHour = d => `${pad(d.getHours())}:${pad(d.getMinutes())}`;
 const nomesStatus = { agendado:'Agendado', confirmado:'Confirmado', cancelado:'Cancelado', concluido:'Concluído' };
 const badgeStatus = { agendado:'badge-green', confirmado:'badge-blue', cancelado:'badge-red', concluido:'badge-gray' };
 
-const compromissos = [
-  { id:1, hora:'08:00', fim:'08:30', servico:'Consulta de Ortopedia', paciente:'Maria Silva', telefone:'(81) 99821-3344', status:'concluido', obs:'Dor no joelho direito. Encaminhar para fisioterapia.', lembretes:[] },
-  { id:2, hora:'08:30', fim:'09:00', servico:'Retorno — Coluna', paciente:'José Ferreira', telefone:'(81) 98855-1122', status:'concluido', obs:'Melhorou 70%. Manter medicação.', lembretes:[{horas:24}] },
-  { id:3, hora:'09:00', fim:'09:30', servico:'Consulta de Ortopedia', paciente:'Ana Paula Costa', telefone:'(81) 99100-5533', status:'confirmado', obs:'Primeira consulta. Dor no ombro há 3 meses.', lembretes:[{horas:2}] },
-  { id:4, hora:'10:00', fim:'10:30', servico:'Avaliação pré-cirúrgica', paciente:'Carlos Mendes', telefone:'(81) 97744-8899', status:'agendado', obs:'', lembretes:[] },
-  { id:5, hora:'10:30', fim:'11:00', servico:'Consulta de Ortopedia', paciente:'Fernanda Lima', telefone:'(81) 99234-6677', status:'agendado', obs:'Torção no tornozelo.', lembretes:[{horas:24}] },
-  { id:6, hora:'14:00', fim:'14:30', servico:'Retorno pós-op', paciente:'Roberto Santos', telefone:'(81) 98100-2211', status:'agendado', obs:'Verificar cicatrização. 30 dias de cirurgia.', lembretes:[] },
-  { id:7, hora:'15:00', fim:'15:30', servico:'Consulta de Ortopedia', paciente:'Lucia Gomes', telefone:'(81) 99800-4455', status:'cancelado', obs:'Paciente desmarcou.', lembretes:[] },
-  { id:8, hora:'16:00', fim:'16:30', servico:'Consulta de Ortopedia', paciente:'Paulo Alves', telefone:'(81) 97601-9988', status:'agendado', obs:'', lembretes:[{horas:1}] },
-];
+let compromissos = [];
 
 let currentFilter = 'todos';
 let currentDayOffset = 0;
