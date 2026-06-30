@@ -115,15 +115,16 @@ export default function Agenda() {
       const profsQuery = supabase.from("profissionais").select("id, nome, especialidade").order("nome");
       const leadsQuery = supabase
         .from("leads")
-        .select("id, name, phone, telefone, email")
+        .select("id, name, phone, telefone, email, profile_picture_url")
         .order("name");
       const compromissosQuery = supabase
         .from("compromissos")
         .select(`
           *,
-          lead:leads(id, name, phone, email),
+          lead:leads(id, name, phone, email, profile_picture_url),
           agenda:agendas(id, nome, tipo)
         `)
+
         .order("data_hora_inicio", { ascending: true })
         .limit(1000);
       const lembretesQuery = supabase
