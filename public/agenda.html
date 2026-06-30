@@ -1565,7 +1565,7 @@
             <button id="infoClose" class="iconbtn" title="Fechar"><i class="ti ti-x"></i></button>
           </div>
           <div class="info-panel-head ${state}">
-            <div class="info-avatar ${state}">${escapeHTML(initials)}</div>
+            <div class="info-avatar ${state}"${ev.avatarUrl ? ` style="background-image:url('${String(ev.avatarUrl).replace(/'/g,"%27")}');background-size:cover;background-position:center;color:transparent"` : ''}>${escapeHTML(initials)}</div>
             <div style="flex:1; min-width:0;">
               <div style="font-size:17px; font-weight:800; line-height:1.2;">${escapeHTML(ev.name || 'Cliente')}</div>
               <div style="font-size:13px; color:hsl(var(--text-muted)); margin-top:4px;">
