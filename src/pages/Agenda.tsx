@@ -111,7 +111,7 @@ export default function Agenda() {
         currentCompanyId = companyId;
       }
 
-      const agendasQuery = supabase.from("agendas").select("id, nome, tipo, status, capacidade_simultanea, tempo_medio_servico, disponibilidade, senha_acesso, slug, responsavel_id, created_at, updated_at").order("nome");
+      const agendasQuery = supabase.from("agendas").select("id, nome, tipo, status, capacidade_simultanea, tempo_medio_servico, disponibilidade, senha_acesso, slug, responsavel_id, avatar_url, bio, created_at, updated_at").order("nome");
       const profsQuery = supabase.from("profissionais").select("id, nome, especialidade").order("nome");
       const leadsQuery = supabase
         .from("leads")
