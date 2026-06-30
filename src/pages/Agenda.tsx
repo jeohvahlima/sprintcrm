@@ -51,6 +51,8 @@ function reminderDate(startIso: string, minutesBefore: number) {
 export default function Agenda() {
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const [iframeReady, setIframeReady] = useState(false);
+  const [chatOpen, setChatOpen] = useState(false);
+  const [chatLead, setChatLead] = useState<{ id: string; name: string; phone?: string } | null>(null);
   const iframeSrc = useMemo(
     () => `/agenda.html?v=${AGENDA_HTML_VERSION}`,
     []
