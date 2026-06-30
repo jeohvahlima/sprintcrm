@@ -818,7 +818,7 @@ body {
     <div class="view active" id="view-dashboard">
       <div class="section-header" style="margin-bottom:20px">
         <div>
-          <div class="section-title">Bom dia, Dr. João 👋</div>
+          <div class="section-title" id="dash-greeting">Bem-vindo 👋</div>
           <div class="section-sub" id="dash-date-sub"></div>
         </div>
         <button class="btn btn-primary" onclick="openNovoCompromisso()">
@@ -829,24 +829,24 @@ body {
       <div class="stats-row">
         <div class="stat-card green-card">
           <div class="stat-label">Hoje</div>
-          <div class="stat-value">5</div>
+          <div class="stat-value" id="stat-hoje">0</div>
           <div class="stat-sub">compromissos</div>
-          <div style="margin-top:10px"><div class="prog-bar"><div class="prog-fill" style="width:60%"></div></div></div>
-          <div style="font-size:10px;color:var(--muted);margin-top:3px">3 de 5 realizados</div>
+          <div style="margin-top:10px"><div class="prog-bar"><div class="prog-fill" id="stat-hoje-prog" style="width:0%"></div></div></div>
+          <div style="font-size:10px;color:var(--muted);margin-top:3px" id="stat-hoje-sub">0 de 0 realizados</div>
         </div>
         <div class="stat-card">
           <div class="stat-label">Esta semana</div>
-          <div class="stat-value">18</div>
+          <div class="stat-value" id="stat-semana">0</div>
           <div class="stat-sub">compromissos</div>
         </div>
         <div class="stat-card amber-card">
           <div class="stat-label">Aguardando</div>
-          <div class="stat-value">4</div>
+          <div class="stat-value" id="stat-aguardando">0</div>
           <div class="stat-sub">confirmação</div>
         </div>
         <div class="stat-card red-card">
           <div class="stat-label">Cancelados</div>
-          <div class="stat-value">2</div>
+          <div class="stat-value" id="stat-cancelados">0</div>
           <div class="stat-sub">este mês</div>
         </div>
       </div>
