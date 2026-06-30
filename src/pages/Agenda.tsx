@@ -635,6 +635,29 @@ export default function Agenda() {
       }
     }
 
+    async function openChatFromIframe(d: any) {
+      try {
+        let leadId = d?.leadId || null;
+        let name = d?.name || "";
+        const phone = String(d?.phone || "").replace(/\D/g, "");
+        if (!leadId && phone) {
+          const { data } = await supabase
+            .from("leads")
+            .select("id, name, phone, telefone")
+            .or(`phone.ilike.%${phone}%,telefone.ilike.%${phone}%`)
+            .limit(1)
+            .maybeSingle();
+          if (data) { leadId = data.id; name = name || data.name || ""; }
+        }
+        if (!leadId) {
+          console.warn("[Agenda] open-chat sem leadId/phone resolvível");
+          return;
+        }
+        setChatLead({ id: leadId, name: name || "Lead", phone });
+        setChatOpen(true);
+      } catch (e) { console.error("[Agenda] openChatFromIframe", e); }
+    }
+
     function onMessage(e: MessageEvent) {
       const d: any = e.data || {};
       if (d?.type === "agenda:ready") loadAndSend();
@@ -643,6 +666,7 @@ export default function Agenda() {
       if (d?.type === "agenda:delete-agenda") deleteAgenda(d);
       if (d?.type === "agenda:save-compromisso") saveCompromisso(d);
       if (d?.type === "agenda:save-meta") saveCompromissoMeta(d);
+      if (d?.type === "agenda:open-chat") openChatFromIframe(d);
     }
 
 
