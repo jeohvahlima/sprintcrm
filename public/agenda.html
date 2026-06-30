@@ -1630,12 +1630,12 @@
         }
         if(document.getElementById('infoWpp') && ev.phone){
           document.getElementById('infoWpp').addEventListener('click', () => {
-            window.open('https://wa.me/'+String(ev.phone).replace(/\D/g,''), '_blank');
+            openLeadChat({ phone: ev.phone, leadId: ev.leadId, name: ev.name });
           });
         }
         if(document.getElementById('infoResendWpp') && ev.phone){
           document.getElementById('infoResendWpp').addEventListener('click', () => {
-            window.open('https://wa.me/'+String(ev.phone).replace(/\D/g,'')+'?text='+encodeURIComponent('Olá! Confirmando nosso compromisso em '+dateText+' às '+ev.start+'.'), '_blank');
+            openLeadChat({ phone: ev.phone, leadId: ev.leadId, name: ev.name, message: 'Olá! Confirmando nosso compromisso em '+dateText+' às '+ev.start+'.' });
             toast('Link de confirmação reenviado');
           });
         }
