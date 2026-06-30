@@ -1812,7 +1812,7 @@
         }
         if(document.getElementById('infoWpp') && ev.phone){
           document.getElementById('infoWpp').addEventListener('click', () => {
-            window.open('https://wa.me/'+String(ev.phone).replace(/\D/g,''), '_blank');
+            openLeadChat({ phone: ev.phone, leadId: ev.leadId, name: ev.name });
           });
         }
         if(document.getElementById('infoDelete')){
