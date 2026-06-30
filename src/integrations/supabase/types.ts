@@ -11736,6 +11736,16 @@ export type Database = {
         Args: { p_funil_id: string; p_order: string[] }
         Returns: undefined
       }
+      save_public_compromisso_meta: {
+        Args: {
+          p_agenda_id: string
+          p_compromisso_id: string
+          p_notes?: string
+          p_tags?: Json
+          p_tasks?: Json
+        }
+        Returns: Json
+      }
       unlock_achievement: {
         Args: {
           p_code: string
