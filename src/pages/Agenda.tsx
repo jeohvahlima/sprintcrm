@@ -710,6 +710,15 @@ export default function Agenda() {
           Carregando agenda...
         </div>
       )}
+      {chatLead && (
+        <ConversaPopup
+          open={chatOpen}
+          onOpenChange={(o) => { setChatOpen(o); if (!o) setChatLead(null); }}
+          leadId={chatLead.id}
+          leadName={chatLead.name}
+          leadPhone={chatLead.phone}
+        />
+      )}
     </div>
   );
 }
