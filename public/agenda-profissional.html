@@ -763,15 +763,15 @@ body {
 <!-- TOPBAR -->
 <header class="topbar">
   <div class="topbar-brand">
-    <div class="topbar-logo">📅</div>
+    <div class="topbar-logo" id="topbar-logo">📅</div>
     <div>
-      <div class="topbar-name">Dr. João Silva</div>
-      <div class="topbar-sub">Ortopedista · GROW OS</div>
+      <div class="topbar-name" id="topbar-name">Carregando…</div>
+      <div class="topbar-sub" id="topbar-sub">GROW OS</div>
     </div>
   </div>
   <div class="topbar-right">
     <div class="topbar-date" id="topbar-date"></div>
-    <div class="avatar" title="Perfil">JS</div>
+    <div class="avatar" id="topbar-avatar" title="Perfil">··</div>
   </div>
 </header>
 
@@ -818,7 +818,7 @@ body {
     <div class="view active" id="view-dashboard">
       <div class="section-header" style="margin-bottom:20px">
         <div>
-          <div class="section-title">Bom dia, Dr. João 👋</div>
+          <div class="section-title" id="dash-greeting">Bem-vindo 👋</div>
           <div class="section-sub" id="dash-date-sub"></div>
         </div>
         <button class="btn btn-primary" onclick="openNovoCompromisso()">
@@ -829,24 +829,24 @@ body {
       <div class="stats-row">
         <div class="stat-card green-card">
           <div class="stat-label">Hoje</div>
-          <div class="stat-value">5</div>
+          <div class="stat-value" id="stat-hoje">0</div>
           <div class="stat-sub">compromissos</div>
-          <div style="margin-top:10px"><div class="prog-bar"><div class="prog-fill" style="width:60%"></div></div></div>
-          <div style="font-size:10px;color:var(--muted);margin-top:3px">3 de 5 realizados</div>
+          <div style="margin-top:10px"><div class="prog-bar"><div class="prog-fill" id="stat-hoje-prog" style="width:0%"></div></div></div>
+          <div style="font-size:10px;color:var(--muted);margin-top:3px" id="stat-hoje-sub">0 de 0 realizados</div>
         </div>
         <div class="stat-card">
           <div class="stat-label">Esta semana</div>
-          <div class="stat-value">18</div>
+          <div class="stat-value" id="stat-semana">0</div>
           <div class="stat-sub">compromissos</div>
         </div>
         <div class="stat-card amber-card">
           <div class="stat-label">Aguardando</div>
-          <div class="stat-value">4</div>
+          <div class="stat-value" id="stat-aguardando">0</div>
           <div class="stat-sub">confirmação</div>
         </div>
         <div class="stat-card red-card">
           <div class="stat-label">Cancelados</div>
-          <div class="stat-value">2</div>
+          <div class="stat-value" id="stat-cancelados">0</div>
           <div class="stat-sub">este mês</div>
         </div>
       </div>
@@ -1232,16 +1232,7 @@ const fmtHour = d => `${pad(d.getHours())}:${pad(d.getMinutes())}`;
 const nomesStatus = { agendado:'Agendado', confirmado:'Confirmado', cancelado:'Cancelado', concluido:'Concluído' };
 const badgeStatus = { agendado:'badge-green', confirmado:'badge-blue', cancelado:'badge-red', concluido:'badge-gray' };
 
-const compromissos = [
-  { id:1, hora:'08:00', fim:'08:30', servico:'Consulta de Ortopedia', paciente:'Maria Silva', telefone:'(81) 99821-3344', status:'concluido', obs:'Dor no joelho direito. Encaminhar para fisioterapia.', lembretes:[] },
-  { id:2, hora:'08:30', fim:'09:00', servico:'Retorno — Coluna', paciente:'José Ferreira', telefone:'(81) 98855-1122', status:'concluido', obs:'Melhorou 70%. Manter medicação.', lembretes:[{horas:24}] },
-  { id:3, hora:'09:00', fim:'09:30', servico:'Consulta de Ortopedia', paciente:'Ana Paula Costa', telefone:'(81) 99100-5533', status:'confirmado', obs:'Primeira consulta. Dor no ombro há 3 meses.', lembretes:[{horas:2}] },
-  { id:4, hora:'10:00', fim:'10:30', servico:'Avaliação pré-cirúrgica', paciente:'Carlos Mendes', telefone:'(81) 97744-8899', status:'agendado', obs:'', lembretes:[] },
-  { id:5, hora:'10:30', fim:'11:00', servico:'Consulta de Ortopedia', paciente:'Fernanda Lima', telefone:'(81) 99234-6677', status:'agendado', obs:'Torção no tornozelo.', lembretes:[{horas:24}] },
-  { id:6, hora:'14:00', fim:'14:30', servico:'Retorno pós-op', paciente:'Roberto Santos', telefone:'(81) 98100-2211', status:'agendado', obs:'Verificar cicatrização. 30 dias de cirurgia.', lembretes:[] },
-  { id:7, hora:'15:00', fim:'15:30', servico:'Consulta de Ortopedia', paciente:'Lucia Gomes', telefone:'(81) 99800-4455', status:'cancelado', obs:'Paciente desmarcou.', lembretes:[] },
-  { id:8, hora:'16:00', fim:'16:30', servico:'Consulta de Ortopedia', paciente:'Paulo Alves', telefone:'(81) 97601-9988', status:'agendado', obs:'', lembretes:[{horas:1}] },
-];
+let compromissos = [];
 
 let currentFilter = 'todos';
 let currentDayOffset = 0;
@@ -1567,6 +1558,146 @@ function showToast(msg, type='') {
 renderMiniCal();
 renderDash();
 renderAgenda();
+
+// ── REAL DATA LOADER (Supabase) ──
+(function loadRealAgenda(){
+  const SB_URL = 'https://dteppsfseusqixuppglh.supabase.co';
+  const SB_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR0ZXBwc2ZzZXVzcWl4dXBwZ2xoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA4MzY0OTgsImV4cCI6MjA3NjQxMjQ5OH0.eEz5cyfwi5chae1U9S0Yt1FBwglyuVnm_Fzg9HVrV_Q';
+  const params = new URLSearchParams(window.location.search);
+  const agendaId = params.get('agenda');
+  if(!agendaId) {
+    document.getElementById('topbar-name').textContent = 'Agenda não informada';
+    document.getElementById('topbar-sub').textContent = 'Adicione ?agenda=<id> na URL';
+    return;
+  }
+
+  function statusFromCompromisso(c){
+    if(c.status === 'cancelado') return 'cancelado';
+    if(c.status === 'concluido' || c.status === 'realizado') return 'concluido';
+    if(c.status_confirmacao === 'confirmado') return 'confirmado';
+    return 'agendado';
+  }
+
+  function fmtHM(iso){
+    const d = new Date(iso);
+    return pad(d.getHours()) + ':' + pad(d.getMinutes());
+  }
+
+  function initials(name){
+    if(!name) return '··';
+    return name.trim().split(/\s+/).slice(0,2).map(p=>p[0]||'').join('').toUpperCase();
+  }
+
+  function applyAgenda(data){
+    const ag = data.agenda || {};
+    const prof = data.profissional || {};
+    const nome = prof.nome || ag.nome || 'Profissional';
+    const esp = prof.especialidade || '';
+    document.getElementById('topbar-name').textContent = nome;
+    document.getElementById('topbar-sub').textContent = (esp ? esp + ' · ' : '') + 'GROW OS';
+    document.title = nome + ' — Agenda';
+    const ava = document.getElementById('topbar-avatar');
+    const avatarUrl = prof.avatar_url || ag.avatar_url;
+    if(avatarUrl){
+      ava.textContent = '';
+      ava.style.backgroundImage = 'url("' + avatarUrl + '")';
+      ava.style.backgroundSize = 'cover';
+      ava.style.backgroundPosition = 'center';
+    } else {
+      ava.textContent = initials(nome);
+    }
+    const greet = document.getElementById('dash-greeting');
+    const h = new Date().getHours();
+    const saudacao = h < 12 ? 'Bom dia' : (h < 18 ? 'Boa tarde' : 'Boa noite');
+    const primeiro = nome.split(' ')[0];
+    greet.textContent = `${saudacao}, ${primeiro} 👋`;
+
+    // Link público (se houver)
+    const slug = ag.slug || ag.id;
+    const linkEl = document.getElementById('public-link');
+    if(linkEl && slug){
+      linkEl.textContent = window.location.origin + '/agenda/' + slug;
+    }
+
+    // Compromissos
+    const list = (data.compromissos || []).map((c, idx) => {
+      const lembretes = Array.isArray(c.lembretes_config) ? c.lembretes_config :
+        (c.lembretes_config && typeof c.lembretes_config === 'object' ? (c.lembretes_config.itens || []) : []);
+      return {
+        _real_id: c.id,
+        _iso_inicio: c.data_hora_inicio,
+        _iso_fim: c.data_hora_fim,
+        id: idx + 1,
+        hora: fmtHM(c.data_hora_inicio),
+        fim: fmtHM(c.data_hora_fim),
+        servico: c.titulo || c.tipo_servico || 'Compromisso',
+        paciente: c.paciente || '—',
+        telefone: c.telefone || '',
+        status: statusFromCompromisso(c),
+        obs: c.observacoes || '',
+        lembretes: (lembretes || []).map(l => ({ horas: l.horas || l.hours || l.h || 1 })),
+      };
+    });
+
+    compromissos.length = 0;
+    list.forEach(x => compromissos.push(x));
+
+    // Stats
+    const todayStr = new Date().toDateString();
+    const today = compromissos.filter(c => new Date(c._iso_inicio).toDateString() === todayStr);
+    const realizadosHoje = today.filter(c => c.status === 'concluido').length;
+    document.getElementById('stat-hoje').textContent = today.length;
+    document.getElementById('stat-hoje-sub').textContent = `${realizadosHoje} de ${today.length} realizados`;
+    document.getElementById('stat-hoje-prog').style.width = (today.length ? Math.round(realizadosHoje/today.length*100) : 0) + '%';
+
+    const now = new Date();
+    const startWeek = new Date(now); startWeek.setDate(now.getDate() - now.getDay()); startWeek.setHours(0,0,0,0);
+    const endWeek = new Date(startWeek); endWeek.setDate(startWeek.getDate() + 7);
+    document.getElementById('stat-semana').textContent = compromissos.filter(c => {
+      const d = new Date(c._iso_inicio); return d >= startWeek && d < endWeek;
+    }).length;
+
+    document.getElementById('stat-aguardando').textContent = compromissos.filter(c => c.status === 'agendado').length;
+
+    const m = now.getMonth(), y = now.getFullYear();
+    document.getElementById('stat-cancelados').textContent = compromissos.filter(c => {
+      const d = new Date(c._iso_inicio); return c.status === 'cancelado' && d.getMonth() === m && d.getFullYear() === y;
+    }).length;
+
+    // Nav badge
+    const badge = document.querySelector('.nav-item .nav-badge');
+    if(badge) badge.textContent = today.filter(c => c.status !== 'cancelado' && c.status !== 'concluido').length;
+
+    renderDash();
+    renderAgenda();
+    if(typeof renderWeek === 'function') renderWeek();
+  }
+
+  fetch(SB_URL + '/rest/v1/rpc/get_public_agenda_profissional', {
+    method: 'POST',
+    headers: {
+      'apikey': SB_ANON,
+      'Authorization': 'Bearer ' + SB_ANON,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ p_agenda_id: agendaId }),
+  })
+    .then(r => r.json())
+    .then(data => {
+      if(!data || data.ok === false){
+        document.getElementById('topbar-name').textContent = 'Agenda não encontrada';
+        document.getElementById('topbar-sub').textContent = '';
+        return;
+      }
+      applyAgenda(data);
+    })
+    .catch(err => {
+      console.error('Falha ao carregar agenda:', err);
+      document.getElementById('topbar-name').textContent = 'Erro ao carregar agenda';
+      document.getElementById('topbar-sub').textContent = String(err && err.message || err);
+    });
+})();
+
 </script>
 </body>
 </html>
