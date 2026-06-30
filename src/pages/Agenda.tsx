@@ -229,6 +229,11 @@ export default function Agenda() {
           remEmail: c.lembrete_email_24h ?? false,
           confirmNow: c.enviar_confirmacao ?? true,
           remTime: "60",
+          meta: {
+            notes: c.observacoes || "",
+            tags: Array.isArray(c.tags_rapidas) ? c.tags_rapidas : [],
+            tasks: Array.isArray(c.tarefas) ? c.tarefas : [],
+          },
           remote: true,
         })),
         lembretes: (lembretes || []).map((l: any) => {
