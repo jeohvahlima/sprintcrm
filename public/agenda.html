@@ -1716,7 +1716,7 @@
           const wireResend = (el) => {
             if(!el || !ev.phone) return;
             el.addEventListener('click', () => {
-              window.open('https://wa.me/'+String(ev.phone).replace(/\D/g,'')+'?text='+encodeURIComponent('Ola! Confirmando nosso compromisso em '+dateText+' as '+ev.start+'.'), '_blank');
+              openLeadChat({ phone: ev.phone, leadId: ev.leadId, name: ev.name, message: 'Ola! Confirmando nosso compromisso em '+dateText+' as '+ev.start+'.' });
               toast('Link de confirmacao reenviado');
             });
           };
