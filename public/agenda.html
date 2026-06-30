@@ -1230,6 +1230,10 @@
         if(!agenda) return;
         editingAgendaId = agenda.id;
         naEl('na_nome').value = agenda.nome || agenda.label || '';
+        if(naEl('na_especialidade')) naEl('na_especialidade').value = agenda.especialidade || '';
+        if(naEl('na_telefone')) naEl('na_telefone').value = agenda.telefone || '';
+        if(naEl('na_bio')) naEl('na_bio').value = agenda.bio || '';
+        naAvatarUrl = agenda.avatar_url || null; naAvatarDataUrl = null; naRenderAvatar();
         if(naEl('na_duracao')) naEl('na_duracao').value = String(agenda.tempo_medio_servico || 30);
         if(naEl('na_capacidade')) naEl('na_capacidade').value = String(agenda.capacidade_simultanea || 1);
         if(naEl('na_senha')) naEl('na_senha').value = agenda.senha_acesso || '';
