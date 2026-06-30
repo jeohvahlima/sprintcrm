@@ -1627,6 +1627,8 @@ renderAgenda();
   const SB_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR0ZXBwc2ZzZXVzcWl4dXBwZ2xoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA4MzY0OTgsImV4cCI6MjA3NjQxMjQ5OH0.eEz5cyfwi5chae1U9S0Yt1FBwglyuVnm_Fzg9HVrV_Q';
   const params = new URLSearchParams(window.location.search);
   const agendaId = params.get('agenda');
+  window.__SB_URL = SB_URL; window.__SB_ANON = SB_ANON; window.__agendaId = agendaId;
+
   if(!agendaId) {
     document.getElementById('topbar-name').textContent = 'Agenda não informada';
     document.getElementById('topbar-sub').textContent = 'Adicione ?agenda=<id> na URL';
