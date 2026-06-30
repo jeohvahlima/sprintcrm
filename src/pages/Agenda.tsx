@@ -197,6 +197,8 @@ export default function Agenda() {
           senha_acesso: a.senha_acesso || null,
           slug: a.slug || null,
           responsavel_id: a.responsavel_id || null,
+          avatar_url: a.avatar_url || null,
+          bio: a.bio || null,
         })),
         profissionais: (profs || []).map((p: any) => ({
           id: p.id,
