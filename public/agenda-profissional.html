@@ -1456,79 +1456,179 @@ function addBloqueio() {
 }
 
 // ── DRAWER ──
+const QUICK_NOTE_TAGS = ['Lead quente','Aguardando retorno','Enviar proposta','Cliente recorrente','Follow-up','Reagendar','Pagamento pendente','VIP'];
+let currentInfoTab = 'details';
+
+function escapeHTML(s){ return String(s||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+async function persistMeta(c){
+  if(!c || !c._real_id || !window.__agendaId) return;
+  try{
+    await fetch(window.__SB_URL + '/rest/v1/rpc/save_public_compromisso_meta', {
+      method:'POST',
+      headers:{ 'apikey':window.__SB_ANON, 'Authorization':'Bearer '+window.__SB_ANON, 'Content-Type':'application/json' },
+      body: JSON.stringify({
+        p_agenda_id: window.__agendaId,
+        p_compromisso_id: c._real_id,
+        p_notes: c.obs || '',
+        p_tags: c.tags || [],
+        p_tasks: c.tarefas || [],
+      })
+    });
+  }catch(e){ console.warn('save meta failed', e); }
+}
+
 function openDrawer(id) {
   selectedComp = compromissos.find(c => c.id===id);
   const c = selectedComp;
+  if(!c) return;
+  c.tags = c.tags || [];
+  c.tarefas = c.tarefas || [];
+
   document.getElementById('drawer-title').textContent = c.servico;
-  document.getElementById('drawer-sub').textContent = `Hoje · ${c.hora} – ${c.fim}`;
+  document.getElementById('drawer-sub').textContent = `${c.hora} – ${c.fim}`;
 
-  const leadInit = c.paciente.split(' ').slice(0,2).map(p=>p[0]).join('').toUpperCase();
+  const leadInit = (c.paciente||'?').split(' ').slice(0,2).map(p=>p[0]||'').join('').toUpperCase();
+  const dateText = c._iso_inicio ? new Date(c._iso_inicio).toLocaleDateString('pt-BR') : '';
+  const dur = (() => {
+    const [h1,m1] = c.hora.split(':').map(Number);
+    const [h2,m2] = c.fim.split(':').map(Number);
+    return (h2*60+m2)-(h1*60+m1);
+  })();
 
-  document.getElementById('drawer-body').innerHTML = `
+  const headerHTML = `
     <div class="lead-card">
       <div class="lead-avatar">${leadInit}</div>
-      <div>
-        <div class="lead-name">${c.paciente}</div>
-        <div class="lead-phone">${c.telefone}</div>
-        <div style="margin-top:6px;display:flex;gap:6px">
-          <a href="https://wa.me/55${c.telefone.replace(/\D/g,'')}" target="_blank" class="btn btn-outline btn-sm">💬 WhatsApp</a>
-          <a href="tel:${c.telefone}" class="btn btn-outline btn-sm">📞 Ligar</a>
+      <div style="flex:1;min-width:0">
+        <div class="lead-name">${escapeHTML(c.paciente)}</div>
+        <div class="lead-phone">${escapeHTML(c.telefone||'')}</div>
+        <div style="margin-top:6px;display:flex;gap:6px;flex-wrap:wrap">
+          ${c.telefone ? `<a href="https://wa.me/55${c.telefone.replace(/\\D/g,'')}" target="_blank" class="btn btn-outline btn-sm">💬 WhatsApp</a>` : ''}
+          ${c.telefone ? `<a href="tel:${c.telefone}" class="btn btn-outline btn-sm">📞 Ligar</a>` : ''}
         </div>
       </div>
     </div>
-
-    <div class="detail-group">
-      <div class="detail-label">Status atual</div>
-      <span class="badge ${badgeStatus[c.status]}" style="font-size:13px;padding:4px 12px">
-        <span class="status-dot ${c.status}"></span>${nomesStatus[c.status]}
-      </span>
+    <div class="info-tabs" style="margin:14px -24px 0">
+      <button class="info-tab ${currentInfoTab==='details'?'active':''}" onclick="switchInfoTab('details')">🗒 Detalhes</button>
+      <button class="info-tab ${currentInfoTab==='notes'?'active':''}" onclick="switchInfoTab('notes')">📝 Anotações</button>
+      <button class="info-tab ${currentInfoTab==='tasks'?'active':''}" onclick="switchInfoTab('tasks')">✓ Tarefas <span class="mini-badge" id="infoTaskBadge">${c.tarefas.length}</span></button>
     </div>
-
-    <div class="detail-group">
-      <div class="detail-label">Horário</div>
-      <div class="detail-value detail-block" style="font-family:'DM Mono',monospace">
-        ${c.hora} – ${c.fim}&nbsp;&nbsp;|&nbsp;&nbsp;30 minutos
-      </div>
-    </div>
-
-    ${c.lembretes.length ? `
-    <div class="detail-group">
-      <div class="detail-label">Lembretes ativos</div>
-      ${c.lembretes.map(l=>`<div class="lembrete-row"><span class="lembrete-icon">🔔</span>Lembrete ${l.horas}h antes — WhatsApp</div>`).join('')}
-    </div>` : ''}
-
-    <div class="detail-group">
-      <div class="detail-label">Anotações e observações</div>
-      <textarea class="obs-area" id="obs-input" placeholder="Adicione anotações sobre esta consulta…">${c.obs}</textarea>
-    </div>
-
-    <div class="detail-group">
-      <div class="detail-label">Histórico do paciente</div>
-      <div class="detail-block" style="font-size:13px;color:var(--muted)">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
-          <span>2 consultas anteriores</span>
-          <span class="badge badge-green">Ativo</span>
-        </div>
-        <div style="font-size:12px">Última consulta: 15/05/2025 · Retorno de coluna</div>
-      </div>
-    </div>
+    <div id="infoTabContent" style="padding-top:16px"></div>
   `;
+
+  document.getElementById('drawer-body').innerHTML = headerHTML;
+  renderInfoTab();
 
   document.getElementById('drawer-btn-cancel').style.display = (c.status==='cancelado'||c.status==='concluido')?'none':'inline-flex';
   document.getElementById('drawer-btn-confirm').style.display = (c.status==='agendado')?'inline-flex':'none';
+  document.getElementById('drawer-btn-save').textContent = 'Salvar e fechar';
 
   document.getElementById('drawer-overlay').classList.add('open');
   document.getElementById('drawer').classList.add('open');
+
+  function renderInfoTab(){
+    const box = document.getElementById('infoTabContent');
+    if(currentInfoTab === 'details'){
+      box.innerHTML = `
+        <div class="detail-group">
+          <div class="detail-label">Status atual</div>
+          <span class="badge ${badgeStatus[c.status]}" style="font-size:13px;padding:4px 12px">
+            <span class="status-dot ${c.status}"></span>${nomesStatus[c.status]}
+          </span>
+        </div>
+        <div class="detail-group">
+          <div class="detail-label">Data e horário</div>
+          <div class="detail-value detail-block" style="font-family:'DM Mono',monospace">
+            ${dateText} · ${c.hora} – ${c.fim}&nbsp;&nbsp;|&nbsp;&nbsp;${dur} minutos
+          </div>
+        </div>
+        ${c.lembretes && c.lembretes.length ? `
+        <div class="detail-group">
+          <div class="detail-label">Lembretes ativos</div>
+          ${c.lembretes.map(l=>`<div class="lembrete-row"><span class="lembrete-icon">🔔</span>Lembrete ${l.horas}h antes — WhatsApp</div>`).join('')}
+        </div>` : ''}
+        ${c.obs ? `<div class="detail-group">
+          <div class="detail-label">Observações</div>
+          <div class="detail-value detail-block">${escapeHTML(c.obs)}</div>
+        </div>` : ''}`;
+    } else if(currentInfoTab === 'notes'){
+      const selected = new Set(c.tags || []);
+      box.innerHTML = `
+        <div style="font-size:11px;font-weight:700;color:var(--muted2);margin-bottom:8px;text-transform:uppercase;letter-spacing:.07em">Tags rápidas</div>
+        <div class="quick-tags">
+          ${QUICK_NOTE_TAGS.map(t => `<button class="quick-tag ${selected.has(t)?'active':''}" onclick="toggleTag('${t.replace(/'/g,"\\'")}')">${escapeHTML(t)}</button>`).join('')}
+        </div>
+        <textarea class="notes-area" id="infoNotesArea" placeholder="Anotações sobre o compromisso...">${escapeHTML(c.obs||'')}</textarea>
+        <div style="font-size:11px;color:var(--muted);margin-top:8px">💡 Estas anotações ficam vinculadas ao compromisso no CRM.</div>`;
+      document.getElementById('infoNotesArea').addEventListener('input', e => {
+        c.obs = e.target.value;
+      });
+    } else {
+      const tasks = c.tarefas || [];
+      const done = tasks.filter(t=>t.done).length;
+      const pct = tasks.length ? Math.round(done/tasks.length*100) : 0;
+      box.innerHTML = `
+        <div class="task-progress"><span>${done} de ${tasks.length} tarefas concluídas</span><strong style="color:var(--green)">${pct}%</strong></div>
+        <div class="task-bar"><i style="width:${pct}%"></i></div>
+        <div class="task-add">
+          <input id="infoTaskInput" placeholder="Adicionar tarefa..." />
+          <button class="btn btn-primary btn-sm" onclick="addTask()">+ Adicionar</button>
+        </div>
+        <div>
+          ${tasks.length ? tasks.map(t => `
+            <div class="task-row ${t.done?'done':''}">
+              <button class="task-check" onclick="toggleTask('${t.id}')">✓</button>
+              <div><div class="task-title">${escapeHTML(t.title)}</div></div>
+              <button class="task-del" onclick="delTask('${t.id}')">🗑</button>
+            </div>`).join('') : '<div class="task-empty">Nenhuma tarefa criada.</div>'}
+        </div>`;
+      const inp = document.getElementById('infoTaskInput');
+      inp.addEventListener('keydown', e => { if(e.key === 'Enter') addTask(); });
+    }
+  }
+  window.__renderInfoTab = renderInfoTab;
 }
+function switchInfoTab(t){ currentInfoTab = t; window.__renderInfoTab && window.__renderInfoTab(); }
+function toggleTag(t){
+  if(!selectedComp) return;
+  const s = new Set(selectedComp.tags||[]);
+  s.has(t) ? s.delete(t) : s.add(t);
+  selectedComp.tags = Array.from(s);
+  window.__renderInfoTab && window.__renderInfoTab();
+}
+function addTask(){
+  const inp = document.getElementById('infoTaskInput');
+  const title = (inp.value||'').trim();
+  if(!title){ showToast('Digite a tarefa','error'); return; }
+  selectedComp.tarefas = [...(selectedComp.tarefas||[]), { id:'t_'+Date.now(), title, done:false }];
+  window.__renderInfoTab && window.__renderInfoTab();
+  document.getElementById('infoTaskBadge').textContent = selectedComp.tarefas.length;
+}
+function toggleTask(id){
+  selectedComp.tarefas = (selectedComp.tarefas||[]).map(t => t.id===id ? {...t, done:!t.done} : t);
+  window.__renderInfoTab && window.__renderInfoTab();
+}
+function delTask(id){
+  selectedComp.tarefas = (selectedComp.tarefas||[]).filter(t => t.id !== id);
+  window.__renderInfoTab && window.__renderInfoTab();
+  document.getElementById('infoTaskBadge').textContent = selectedComp.tarefas.length;
+}
+
 function closeDrawer() {
   document.getElementById('drawer-overlay').classList.remove('open');
   document.getElementById('drawer').classList.remove('open');
 }
-function salvarObs() {
-  if(selectedComp) { selectedComp.obs = document.getElementById('obs-input').value; }
-  showToast('Anotações salvas!','success');
+async function salvarObs() {
+  if(selectedComp){
+    const ta = document.getElementById('infoNotesArea');
+    if(ta) selectedComp.obs = ta.value;
+    await persistMeta(selectedComp);
+  }
+  showToast('Anotações e tarefas salvas!','success');
   renderDash(); renderAgenda();
+  closeDrawer();
 }
+
 function cancelarCompromisso() {
   if(!selectedComp) return;
   selectedComp.status = 'cancelado';
