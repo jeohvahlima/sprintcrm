@@ -2472,7 +2472,7 @@
         const ib = e.target.closest('.iconbtn');
         if(ib && ib.closest('.compromisso-list') && !ib.hasAttribute('data-wa') && !ib.hasAttribute('data-edit') && !ib.hasAttribute('data-del')){
           const title = ib.getAttribute('title') || '';
-          if(title==='WhatsApp'){ window.open('https://wa.me/','_blank'); }
+          if(title==='WhatsApp'){ openLeadChat({ phone: '' }); }
           else if(title==='Editar' || title==='Reagendar'){ openModal(null, {date: fmtDateISO(selectedDate)}); }
         }
       });
