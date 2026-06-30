@@ -2,6 +2,7 @@
 // Visual changes must be made in public/agenda.html instead of replacing with old React components.
 import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { ConversaPopup } from "@/components/leads/ConversaPopup";
 
 const AGENDA_HTML_VERSION = "agenda-fix-20260629-app-agenda-top-button";
 
