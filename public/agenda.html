@@ -1264,6 +1264,17 @@
       document.getElementById('naBack')?.addEventListener('click', () => naSetStep(naStep - 1));
       document.getElementById('naNext')?.addEventListener('click', () => { if(naValidateStep()) naSetStep(naStep + 1); });
       document.getElementById('na_nome')?.addEventListener('input', naUpdateAvatar);
+      document.getElementById('na_avatar_file')?.addEventListener('change', (e) => {
+        const file = e.target.files && e.target.files[0]; if(!file) return;
+        if(file.size > 5 * 1024 * 1024){ alert('Imagem muito grande (máx 5MB).'); e.target.value=''; return; }
+        const reader = new FileReader();
+        reader.onload = () => { naAvatarDataUrl = String(reader.result || ''); naRenderAvatar(); };
+        reader.readAsDataURL(file);
+      });
+      document.getElementById('na_avatar_remove')?.addEventListener('click', () => {
+        naAvatarDataUrl = null; naAvatarUrl = null;
+        if(naEl('na_avatar_file')) naEl('na_avatar_file').value=''; naRenderAvatar();
+      });
       document.querySelectorAll('#na_type_pills .na-type-pill').forEach(btn => btn.addEventListener('click', () => naSetTipo(btn.getAttribute('data-type'))));
       document.querySelectorAll('#na_dias .na-day').forEach(btn => btn.addEventListener('click', () => btn.classList.toggle('active')));
       document.querySelectorAll('[data-toggle-period]').forEach(btn => btn.addEventListener('click', () => document.querySelector('[data-period="'+btn.getAttribute('data-toggle-period')+'"]')?.classList.toggle('active')));
