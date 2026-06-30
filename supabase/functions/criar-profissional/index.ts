@@ -144,6 +144,8 @@ Deno.serve(async (req) => {
         especialidade: especialidade || null,
         valor_consulta: valor_consulta ?? null,
         duracao_consulta: duracao_consulta && duracao_consulta > 0 ? duracao_consulta : 30,
+        avatar_url: avatar_url || null,
+        bio: bio || null,
         company_id
       })
       .select()
