@@ -1565,7 +1565,7 @@
             <button id="infoClose" class="iconbtn" title="Fechar"><i class="ti ti-x"></i></button>
           </div>
           <div class="info-panel-head ${state}">
-            <div class="info-avatar ${state}">${escapeHTML(initials)}</div>
+            <div class="info-avatar ${state}"${ev.avatarUrl ? ` style="background-image:url('${String(ev.avatarUrl).replace(/'/g,"%27")}');background-size:cover;background-position:center;color:transparent"` : ''}>${escapeHTML(initials)}</div>
             <div style="flex:1; min-width:0;">
               <div style="font-size:17px; font-weight:800; line-height:1.2;">${escapeHTML(ev.name || 'Cliente')}</div>
               <div style="font-size:13px; color:hsl(var(--text-muted)); margin-top:4px;">
@@ -1652,7 +1652,7 @@
         box.innerHTML = `
           <div style="display:flex; align-items:center; justify-content:space-between; padding:12px 16px 10px 20px;">
             <div style="display:flex; align-items:center; gap:10px; min-width:0;">
-              <div class="info-avatar ${state}" style="width:38px;height:38px;font-size:13px;">${escapeHTML(initials)}</div>
+              <div class="info-avatar ${state}" style="width:38px;height:38px;font-size:13px;${ev.avatarUrl ? `background-image:url('${String(ev.avatarUrl).replace(/'/g,"%27")}');background-size:cover;background-position:center;color:transparent;` : ''}">${escapeHTML(initials)}</div>
               <div style="min-width:0;">
                 <div style="font-size:15px; font-weight:800; line-height:1.2; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escapeHTML(ev.name || 'Cliente')}</div>
                 <div style="font-size:12px; color:hsl(var(--text-muted)); margin-top:3px;">
@@ -1928,8 +1928,12 @@
               const initials = (ev.name||'?').split(/\s+/).slice(0,2).map(s=>s[0]||'').join('').toUpperCase();
               const tip = [ev.name, ev.start+' - '+(ev.end||''), ev.type, ev.agenda, ev.prof, ev.phone, ev.email, ev.notes].filter(Boolean).join('\n');
               e.title = tip;
+              const avatarHtml = ev.avatarUrl
+                ? '<div class="ev-avatar" style="background-image:url(\''+String(ev.avatarUrl).replace(/'/g,"%27")+'\');background-size:cover;background-position:center;color:transparent"></div>'
+                : '<div class="ev-avatar">'+escapeHTML(initials)+'</div>';
               e.innerHTML = '<div class="ev-top">'
-                + '<div class="ev-avatar">'+escapeHTML(initials)+'</div>'
+                + avatarHtml
+
                 + '<div class="ev-main">'
                 + '<div class="ev-line">'
                 + '<div class="nm">'+escapeHTML(ev.name)+'</div>'
