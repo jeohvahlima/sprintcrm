@@ -442,6 +442,33 @@ export default function Agenda() {
       }
     }
 
+    async function uploadAgendaAvatar(dataUrl: string, userId: string): Promise<string | null> {
+      try {
+        if (!dataUrl || !dataUrl.startsWith("data:")) return null;
+        const match = dataUrl.match(/^data:([^;]+);base64,(.+)$/);
+        if (!match) return null;
+        const mime = match[1];
+        const b64 = match[2];
+        const bin = atob(b64);
+        const bytes = new Uint8Array(bin.length);
+        for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+        const ext = (mime.split("/")[1] || "png").replace("jpeg", "jpg");
+        const path = `agendas/${userId}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+        const { error } = await supabase.storage
+          .from("user-avatars")
+          .upload(path, bytes, { contentType: mime, upsert: false, cacheControl: "3600" });
+        if (error) {
+          console.error("[uploadAgendaAvatar] upload error", error);
+          return null;
+        }
+        const { data } = supabase.storage.from("user-avatars").getPublicUrl(path);
+        return data.publicUrl;
+      } catch (e) {
+        console.error("[uploadAgendaAvatar]", e);
+        return null;
+      }
+    }
+
     async function createAgenda(data: any) {
       try {
         const { data: userData } = await supabase.auth.getUser();
