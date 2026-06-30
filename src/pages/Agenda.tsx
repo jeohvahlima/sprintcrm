@@ -111,7 +111,7 @@ export default function Agenda() {
         currentCompanyId = companyId;
       }
 
-      const agendasQuery = supabase.from("agendas").select("id, nome, tipo, status, capacidade_simultanea, tempo_medio_servico, disponibilidade, senha_acesso, slug, responsavel_id, created_at, updated_at").order("nome");
+      const agendasQuery = supabase.from("agendas").select("id, nome, tipo, status, capacidade_simultanea, tempo_medio_servico, disponibilidade, senha_acesso, slug, responsavel_id, avatar_url, bio, created_at, updated_at").order("nome");
       const profsQuery = supabase.from("profissionais").select("id, nome, especialidade").order("nome");
       const leadsQuery = supabase
         .from("leads")
@@ -197,6 +197,8 @@ export default function Agenda() {
           senha_acesso: a.senha_acesso || null,
           slug: a.slug || null,
           responsavel_id: a.responsavel_id || null,
+          avatar_url: a.avatar_url || null,
+          bio: a.bio || null,
         })),
         profissionais: (profs || []).map((p: any) => ({
           id: p.id,
@@ -440,6 +442,33 @@ export default function Agenda() {
       }
     }
 
+    async function uploadAgendaAvatar(dataUrl: string, userId: string): Promise<string | null> {
+      try {
+        if (!dataUrl || !dataUrl.startsWith("data:")) return null;
+        const match = dataUrl.match(/^data:([^;]+);base64,(.+)$/);
+        if (!match) return null;
+        const mime = match[1];
+        const b64 = match[2];
+        const bin = atob(b64);
+        const bytes = new Uint8Array(bin.length);
+        for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+        const ext = (mime.split("/")[1] || "png").replace("jpeg", "jpg");
+        const path = `agendas/${userId}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+        const { error } = await supabase.storage
+          .from("user-avatars")
+          .upload(path, bytes, { contentType: mime, upsert: false, cacheControl: "3600" });
+        if (error) {
+          console.error("[uploadAgendaAvatar] upload error", error);
+          return null;
+        }
+        const { data } = supabase.storage.from("user-avatars").getPublicUrl(path);
+        return data.publicUrl;
+      } catch (e) {
+        console.error("[uploadAgendaAvatar]", e);
+        return null;
+      }
+    }
+
     async function createAgenda(data: any) {
       try {
         const { data: userData } = await supabase.auth.getUser();
@@ -461,6 +490,11 @@ export default function Agenda() {
           .replace(/(^-|-$)/g, "")
           .slice(0, 40) + "-" + Math.random().toString(36).slice(2, 7);
 
+        let avatarUrl: string | null = data.avatar_url ?? null;
+        if (data.avatar_data_url) {
+          avatarUrl = (await uploadAgendaAvatar(data.avatar_data_url, user.id)) || avatarUrl;
+        }
+
         const insertPayload: any = {
           nome: data.nome,
           tipo: data.tipo || "colaborador",
@@ -476,6 +510,8 @@ export default function Agenda() {
             horario_fim: "18:00",
           },
           senha_acesso: data.senha_acesso || null,
+          avatar_url: avatarUrl,
+          bio: data.bio ?? null,
         };
 
         const { error } = await supabase.from("agendas").insert(insertPayload);
@@ -506,6 +542,13 @@ export default function Agenda() {
         if (!company_id) throw new Error("Empresa nao encontrada para o usuario");
         if (!data.id) throw new Error("Agenda nao informada");
 
+        let avatarUrl: string | null | undefined = undefined;
+        if (data.avatar_data_url) {
+          avatarUrl = await uploadAgendaAvatar(data.avatar_data_url, user.id);
+        } else if (typeof data.avatar_url !== "undefined") {
+          avatarUrl = data.avatar_url;
+        }
+
         const updatePayload: any = {
           nome: data.nome,
           tipo: data.tipo || "colaborador",
@@ -519,6 +562,8 @@ export default function Agenda() {
           senha_acesso: data.senha_acesso || null,
           updated_at: new Date().toISOString(),
         };
+        if (typeof avatarUrl !== "undefined") updatePayload.avatar_url = avatarUrl;
+        if (typeof data.bio !== "undefined") updatePayload.bio = data.bio;
 
         const { error } = await supabase
           .from("agendas")
