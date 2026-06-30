@@ -13,6 +13,8 @@ interface CriarProfissionalRequest {
   especialidade?: string
   valor_consulta?: number | null
   duracao_consulta?: number | null
+  avatar_url?: string | null
+  bio?: string | null
   company_id: string
 }
 
