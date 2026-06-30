@@ -79,7 +79,10 @@ export function AgendaColaboradores() {
     email: "",
     senha: "",
     telefone: "",
+    avatar_url: "",
+    bio: "",
   });
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
 
   const [editFormData, setEditFormData] = useState({
     nome: "",
@@ -111,8 +114,33 @@ export function AgendaColaboradores() {
     capacidade_simultanea: 1, tempo_medio_servico: 30,
     horarioComercial: criarHorarioPadrao(),
     dias_funcionamento: ["segunda", "terca", "quarta", "quinta", "sexta"],
-    email: "", senha: "", telefone: "",
+    email: "", senha: "", telefone: "", avatar_url: "", bio: "",
   });
+
+  const handleAvatarUpload = async (file: File) => {
+    if (!file) return;
+    if (file.size > 4 * 1024 * 1024) return toast.error("Imagem deve ter no máximo 4MB");
+    try {
+      setUploadingAvatar(true);
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Usuário não autenticado");
+      const ext = (file.name.split('.').pop() || 'png').toLowerCase();
+      const path = `profissionais/${user.id}/${Date.now()}.${ext}`;
+      const { error: upErr } = await supabase.storage.from('user-avatars').upload(path, file, {
+        cacheControl: '3600', upsert: true, contentType: file.type || 'image/png',
+      });
+      if (upErr) throw upErr;
+      const { data: pub } = supabase.storage.from('user-avatars').getPublicUrl(path);
+      setFormData(prev => ({ ...prev, avatar_url: pub.publicUrl }));
+      toast.success("Foto carregada");
+    } catch (e: any) {
+      console.error(e);
+      toast.error(e.message || "Erro ao enviar foto");
+    } finally {
+      setUploadingAvatar(false);
+    }
+  };
+
 
   const criarAgenda = async () => {
     if (!formData.nome?.trim()) return toast.error("Informe o nome");
