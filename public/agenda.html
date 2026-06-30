@@ -1115,6 +1115,19 @@
         if(current) el.value = current;
       }
       let CRM_LEADS = [];
+      function openLeadChat(payload){
+        try{
+          const ph = String(payload?.phone || '').replace(/\D/g,'');
+          const msg = { type:'agenda:open-chat', leadId: payload?.leadId || null, phone: ph, name: payload?.name || '', message: payload?.message || '' };
+          if(window.parent && window.parent !== window){
+            window.parent.postMessage(msg, '*');
+            return;
+          }
+        }catch(_){}
+        const ph2 = String(payload?.phone || '').replace(/\D/g,'');
+        const url = 'https://wa.me/' + ph2 + (payload?.message ? ('?text=' + encodeURIComponent(payload.message)) : '');
+        window.open(url, '_blank');
+      }
       window.addEventListener('message', (e) => {
         const d = e.data || {};
         if(d.type === 'agenda:data'){
@@ -1617,12 +1630,12 @@
         }
         if(document.getElementById('infoWpp') && ev.phone){
           document.getElementById('infoWpp').addEventListener('click', () => {
-            window.open('https://wa.me/'+String(ev.phone).replace(/\D/g,''), '_blank');
+            openLeadChat({ phone: ev.phone, leadId: ev.leadId, name: ev.name });
           });
         }
         if(document.getElementById('infoResendWpp') && ev.phone){
           document.getElementById('infoResendWpp').addEventListener('click', () => {
-            window.open('https://wa.me/'+String(ev.phone).replace(/\D/g,'')+'?text='+encodeURIComponent('Olá! Confirmando nosso compromisso em '+dateText+' às '+ev.start+'.'), '_blank');
+            openLeadChat({ phone: ev.phone, leadId: ev.leadId, name: ev.name, message: 'Olá! Confirmando nosso compromisso em '+dateText+' às '+ev.start+'.' });
             toast('Link de confirmação reenviado');
           });
         }
@@ -1703,7 +1716,7 @@
           const wireResend = (el) => {
             if(!el || !ev.phone) return;
             el.addEventListener('click', () => {
-              window.open('https://wa.me/'+String(ev.phone).replace(/\D/g,'')+'?text='+encodeURIComponent('Ola! Confirmando nosso compromisso em '+dateText+' as '+ev.start+'.'), '_blank');
+              openLeadChat({ phone: ev.phone, leadId: ev.leadId, name: ev.name, message: 'Ola! Confirmando nosso compromisso em '+dateText+' as '+ev.start+'.' });
               toast('Link de confirmacao reenviado');
             });
           };
@@ -1799,7 +1812,7 @@
         }
         if(document.getElementById('infoWpp') && ev.phone){
           document.getElementById('infoWpp').addEventListener('click', () => {
-            window.open('https://wa.me/'+String(ev.phone).replace(/\D/g,''), '_blank');
+            openLeadChat({ phone: ev.phone, leadId: ev.leadId, name: ev.name });
           });
         }
         if(document.getElementById('infoDelete')){
@@ -2031,7 +2044,7 @@
           const wppPillClass = state==='confirmed' ? 'success' : state==='no-answer' ? 'danger' : 'warning';
           const wppIcon = state==='confirmed' ? 'ti-circle-check' : state==='no-answer' ? 'ti-x' : 'ti-hourglass';
           const [y,m,d] = ev.date.split('-');
-          const wa = ev.phone ? '<button class="iconbtn green" data-wa="'+escapeAttr(ev.phone)+'" title="WhatsApp"><i class="ti ti-brand-whatsapp"></i></button>' : '';
+          const wa = ev.phone ? '<button class="iconbtn green" data-wa="'+escapeAttr(ev.phone)+'" data-wa-lead="'+escapeAttr(ev.leadId||'')+'" data-wa-name="'+escapeAttr(ev.name||'')+'" title="WhatsApp"><i class="ti ti-brand-whatsapp"></i></button>' : '';
           const localActions = ev.remote ? '' : `
               <button class="iconbtn" data-edit="${ev.id}" title="Editar"><i class="ti ti-pencil"></i></button>
               <button class="iconbtn" data-del="${ev.id}" title="Excluir"><i class="ti ti-trash"></i></button>`;
@@ -2446,7 +2459,7 @@
       // delegated clicks on list (works for static items too)
       document.addEventListener('click', (e) => {
         const wa = e.target.closest('[data-wa]');
-        if(wa){ const ph=wa.getAttribute('data-wa').replace(/\D/g,''); window.open('https://wa.me/'+ph,'_blank'); return; }
+        if(wa){ openLeadChat({ phone: wa.getAttribute('data-wa'), leadId: wa.getAttribute('data-wa-lead'), name: wa.getAttribute('data-wa-name') }); return; }
         const view = e.target.closest('[data-view]');
         if(view && !e.target.closest('.item-actions') && !e.target.closest('[data-edit]') && !e.target.closest('[data-del]')){
           openInfoPanel(view.getAttribute('data-view')); return;
@@ -2459,7 +2472,7 @@
         const ib = e.target.closest('.iconbtn');
         if(ib && ib.closest('.compromisso-list') && !ib.hasAttribute('data-wa') && !ib.hasAttribute('data-edit') && !ib.hasAttribute('data-del')){
           const title = ib.getAttribute('title') || '';
-          if(title==='WhatsApp'){ window.open('https://wa.me/','_blank'); }
+          if(title==='WhatsApp'){ openLeadChat({ phone: '' }); }
           else if(title==='Editar' || title==='Reagendar'){ openModal(null, {date: fmtDateISO(selectedDate)}); }
         }
       });

@@ -2,6 +2,7 @@
 // Visual changes must be made in public/agenda.html instead of replacing with old React components.
 import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { ConversaPopup } from "@/components/leads/ConversaPopup";
 
 const AGENDA_HTML_VERSION = "agenda-fix-20260629-app-agenda-top-button";
 
@@ -50,6 +51,8 @@ function reminderDate(startIso: string, minutesBefore: number) {
 export default function Agenda() {
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const [iframeReady, setIframeReady] = useState(false);
+  const [chatOpen, setChatOpen] = useState(false);
+  const [chatLead, setChatLead] = useState<{ id: string; name: string; phone?: string } | null>(null);
   const iframeSrc = useMemo(
     () => `/agenda.html?v=${AGENDA_HTML_VERSION}`,
     []
@@ -632,6 +635,29 @@ export default function Agenda() {
       }
     }
 
+    async function openChatFromIframe(d: any) {
+      try {
+        let leadId = d?.leadId || null;
+        let name = d?.name || "";
+        const phone = String(d?.phone || "").replace(/\D/g, "");
+        if (!leadId && phone) {
+          const { data } = await supabase
+            .from("leads")
+            .select("id, name, phone, telefone")
+            .or(`phone.ilike.%${phone}%,telefone.ilike.%${phone}%`)
+            .limit(1)
+            .maybeSingle();
+          if (data) { leadId = data.id; name = name || data.name || ""; }
+        }
+        if (!leadId) {
+          console.warn("[Agenda] open-chat sem leadId/phone resolvível");
+          return;
+        }
+        setChatLead({ id: leadId, name: name || "Lead", phone });
+        setChatOpen(true);
+      } catch (e) { console.error("[Agenda] openChatFromIframe", e); }
+    }
+
     function onMessage(e: MessageEvent) {
       const d: any = e.data || {};
       if (d?.type === "agenda:ready") loadAndSend();
@@ -640,6 +666,7 @@ export default function Agenda() {
       if (d?.type === "agenda:delete-agenda") deleteAgenda(d);
       if (d?.type === "agenda:save-compromisso") saveCompromisso(d);
       if (d?.type === "agenda:save-meta") saveCompromissoMeta(d);
+      if (d?.type === "agenda:open-chat") openChatFromIframe(d);
     }
 
 
@@ -682,6 +709,15 @@ export default function Agenda() {
         <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
           Carregando agenda...
         </div>
+      )}
+      {chatLead && (
+        <ConversaPopup
+          open={chatOpen}
+          onOpenChange={(o) => { setChatOpen(o); if (!o) setChatLead(null); }}
+          leadId={chatLead.id}
+          leadName={chatLead.name}
+          leadPhone={chatLead.phone}
+        />
       )}
     </div>
   );
