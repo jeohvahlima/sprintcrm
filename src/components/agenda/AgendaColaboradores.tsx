@@ -79,7 +79,10 @@ export function AgendaColaboradores() {
     email: "",
     senha: "",
     telefone: "",
+    avatar_url: "",
+    bio: "",
   });
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
 
   const [editFormData, setEditFormData] = useState({
     nome: "",
@@ -111,8 +114,33 @@ export function AgendaColaboradores() {
     capacidade_simultanea: 1, tempo_medio_servico: 30,
     horarioComercial: criarHorarioPadrao(),
     dias_funcionamento: ["segunda", "terca", "quarta", "quinta", "sexta"],
-    email: "", senha: "", telefone: "",
+    email: "", senha: "", telefone: "", avatar_url: "", bio: "",
   });
+
+  const handleAvatarUpload = async (file: File) => {
+    if (!file) return;
+    if (file.size > 4 * 1024 * 1024) return toast.error("Imagem deve ter no máximo 4MB");
+    try {
+      setUploadingAvatar(true);
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Usuário não autenticado");
+      const ext = (file.name.split('.').pop() || 'png').toLowerCase();
+      const path = `profissionais/${user.id}/${Date.now()}.${ext}`;
+      const { error: upErr } = await supabase.storage.from('user-avatars').upload(path, file, {
+        cacheControl: '3600', upsert: true, contentType: file.type || 'image/png',
+      });
+      if (upErr) throw upErr;
+      const { data: pub } = supabase.storage.from('user-avatars').getPublicUrl(path);
+      setFormData(prev => ({ ...prev, avatar_url: pub.publicUrl }));
+      toast.success("Foto carregada");
+    } catch (e: any) {
+      console.error(e);
+      toast.error(e.message || "Erro ao enviar foto");
+    } finally {
+      setUploadingAvatar(false);
+    }
+  };
+
 
   const criarAgenda = async () => {
     if (!formData.nome?.trim()) return toast.error("Informe o nome");
@@ -138,14 +166,26 @@ export function AgendaColaboradores() {
             senha: formData.senha,
             telefone: formData.telefone || undefined,
             especialidade: formData.especialidade || undefined,
+            avatar_url: formData.avatar_url || undefined,
+            bio: formData.bio || undefined,
             company_id: userRole.company_id
           }
         });
         if (pe) throw new Error("Erro ao criar profissional");
         if (!pd?.success) throw new Error(pd?.error || "Erro ao criar profissional");
         profissionalId = pd?.profissional?.id;
-        if (pd?.already_exists) toast.info("Profissional já cadastrado. Vinculando à agenda...");
+        if (pd?.already_exists) {
+          toast.info("Profissional já cadastrado. Vinculando à agenda...");
+          // atualiza avatar/bio do profissional existente
+          if (profissionalId && (formData.avatar_url || formData.bio)) {
+            await supabase.from('profissionais').update({
+              avatar_url: formData.avatar_url || null,
+              bio: formData.bio || null,
+            }).eq('id', profissionalId);
+          }
+        }
       }
+
 
       const { error } = await supabase.from('agendas').insert([{
         nome: formData.nome,
@@ -532,6 +572,42 @@ export function AgendaColaboradores() {
           <div className="p-6 max-h-[60vh] overflow-y-auto space-y-6">
             <FormSection icon={<User className="h-4 w-4" />} title="Dados do especialista">
               <div className="space-y-3">
+                {formData.tipo === "colaborador" && (
+                  <div className="flex items-center gap-4">
+                    <div
+                      className="w-16 h-16 rounded-full overflow-hidden flex items-center justify-center text-white font-bold text-lg shrink-0 border-2 border-border"
+                      style={{ background: formData.avatar_url ? undefined : "linear-gradient(135deg,#16a34a,#15803d)" }}
+                    >
+                      {formData.avatar_url ? (
+                        <img src={formData.avatar_url} alt="avatar" className="w-full h-full object-cover" />
+                      ) : (
+                        formData.nome ? getInitials(formData.nome) : "?"
+                      )}
+                    </div>
+                    <div className="flex-1">
+                      <label className="inline-flex items-center gap-2 px-3 py-1.5 rounded-md border border-input bg-card text-xs font-semibold cursor-pointer hover:bg-muted">
+                        {uploadingAvatar ? "Enviando..." : "📷 Carregar foto"}
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          disabled={uploadingAvatar}
+                          onChange={e => { const f = e.target.files?.[0]; if (f) handleAvatarUpload(f); }}
+                        />
+                      </label>
+                      {formData.avatar_url && (
+                        <button
+                          type="button"
+                          onClick={() => setFormData({ ...formData, avatar_url: "" })}
+                          className="ml-2 text-[11px] text-red-600 hover:underline"
+                        >
+                          Remover
+                        </button>
+                      )}
+                      <div className="text-[11px] text-muted-foreground mt-1">JPG ou PNG, até 4MB</div>
+                    </div>
+                  </div>
+                )}
                 <Field label="Nome completo" required>
                   <Input value={formData.nome} onChange={e => setFormData({ ...formData, nome: e.target.value })} placeholder="Ex: Dr. João Silva" />
                 </Field>
@@ -543,8 +619,20 @@ export function AgendaColaboradores() {
                     <Input value={formData.telefone} onChange={e => setFormData({ ...formData, telefone: e.target.value })} placeholder="(00) 00000-0000" />
                   </Field>
                 </div>
+                {formData.tipo === "colaborador" && (
+                  <Field label="Biografia" hint="Apresentação curta exibida no perfil do profissional">
+                    <textarea
+                      value={formData.bio}
+                      onChange={e => setFormData({ ...formData, bio: e.target.value })}
+                      placeholder="Ex: Cirurgião-dentista com 10 anos de experiência em estética..."
+                      rows={3}
+                      className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm resize-y"
+                    />
+                  </Field>
+                )}
               </div>
             </FormSection>
+
 
             <FormSection icon={<Settings className="h-4 w-4" />} title="Configuração de atendimento">
               <div className="grid grid-cols-2 gap-3">

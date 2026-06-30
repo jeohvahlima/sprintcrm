@@ -229,6 +229,11 @@ export default function Agenda() {
           remEmail: c.lembrete_email_24h ?? false,
           confirmNow: c.enviar_confirmacao ?? true,
           remTime: "60",
+          meta: {
+            notes: c.observacoes || "",
+            tags: Array.isArray(c.tags_rapidas) ? c.tags_rapidas : [],
+            tasks: Array.isArray(c.tarefas) ? c.tarefas : [],
+          },
           remote: true,
         })),
         lembretes: (lembretes || []).map((l: any) => {
@@ -559,6 +564,25 @@ export default function Agenda() {
       }
     }
 
+    async function saveCompromissoMeta(data: any) {
+      try {
+        const id = data?.id;
+        if (!id || String(id).startsWith("a_")) return;
+        const meta = data?.meta || {};
+        const update: any = {
+          tags_rapidas: Array.isArray(meta.tags) ? meta.tags : [],
+          tarefas: Array.isArray(meta.tasks) ? meta.tasks : [],
+        };
+        if (typeof meta.notes === "string") update.observacoes = meta.notes;
+        const { error } = await supabase.from("compromissos").update(update).eq("id", id);
+        if (error) throw error;
+        sendToIframe({ type: "agenda:save-meta-result", ok: true, id });
+      } catch (e: any) {
+        console.error("[Agenda] erro ao salvar meta", e);
+        sendToIframe({ type: "agenda:save-meta-result", ok: false, error: e?.message || "Erro ao salvar" });
+      }
+    }
+
     function onMessage(e: MessageEvent) {
       const d: any = e.data || {};
       if (d?.type === "agenda:ready") loadAndSend();
@@ -566,7 +590,9 @@ export default function Agenda() {
       if (d?.type === "agenda:update-agenda") updateAgenda(d);
       if (d?.type === "agenda:delete-agenda") deleteAgenda(d);
       if (d?.type === "agenda:save-compromisso") saveCompromisso(d);
+      if (d?.type === "agenda:save-meta") saveCompromissoMeta(d);
     }
+
 
     const compromissosChannel = supabase
       .channel("agenda-page-compromissos")

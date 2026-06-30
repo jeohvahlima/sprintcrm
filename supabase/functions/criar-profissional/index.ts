@@ -13,6 +13,8 @@ interface CriarProfissionalRequest {
   especialidade?: string
   valor_consulta?: number | null
   duracao_consulta?: number | null
+  avatar_url?: string | null
+  bio?: string | null
   company_id: string
 }
 
@@ -36,7 +38,7 @@ Deno.serve(async (req) => {
 
     // Parse do body
     const body: CriarProfissionalRequest = await req.json()
-    const { nome, email, senha, telefone, especialidade, valor_consulta, duracao_consulta, company_id } = body
+    const { nome, email, senha, telefone, especialidade, valor_consulta, duracao_consulta, avatar_url, bio, company_id } = body
 
     console.log('[criar-profissional] Iniciando criação de profissional:', { email, nome })
 
@@ -142,6 +144,8 @@ Deno.serve(async (req) => {
         especialidade: especialidade || null,
         valor_consulta: valor_consulta ?? null,
         duracao_consulta: duracao_consulta && duracao_consulta > 0 ? duracao_consulta : 30,
+        avatar_url: avatar_url || null,
+        bio: bio || null,
         company_id
       })
       .select()

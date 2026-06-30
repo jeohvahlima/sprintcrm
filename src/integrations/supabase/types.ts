@@ -2148,6 +2148,8 @@ export type Database = {
           profissional_id: string | null
           status: string | null
           status_confirmacao: string
+          tags_rapidas: Json
+          tarefas: Json
           telefone: string | null
           tipo_servico: string
           titulo: string | null
@@ -2183,6 +2185,8 @@ export type Database = {
           profissional_id?: string | null
           status?: string | null
           status_confirmacao?: string
+          tags_rapidas?: Json
+          tarefas?: Json
           telefone?: string | null
           tipo_servico: string
           titulo?: string | null
@@ -2218,6 +2222,8 @@ export type Database = {
           profissional_id?: string | null
           status?: string | null
           status_confirmacao?: string
+          tags_rapidas?: Json
+          tarefas?: Json
           telefone?: string | null
           tipo_servico?: string
           titulo?: string | null
@@ -8187,6 +8193,8 @@ export type Database = {
       }
       profissionais: {
         Row: {
+          avatar_url: string | null
+          bio: string | null
           company_id: string | null
           created_at: string | null
           duracao_consulta: number
@@ -8200,6 +8208,8 @@ export type Database = {
           valor_consulta: number | null
         }
         Insert: {
+          avatar_url?: string | null
+          bio?: string | null
           company_id?: string | null
           created_at?: string | null
           duracao_consulta?: number
@@ -8213,6 +8223,8 @@ export type Database = {
           valor_consulta?: number | null
         }
         Update: {
+          avatar_url?: string | null
+          bio?: string | null
           company_id?: string | null
           created_at?: string | null
           duracao_consulta?: number
