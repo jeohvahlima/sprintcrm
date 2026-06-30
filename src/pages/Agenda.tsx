@@ -542,6 +542,13 @@ export default function Agenda() {
         if (!company_id) throw new Error("Empresa nao encontrada para o usuario");
         if (!data.id) throw new Error("Agenda nao informada");
 
+        let avatarUrl: string | null | undefined = undefined;
+        if (data.avatar_data_url) {
+          avatarUrl = await uploadAgendaAvatar(data.avatar_data_url, user.id);
+        } else if (typeof data.avatar_url !== "undefined") {
+          avatarUrl = data.avatar_url;
+        }
+
         const updatePayload: any = {
           nome: data.nome,
           tipo: data.tipo || "colaborador",
@@ -555,6 +562,8 @@ export default function Agenda() {
           senha_acesso: data.senha_acesso || null,
           updated_at: new Date().toISOString(),
         };
+        if (typeof avatarUrl !== "undefined") updatePayload.avatar_url = avatarUrl;
+        if (typeof data.bio !== "undefined") updatePayload.bio = data.bio;
 
         const { error } = await supabase
           .from("agendas")
