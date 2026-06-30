@@ -181,7 +181,7 @@ export default function IA() {
         className="w-full h-full border-0 block"
       />
 
-      <Dialog open={overlay !== null && overlay !== "disparo-nao-oficial" && overlay !== "fluxos"} onOpenChange={(o) => { if (!o) { setOverlay(null); sendSiteInfo(); } }}>
+      <Dialog open={overlay === "site"} onOpenChange={(o) => { if (!o) { setOverlay(null); sendSiteInfo(); } }}>
         <DialogContent className="max-w-[min(96vw,1400px)] max-h-[92vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{overlayTitle}</DialogTitle>
