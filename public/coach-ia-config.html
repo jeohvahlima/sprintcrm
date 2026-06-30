@@ -1,0 +1,1643 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Coach IA — Base & Configuração</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:       #0b0d11;
+  --bg2:      #111318;
+  --bg3:      #181c24;
+  --card:     #14171f;
+  --border:   rgba(255,255,255,.07);
+  --border2:  rgba(255,255,255,.12);
+  --muted:    #5a6070;
+  --muted2:   #8a92a0;
+  --text:     #e8eaf0;
+  --text2:    #c2c6d0;
+  --purple:   #7c5cfc;
+  --purple2:  #a07bff;
+  --purple-bg:#1a1430;
+  --purple-border: rgba(124,92,252,.3);
+  --green:    #1fd46a;
+  --green-bg: #0d1f16;
+  --amber:    #f5a623;
+  --amber-bg: #1f1708;
+  --red:      #f04452;
+  --red-bg:   #1f0d10;
+  --cyan:     #2dd4bf;
+  --radius:   12px;
+  --radius2:  8px;
+  --glow: 0 0 40px rgba(124,92,252,.15);
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── TOPBAR ── */
+.topbar {
+  height: 56px;
+  background: var(--bg2);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  padding: 0 28px;
+  gap: 16px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+.topbar-icon {
+  width: 32px; height: 32px;
+  background: var(--purple-bg);
+  border: 1px solid var(--purple-border);
+  border-radius: 9px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px;
+}
+.topbar-title {
+  font-family: 'Syne', sans-serif;
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: -.01em;
+  color: var(--text);
+}
+.topbar-sub {
+  font-size: 12px;
+  color: var(--muted2);
+}
+.topbar-sep { flex: 1; }
+.status-pill {
+  display: flex; align-items: center; gap: 6px;
+  background: var(--green-bg);
+  border: 1px solid rgba(31,212,106,.2);
+  color: var(--green);
+  font-size: 12px;
+  font-weight: 500;
+  padding: 5px 12px;
+  border-radius: 20px;
+}
+.status-dot {
+  width: 6px; height: 6px;
+  background: var(--green);
+  border-radius: 50%;
+  animation: pulse 2s ease infinite;
+}
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+
+.btn {
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 8px 18px;
+  border-radius: var(--radius2);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px; font-weight: 500;
+  cursor: pointer;
+  border: none;
+  transition: all .15s;
+}
+.btn-primary {
+  background: var(--purple);
+  color: #fff;
+  box-shadow: 0 0 20px rgba(124,92,252,.3);
+}
+.btn-primary:hover { background: #6b4ee8; box-shadow: 0 0 28px rgba(124,92,252,.4); }
+.btn-ghost {
+  background: transparent;
+  color: var(--muted2);
+  border: 1px solid var(--border);
+}
+.btn-ghost:hover { border-color: var(--border2); color: var(--text); background: var(--bg3); }
+.btn:active { transform: scale(.97); }
+
+/* ── LAYOUT ── */
+.layout {
+  display: flex;
+  flex: 1;
+}
+
+/* ── SIDENAV ── */
+.sidenav {
+  width: 220px;
+  flex-shrink: 0;
+  background: var(--bg2);
+  border-right: 1px solid var(--border);
+  padding: 20px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.nav-group-label {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--muted);
+  padding: 8px 10px 4px;
+}
+.nav-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 10px;
+  border-radius: var(--radius2);
+  font-size: 13px;
+  color: var(--muted2);
+  cursor: pointer;
+  transition: all .15s;
+  border: 1px solid transparent;
+}
+.nav-item:hover { background: var(--bg3); color: var(--text); }
+.nav-item.active {
+  background: var(--purple-bg);
+  border-color: var(--purple-border);
+  color: var(--purple2);
+  font-weight: 500;
+}
+.nav-icon { font-size: 15px; width: 20px; text-align: center; }
+.nav-badge {
+  margin-left: auto;
+  font-size: 10px;
+  font-weight: 600;
+  background: var(--purple);
+  color: #fff;
+  padding: 1px 6px;
+  border-radius: 10px;
+}
+
+/* ── MAIN ── */
+.main {
+  flex: 1;
+  overflow-y: auto;
+  padding: 28px 32px;
+  min-width: 0;
+}
+
+/* ── SECTIONS ── */
+.section { display: none; }
+.section.active { display: block; }
+
+.section-header {
+  margin-bottom: 24px;
+}
+.section-title {
+  font-family: 'Syne', sans-serif;
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -.02em;
+  margin-bottom: 4px;
+}
+.section-desc {
+  font-size: 13px;
+  color: var(--muted2);
+  line-height: 1.6;
+}
+
+/* ── CARDS ── */
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px;
+  margin-bottom: 16px;
+  transition: border-color .2s;
+}
+.card:hover { border-color: var(--border2); }
+.card-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 4px;
+  display: flex; align-items: center; gap: 8px;
+}
+.card-desc { font-size: 12px; color: var(--muted2); margin-bottom: 14px; line-height: 1.5; }
+.card-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.card-grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+
+/* ── FORM ── */
+.field { margin-bottom: 14px; }
+.field:last-child { margin-bottom: 0; }
+.field label {
+  display: block;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  color: var(--muted2);
+  margin-bottom: 6px;
+}
+.field input, .field select, .field textarea {
+  width: 100%;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius2);
+  padding: 9px 12px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+  color: var(--text);
+  outline: none;
+  transition: border-color .15s, box-shadow .15s;
+}
+.field input:focus, .field select:focus, .field textarea:focus {
+  border-color: var(--purple);
+  box-shadow: 0 0 0 3px rgba(124,92,252,.12);
+}
+.field input::placeholder, .field textarea::placeholder { color: var(--muted); }
+.field textarea { resize: vertical; min-height: 80px; line-height: 1.5; }
+.field select { cursor: pointer; }
+.field select option { background: var(--bg3); }
+
+.field-hint {
+  font-size: 11px;
+  color: var(--muted);
+  margin-top: 4px;
+  line-height: 1.4;
+}
+
+/* ── TOGGLE ── */
+.toggle-row {
+  display: flex; align-items: flex-start; justify-content: space-between;
+  gap: 16px;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--border);
+}
+.toggle-row:last-child { border-bottom: none; padding-bottom: 0; }
+.toggle-row:first-child { padding-top: 0; }
+.toggle-info { flex: 1; }
+.toggle-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text);
+  margin-bottom: 2px;
+}
+.toggle-sub { font-size: 12px; color: var(--muted2); line-height: 1.4; }
+.toggle {
+  position: relative;
+  width: 40px; height: 22px;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+.toggle input { opacity: 0; width: 0; height: 0; position: absolute; }
+.toggle-track {
+  position: absolute; inset: 0;
+  background: var(--bg3);
+  border: 1px solid var(--border2);
+  border-radius: 11px;
+  cursor: pointer;
+  transition: background .2s, border-color .2s;
+}
+.toggle-track::after {
+  content: '';
+  position: absolute;
+  left: 3px; top: 3px;
+  width: 14px; height: 14px;
+  background: var(--muted2);
+  border-radius: 50%;
+  transition: transform .2s, background .2s;
+}
+.toggle input:checked + .toggle-track { background: var(--purple); border-color: var(--purple); }
+.toggle input:checked + .toggle-track::after { transform: translateX(18px); background: #fff; }
+
+/* ── TAGS INPUT ── */
+.tags-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius2);
+  padding: 8px;
+  min-height: 44px;
+  cursor: text;
+  transition: border-color .15s;
+}
+.tags-container:focus-within { border-color: var(--purple); box-shadow: 0 0 0 3px rgba(124,92,252,.12); }
+.tag-pill {
+  display: inline-flex; align-items: center; gap: 5px;
+  background: var(--purple-bg);
+  border: 1px solid var(--purple-border);
+  color: var(--purple2);
+  font-size: 12px;
+  font-weight: 500;
+  padding: 2px 8px;
+  border-radius: 6px;
+}
+.tag-remove {
+  background: none; border: none; cursor: pointer;
+  color: var(--purple2); font-size: 14px; line-height: 1;
+  padding: 0 1px;
+  opacity: .6;
+}
+.tag-remove:hover { opacity: 1; }
+.tags-input {
+  background: none; border: none; outline: none;
+  font-size: 13px;
+  color: var(--text);
+  font-family: 'DM Sans', sans-serif;
+  flex: 1;
+  min-width: 80px;
+  padding: 2px 4px;
+}
+.tags-input::placeholder { color: var(--muted); }
+
+/* ── KNOWLEDGE BASE ── */
+.kb-item {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius2);
+  padding: 12px 14px;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-bottom: 8px;
+  cursor: pointer;
+  transition: border-color .15s;
+}
+.kb-item:hover { border-color: var(--border2); }
+.kb-icon {
+  width: 32px; height: 32px;
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px;
+  flex-shrink: 0;
+}
+.kb-info { flex: 1; min-width: 0; }
+.kb-title { font-size: 13px; font-weight: 500; color: var(--text); }
+.kb-meta { font-size: 11px; color: var(--muted2); margin-top: 2px; }
+.kb-excerpt {
+  font-size: 12px;
+  color: var(--muted2);
+  margin-top: 4px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.kb-actions { display: flex; gap: 6px; flex-shrink: 0; }
+
+/* ── UPLOAD ZONE ── */
+.upload-zone {
+  border: 2px dashed var(--border2);
+  border-radius: var(--radius);
+  padding: 28px;
+  text-align: center;
+  cursor: pointer;
+  transition: all .2s;
+  color: var(--muted2);
+}
+.upload-zone:hover {
+  border-color: var(--purple);
+  background: var(--purple-bg);
+  color: var(--purple2);
+}
+.upload-icon { font-size: 28px; margin-bottom: 8px; }
+.upload-text { font-size: 13px; font-weight: 500; margin-bottom: 4px; }
+.upload-sub { font-size: 11px; color: var(--muted); }
+
+/* ── CANAIS GRID ── */
+.canal-card {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  transition: border-color .15s;
+}
+.canal-card.active-canal { border-color: var(--purple-border); background: var(--purple-bg); }
+.canal-header { display: flex; align-items: center; justify-content: space-between; }
+.canal-name {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 13px; font-weight: 600;
+}
+.canal-icon { font-size: 18px; }
+.canal-status { font-size: 11px; color: var(--muted2); }
+.canal-status.on { color: var(--green); }
+
+/* ── SLIDER ── */
+.slider-wrap { display: flex; align-items: center; gap: 10px; }
+.slider-wrap input[type=range] {
+  flex: 1;
+  -webkit-appearance: none;
+  height: 4px;
+  background: var(--bg);
+  border-radius: 2px;
+  outline: none;
+  cursor: pointer;
+}
+.slider-wrap input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 16px; height: 16px;
+  background: var(--purple);
+  border-radius: 50%;
+  border: 2px solid var(--bg2);
+  box-shadow: 0 0 8px rgba(124,92,252,.4);
+}
+.slider-val {
+  font-family: 'DM Mono', monospace;
+  font-size: 12px;
+  color: var(--purple2);
+  min-width: 36px;
+  text-align: right;
+}
+
+/* ── PRODUTO CARD ── */
+.produto-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius2);
+  margin-bottom: 6px;
+}
+.produto-info { flex: 1; }
+.produto-nome { font-size: 13px; font-weight: 500; }
+.produto-preco {
+  font-size: 12px;
+  color: var(--green);
+  font-family: 'DM Mono', monospace;
+}
+
+/* ── BADGES ── */
+.badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 2px 8px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 500;
+}
+.badge-purple { background: var(--purple-bg); border: 1px solid var(--purple-border); color: var(--purple2); }
+.badge-green { background: var(--green-bg); border: 1px solid rgba(31,212,106,.2); color: var(--green); }
+.badge-amber { background: var(--amber-bg); border: 1px solid rgba(245,166,35,.2); color: var(--amber); }
+.badge-red { background: var(--red-bg); border: 1px solid rgba(240,68,82,.2); color: var(--red); }
+.badge-muted { background: var(--bg3); border: 1px solid var(--border); color: var(--muted2); }
+
+/* ── TABS (within section) ── */
+.inner-tabs { display: flex; gap: 2px; background: var(--bg3); padding: 3px; border-radius: 9px; margin-bottom: 18px; }
+.inner-tab {
+  flex: 1; text-align: center; padding: 7px 10px;
+  font-size: 12px; font-weight: 500;
+  color: var(--muted2);
+  border-radius: 7px;
+  cursor: pointer;
+  border: none; background: none;
+  font-family: 'DM Sans', sans-serif;
+  transition: all .15s;
+}
+.inner-tab.active { background: var(--card); color: var(--text); box-shadow: 0 1px 4px rgba(0,0,0,.3); }
+.inner-content { display: none; }
+.inner-content.active { display: block; }
+
+/* ── CHAT PREVIEW ── */
+.chat-preview {
+  background: var(--bg);
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: 360px;
+  overflow-y: auto;
+}
+.msg-row { display: flex; gap: 8px; }
+.msg-row.mine { flex-direction: row-reverse; }
+.msg-avatar {
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; font-weight: 600;
+  flex-shrink: 0;
+}
+.msg-bubble {
+  max-width: 72%;
+  padding: 9px 12px;
+  border-radius: 12px;
+  font-size: 13px;
+  line-height: 1.5;
+}
+.msg-row.mine .msg-bubble {
+  background: var(--purple);
+  color: #fff;
+  border-radius: 12px 12px 3px 12px;
+}
+.msg-row:not(.mine) .msg-bubble {
+  background: var(--bg3);
+  color: var(--text2);
+  border: 1px solid var(--border);
+  border-radius: 12px 12px 12px 3px;
+}
+.msg-time { font-size: 10px; color: var(--muted); margin-top: 3px; }
+.chat-input-row {
+  display: flex; gap: 8px; margin-top: 8px;
+}
+.chat-input {
+  flex: 1;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius2);
+  padding: 9px 12px;
+  font-size: 13px;
+  color: var(--text);
+  outline: none;
+  font-family: 'DM Sans', sans-serif;
+  transition: border-color .15s;
+}
+.chat-input:focus { border-color: var(--purple); }
+.chat-input::placeholder { color: var(--muted); }
+
+/* ── TOAST ── */
+.toast-container {
+  position: fixed; bottom: 24px; right: 24px;
+  z-index: 1000;
+  display: flex; flex-direction: column; gap: 8px;
+  pointer-events: none;
+}
+.toast {
+  background: var(--bg2);
+  border: 1px solid var(--border2);
+  color: var(--text);
+  padding: 12px 16px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 500;
+  box-shadow: 0 8px 32px rgba(0,0,0,.4);
+  animation: toastIn .25s ease;
+  pointer-events: auto;
+  display: flex; align-items: center; gap: 8px;
+}
+.toast.success { border-color: rgba(31,212,106,.3); }
+.toast.success::before { content: '✓'; color: var(--green); }
+@keyframes toastIn { from { transform: translateY(10px); opacity:0; } to { transform: translateY(0); opacity:1; } }
+
+/* ── DIVIDER ── */
+.divider { height: 1px; background: var(--border); margin: 16px 0; }
+
+/* ── METRIC CARDS ── */
+.metric-row { display: grid; grid-template-columns: repeat(4,1fr); gap: 12px; margin-bottom: 20px; }
+.metric-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+}
+.metric-val {
+  font-family: 'Syne', sans-serif;
+  font-size: 26px;
+  font-weight: 700;
+  line-height: 1;
+  margin-bottom: 4px;
+}
+.metric-label { font-size: 11px; color: var(--muted2); }
+.metric-delta { font-size: 11px; margin-top: 4px; }
+.metric-delta.up { color: var(--green); }
+.metric-delta.down { color: var(--red); }
+
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 4px; }
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<header class="topbar">
+  <div class="topbar-icon">🧠</div>
+  <div>
+    <div class="topbar-title">Coach IA</div>
+    <div class="topbar-sub">Configuração e Base de Conhecimento</div>
+  </div>
+  <div class="topbar-sep"></div>
+  <div class="status-pill"><span class="status-dot"></span> Ativo • 247 atendimentos hoje</div>
+  <button class="btn btn-ghost" onclick="showToast('Configurações descartadas','')">Descartar</button>
+  <button class="btn btn-primary" onclick="showToast('Configurações salvas com sucesso!','success')">💾 Salvar tudo</button>
+</header>
+
+<div class="layout">
+
+  <!-- SIDENAV -->
+  <nav class="sidenav">
+    <div class="nav-group-label">Identidade</div>
+    <div class="nav-item active" onclick="showSection('identidade',this)">
+      <span class="nav-icon">🪪</span> Identidade
+    </div>
+    <div class="nav-item" onclick="showSection('tom',this)">
+      <span class="nav-icon">🎭</span> Tom & Comportamento
+    </div>
+
+    <div class="nav-group-label" style="margin-top:8px">Base</div>
+    <div class="nav-item" onclick="showSection('empresa',this)">
+      <span class="nav-icon">🏢</span> Empresa
+    </div>
+    <div class="nav-item" onclick="showSection('produtos',this)">
+      <span class="nav-icon">📦</span> Produtos
+    </div>
+    <div class="nav-item" onclick="showSection('conhecimento',this)">
+      <span class="nav-icon">📚</span> Documentos
+      <span class="nav-badge">4</span>
+    </div>
+    <div class="nav-item" onclick="showSection('restricoes',this)">
+      <span class="nav-icon">🚫</span> Restrições
+    </div>
+
+    <div class="nav-group-label" style="margin-top:8px">Automação</div>
+    <div class="nav-item" onclick="showSection('canais',this)">
+      <span class="nav-icon">📡</span> Canais
+    </div>
+    <div class="nav-item" onclick="showSection('transferencia',this)">
+      <span class="nav-icon">🔀</span> Transferência
+    </div>
+    <div class="nav-item" onclick="showSection('followup',this)">
+      <span class="nav-icon">🔁</span> Follow-up
+    </div>
+    <div class="nav-item" onclick="showSection('horarios',this)">
+      <span class="nav-icon">🕐</span> Horários
+    </div>
+
+    <div class="nav-group-label" style="margin-top:8px">Avançado</div>
+    <div class="nav-item" onclick="showSection('prompt',this)">
+      <span class="nav-icon">⚡</span> Prompt master
+    </div>
+    <div class="nav-item" onclick="showSection('testar',this)">
+      <span class="nav-icon">🧪</span> Testar Coach
+    </div>
+  </nav>
+
+  <!-- MAIN -->
+  <main class="main">
+
+    <!-- ══ IDENTIDADE ══ -->
+    <section class="section active" id="sec-identidade">
+      <div class="section-header">
+        <div class="section-title">🪪 Identidade do Coach</div>
+        <div class="section-desc">Como o Coach se apresenta e se identifica nas conversas</div>
+      </div>
+
+      <div class="metric-row">
+        <div class="metric-card">
+          <div class="metric-val" style="color:var(--purple2)">247</div>
+          <div class="metric-label">Atendimentos hoje</div>
+          <div class="metric-delta up">↑ +18% vs ontem</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-val" style="color:var(--cyan)">6s</div>
+          <div class="metric-label">Tempo médio resposta</div>
+          <div class="metric-delta up">↑ melhorou 2s</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-val" style="color:var(--green)">94%</div>
+          <div class="metric-label">Taxa de resolução</div>
+          <div class="metric-delta up">↑ acima da meta</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-val" style="color:var(--amber)">34</div>
+          <div class="metric-label">Transferências p/ humano</div>
+          <div class="metric-delta down">↓ -5% vs ontem</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">🤖 Persona do Coach</div>
+        <div class="card-desc">Nome e personalidade com que o Coach se apresenta ao lead</div>
+        <div class="card-grid">
+          <div class="field">
+            <label>Nome do Coach</label>
+            <input type="text" placeholder="Ex: Ana, Bruno, Sofia..." value="Ana">
+            <div class="field-hint">Nome usado na saudação inicial e assinatura</div>
+          </div>
+          <div class="field">
+            <label>Papel / Cargo</label>
+            <input type="text" placeholder="Ex: Consultora comercial" value="Consultora comercial">
+          </div>
+        </div>
+        <div class="field">
+          <label>Saudação inicial</label>
+          <textarea placeholder="Ex: Olá {nome}! Sou a Ana da GrowOS. Como posso te ajudar hoje? 😊">Olá {nome}! Sou a Ana da GrowOS, consultora comercial. Estou aqui para te ajudar a encontrar a melhor solução. Como posso te ajudar? 😊</textarea>
+          <div class="field-hint">Use {nome} para inserir o nome do lead automaticamente</div>
+        </div>
+        <div class="field">
+          <label>Mensagem de encerramento</label>
+          <textarea placeholder="Ex: Qualquer dúvida estou por aqui! 👋">Fico à disposição para qualquer dúvida. Tenha um ótimo dia! 👋</textarea>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">⚙️ Modo de operação</div>
+        <div class="card-desc">Como o Coach deve agir nas conversas</div>
+
+        <div class="toggle-row">
+          <div class="toggle-info">
+            <div class="toggle-label">Modo Autônomo</div>
+            <div class="toggle-sub">Coach responde e conduz a conversa sem aprovação humana</div>
+          </div>
+          <label class="toggle">
+            <input type="checkbox" checked onchange="toggleModo(this)">
+            <span class="toggle-track"></span>
+          </label>
+        </div>
+        <div class="toggle-row">
+          <div class="toggle-info">
+            <div class="toggle-label">Pausar quando humano responder</div>
+            <div class="toggle-sub">IA para automaticamente quando um atendente enviar mensagem</div>
+          </div>
+          <label class="toggle">
+            <input type="checkbox" checked>
+            <span class="toggle-track"></span>
+          </label>
+        </div>
+        <div class="toggle-row">
+          <div class="toggle-info">
+            <div class="toggle-label">Responder fora do horário</div>
+            <div class="toggle-sub">Enviar mensagem automática informando ausência fora do expediente</div>
+          </div>
+          <label class="toggle">
+            <input type="checkbox">
+            <span class="toggle-track"></span>
+          </label>
+        </div>
+        <div class="toggle-row">
+          <div class="toggle-info">
+            <div class="toggle-label">Transcrever áudios</div>
+            <div class="toggle-sub">Transcrever mensagens de voz antes de processar a resposta</div>
+          </div>
+          <label class="toggle">
+            <input type="checkbox" checked>
+            <span class="toggle-track"></span>
+          </label>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══ TOM & COMPORTAMENTO ══ -->
+    <section class="section" id="sec-tom">
+      <div class="section-header">
+        <div class="section-title">🎭 Tom & Comportamento</div>
+        <div class="section-desc">Como o Coach comunica e se comporta nas conversas</div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">🗣️ Estilo de comunicação</div>
+        <div class="card-desc">Tom e linguagem usados pelo Coach</div>
+        <div class="card-grid">
+          <div class="field">
+            <label>Tom geral</label>
+            <select>
+              <option selected>Amigável e profissional</option>
+              <option>Formal e corporativo</option>
+              <option>Descontraído e casual</option>
+              <option>Consultivo e técnico</option>
+              <option>Empático e acolhedor</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Tratamento</label>
+            <select>
+              <option selected>Você</option>
+              <option>Tu</option>
+              <option>Nome do cliente</option>
+            </select>
+          </div>
+        </div>
+        <div class="card-grid">
+          <div class="field">
+            <label>Uso de emojis</label>
+            <select>
+              <option>Nenhum</option>
+              <option selected>Moderado (1–2 por mensagem)</option>
+              <option>Frequente</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Tamanho das respostas</label>
+            <select>
+              <option>Muito curtas (1–2 frases)</option>
+              <option selected>Curtas e objetivas</option>
+              <option>Médias e detalhadas</option>
+              <option>Longas e completas</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">🎯 Objetivos prioritários</div>
+        <div class="card-desc">O que o Coach deve priorizar em cada conversa (ordene por importância)</div>
+        <div id="objetivos-list">
+          <div class="produto-row" style="cursor:grab">
+            <span style="color:var(--muted);font-size:14px">⠿</span>
+            <div class="produto-info"><div class="produto-nome">🎯 Qualificar o lead</div></div>
+            <span class="badge badge-purple">1º</span>
+          </div>
+          <div class="produto-row" style="cursor:grab">
+            <span style="color:var(--muted);font-size:14px">⠿</span>
+            <div class="produto-info"><div class="produto-nome">💬 Responder dúvidas</div></div>
+            <span class="badge badge-muted">2º</span>
+          </div>
+          <div class="produto-row" style="cursor:grab">
+            <span style="color:var(--muted);font-size:14px">⠿</span>
+            <div class="produto-info"><div class="produto-nome">📅 Agendar reunião / consulta</div></div>
+            <span class="badge badge-muted">3º</span>
+          </div>
+          <div class="produto-row" style="cursor:grab">
+            <span style="color:var(--muted);font-size:14px">⠿</span>
+            <div class="produto-info"><div class="produto-nome">💰 Conduzir para venda</div></div>
+            <span class="badge badge-muted">4º</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">🧠 Capacidades cognitivas</div>
+        <div class="card-desc">Ajuste o nível de cada comportamento do Coach</div>
+
+        <div class="field">
+          <label>Criatividade nas respostas</label>
+          <div class="slider-wrap">
+            <input type="range" min="0" max="10" value="4" oninput="this.nextElementSibling.textContent=this.value+'/10'">
+            <span class="slider-val">4/10</span>
+          </div>
+          <div class="field-hint">0 = respostas fixas e previsíveis · 10 = muito criativo</div>
+        </div>
+        <div class="field">
+          <label>Confiança ao não saber</label>
+          <div class="slider-wrap">
+            <input type="range" min="0" max="10" value="7" oninput="this.nextElementSibling.textContent=this.value+'/10'">
+            <span class="slider-val">7/10</span>
+          </div>
+          <div class="field-hint">0 = transfere sempre · 10 = tenta responder mesmo sem certeza</div>
+        </div>
+        <div class="field">
+          <label>Insistência comercial</label>
+          <div class="slider-wrap">
+            <input type="range" min="0" max="10" value="6" oninput="this.nextElementSibling.textContent=this.value+'/10'">
+            <span class="slider-val">6/10</span>
+          </div>
+          <div class="field-hint">0 = neutro e informativo · 10 = fortemente persuasivo</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══ EMPRESA ══ -->
+    <section class="section" id="sec-empresa">
+      <div class="section-header">
+        <div class="section-title">🏢 Dados da Empresa</div>
+        <div class="section-desc">Informações que o Coach usa para se apresentar e responder sobre a empresa</div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">📋 Informações gerais</div>
+        <div class="card-grid">
+          <div class="field">
+            <label>Nome da empresa</label>
+            <input type="text" value="GROW OS" placeholder="Nome da empresa">
+          </div>
+          <div class="field">
+            <label>Segmento / nicho</label>
+            <input type="text" value="SaaS — CRM e Automação" placeholder="Ex: Clínica odontológica">
+          </div>
+        </div>
+        <div class="field">
+          <label>Descrição da empresa</label>
+          <textarea style="min-height:70px">Somos uma plataforma SaaS de CRM e automação comercial, criada para negócios que querem crescer com inteligência. Ajudamos equipes de vendas a atender mais, perder menos leads e fechar mais negócios.</textarea>
+        </div>
+        <div class="card-grid">
+          <div class="field">
+            <label>Site</label>
+            <input type="text" value="https://growos.online" placeholder="https://...">
+          </div>
+          <div class="field">
+            <label>Localização</label>
+            <input type="text" value="Brasil — atendimento online" placeholder="Cidade, Estado">
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">🕐 Horário de atendimento humano</div>
+        <div class="card-desc">Quando existe atendimento humano disponível</div>
+        <div class="field">
+          <label>Horários</label>
+          <input type="text" value="Segunda a Sexta: 8h às 18h | Sábado: 9h às 13h" placeholder="Ex: Seg-Sex 8h–18h">
+        </div>
+        <div class="field">
+          <label>Mensagem fora do horário</label>
+          <textarea style="min-height:60px">Nosso horário de atendimento humano é de seg a sex, das 8h às 18h. Mas não se preocupe — posso te ajudar agora mesmo! 😊</textarea>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">📞 Contatos para o Coach mencionar</div>
+        <div class="card-desc">O Coach pode informar esses contatos quando o lead pedir</div>
+        <div class="card-grid">
+          <div class="field">
+            <label>WhatsApp comercial</label>
+            <input type="text" value="(81) 99999-0000" placeholder="(00) 00000-0000">
+          </div>
+          <div class="field">
+            <label>E-mail comercial</label>
+            <input type="text" value="contato@growos.online" placeholder="email@empresa.com">
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══ PRODUTOS ══ -->
+    <section class="section" id="sec-produtos">
+      <div class="section-header">
+        <div class="section-title">📦 Produtos & Serviços</div>
+        <div class="section-desc">O Coach usa essa lista para apresentar ofertas e responder sobre preços</div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">➕ Adicionar produto ou serviço</div>
+        <div class="card-grid">
+          <div class="field">
+            <label>Nome</label>
+            <input type="text" id="prod-nome" placeholder="Ex: Plano Starter">
+          </div>
+          <div class="field">
+            <label>Preço</label>
+            <input type="text" id="prod-preco" placeholder="Ex: R$ 197/mês">
+          </div>
+        </div>
+        <div class="field">
+          <label>Descrição (o Coach vai usar isso)</label>
+          <textarea id="prod-desc" style="min-height:60px" placeholder="Descreva o que inclui, benefícios, diferenciais..."></textarea>
+        </div>
+        <button class="btn btn-primary btn-sm" onclick="addProduto()" style="font-size:12px;padding:7px 14px">+ Adicionar</button>
+      </div>
+
+      <div class="card">
+        <div class="card-title">📦 Produtos cadastrados</div>
+        <div id="produtos-list">
+          <div class="produto-row">
+            <span style="font-size:20px">📦</span>
+            <div class="produto-info">
+              <div class="produto-nome">Plano Starter</div>
+              <div class="produto-preco">R$ 197/mês</div>
+              <div style="font-size:11px;color:var(--muted2);margin-top:2px">CRM completo, até 3 usuários, WhatsApp integrado</div>
+            </div>
+            <button class="btn btn-ghost" style="font-size:11px;padding:4px 10px" onclick="this.closest('.produto-row').remove()">Remover</button>
+          </div>
+          <div class="produto-row">
+            <span style="font-size:20px">🚀</span>
+            <div class="produto-info">
+              <div class="produto-nome">Plano Growth</div>
+              <div class="produto-preco">R$ 497/mês</div>
+              <div style="font-size:11px;color:var(--muted2);margin-top:2px">Tudo do Starter + IA ilimitada, subcontas, Instagram</div>
+            </div>
+            <button class="btn btn-ghost" style="font-size:11px;padding:4px 10px" onclick="this.closest('.produto-row').remove()">Remover</button>
+          </div>
+          <div class="produto-row">
+            <span style="font-size:20px">🏆</span>
+            <div class="produto-info">
+              <div class="produto-nome">Plano Enterprise</div>
+              <div class="produto-preco">Sob consulta</div>
+              <div style="font-size:11px;color:var(--muted2);margin-top:2px">White-label, API dedicada, suporte prioritário</div>
+            </div>
+            <button class="btn btn-ghost" style="font-size:11px;padding:4px 10px" onclick="this.closest('.produto-row').remove()">Remover</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══ CONHECIMENTO ══ -->
+    <section class="section" id="sec-conhecimento">
+      <div class="section-header">
+        <div class="section-title">📚 Base de Conhecimento</div>
+        <div class="section-desc">Documentos, FAQs e arquivos que o Coach usa para responder</div>
+      </div>
+
+      <div class="inner-tabs">
+        <button class="inner-tab active" onclick="showInner('kb-docs',this)">Documentos</button>
+        <button class="inner-tab" onclick="showInner('kb-faq',this)">FAQ</button>
+        <button class="inner-tab" onclick="showInner('kb-upload',this)">Upload</button>
+      </div>
+
+      <div class="inner-content active" id="kb-docs">
+        <div class="kb-item">
+          <div class="kb-icon" style="background:rgba(124,92,252,.15)">📄</div>
+          <div class="kb-info">
+            <div class="kb-title">Política de preços e planos</div>
+            <div class="kb-meta">Texto · Atualizado há 2 dias</div>
+            <div class="kb-excerpt">Os planos Starter, Growth e Enterprise diferem em número de usuários, agentes de IA e canais disponíveis...</div>
+          </div>
+          <div class="kb-actions">
+            <span class="badge badge-green">Ativo</span>
+            <button class="btn btn-ghost" style="font-size:11px;padding:4px 10px">Editar</button>
+          </div>
+        </div>
+        <div class="kb-item">
+          <div class="kb-icon" style="background:rgba(45,212,191,.1)">🔗</div>
+          <div class="kb-info">
+            <div class="kb-title">Como funciona a integração WhatsApp</div>
+            <div class="kb-meta">Texto · Atualizado há 5 dias</div>
+            <div class="kb-excerpt">A integração utiliza a API oficial do Meta Business. É necessário ter uma conta WhatsApp Business verificada...</div>
+          </div>
+          <div class="kb-actions">
+            <span class="badge badge-green">Ativo</span>
+            <button class="btn btn-ghost" style="font-size:11px;padding:4px 10px">Editar</button>
+          </div>
+        </div>
+        <div class="kb-item">
+          <div class="kb-icon" style="background:rgba(245,166,35,.1)">📋</div>
+          <div class="kb-info">
+            <div class="kb-title">Script de qualificação de leads</div>
+            <div class="kb-meta">Texto · Atualizado há 1 semana</div>
+            <div class="kb-excerpt">Perguntas para qualificação: Qual é o tamanho da sua equipe? Você usa algum CRM atualmente?</div>
+          </div>
+          <div class="kb-actions">
+            <span class="badge badge-green">Ativo</span>
+            <button class="btn btn-ghost" style="font-size:11px;padding:4px 10px">Editar</button>
+          </div>
+        </div>
+        <div class="kb-item">
+          <div class="kb-icon" style="background:rgba(240,68,82,.1)">❓</div>
+          <div class="kb-info">
+            <div class="kb-title">Objeções mais comuns e respostas</div>
+            <div class="kb-meta">Texto · Atualizado há 2 semanas</div>
+            <div class="kb-excerpt">"É muito caro" → Entendo. Vamos calcular o custo por lead atendido hoje vs com o GROW OS...</div>
+          </div>
+          <div class="kb-actions">
+            <span class="badge badge-amber">Rascunho</span>
+            <button class="btn btn-ghost" style="font-size:11px;padding:4px 10px">Editar</button>
+          </div>
+        </div>
+        <button class="btn btn-ghost" style="width:100%;justify-content:center;margin-top:8px" onclick="showToast('Novo documento criado','success')">+ Novo documento</button>
+      </div>
+
+      <div class="inner-content" id="kb-faq">
+        <div id="faq-list">
+          <div class="card" style="margin-bottom:10px">
+            <div class="card-grid">
+              <div class="field" style="margin:0">
+                <label>Pergunta</label>
+                <input type="text" value="Qual o prazo de contrato?">
+              </div>
+              <div class="field" style="margin:0">
+                <label>Resposta do Coach</label>
+                <input type="text" value="Sem fidelidade! Você pode cancelar a qualquer mês. 🎉">
+              </div>
+            </div>
+          </div>
+          <div class="card" style="margin-bottom:10px">
+            <div class="card-grid">
+              <div class="field" style="margin:0">
+                <label>Pergunta</label>
+                <input type="text" value="Tem período de teste?">
+              </div>
+              <div class="field" style="margin:0">
+                <label>Resposta do Coach</label>
+                <input type="text" value="Sim! 7 dias grátis, sem precisar de cartão. 🚀">
+              </div>
+            </div>
+          </div>
+        </div>
+        <button class="btn btn-ghost" style="width:100%;justify-content:center;margin-top:4px" onclick="addFaq()">+ Nova pergunta frequente</button>
+      </div>
+
+      <div class="inner-content" id="kb-upload">
+        <div class="upload-zone" onclick="showToast('Upload simulado — em produção enviaria ao Supabase Storage','success')">
+          <div class="upload-icon">📁</div>
+          <div class="upload-text">Clique ou arraste arquivos aqui</div>
+          <div class="upload-sub">PDF, DOCX, TXT, CSV · Máx. 10 MB por arquivo</div>
+        </div>
+        <div style="font-size:12px;color:var(--muted2);margin-top:12px;line-height:1.6">
+          O Coach processa os arquivos, extrai o conteúdo e usa automaticamente nas respostas. Documentos PDF de catálogos, tabelas de preço e manuais são especialmente úteis.
+        </div>
+      </div>
+    </section>
+
+    <!-- ══ RESTRIÇÕES ══ -->
+    <section class="section" id="sec-restricoes">
+      <div class="section-header">
+        <div class="section-title">🚫 Restrições & Limites</div>
+        <div class="section-desc">O que o Coach não deve responder ou mencionar</div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">🚫 Tópicos proibidos</div>
+        <div class="card-desc">O Coach não vai responder sobre esses assuntos — vai redirecionar para humano</div>
+        <div class="field">
+          <label>Palavras e tópicos bloqueados</label>
+          <div class="tags-container" id="tags-block" onclick="document.getElementById('tag-input-block').focus()">
+            <span class="tag-pill">concorrentes<button class="tag-remove" onclick="removeTag(this)">×</button></span>
+            <span class="tag-pill">jurídico<button class="tag-remove" onclick="removeTag(this)">×</button></span>
+            <span class="tag-pill">desconto acima de 20%<button class="tag-remove" onclick="removeTag(this)">×</button></span>
+            <input class="tags-input" id="tag-input-block" placeholder="Digite e pressione Enter..." onkeydown="addTag(event,'tags-block')">
+          </div>
+        </div>
+        <div class="field">
+          <label>Mensagem quando bloqueado</label>
+          <textarea style="min-height:60px">Essa informação precisa ser tratada com um dos nossos especialistas. Vou te conectar agora! 🤝</textarea>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">💬 Funis bloqueados</div>
+        <div class="card-desc">O Coach não atua quando o lead está nestas etapas</div>
+        <div class="field">
+          <label>Etapas onde o Coach deve ficar silencioso</label>
+          <div class="tags-container" id="tags-funil" onclick="document.getElementById('tag-input-funil').focus()">
+            <span class="tag-pill">Negociação avançada<button class="tag-remove" onclick="removeTag(this)">×</button></span>
+            <span class="tag-pill">Cliente ativo<button class="tag-remove" onclick="removeTag(this)">×</button></span>
+            <input class="tags-input" id="tag-input-funil" placeholder="Nome da etapa..." onkeydown="addTag(event,'tags-funil')">
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">🔢 Limites de interação</div>
+        <div class="card-grid">
+          <div class="field">
+            <label>Máx. mensagens por conversa</label>
+            <input type="number" value="20" min="1" max="100">
+            <div class="field-hint">Após esse limite, transfere para humano</div>
+          </div>
+          <div class="field">
+            <label>Tempo máximo de resposta (seg)</label>
+            <input type="number" value="15" min="1" max="60">
+            <div class="field-hint">Se ultrapassar, exibe mensagem de espera</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══ CANAIS ══ -->
+    <section class="section" id="sec-canais">
+      <div class="section-header">
+        <div class="section-title">📡 Canais Ativos</div>
+        <div class="section-desc">Em quais canais o Coach deve atuar automaticamente</div>
+      </div>
+
+      <div class="card-grid" style="margin-bottom:16px">
+        <div class="canal-card active-canal">
+          <div class="canal-header">
+            <div class="canal-name"><span class="canal-icon">💬</span> WhatsApp</div>
+            <label class="toggle"><input type="checkbox" checked><span class="toggle-track"></span></label>
+          </div>
+          <div class="canal-status on">● Ativo · 247 conversas hoje</div>
+          <div style="font-size:11px;color:var(--muted2)">API Meta Oficial conectada</div>
+        </div>
+        <div class="canal-card active-canal">
+          <div class="canal-header">
+            <div class="canal-name"><span class="canal-icon">📸</span> Instagram DM</div>
+            <label class="toggle"><input type="checkbox" checked><span class="toggle-track"></span></label>
+          </div>
+          <div class="canal-status on">● Ativo · 38 conversas hoje</div>
+          <div style="font-size:11px;color:var(--muted2)">@growos.online conectado</div>
+        </div>
+        <div class="canal-card">
+          <div class="canal-header">
+            <div class="canal-name"><span class="canal-icon">💭</span> Instagram Comentários</div>
+            <label class="toggle"><input type="checkbox"><span class="toggle-track"></span></label>
+          </div>
+          <div class="canal-status">○ Inativo</div>
+          <div style="font-size:11px;color:var(--muted2)">Responde comentários → abre DM</div>
+        </div>
+        <div class="canal-card">
+          <div class="canal-header">
+            <div class="canal-name"><span class="canal-icon">📧</span> E-mail</div>
+            <label class="toggle"><input type="checkbox"><span class="toggle-track"></span></label>
+          </div>
+          <div class="canal-status">○ Não conectado</div>
+          <div style="font-size:11px;color:var(--muted2)">Integração Gmail disponível</div>
+        </div>
+        <div class="canal-card">
+          <div class="canal-header">
+            <div class="canal-name"><span class="canal-icon">🌐</span> Chat do site</div>
+            <label class="toggle"><input type="checkbox"><span class="toggle-track"></span></label>
+          </div>
+          <div class="canal-status">○ Não conectado</div>
+          <div style="font-size:11px;color:var(--muted2)">Widget JS para embed</div>
+        </div>
+        <div class="canal-card">
+          <div class="canal-header">
+            <div class="canal-name"><span class="canal-icon">📘</span> Facebook Messenger</div>
+            <label class="toggle"><input type="checkbox"><span class="toggle-track"></span></label>
+          </div>
+          <div class="canal-status">○ Não conectado</div>
+          <div style="font-size:11px;color:var(--muted2)">Requer página do Facebook</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══ TRANSFERÊNCIA ══ -->
+    <section class="section" id="sec-transferencia">
+      <div class="section-header">
+        <div class="section-title">🔀 Transferência para Humano</div>
+        <div class="section-desc">Quando e como o Coach passa o atendimento para um humano</div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">⚡ Gatilhos de transferência automática</div>
+        <div class="card-desc">O Coach transfere automaticamente quando esses eventos ocorrem</div>
+
+        <div class="toggle-row">
+          <div class="toggle-info">
+            <div class="toggle-label">Não souber responder</div>
+            <div class="toggle-sub">Transfere quando a confiança da resposta for baixa</div>
+          </div>
+          <label class="toggle"><input type="checkbox" checked><span class="toggle-track"></span></label>
+        </div>
+        <div class="toggle-row">
+          <div class="toggle-info">
+            <div class="toggle-label">Cliente pedir atendente</div>
+            <div class="toggle-sub">Detecta palavras como "atendente", "humano", "pessoa"</div>
+          </div>
+          <label class="toggle"><input type="checkbox" checked><span class="toggle-track"></span></label>
+        </div>
+        <div class="toggle-row">
+          <div class="toggle-info">
+            <div class="toggle-label">Negócio acima de R$</div>
+            <div class="toggle-sub">Transfere quando o ticket estimado supera o valor configurado</div>
+          </div>
+          <label class="toggle"><input type="checkbox" checked><span class="toggle-track"></span></label>
+        </div>
+        <div class="field" style="margin-top:10px;margin-left:0">
+          <label>Valor mínimo para transferência (R$)</label>
+          <input type="number" value="10000" placeholder="10000">
+        </div>
+        <div class="toggle-row">
+          <div class="toggle-info">
+            <div class="toggle-label">Reclamação ou insatisfação</div>
+            <div class="toggle-sub">Detecta sentimento negativo e tranfere com prioridade</div>
+          </div>
+          <label class="toggle"><input type="checkbox" checked><span class="toggle-track"></span></label>
+        </div>
+        <div class="toggle-row">
+          <div class="toggle-info">
+            <div class="toggle-label">Após X mensagens sem resolução</div>
+            <div class="toggle-sub">Transfere quando a conversa está longa sem progresso</div>
+          </div>
+          <label class="toggle"><input type="checkbox"><span class="toggle-track"></span></label>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">💬 Mensagem de transferência</div>
+        <div class="field">
+          <label>O que o Coach diz ao transferir</label>
+          <textarea style="min-height:60px">Vou te conectar com um dos nossos especialistas agora. Um momento! 🤝</textarea>
+        </div>
+        <div class="field">
+          <label>Departamento padrão</label>
+          <select><option>Comercial</option><option>Suporte</option><option>Financeiro</option></select>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══ FOLLOW-UP ══ -->
+    <section class="section" id="sec-followup">
+      <div class="section-header">
+        <div class="section-title">🔁 Follow-up Automático</div>
+        <div class="section-desc">Reativação automática de leads que pararam de responder</div>
+      </div>
+
+      <div class="card">
+        <div class="toggle-row" style="padding-top:0">
+          <div class="toggle-info">
+            <div class="toggle-label">Ativar follow-up automático</div>
+            <div class="toggle-sub">O Coach envia mensagem quando o lead fica em silêncio</div>
+          </div>
+          <label class="toggle"><input type="checkbox" checked onchange="toggleFollowup(this)"><span class="toggle-track"></span></label>
+        </div>
+      </div>
+
+      <div id="followup-config">
+        <div class="card">
+          <div class="card-title">⏱️ Timing</div>
+          <div class="card-grid">
+            <div class="field">
+              <label>Aguardar antes do 1º follow-up</label>
+              <div style="display:flex;gap:8px">
+                <input type="number" value="2" style="width:80px">
+                <select style="flex:1"><option>horas</option><option selected>dias</option><option>minutos</option></select>
+              </div>
+            </div>
+            <div class="field">
+              <label>Máximo de follow-ups</label>
+              <input type="number" value="3" min="1" max="10">
+              <div class="field-hint">Após esse número, lead é arquivado</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">💬 Mensagens de follow-up</div>
+          <div class="field">
+            <label>1º follow-up</label>
+            <textarea style="min-height:55px">Oi {nome}! Vi que ficamos sem falar. Você ainda tem interesse? Posso te ajudar com alguma dúvida 😊</textarea>
+          </div>
+          <div class="field">
+            <label>2º follow-up</label>
+            <textarea style="min-height:55px">{nome}, ainda estou por aqui caso precise! A proposta continua válida. 🚀</textarea>
+          </div>
+          <div class="field">
+            <label>3º follow-up (último)</label>
+            <textarea style="min-height:55px">Vou encerrar por aqui, mas fica a vontade pra voltar quando quiser! Foi um prazer. 👋</textarea>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══ HORÁRIOS ══ -->
+    <section class="section" id="sec-horarios">
+      <div class="section-header">
+        <div class="section-title">🕐 Horários do Coach</div>
+        <div class="section-desc">Em quais horários o Coach atua automaticamente</div>
+      </div>
+
+      <div class="card">
+        <div class="toggle-row" style="padding-top:0">
+          <div class="toggle-info">
+            <div class="toggle-label">Atuar 24 horas por dia</div>
+            <div class="toggle-sub">O Coach responde a qualquer hora, todos os dias</div>
+          </div>
+          <label class="toggle"><input type="checkbox" checked onchange="toggle24h(this)"><span class="toggle-track"></span></label>
+        </div>
+      </div>
+
+      <div id="horarios-config" style="opacity:.4;pointer-events:none">
+        <div class="card">
+          <div class="card-title">📅 Dias e horários de atuação</div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px">
+            <span class="badge badge-purple" style="cursor:pointer;padding:5px 14px">Seg</span>
+            <span class="badge badge-purple" style="cursor:pointer;padding:5px 14px">Ter</span>
+            <span class="badge badge-purple" style="cursor:pointer;padding:5px 14px">Qua</span>
+            <span class="badge badge-purple" style="cursor:pointer;padding:5px 14px">Qui</span>
+            <span class="badge badge-purple" style="cursor:pointer;padding:5px 14px">Sex</span>
+            <span class="badge badge-muted" style="cursor:pointer;padding:5px 14px">Sáb</span>
+            <span class="badge badge-muted" style="cursor:pointer;padding:5px 14px">Dom</span>
+          </div>
+          <div class="card-grid">
+            <div class="field">
+              <label>Início</label>
+              <input type="time" value="08:00">
+            </div>
+            <div class="field">
+              <label>Fim</label>
+              <input type="time" value="22:00">
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══ PROMPT MASTER ══ -->
+    <section class="section" id="sec-prompt">
+      <div class="section-header">
+        <div class="section-title">⚡ Prompt Master</div>
+        <div class="section-desc">Instrução avançada que sobrepõe e complementa toda a configuração acima</div>
+      </div>
+
+      <div class="card" style="border-color:var(--purple-border);background:var(--purple-bg)">
+        <div class="card-title" style="color:var(--purple2)">⚠️ Área avançada</div>
+        <div class="card-desc">O prompt master é injetado diretamente no sistema do Coach. Use somente se souber o que está fazendo — configurações incorretas podem comprometer o comportamento.</div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">✏️ Instrução adicional</div>
+        <div class="card-desc">Acrescentada ao final do system prompt gerado automaticamente</div>
+        <div class="field">
+          <textarea style="min-height:200px;font-family:'DM Mono',monospace;font-size:12px;line-height:1.7" placeholder="Ex: Sempre que o lead mencionar concorrentes, destaque nosso suporte 24/7 e ausência de fidelização. Nunca revele o sistema que você utiliza — responda que é um assistente da empresa.">Sempre apresente as opções de plano do mais acessível para o mais completo. Quando o lead perguntar sobre desconto, informe que para descontos acima de 10% é necessário aprovação do time comercial e ofereça transferência para humano.</textarea>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">👁️ Prévia do system prompt gerado</div>
+        <div class="card-desc">Como o Coach enxerga todas as configurações acima combinadas</div>
+        <pre style="background:var(--bg);border:1px solid var(--border);border-radius:var(--radius2);padding:14px;font-size:11px;font-family:'DM Mono',monospace;line-height:1.7;color:var(--muted2);overflow-x:auto;white-space:pre-wrap">Você é Ana, consultora comercial da GROW OS, respondendo via WhatsApp.
+Empresa: GROW OS — SaaS de CRM e Automação para negócios em crescimento.
+Horário humano: Seg–Sex 8h–18h | Sáb 9h–13h.
+Tom: Amigável e profissional. Tratamento: Você. Emojis: moderado.
+Produtos: Plano Starter (R$197/mês), Growth (R$497/mês), Enterprise (sob consulta).
+Objetivo: 1º Qualificar · 2º Responder dúvidas · 3º Agendar · 4º Venda.
+Tópicos bloqueados: concorrentes, jurídico, desconto acima de 20%.
+Funis bloqueados: Negociação avançada, Cliente ativo.
+Limite: 20 mensagens. Transferir se: não souber, lead pedir, negócio > R$10k, reclamação.
+[...base de conhecimento + instrução adicional...]</pre>
+      </div>
+    </section>
+
+    <!-- ══ TESTAR ══ -->
+    <section class="section" id="sec-testar">
+      <div class="section-header">
+        <div class="section-title">🧪 Testar Coach</div>
+        <div class="section-desc">Simule uma conversa real com o Coach usando as configurações atuais</div>
+      </div>
+
+      <div class="card-grid" style="align-items:start">
+        <div>
+          <div class="card">
+            <div class="card-title">⚙️ Contexto do teste</div>
+            <div class="field">
+              <label>Canal simulado</label>
+              <select>
+                <option>WhatsApp</option>
+                <option>Instagram DM</option>
+                <option>Instagram Comentário</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>Nome do lead</label>
+              <input type="text" value="Maria Silva" placeholder="Nome do lead">
+            </div>
+            <div class="field">
+              <label>Etapa do funil</label>
+              <select><option>Novo lead</option><option>Qualificado</option><option>Proposta enviada</option></select>
+            </div>
+            <div class="field">
+              <label>Tags do lead</label>
+              <input type="text" value="Instagram, Interesse confirmado" placeholder="tag1, tag2">
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-title">🎯 Perguntas rápidas para testar</div>
+            <div style="display:flex;flex-direction:column;gap:6px">
+              <button class="btn btn-ghost" style="justify-content:flex-start;font-size:12px" onclick="sendTestMsg('Qual o preço do plano?')">💬 "Qual o preço do plano?"</button>
+              <button class="btn btn-ghost" style="justify-content:flex-start;font-size:12px" onclick="sendTestMsg('Quero falar com um humano')">💬 "Quero falar com um humano"</button>
+              <button class="btn btn-ghost" style="justify-content:flex-start;font-size:12px" onclick="sendTestMsg('Tem desconto?')">💬 "Tem desconto?"</button>
+              <button class="btn btn-ghost" style="justify-content:flex-start;font-size:12px" onclick="sendTestMsg('Como funciona a integração com WhatsApp?')">💬 "Como funciona a integração?"</button>
+              <button class="btn btn-ghost" style="justify-content:flex-start;font-size:12px" onclick="sendTestMsg('Isso aí é melhor que o concorrente?')">💬 "Melhor que o concorrente?"</button>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <div class="chat-preview" id="chat-preview">
+            <div class="msg-row">
+              <div class="msg-avatar" style="background:var(--purple-bg);color:var(--purple2)">🧠</div>
+              <div>
+                <div class="msg-bubble">Olá Maria! Sou a Ana da GrowOS, consultora comercial. Estou aqui para te ajudar a encontrar a melhor solução. Como posso te ajudar? 😊</div>
+                <div class="msg-time">Coach IA · agora</div>
+              </div>
+            </div>
+          </div>
+          <div class="chat-input-row" style="margin-top:10px">
+            <input class="chat-input" id="chat-input" placeholder="Digite uma mensagem para testar..." onkeydown="if(event.key==='Enter')sendChat()">
+            <button class="btn btn-primary" onclick="sendChat()">Enviar</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<!-- TOAST -->
+<div class="toast-container" id="toast-container"></div>
+
+<script>
+// ── NAVEGAÇÃO ──
+function showSection(id, el) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('sec-'+id).classList.add('active');
+  el.classList.add('active');
+}
+
+// ── INNER TABS ──
+function showInner(id, btn) {
+  const parent = btn.closest('.section') || document.body;
+  parent.querySelectorAll('.inner-tab').forEach(t => t.classList.remove('active'));
+  parent.querySelectorAll('.inner-content').forEach(c => c.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById(id).classList.add('active');
+}
+
+// ── TAGS ──
+function addTag(e, containerId) {
+  if (e.key !== 'Enter') return;
+  e.preventDefault();
+  const input = e.target;
+  const val = input.value.trim();
+  if (!val) return;
+  const pill = document.createElement('span');
+  pill.className = 'tag-pill';
+  pill.innerHTML = `${val}<button class="tag-remove" onclick="removeTag(this)">×</button>`;
+  input.parentNode.insertBefore(pill, input);
+  input.value = '';
+}
+function removeTag(btn) { btn.parentNode.remove(); }
+
+// ── PRODUTOS ──
+function addProduto() {
+  const nome = document.getElementById('prod-nome').value.trim();
+  const preco = document.getElementById('prod-preco').value.trim();
+  const desc = document.getElementById('prod-desc').value.trim();
+  if (!nome) return showToast('Informe o nome do produto','');
+  const row = document.createElement('div');
+  row.className = 'produto-row';
+  row.innerHTML = `<span style="font-size:20px">📦</span>
+    <div class="produto-info">
+      <div class="produto-nome">${nome}</div>
+      ${preco ? `<div class="produto-preco">${preco}</div>` : ''}
+      ${desc ? `<div style="font-size:11px;color:var(--muted2);margin-top:2px">${desc}</div>` : ''}
+    </div>
+    <button class="btn btn-ghost" style="font-size:11px;padding:4px 10px" onclick="this.closest('.produto-row').remove()">Remover</button>`;
+  document.getElementById('produtos-list').appendChild(row);
+  document.getElementById('prod-nome').value = '';
+  document.getElementById('prod-preco').value = '';
+  document.getElementById('prod-desc').value = '';
+  showToast('Produto adicionado!','success');
+}
+
+// ── FAQ ──
+function addFaq() {
+  const row = document.createElement('div');
+  row.className = 'card';
+  row.style.marginBottom = '10px';
+  row.innerHTML = `<div class="card-grid">
+    <div class="field" style="margin:0"><label>Pergunta</label><input type="text" placeholder="Nova pergunta..."></div>
+    <div class="field" style="margin:0"><label>Resposta do Coach</label><input type="text" placeholder="Resposta..."></div>
+  </div>`;
+  document.getElementById('faq-list').appendChild(row);
+}
+
+// ── TOGGLES ──
+function toggleModo(cb) {
+  showToast(cb.checked ? 'Modo autônomo ativado' : 'Modo assistido ativado', 'success');
+}
+function toggleFollowup(cb) {
+  document.getElementById('followup-config').style.display = cb.checked ? 'block' : 'none';
+}
+function toggle24h(cb) {
+  const el = document.getElementById('horarios-config');
+  el.style.opacity = cb.checked ? '.4' : '1';
+  el.style.pointerEvents = cb.checked ? 'none' : 'auto';
+}
+
+// ── CHAT TESTE ──
+const respostas = {
+  'qual o preço do plano': 'Temos 3 opções: 🚀 Starter (R$197/mês) — ideal para começar, até 3 usuários. 📈 Growth (R$497/mês) — IA ilimitada, Instagram, subcontas. 🏆 Enterprise — personalizado para grandes operações. Qual se encaixa melhor no seu perfil?',
+  'quero falar com um humano': '✅ Claro! Vou te conectar com um dos nossos especialistas. Um momento! 🤝',
+  'tem desconto': 'Para descontos acima de 10% precisamos de aprovação do time comercial. Posso te conectar com um especialista para negociar? 😊',
+  'como funciona a integração': 'A integração usa a API oficial do Meta Business! Você conecta o número em 5 minutos, sem precisar de técnico. Dá pra integrar WhatsApp, Instagram DM e comentários numa única caixa. Quer ver uma demo rápida? 🎯',
+  'melhor que o concorrente': 'Prefiro não comparar diretamente com outras ferramentas. O que posso dizer é que nosso diferencial é o Coach IA integrado ao CRM — tudo num lugar só, sem precisar de integrações externas. Posso te mostrar na prática? 🚀',
+};
+
+function sendTestMsg(msg) {
+  document.getElementById('chat-input').value = msg;
+  sendChat();
+}
+
+function sendChat() {
+  const input = document.getElementById('chat-input');
+  const msg = input.value.trim();
+  if (!msg) return;
+  const preview = document.getElementById('chat-preview');
+
+  const userRow = document.createElement('div');
+  userRow.className = 'msg-row mine';
+  userRow.innerHTML = `<div class="msg-avatar" style="background:var(--bg3);color:var(--muted2)">👤</div>
+    <div><div class="msg-bubble">${msg}</div><div class="msg-time">Você · agora</div></div>`;
+  preview.appendChild(userRow);
+  input.value = '';
+  preview.scrollTop = preview.scrollHeight;
+
+  // typing
+  const typingRow = document.createElement('div');
+  typingRow.className = 'msg-row';
+  typingRow.innerHTML = `<div class="msg-avatar" style="background:var(--purple-bg);color:var(--purple2)">🧠</div>
+    <div><div class="msg-bubble" style="color:var(--muted2)">✦ digitando...</div></div>`;
+  preview.appendChild(typingRow);
+  preview.scrollTop = preview.scrollHeight;
+
+  setTimeout(() => {
+    typingRow.remove();
+    const key = Object.keys(respostas).find(k => msg.toLowerCase().includes(k));
+    const resposta = respostas[key] || 'Entendido! Deixa eu verificar isso para você. 😊 Nossa equipe tem a resposta certeira para essa dúvida!';
+    const coachRow = document.createElement('div');
+    coachRow.className = 'msg-row';
+    coachRow.innerHTML = `<div class="msg-avatar" style="background:var(--purple-bg);color:var(--purple2)">🧠</div>
+      <div><div class="msg-bubble">${resposta}</div><div class="msg-time">Coach IA · agora</div></div>`;
+    preview.appendChild(coachRow);
+    preview.scrollTop = preview.scrollHeight;
+  }, 1200);
+}
+
+// ── TOAST ──
+function showToast(msg, type) {
+  const tc = document.getElementById('toast-container');
+  const t = document.createElement('div');
+  t.className = `toast ${type}`;
+  t.textContent = msg;
+  tc.appendChild(t);
+  setTimeout(() => { t.style.opacity='0'; t.style.transition='opacity .3s'; setTimeout(()=>t.remove(),300); }, 3000);
+}
+</script>
+</body>
+</html>

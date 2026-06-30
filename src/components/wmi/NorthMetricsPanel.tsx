@@ -11,7 +11,7 @@ const MODULO_ROUTE: Record<string, string> = {
   prospeccao: "/prospeccao",
   funil: "/kanban",
   analytics: "/analytics",
-  rh: "/maturidade",
+  rh: "/rh-comercial",
   processos: "/processos",
   discador: "/discador",
 };

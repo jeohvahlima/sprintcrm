@@ -310,16 +310,10 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
 
 <!-- LEFT SIDEBAR -->
 <div class="left-tabs">
-  <div class="tab-section">IA & Agentes</div>
+  <div class="tab-section">IA Coach</div>
   <div class="tab-item active" onclick="switchTab('agentes',this)">
-    <i class="ti ti-robot"></i>Agentes de IA
+    <i class="ti ti-brain"></i>IA Coach
     <div class="status-dot dot-green"></div>
-  </div>
-  <div class="tab-item" onclick="switchTab('base',this)">
-    <i class="ti ti-brain"></i>Base de Conhecimento
-  </div>
-  <div class="tab-item" onclick="switchTab('treinamento',this)">
-    <i class="ti ti-school"></i>Treinamento
   </div>
 
   <div class="tab-section">Automação</div>
@@ -391,187 +385,14 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
 <!-- CONTENT -->
 <div class="content">
 
-<!-- ═══════════════════ AGENTES ═══════════════════ -->
-<div class="tab-panel active" id="tab-agentes">
-  <div class="panel-hdr">
-    <div class="panel-hdr-icon" style="background:var(--blue-d);color:var(--blue)"><i class="ti ti-robot"></i></div>
-    <div class="panel-hdr-text">
-      <div class="panel-title">Agentes de IA</div>
-      <div class="panel-sub">Respondentes automáticos inteligentes que operam em tempo real nas suas conversas de WhatsApp</div>
-    </div>
-    <div class="panel-hdr-actions">
-      <button class="btn btn-ghost"><i class="ti ti-chart-bar"></i>Ver métricas</button>
-      <button class="btn btn-primary"><i class="ti ti-plus"></i>Novo Agente</button>
-    </div>
-  </div>
-  <div class="panel-body">
-    <!-- Status global -->
-    <div class="ai-status-box asb-enabled" style="margin-bottom:18px">
-      <div class="asb-icon" style="background:var(--green-d);color:var(--green)"><i class="ti ti-shield-check"></i></div>
-      <div class="asb-text">
-        <div class="asb-title" style="color:var(--green)">IA habilitada para sua conta</div>
-        <div class="asb-sub">Os agentes estão disponíveis e podem responder conversas automaticamente. Ative cada agente individualmente.</div>
-      </div>
-      <button class="btn btn-ghost" style="font-size:11.5px;padding:6px 12px"><i class="ti ti-settings"></i>Config global</button>
-    </div>
-
-    <!-- Métricas rápidas -->
-    <div class="grid4" style="margin-bottom:20px">
-      <div class="metric-card mc-blue">
-        <div class="metric-icon mi-blue"><i class="ti ti-message-circle-bolt"></i></div>
-        <div class="metric-num" style="color:var(--blue)">247</div>
-        <div class="metric-label">Atendimentos hoje</div>
-        <div class="metric-trend mt-up"><i class="ti ti-trending-up" style="font-size:11px"></i>+18% vs ontem</div>
-      </div>
-      <div class="metric-card mc-green">
-        <div class="metric-icon mi-green"><i class="ti ti-clock-bolt"></i></div>
-        <div class="metric-num" style="color:var(--green)">6s</div>
-        <div class="metric-label">Tempo médio resposta</div>
-        <div class="metric-trend mt-up"><i class="ti ti-trending-up" style="font-size:11px"></i>melhorou 2s</div>
-      </div>
-      <div class="metric-card mc-amber">
-        <div class="metric-icon mi-amber"><i class="ti ti-user-bolt"></i></div>
-        <div class="metric-num" style="color:var(--amber)">34</div>
-        <div class="metric-label">Transferências p/ humano</div>
-        <div class="metric-trend mt-down"><i class="ti ti-trending-down" style="font-size:11px"></i>-5% vs ontem</div>
-      </div>
-      <div class="metric-card mc-purple">
-        <div class="metric-icon mi-purple"><i class="ti ti-percentage"></i></div>
-        <div class="metric-num" style="color:var(--purple)">94%</div>
-        <div class="metric-label">Taxa de resolução</div>
-        <div class="metric-trend mt-up"><i class="ti ti-trending-up" style="font-size:11px"></i>acima da meta</div>
-      </div>
-    </div>
-
-    <!-- Agent Cards -->
-    <div class="grid2" style="margin-bottom:20px">
-      <!-- Coach IA (único agente ativo) -->
-      <div class="agent-card ac-purple">
-        <div class="agent-header">
-          <div class="agent-icon" style="background:var(--purple-d);color:var(--purple)"><i class="ti ti-brain"></i></div>
-          <div class="agent-meta">
-            <div class="agent-name">Coach IA</div>
-            <div class="agent-desc">Agente unificado: atende, qualifica, agenda, vende e orienta a equipe em tempo real com base no histórico real da conversa</div>
-          </div>
-          <div class="toggle on" onclick="this.classList.toggle('on');this.classList.toggle('off')"></div>
-        </div>
-        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px">
-          <span class="badge b-green"><i class="ti ti-circle-check" style="font-size:10px"></i>Ativo</span>
-          <span class="badge b-purple">Análise real</span>
-          <span class="badge b-blue">Cadência automática</span>
-          <span class="badge b-teal">Modo autônomo</span>
-          <span class="badge b-amber">Base de conhecimento</span>
-        </div>
-        <div class="agent-status">
-          <div class="agent-stat">
-            <div class="agent-stat-num" style="color:var(--purple)">247</div>
-            <div class="agent-stat-label">Atendimentos hoje</div>
-          </div>
-          <div class="agent-divider"></div>
-          <div class="agent-stat">
-            <div class="agent-stat-num" style="color:var(--green)">6s</div>
-            <div class="agent-stat-label">Resp. média</div>
-          </div>
-          <div class="agent-divider"></div>
-          <div class="agent-stat">
-            <div class="agent-stat-num" style="color:var(--amber)">94%</div>
-            <div class="agent-stat-label">Resolução</div>
-          </div>
-        </div>
-        <div class="agent-actions">
-          <button class="btn btn-ghost" onclick="window.parent.postMessage({__growos:true,type:'overlay',module:'base'},'*')"><i class="ti ti-book"></i>Base de conhecimento</button>
-          <button class="btn btn-ghost" onclick="window.parent.postMessage({__growos:true,type:'navigate',path:'/conversas'},'*')"><i class="ti ti-message-circle"></i>Abrir BatePapo</button>
-          <button class="btn btn-ghost"><i class="ti ti-activity"></i>Logs</button>
-        </div>
-      </div>
-
-      <!-- Modo Híbrido -->
-      <div class="card" style="border-style:dashed;border-color:var(--border2)">
-        <div class="section-title" style="margin-bottom:14px"><i class="ti ti-users-group" style="color:var(--teal)"></i>Modo Híbrido: Coach IA + Humano</div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
-          <div class="card-sm" style="border-color:rgba(239,68,68,.2)">
-            <div style="font-size:12px;font-weight:700;color:var(--red);margin-bottom:8px"><i class="ti ti-user-x"></i> Transferência auto</div>
-            <ul style="font-size:11px;color:var(--text2);line-height:2;list-style:none">
-              <li>• Não souber responder</li>
-              <li>• Cliente pedir atendente</li>
-              <li>• Negócio acima de R$ 10k</li>
-              <li>• Reclamação detectada</li>
-            </ul>
-          </div>
-          <div class="card-sm" style="border-color:rgba(61,135,245,.2)">
-            <div style="font-size:12px;font-weight:700;color:var(--blue);margin-bottom:8px"><i class="ti ti-wand"></i> Sugestões ao humano</div>
-            <ul style="font-size:11px;color:var(--text2);line-height:2;list-style:none">
-              <li>• Coach sugere respostas</li>
-              <li>• Humano aceita ou edita</li>
-              <li>• Histórico completo</li>
-              <li>• Transição suave</li>
-            </ul>
-          </div>
-        </div>
-        <button class="btn btn-ghost" style="width:100%;justify-content:center"><i class="ti ti-settings"></i>Configurar transferências</button>
-      </div>
-    </div>
-
-
-    <!-- n8n integration banner -->
-    <div class="card" style="background:linear-gradient(135deg,rgba(255,102,0,.06),rgba(255,102,0,.02));border-color:rgba(255,102,0,.2)">
-      <div style="display:flex;align-items:center;gap:12px">
-        <div style="font-size:28px">🔗</div>
-        <div style="flex:1">
-          <div style="font-family:var(--display);font-size:13px;font-weight:700;color:#fb923c">Integração n8n</div>
-          <div style="font-size:11.5px;color:var(--text2);margin-top:3px">Conecte fluxos avançados via n8n para automações complexas com qualquer serviço externo.</div>
-        </div>
-        <button class="btn btn-ghost" style="border-color:rgba(255,102,0,.3);color:#fb923c"><i class="ti ti-external-link"></i>Conectar n8n</button>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- ═══════════════════ BASE DE CONHECIMENTO ═══════════════════ -->
-<div class="tab-panel" id="tab-base">
-  <div class="panel-hdr">
-    <div class="panel-hdr-icon" style="background:var(--purple-d);color:var(--purple)"><i class="ti ti-brain"></i></div>
-    <div class="panel-hdr-text">
-      <div class="panel-title">Base de Conhecimento</div>
-      <div class="panel-sub">Documentos, FAQs, produtos e arquivos que treinam os agentes de IA</div>
-    </div>
-    <div class="panel-hdr-actions">
-      <button class="btn btn-primary"><i class="ti ti-upload"></i>Enviar arquivo</button>
-    </div>
-  </div>
-  <div class="panel-body">
-    <div class="grid2" style="margin-bottom:20px">
-      <div>
-        <div class="section-title"><i class="ti ti-building" style="color:var(--blue)"></i>Dados da Empresa</div>
-        <div class="card-sm" style="margin-bottom:10px">
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-            <div><div class="field-label">Nome</div><div style="font-size:12.5px;color:var(--text)">Consultoria</div></div>
-            <div><div class="field-label">Segmento</div><div style="font-size:12.5px;color:var(--text)">SaaS / CRM</div></div>
-            <div><div class="field-label">Horário</div><div style="font-size:12.5px;color:var(--text)">Seg–Sex, 8h–18h</div></div>
-            <div><div class="field-label">WhatsApp</div><div style="font-size:12.5px;color:var(--green)">(11) 9 9999-9999</div></div>
-          </div>
-        </div>
-        <div class="section-title" style="margin-top:16px"><i class="ti ti-package" style="color:var(--amber)"></i>Produtos (3)</div>
-        <div class="kb-item"><div class="kb-icon" style="background:var(--amber-d);color:var(--amber)"><i class="ti ti-package"></i></div><div><div class="kb-name">Plano Starter</div><div class="kb-meta">R$ 197/mês · CRM básico</div></div><span class="badge b-green" style="margin-left:auto">ativo</span></div>
-        <div class="kb-item"><div class="kb-icon" style="background:var(--blue-d);color:var(--blue)"><i class="ti ti-package"></i></div><div><div class="kb-name">Plano Pro</div><div class="kb-meta">R$ 497/mês · IA + Automação</div></div><span class="badge b-green" style="margin-left:auto">ativo</span></div>
-        <div class="kb-item"><div class="kb-icon" style="background:var(--purple-d);color:var(--purple)"><i class="ti ti-package"></i></div><div><div class="kb-name">Plano Enterprise</div><div class="kb-meta">R$ 997/mês · Personalizado</div></div><span class="badge b-green" style="margin-left:auto">ativo</span></div>
-        <button class="btn btn-ghost" style="width:100%;justify-content:center;margin-top:8px"><i class="ti ti-plus"></i>Adicionar produto</button>
-      </div>
-      <div>
-        <div class="section-title"><i class="ti ti-help-circle" style="color:var(--teal)"></i>FAQ (5 perguntas)</div>
-        <div class="kb-item"><div class="kb-icon" style="background:var(--teal-d);color:var(--teal)"><i class="ti ti-question-mark"></i></div><div><div class="kb-name">Como faço para integrar WhatsApp?</div><div class="kb-meta">Resposta configurada</div></div><div class="kb-status"><span class="badge b-green">ok</span></div></div>
-        <div class="kb-item"><div class="kb-icon" style="background:var(--teal-d);color:var(--teal)"><i class="ti ti-question-mark"></i></div><div><div class="kb-name">Qual o prazo de contrato?</div><div class="kb-meta">Resposta configurada</div></div><div class="kb-status"><span class="badge b-green">ok</span></div></div>
-        <div class="kb-item"><div class="kb-icon" style="background:var(--teal-d);color:var(--teal)"><i class="ti ti-question-mark"></i></div><div><div class="kb-name">Tem versão gratuita?</div><div class="kb-meta">Resposta configurada</div></div><div class="kb-status"><span class="badge b-green">ok</span></div></div>
-        <button class="btn btn-ghost" style="width:100%;justify-content:center;margin-top:8px"><i class="ti ti-plus"></i>Adicionar FAQ</button>
-        <div class="section-title" style="margin-top:16px"><i class="ti ti-file-text" style="color:var(--pink)"></i>Arquivos de conhecimento</div>
-        <div class="kb-item"><div class="kb-icon" style="background:var(--red-d);color:var(--red)"><i class="ti ti-file-type-pdf"></i></div><div><div class="kb-name">Manual do Produto.pdf</div><div class="kb-meta">2.4 MB · PDF · processado</div></div><div class="kb-status"><span class="badge b-green">pronto</span></div></div>
-        <div class="kb-item"><div class="kb-icon" style="background:var(--blue-d);color:var(--blue)"><i class="ti ti-file-type-doc"></i></div><div><div class="kb-name">Script de Vendas.docx</div><div class="kb-meta">180 KB · Documento · processado</div></div><div class="kb-status"><span class="badge b-green">pronto</span></div></div>
-        <div class="kb-item"><div class="kb-icon" style="background:var(--amber-d);color:var(--amber)"><i class="ti ti-loader-2" style="animation:spin .8s linear infinite"></i></div><div><div class="kb-name">Tabela de preços 2025.xlsx</div><div class="kb-meta">56 KB · Planilha · processando...</div></div><div class="kb-status"><span class="badge b-amber">processando</span></div></div>
-        <style>@keyframes spin{to{transform:rotate(360deg)}}</style>
-        <button class="btn btn-ghost" style="width:100%;justify-content:center;margin-top:8px"><i class="ti ti-upload"></i>Enviar arquivo</button>
-      </div>
-    </div>
-  </div>
+<!-- ═══════════════════ IA COACH ═══════════════════ -->
+<div class="tab-panel active" id="tab-agentes" style="padding:0;overflow:hidden">
+  <iframe
+    id="coachIaConfigIframe"
+    src="/coach-ia-config.html"
+    title="IA Coach — Configuração"
+    style="width:100%;height:100%;border:0;display:block;min-height:calc(100vh - 7rem);background:#0b0d11"
+  ></iframe>
 </div>
 
 <!-- ═══════════════════ FLUXOS ═══════════════════ -->
@@ -1187,28 +1008,6 @@ Att, Rafael</textarea>
   </div>
 </div>
 
-<!-- Treinamento placeholder -->
-<div class="tab-panel" id="tab-treinamento">
-  <div class="panel-hdr">
-    <div class="panel-hdr-icon" style="background:var(--amber-d);color:var(--amber)"><i class="ti ti-school"></i></div>
-    <div class="panel-hdr-text">
-      <div class="panel-title">Treinamento da IA</div>
-      <div class="panel-sub">Exemplos de perguntas e respostas ideais para refinar o comportamento dos agentes</div>
-    </div>
-    <div class="panel-hdr-actions"><button class="btn btn-primary"><i class="ti ti-plus"></i>Adicionar exemplo</button></div>
-  </div>
-  <div class="panel-body">
-    <div class="card" style="text-align:center;padding:40px;border-style:dashed">
-      <i class="ti ti-school" style="font-size:40px;color:var(--text3);opacity:.4"></i>
-      <div style="font-size:14px;font-weight:600;color:var(--text2);margin-top:12px">Adicione exemplos de treinamento</div>
-      <div style="font-size:12px;color:var(--text3);margin-top:6px;max-width:360px;margin-left:auto;margin-right:auto">Ensine os agentes com pares de pergunta-resposta ideal, roteiros e categorias de atendimento</div>
-      <button class="btn btn-primary" style="margin-top:14px"><i class="ti ti-plus"></i>Adicionar primeiro exemplo</button>
-    </div>
-  </div>
-</div>
-
-</div><!-- /content -->
-</div><!-- /layout -->
 
 <script>
 let growosSessionPayload = null;
@@ -1263,7 +1062,6 @@ function switchTab(id, el) {
   // Bridge: certas abas abrem módulos React reais (mantendo visual fixo)
   const overlayTabs = {
     fluxos: { type: 'overlay', module: 'fluxos' },
-    base: { type: 'overlay', module: 'base' },
     diagnostico: { type: 'navigate', path: '/automacoes/diagnostico' },
     'whatsapp-nao-oficial': { type: 'overlay', module: 'disparo-nao-oficial' },
   };
@@ -1303,7 +1101,6 @@ document.addEventListener('click', function (e) {
   const map = [
     { match: ['novo fluxo', 'abrir no builder', 'simular fluxo', 'templates'], action: { type: 'overlay', module: 'fluxos' } },
     { match: ['diagnosticar', 'diagnóstico ura', 'diagnostico ura'], action: { type: 'navigate', path: '/automacoes/diagnostico' } },
-    { match: ['base de conhecimento'], action: { type: 'overlay', module: 'base' } },
     { match: ['logs'], action: { type: 'toast', message: 'Logs de execução em breve' } },
     { match: ['configurar', 'configurar transferências', 'config global'], action: { type: 'toast', message: 'Painel de configuração em breve' } },
     { match: ['novo agente', 'ativar agente'], action: { type: 'toast', message: 'Criação de agente em breve' } },
@@ -1311,7 +1108,6 @@ document.addEventListener('click', function (e) {
     { match: ['nova campanha', 'confirmar e agendar disparo'], action: { type: 'toast', message: 'Campanhas em breve' } },
     { match: ['conectar n8n', 'conectar', 'novo webhook'], action: { type: 'toast', message: 'Integrações em breve' } },
     { match: ['salvar'], action: { type: 'toast', message: 'Ação em breve' } },
-    { match: ['enviar arquivo', 'adicionar produto', 'adicionar faq', 'adicionar exemplo', 'adicionar primeiro exemplo'], action: { type: 'overlay', module: 'base' } },
   ];
   for (const m of map) {
     if (m.match.some(t => label === t || label.endsWith(t) || label.includes(t))) {

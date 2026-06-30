@@ -8,15 +8,16 @@
 // alterar o visual fixo.
 import { useEffect, useRef, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
+import { ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 import { FluxoAutomacaoBuilder } from "@/components/fluxos/FluxoAutomacaoBuilder";
-import { BaseConhecimentoIA } from "@/components/ia/BaseConhecimentoIA";
 import { SiteInstitucionalConfig } from "@/components/ia/SiteInstitucionalConfig";
-import DisparoEmMassaWhatsAppNormal from "@/components/campanhas/DisparoEmMassaWhatsAppNormal";
+import { DisparoEmMassa } from "@/components/campanhas/DisparoEmMassa";
 import { supabase } from "@/integrations/supabase/client";
 
-type OverlayModule = "fluxos" | "base" | "site" | "disparo-nao-oficial" | null;
+type OverlayModule = "fluxos" | "site" | "disparo-nao-oficial" | null;
 
 export default function IA() {
   const navigate = useNavigate();
@@ -82,7 +83,7 @@ export default function IA() {
           if (typeof data.path === "string") navigate(data.path);
           break;
         case "overlay":
-          if (data.module === "fluxos" || data.module === "base" || data.module === "site" || data.module === "disparo-nao-oficial") {
+          if (data.module === "fluxos" || data.module === "site" || data.module === "disparo-nao-oficial") {
             if (data.module === "site") await loadSiteInfo();
             setOverlay(data.module);
           }
@@ -112,7 +113,64 @@ export default function IA() {
     };
   }, [navigate, sendSiteInfo, loadSiteInfo]);
 
-  const overlayTitle = overlay === "fluxos" ? "Fluxos de Automação" : overlay === "base" ? "Base de Conhecimento" : overlay === "disparo-nao-oficial" ? "WhatsApp Não Oficial — Disparo em Massa" : "Site Institucional";
+  const overlayTitle = overlay === "fluxos" ? "Fluxos de Automação" : overlay === "disparo-nao-oficial" ? "WhatsApp Não Oficial — Disparo em Massa" : "Site Institucional";
+
+  if (overlay === "fluxos") {
+    return (
+      <div className="w-full h-[calc(100vh-7rem)] min-h-[640px] overflow-y-auto rounded-lg border border-border bg-background">
+        <div className="sticky top-0 z-20 flex items-center gap-3 border-b border-border bg-background/95 px-4 py-3 backdrop-blur sm:px-6">
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={() => {
+              setOverlay(null);
+              requestAnimationFrame(sendSiteInfo);
+            }}
+            className="gap-2"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Voltar
+          </Button>
+          <div className="min-w-0">
+            <h1 className="truncate text-lg font-semibold">Fluxos de Automação</h1>
+            <p className="text-sm text-muted-foreground">Crie fluxos visuais para automatizar atendimento e processos.</p>
+          </div>
+        </div>
+        <div className="p-4 sm:p-6">
+          <FluxoAutomacaoBuilder />
+        </div>
+      </div>
+    );
+  }
+  if (overlay === "disparo-nao-oficial") {
+    return (
+      <div className="w-full h-[calc(100vh-7rem)] min-h-[640px] overflow-y-auto rounded-lg border border-border bg-background">
+        <div className="sticky top-0 z-20 flex items-center gap-3 border-b border-border bg-background/95 px-4 py-3 backdrop-blur sm:px-6">
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={() => {
+              setOverlay(null);
+              requestAnimationFrame(sendSiteInfo);
+            }}
+            className="gap-2"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Voltar
+          </Button>
+          <div className="min-w-0">
+            <h1 className="truncate text-lg font-semibold">WhatsApp Não Oficial — Disparo em Massa</h1>
+            <p className="text-sm text-muted-foreground">Selecione leads, configure timing e envie campanhas pela API não oficial.</p>
+          </div>
+        </div>
+        <div className="p-4 sm:p-6">
+          <DisparoEmMassa />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full h-[calc(100vh-7rem)] min-h-[640px] overflow-hidden rounded-lg border border-border bg-background">
@@ -123,15 +181,12 @@ export default function IA() {
         className="w-full h-full border-0 block"
       />
 
-      <Dialog open={overlay !== null} onOpenChange={(o) => { if (!o) { setOverlay(null); sendSiteInfo(); } }}>
-        <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
+      <Dialog open={overlay !== null && overlay !== "disparo-nao-oficial" && overlay !== "fluxos"} onOpenChange={(o) => { if (!o) { setOverlay(null); sendSiteInfo(); } }}>
+        <DialogContent className="max-w-[min(96vw,1400px)] max-h-[92vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{overlayTitle}</DialogTitle>
           </DialogHeader>
-          {overlay === "fluxos" && <FluxoAutomacaoBuilder />}
-          {overlay === "base" && <BaseConhecimentoIA />}
           {overlay === "site" && companyId && <SiteInstitucionalConfig companyId={companyId} />}
-          {overlay === "disparo-nao-oficial" && <DisparoEmMassaWhatsAppNormal />}
         </DialogContent>
       </Dialog>
     </div>

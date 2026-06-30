@@ -34,6 +34,7 @@ import BIClinico from "./pages/BIClinico";
 import CallCenterPreview from "./pages/CallCenterPreview";
 
 import Maturidade from "./pages/Maturidade";
+import RHComercial from "./pages/RHComercial";
 import Mentoria from "./pages/Mentoria";
 import Juridico from "./pages/Juridico";
 import ConfiguracoesGamificacao from "./pages/ConfiguracoesGamificacao";
@@ -127,6 +128,7 @@ const App = () => (
               <Route path="bi-clinico" element={<BIClinico />} />
               <Route path="revenue-engine" element={<Navigate to="/analytics" replace />} />
               <Route path="maturidade" element={<Maturidade />} />
+              <Route path="rh-comercial" element={<RHComercial />} />
               <Route path="mentoria" element={<Mentoria />} />
               <Route path="juridico" element={<Juridico />} />
               <Route path="configuracoes/gamificacao" element={<ConfiguracoesGamificacao />} />

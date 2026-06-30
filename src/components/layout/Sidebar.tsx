@@ -1,6 +1,6 @@
 import { NavLink, useNavigate, useLocation } from "react-router-dom";
 import { useState, useEffect } from "react";
-import { LayoutDashboard, Users, MessageSquare, Calendar, Bot, Settings, LogOut, Video, PhoneCall, Target, Lock, X, Brain, DollarSign, GraduationCap, Activity, Sparkles, Scale, Rocket, ChevronDown, ChevronRight, Stethoscope } from "lucide-react";
+import { LayoutDashboard, Users, MessageSquare, Calendar, Bot, Settings, LogOut, Video, PhoneCall, Target, Lock, X, Brain, DollarSign, GraduationCap, Activity, Sparkles, Scale, Rocket, ChevronDown, ChevronRight, Stethoscope, Heart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
@@ -73,6 +73,7 @@ const navigation: NavEntry[] = [
       // "Gestão de Processos" é exclusivamente comercial — oculto para clínicas
       // Módulo "Máquina de Vendas" removido — substituído pelo Call Center
       { name: "Diagnóstico Comercial", href: "/maturidade", icon: Activity, menuKey: "maturidade", hideForClinica: true } as any,
+      { name: "RH Comercial", href: "/rh-comercial", icon: Heart, menuKey: "processos", hideForClinica: true } as any,
       { name: "Gestão de Processos", href: "/processos", icon: Target, menuKey: "processos", showAIBadge: true, hideForClinica: true } as any,
       { name: "Call Center", href: "/discador", icon: PhoneCall, menuKey: "discador" },
       { name: "Business Intelligence (BI)", href: "/financeiro", icon: DollarSign, menuKey: "financeiro", clinicaLabel: "BI Clínico", clinicaHref: "/bi-clinico", clinicaIcon: Stethoscope },

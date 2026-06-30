@@ -1,34 +1,18 @@
 import { useNavigate } from "react-router-dom";
-import { useWMIScore, useWMIHistory } from "@/hooks/useWMI";
+import { useWMIScore } from "@/hooks/useWMI";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { RadarPilares } from "@/components/wmi/RadarPilares";
 import { WMIAlertsPanel } from "@/components/wmi/WMIAlertsPanel";
-import { SegmentBenchmarkCard } from "@/components/wmi/SegmentBenchmarkCard";
-import { GrowSegmentBenchmarkCard } from "@/components/wmi/GrowSegmentBenchmarkCard";
-import { PillarEvolutionChart } from "@/components/wmi/PillarEvolutionChart";
-import { Diagnostico360 } from "@/components/wmi/Diagnostico360";
-import { GuidedDiagnosisWizard } from "@/components/wmi/GuidedDiagnosisWizard";
-import { CRMMaturityCheck } from "@/components/wmi/CRMMaturityCheck";
-import { CommercialHRPanel } from "@/components/wmi/CommercialHRPanel";
-import { BusinessPhaseCard } from "@/components/wmi/BusinessPhaseCard";
 import { GrowScoreHero } from "@/components/wmi/GrowScoreHero";
-import { NorthMetricsPanel } from "@/components/wmi/NorthMetricsPanel";
-import { RhythmTemplatesPanel } from "@/components/wmi/RhythmTemplatesPanel";
-import { Onboarding7Days } from "@/components/wmi/Onboarding7Days";
-import { GrowPhasesPanel } from "@/components/wmi/GrowPhasesPanel";
 import {
-  Activity, Trophy, Sparkles, ArrowRight, GraduationCap, AlertTriangle,
-  TrendingUp, Target, FileText, BarChart3, Bot, Users, ClipboardCheck,
-  Database, Heart, Rocket, Compass, Calendar as CalendarIcon, Zap,
-  Megaphone, Instagram, ShieldAlert, TrendingDown, ListChecks,
+  Activity, Trophy, Sparkles, ArrowRight, AlertTriangle,
+  Target, FileText, BarChart3, Bot, Users,
+  Megaphone, Instagram, ShieldAlert, TrendingDown,
 } from "lucide-react";
-import { LineChart, Line, ResponsiveContainer, XAxis, YAxis, Tooltip, CartesianGrid } from "recharts";
-import { format } from "date-fns";
 
 const CLASS_STYLE: Record<string, { color: string; emoji: string; desc: string }> = {
   "Escalável": { color: "from-amber-500 to-yellow-400", emoji: "🚀", desc: "Operação previsível e escalável. Top 5% do mercado." },
@@ -52,7 +36,6 @@ const PILLAR_META: Record<string, { label: string; icon: any; color: string; rou
 export default function Maturidade() {
   const navigate = useNavigate();
   const { data: score, isLoading } = useWMIScore();
-  const { data: history } = useWMIHistory();
 
   if (isLoading || !score) {
     return (
@@ -90,10 +73,6 @@ export default function Maturidade() {
           Diagnóstico estratégico 360° + plano de ação executivo gerado pela IA com base nos 5 pilares do GROW OS.
         </p>
       </div>
-
-      {/* 4 FASES G.R.O.W. — jornada da metodologia */}
-      <GrowPhasesPanel />
-
       {/* GROW SCORE CONSOLIDADO (selo da metodologia) */}
       <GrowScoreHero />
 
@@ -161,176 +140,22 @@ export default function Maturidade() {
 
       {/* Alertas Inteligentes */}
       <WMIAlertsPanel />
-
-      {/* TABS UNIFICADAS */}
-      <Tabs defaultValue="onboarding" className="space-y-4">
-        <TabsList className="flex-wrap h-auto">
-          <TabsTrigger value="onboarding" className="gap-2">
-            <Zap className="h-4 w-4" /> Onboarding 7 Dias
-          </TabsTrigger>
-          <TabsTrigger value="diagnostico" className="gap-2">
-            <Sparkles className="h-4 w-4" /> Diagnóstico 360°
-          </TabsTrigger>
-          <TabsTrigger value="evolucao" className="gap-2">
-            <TrendingUp className="h-4 w-4" /> Maturidade & Evolução
-          </TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="onboarding">
-          <Onboarding7Days />
-        </TabsContent>
-
-        <TabsContent value="diagnostico" className="space-y-6">
-          <section className="space-y-3">
-            <div className="flex items-center gap-2">
-              <Sparkles className="h-5 w-5 text-primary" />
-              <h2 className="text-lg font-semibold">Diagnóstico Comercial Unificado</h2>
-            </div>
-            <p className="text-sm text-muted-foreground max-w-3xl">
-              Fluxo guiado GROW Sales Group: pilares, dores, alavancas e plano de ação.
-            </p>
-            <div className="relative w-full overflow-hidden rounded-xl border bg-background" style={{ height: "calc(100vh - 16rem)", minHeight: 640 }}>
-              <iframe
-                src="/diagnostico-comercial.html"
-                title="Diagnóstico Comercial"
-                className="absolute inset-0 block h-full w-full border-none"
-              />
-            </div>
-          </section>
-        </TabsContent>
-
-
-        {/* MATURIDADE & EVOLUÇÃO — agrupa Pilares, CRM, RH, Fase, Métricas Norte e Ritmos */}
-        <TabsContent value="evolucao" className="space-y-10">
-          {/* Pilares & Evolução do GMI Score */}
-          <section className="space-y-4">
-            <div className="flex items-center gap-2">
-              <TrendingUp className="h-5 w-5 text-primary" />
-              <h2 className="text-lg font-semibold">Pilares & Evolução</h2>
-            </div>
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {Object.entries(score.pillars ?? {}).map(([key, p]: any) => {
-                const meta = PILLAR_META[key];
-                if (!meta || !p) return null;
-                const Icon = meta.icon;
-                const pct = p.max ? Math.round((p.score / p.max) * 100) : 0;
-                return (
-                  <Card key={key} className="overflow-hidden hover:border-primary/40 transition">
-                    <div className={`h-1.5 bg-gradient-to-r ${meta.color}`} />
-                    <CardHeader className="pb-3">
-                      <div className="flex items-center gap-2">
-                        <div className={`p-2 rounded-lg bg-gradient-to-br ${meta.color} text-white`}>
-                          <Icon className="h-5 w-5" />
-                        </div>
-                        <CardTitle className="text-base flex-1">{meta.label}</CardTitle>
-                        <Badge variant="secondary" className="font-mono">{p.score}/{p.max}</Badge>
-                      </div>
-                    </CardHeader>
-                    <CardContent className="space-y-3">
-                      <Progress value={pct} className="h-2" />
-                      <div className="space-y-1.5 pt-1">
-                        {Object.entries(p.metrics ?? {}).map(([k, v]) => (
-                          <div key={k} className="flex justify-between text-xs">
-                            <span className="text-muted-foreground capitalize">{k.replace(/_/g, " ")}</span>
-                            <span className="font-medium">{typeof v === "number" ? v.toLocaleString("pt-BR") : String(v ?? "")}</span>
-                          </div>
-                        ))}
-                      </div>
-                      <Button variant="ghost" size="sm" className="w-full justify-between" onClick={() => navigate(meta.route)}>
-                        Ir para o módulo <ArrowRight className="h-3 w-3" />
-                      </Button>
-                    </CardContent>
-                  </Card>
-                );
-              })}
-            </div>
-
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-base">Evolução do GMI Score</CardTitle>
-                <CardDescription>Histórico de avaliações geradas.</CardDescription>
-              </CardHeader>
-              <CardContent>
-                {!history?.length ? (
-                  <p className="text-sm text-muted-foreground text-center py-10">
-                    Gere seu primeiro plano para registrar o histórico.
-                  </p>
-                ) : (
-                  <ResponsiveContainer width="100%" height={280}>
-                    <LineChart data={history.map((h: any) => ({
-                      date: format(new Date(h.created_at), "dd/MM"),
-                      score: h.total_score,
-                    }))}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                      <XAxis dataKey="date" tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }} />
-                      <YAxis domain={[0, 100]} tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }} />
-                      <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 8 }} />
-                      <Line type="monotone" dataKey="score" stroke="hsl(var(--primary))" strokeWidth={2.5} dot={{ r: 4 }} />
-                    </LineChart>
-                  </ResponsiveContainer>
-                )}
-              </CardContent>
-            </Card>
-
-            <div className="grid lg:grid-cols-2 gap-4">
-              <PillarEvolutionChart />
-              <SegmentBenchmarkCard
-                currentMetrics={{
-                  win_rate: (score.pillars.gestao?.metrics as any)?.win_rate,
-                  cycle_days: (score.pillars.gestao?.metrics as any)?.cycle_days,
-                }}
-              />
-            </div>
-          </section>
-
-          {/* Fase do Negócio */}
-          <section className="space-y-3">
-            <div className="flex items-center gap-2">
-              <Rocket className="h-5 w-5 text-primary" />
-              <h2 className="text-lg font-semibold">Fase do Negócio</h2>
-            </div>
-            <BusinessPhaseCard />
-          </section>
-
-          {/* Métricas Norte */}
-          <section className="space-y-3">
-            <div className="flex items-center gap-2">
-              <Compass className="h-5 w-5 text-primary" />
-              <h2 className="text-lg font-semibold">Métricas Norte</h2>
-            </div>
-            <NorthMetricsPanel />
-            <GrowSegmentBenchmarkCard />
-          </section>
-
-          {/* Maturidade CRM */}
-          <section className="space-y-3">
-            <div className="flex items-center gap-2">
-              <Database className="h-5 w-5 text-primary" />
-              <h2 className="text-lg font-semibold">Maturidade CRM</h2>
-            </div>
-            <CRMMaturityCheck />
-          </section>
-
-          {/* RH Comercial */}
-          <section className="space-y-3">
-            <div className="flex items-center gap-2">
-              <Heart className="h-5 w-5 text-primary" />
-              <h2 className="text-lg font-semibold">RH Comercial</h2>
-            </div>
-            <CommercialHRPanel />
-          </section>
-
-          {/* Ritmos GROW */}
-          <section className="space-y-3">
-            <div className="flex items-center gap-2">
-              <CalendarIcon className="h-5 w-5 text-primary" />
-              <h2 className="text-lg font-semibold">Ritmos GROW</h2>
-            </div>
-            <RhythmTemplatesPanel />
-          </section>
-        </TabsContent>
-      </Tabs>
-
+      <section className="space-y-3">
+        <div className="flex items-center gap-2">
+          <Sparkles className="h-5 w-5 text-primary" />
+          <h2 className="text-lg font-semibold">Diagnóstico Comercial Unificado</h2>
+        </div>
+        <p className="text-sm text-muted-foreground max-w-3xl">
+          Fluxo guiado GROW Sales Group: pilares, dores, alavancas e plano de ação.
+        </p>
+        <div className="relative w-full overflow-hidden rounded-xl border bg-background" style={{ height: "calc(100vh - 16rem)", minHeight: 640 }}>
+          <iframe
+            src="/diagnostico-comercial.html"
+            title="Diagnóstico Comercial"
+            className="absolute inset-0 block h-full w-full border-none"
+          />
+        </div>
+      </section>
       {/* UPSELL MENTORIA — oculto enquanto o módulo Advisory estiver indisponível para subcontas */}
     </div>
   );
