@@ -1115,6 +1115,19 @@
         if(current) el.value = current;
       }
       let CRM_LEADS = [];
+      function openLeadChat(payload){
+        try{
+          const ph = String(payload?.phone || '').replace(/\D/g,'');
+          const msg = { type:'agenda:open-chat', leadId: payload?.leadId || null, phone: ph, name: payload?.name || '', message: payload?.message || '' };
+          if(window.parent && window.parent !== window){
+            window.parent.postMessage(msg, '*');
+            return;
+          }
+        }catch(_){}
+        const ph2 = String(payload?.phone || '').replace(/\D/g,'');
+        const url = 'https://wa.me/' + ph2 + (payload?.message ? ('?text=' + encodeURIComponent(payload.message)) : '');
+        window.open(url, '_blank');
+      }
       window.addEventListener('message', (e) => {
         const d = e.data || {};
         if(d.type === 'agenda:data'){
