@@ -1345,8 +1345,10 @@ function renderCard(c, showDate) {
       ${c.obs ? `<div class="comp-obs">${c.obs}</div>` : ''}
       <div class="comp-tags">
         <span class="badge ${badgeStatus[c.status]}"><span class="status-dot ${c.status}"></span>${nomesStatus[c.status]}</span>
-        ${c.lembretes.length ? `<span class="badge badge-amber">🔔 ${c.lembretes.length} lembrete${c.lembretes.length>1?'s':''}</span>` : ''}
+        ${c.lembretes && c.lembretes.length ? `<span class="badge badge-amber">🔔 ${c.lembretes.length} lembrete${c.lembretes.length>1?'s':''}</span>` : ''}
+        ${c.tarefas && c.tarefas.length ? `<span class="badge badge-blue">✓ ${c.tarefas.filter(t=>t.done).length}/${c.tarefas.length} tarefas</span>` : ''}
       </div>
+
     </div>
     <div class="comp-actions" onclick="event.stopPropagation()">
       ${c.status==='agendado' ? `<button class="btn btn-outline btn-sm btn-icon" title="Confirmar" onclick="quickConfirm(${c.id})">✔</button>` : ''}
