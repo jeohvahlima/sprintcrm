@@ -1468,23 +1468,36 @@
       }
       const APPT_META_KEY = 'agenda_appointment_meta_v1';
       const quickNoteTags = ['Lead quente', 'Orcamento aprovado', 'Objecao de preco', 'Remarcar', 'Pronto pra fechar', 'Baixo potencial'];
+      const REMOTE_META = new Map(); // id -> {notes, tags, tasks} for remote (DB) compromissos
       function loadApptMeta(){
         try { return JSON.parse(localStorage.getItem(APPT_META_KEY)) || {}; }
         catch(_) { return {}; }
       }
+      function isRemoteAppt(id){
+        const ev = (CRM_APPOINTMENTS || []).find(i => i.id === id);
+        return !!(ev && ev.remote);
+      }
       function getApptMeta(id){
+        if(REMOTE_META.has(id)) return REMOTE_META.get(id);
         const all = loadApptMeta();
         return all[id] || { notes: '', tags: [], tasks: [] };
       }
       function saveApptMeta(id, meta){
-        const all = loadApptMeta();
-        all[id] = {
+        const clean = {
           notes: meta.notes || '',
           tags: Array.isArray(meta.tags) ? meta.tags : [],
           tasks: Array.isArray(meta.tasks) ? meta.tasks : [],
         };
+        if(isRemoteAppt(id)){
+          REMOTE_META.set(id, clean);
+          try { window.parent.postMessage({ type: 'agenda:save-meta', id, meta: clean }, '*'); } catch(_){}
+          return;
+        }
+        const all = loadApptMeta();
+        all[id] = clean;
         localStorage.setItem(APPT_META_KEY, JSON.stringify(all));
       }
+
       function metaTaskStats(meta){
         const tasks = Array.isArray(meta.tasks) ? meta.tasks : [];
         const done = tasks.filter(t => t.done).length;
