@@ -1122,7 +1122,18 @@
           populateSelect('f_agenda', d.agendas, 'Nenhuma agenda cadastrada');
           populateSelect('f_prof', d.profissionais, 'Nenhum profissional cadastrado');
           if(Array.isArray(d.leads)) CRM_LEADS = d.leads;
-          if(Array.isArray(d.compromissos)) CRM_APPOINTMENTS = d.compromissos.map(normalizeAppointment).filter(i => i.date && i.start);
+          if(Array.isArray(d.compromissos)) {
+            CRM_APPOINTMENTS = d.compromissos.map(normalizeAppointment).filter(i => i.date && i.start);
+            CRM_APPOINTMENTS.forEach(c => {
+              if(c.remote && c.meta){
+                REMOTE_META.set(c.id, {
+                  notes: c.meta.notes || '',
+                  tags: Array.isArray(c.meta.tags) ? c.meta.tags : [],
+                  tasks: Array.isArray(c.meta.tasks) ? c.meta.tasks : [],
+                });
+              }
+            });
+          }
           if(Array.isArray(d.lembretes)) CRM_REMINDERS = d.lembretes;
           renderAgendaManager();
           maybeSelectAppointmentWeek(CRM_APPOINTMENTS);
