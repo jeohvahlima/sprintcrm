@@ -166,14 +166,26 @@ export function AgendaColaboradores() {
             senha: formData.senha,
             telefone: formData.telefone || undefined,
             especialidade: formData.especialidade || undefined,
+            avatar_url: formData.avatar_url || undefined,
+            bio: formData.bio || undefined,
             company_id: userRole.company_id
           }
         });
         if (pe) throw new Error("Erro ao criar profissional");
         if (!pd?.success) throw new Error(pd?.error || "Erro ao criar profissional");
         profissionalId = pd?.profissional?.id;
-        if (pd?.already_exists) toast.info("Profissional já cadastrado. Vinculando à agenda...");
+        if (pd?.already_exists) {
+          toast.info("Profissional já cadastrado. Vinculando à agenda...");
+          // atualiza avatar/bio do profissional existente
+          if (profissionalId && (formData.avatar_url || formData.bio)) {
+            await supabase.from('profissionais').update({
+              avatar_url: formData.avatar_url || null,
+              bio: formData.bio || null,
+            }).eq('id', profissionalId);
+          }
+        }
       }
+
 
       const { error } = await supabase.from('agendas').insert([{
         nome: formData.nome,
