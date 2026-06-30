@@ -2459,7 +2459,7 @@
       // delegated clicks on list (works for static items too)
       document.addEventListener('click', (e) => {
         const wa = e.target.closest('[data-wa]');
-        if(wa){ const ph=wa.getAttribute('data-wa').replace(/\D/g,''); window.open('https://wa.me/'+ph,'_blank'); return; }
+        if(wa){ openLeadChat({ phone: wa.getAttribute('data-wa'), leadId: wa.getAttribute('data-wa-lead'), name: wa.getAttribute('data-wa-name') }); return; }
         const view = e.target.closest('[data-view]');
         if(view && !e.target.closest('.item-actions') && !e.target.closest('[data-edit]') && !e.target.closest('[data-del]')){
           openInfoPanel(view.getAttribute('data-view')); return;
