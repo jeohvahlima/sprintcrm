@@ -490,6 +490,11 @@ export default function Agenda() {
           .replace(/(^-|-$)/g, "")
           .slice(0, 40) + "-" + Math.random().toString(36).slice(2, 7);
 
+        let avatarUrl: string | null = data.avatar_url ?? null;
+        if (data.avatar_data_url) {
+          avatarUrl = (await uploadAgendaAvatar(data.avatar_data_url, user.id)) || avatarUrl;
+        }
+
         const insertPayload: any = {
           nome: data.nome,
           tipo: data.tipo || "colaborador",
@@ -505,6 +510,8 @@ export default function Agenda() {
             horario_fim: "18:00",
           },
           senha_acesso: data.senha_acesso || null,
+          avatar_url: avatarUrl,
+          bio: data.bio ?? null,
         };
 
         const { error } = await supabase.from("agendas").insert(insertPayload);
