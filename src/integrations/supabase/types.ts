@@ -11591,6 +11591,10 @@ export type Database = {
           role: Database["public"]["Enums"]["app_role"]
         }[]
       }
+      get_public_agenda_profissional: {
+        Args: { p_agenda_id: string }
+        Returns: Json
+      }
       get_revenue_engine_bottlenecks: {
         Args: {
           p_company_id: string
