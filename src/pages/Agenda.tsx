@@ -210,6 +210,7 @@ export default function Agenda() {
           name: l.name || "",
           phone: l.phone || l.telefone || "",
           email: l.email || "",
+          avatarUrl: l.profile_picture_url || null,
         })),
         compromissos: (compromissos || []).map((c: any) => ({
           id: c.id,
@@ -225,6 +226,7 @@ export default function Agenda() {
           prof: "",
           phone: c.lead?.phone || c.telefone || "",
           email: c.lead?.email || c.email_convidado || "",
+          avatarUrl: c.lead?.profile_picture_url || null,
           notes: c.observacoes || "",
           status: c.status_confirmacao || c.status || "agendado",
           value: c.custo_estimado || c.valor || 0,
@@ -239,6 +241,7 @@ export default function Agenda() {
           },
           remote: true,
         })),
+
         lembretes: (lembretes || []).map((l: any) => {
           const compromisso = l.compromisso || {};
           const envio = l.data_hora_envio || l.data_envio || l.proxima_data_envio || compromisso.data_hora_inicio;
