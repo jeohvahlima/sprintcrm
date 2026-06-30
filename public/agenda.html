@@ -1928,8 +1928,12 @@
               const initials = (ev.name||'?').split(/\s+/).slice(0,2).map(s=>s[0]||'').join('').toUpperCase();
               const tip = [ev.name, ev.start+' - '+(ev.end||''), ev.type, ev.agenda, ev.prof, ev.phone, ev.email, ev.notes].filter(Boolean).join('\n');
               e.title = tip;
+              const avatarHtml = ev.avatarUrl
+                ? '<div class="ev-avatar" style="background-image:url(\''+String(ev.avatarUrl).replace(/'/g,"%27")+'\');background-size:cover;background-position:center;color:transparent"></div>'
+                : '<div class="ev-avatar">'+escapeHTML(initials)+'</div>';
               e.innerHTML = '<div class="ev-top">'
-                + '<div class="ev-avatar">'+escapeHTML(initials)+'</div>'
+                + avatarHtml
+
                 + '<div class="ev-main">'
                 + '<div class="ev-line">'
                 + '<div class="nm">'+escapeHTML(ev.name)+'</div>'
