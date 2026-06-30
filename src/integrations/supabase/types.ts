@@ -364,6 +364,8 @@ export type Database = {
       }
       agendas: {
         Row: {
+          avatar_url: string | null
+          bio: string | null
           capacidade_simultanea: number | null
           company_id: string | null
           created_at: string | null
@@ -381,6 +383,8 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
+          avatar_url?: string | null
+          bio?: string | null
           capacidade_simultanea?: number | null
           company_id?: string | null
           created_at?: string | null
@@ -398,6 +402,8 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
+          avatar_url?: string | null
+          bio?: string | null
           capacidade_simultanea?: number | null
           company_id?: string | null
           created_at?: string | null
