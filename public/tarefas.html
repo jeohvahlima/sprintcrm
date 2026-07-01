@@ -124,14 +124,14 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
 .overdue-pill{font-size:10.5px;padding:2px 8px;border-radius:99px;background:var(--red-d);color:var(--red);border:1px solid rgba(240,82,82,.2)}
 
 /* ─── KANBAN LAYOUT ──────────────────────────────────────────────── */
-.board-area{flex:1;display:flex;overflow:hidden;position:relative}
-.kanban-scroll{flex:1;overflow-x:auto;overflow-y:hidden;padding:14px 24px 20px;display:flex;gap:14px;align-items:flex-start}
+.board-area{flex:1;display:flex;overflow:auto;position:relative;min-height:0}
+.kanban-scroll{flex:1;overflow:auto;padding:14px 24px 20px;display:flex;gap:14px;align-items:flex-start;min-height:100%}
 .kanban-scroll::-webkit-scrollbar{height:6px}
 .kanban-scroll::-webkit-scrollbar-track{background:transparent}
 .kanban-scroll::-webkit-scrollbar-thumb{background:var(--border2);border-radius:99px}
 
 /* ─── COLUMN ─────────────────────────────────────────────────────── */
-.col{width:290px;min-width:290px;flex-shrink:0;display:flex;flex-direction:column;max-height:calc(100vh - 310px)}
+.col{width:290px;min-width:290px;flex-shrink:0;display:flex;flex-direction:column;max-height:none}
 .col-header{padding:10px 12px;border-radius:var(--radius) var(--radius) 0 0;display:flex;align-items:center;gap:7px;position:relative;overflow:hidden;flex-shrink:0}
 .col-header::before{content:'';position:absolute;inset:0;opacity:.08;pointer-events:none}
 .col-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
@@ -140,7 +140,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
 .col-wip{font-size:9.5px;padding:2px 6px;border-radius:99px;background:rgba(255,255,255,.1);color:rgba(255,255,255,.6)}
 .col-menu-btn{opacity:0;transition:.15s;cursor:pointer;color:rgba(255,255,255,.6);font-size:16px;padding:2px}
 .col-header:hover .col-menu-btn{opacity:1}
-.col-body{background:var(--bg3);border:1px solid var(--border);border-top:none;border-radius:0 0 var(--radius) var(--radius);flex:1;overflow-y:auto;padding:8px;display:flex;flex-direction:column;gap:6px;min-height:80px}
+.col-body{background:var(--bg3);border:1px solid var(--border);border-top:none;border-radius:0 0 var(--radius) var(--radius);flex:0 0 auto;overflow:visible;padding:8px;display:flex;flex-direction:column;gap:6px;min-height:80px}
 .col-body::-webkit-scrollbar{width:4px}
 .col-body::-webkit-scrollbar-thumb{background:var(--border2);border-radius:99px}
 .add-btn{display:flex;align-items:center;gap:6px;padding:7px 10px;border-radius:var(--radius-sm);color:var(--text3);cursor:pointer;font-size:11.5px;transition:.15s;border:1px dashed var(--border);background:transparent;width:100%;text-align:left;font-family:var(--font);margin-top:2px}
@@ -1965,7 +1965,7 @@ function buildCardEl(t) {
   const dueLbl = t.due_date ? `<span class="date-badge ${due.className}"><i class="ti ti-${due.icon}"></i>${escapeHtml(due.text)}</span>` : '';
   const tagsHtml = (t.tags || []).slice(0, 3).map(tg => `<span class="tag tag-blue">${escapeHtml(tg)}</span>`).join('');
   const assName = t.assignee?.full_name || '';
-  const initials = assName ? assName.split(' ').map(s => s[0]).slice(0, 2).join('').toUpperCase() : '?';
+  const assInitials = assName ? assName.split(' ').map(s => s[0]).slice(0, 2).join('').toUpperCase() : '?';
   div.innerHTML = `
     <div class="card-top-stripe" style="background:${color}"></div>
     <div class="card-body">
