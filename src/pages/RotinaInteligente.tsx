@@ -33,6 +33,40 @@ const PROFILES: ProfileDef[] = [
   { key: "secretaria",     label: "Secretária",     Icon: CalendarDays,  color: "text-indigo-400",  ring: "ring-indigo-500/60"  },
   { key: "gerente",        label: "Gerente",        Icon: Trophy,        color: "text-yellow-400",  ring: "ring-yellow-500/60"  },
 ];
+type RoutineProfileSource = { role?: string | null; commercial_role?: string | null };
+
+function normalizeRoleName(value?: string | null) {
+  return (value || "")
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9_ -]/g, "")
+    .trim();
+}
+
+function profileFromRole(member: RoutineProfileSource): ProfileKey | null {
+  const role = normalizeRoleName(member.commercial_role || member.role);
+  if (!role) return null;
+  if (role.includes("sdr") || role.includes("pre_venda") || role.includes("pre-venda")) return "sdr";
+  if (role.includes("closer") || role.includes("close") || role.includes("vendedor") || role.includes("sales") || role.includes("hybrid")) return "vendedor_close";
+  if (role.includes("atendente") || role.includes("suporte") || role.includes("support")) return "atendente";
+  if (role.includes("secret")) return "secretaria";
+  if (role.includes("gerente") || role.includes("gestor") || role.includes("manager") || role.includes("admin")) return "gerente";
+  return null;
+}
+
+function profilesForMember(member: RoutineProfileSource) {
+  const profile = profileFromRole(member);
+  return profile ? PROFILES.filter((p) => p.key === profile) : PROFILES;
+}
+
+function roleDisplayName(member: RoutineProfileSource) {
+  const raw = member.commercial_role || member.role;
+  if (!raw) return "Cargo não definido";
+  const profile = profileFromRole(member);
+  const profileLabel = PROFILES.find((p) => p.key === profile)?.label;
+  return profileLabel ? `${raw} -> ${profileLabel}` : raw;
+}
 
 // ─── Templates por perfil ────────────────────────────────────────────────────
 const DEFAULT_TEMPLATES: Record<ProfileKey, RotineTask[]> = {
@@ -271,7 +305,7 @@ export default function RotinaInteligente() {
   }, [myGoals, getGoalStatus]);
 
   const usersInProfile = useMemo(
-    () => members.filter(m => assignments[m.id] === selectedProfile),
+    () => members.filter(m => (assignments[m.id] || profileFromRole(m)) === selectedProfile),
     [members, assignments, selectedProfile]
   );
 
@@ -886,7 +920,10 @@ export default function RotinaInteligente() {
                 <p className="text-sm text-slate-400 text-center py-8">Nenhum usuário encontrado na empresa.</p>
               )}
               {members.map(m => {
-                const assigned = assignments[m.id];
+                const allowedProfiles = profilesForMember(m);
+                const roleProfile = profileFromRole(m);
+                const storedAssignment = assignments[m.id];
+                const assigned = allowedProfiles.some((p) => p.key === storedAssignment) ? storedAssignment : roleProfile || "";
                 return (
                   <div key={m.id} className="flex items-center gap-3 p-3 border border-slate-700/60 rounded-xl bg-slate-800/40">
                     <div className="w-9 h-9 rounded-full bg-slate-700 flex items-center justify-center text-sm font-bold text-white overflow-hidden flex-shrink-0">
@@ -895,14 +932,15 @@ export default function RotinaInteligente() {
                     <div className="flex-1 min-w-0">
                       <div className="text-sm font-semibold text-white truncate">{m.full_name || "Sem nome"}</div>
                       <div className="text-xs text-slate-400 truncate">{m.email}</div>
+                      <div className="text-[10px] text-emerald-300 truncate mt-0.5">{roleDisplayName(m)}</div>
                     </div>
                     <select
                       value={assigned || ""}
                       onChange={(e) => assignUser(m.id, e.target.value as ProfileKey | "")}
                       className="bg-slate-900 border border-slate-600 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-emerald-500 min-w-[160px]"
                     >
-                      <option value="">— Sem rotina —</option>
-                      {PROFILES.map(p => <option key={p.key} value={p.key}>{p.label}</option>)}
+                      {!roleProfile && <option value="">— Sem rotina —</option>}
+                      {allowedProfiles.map(p => <option key={p.key} value={p.key}>{p.label}</option>)}
                     </select>
                   </div>
                 );

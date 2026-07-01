@@ -7,6 +7,7 @@ export interface TeamMember {
   email: string;
   avatar_url: string | null;
   role: string | null;
+  commercial_role?: string | null;
 }
 
 export const useTeamMembers = () => {
@@ -47,7 +48,7 @@ export const useTeamMembers = () => {
       // Get profiles for these users
       const { data: profiles } = await supabase
         .from('profiles')
-        .select('id, full_name, email, avatar_url, role')
+        .select('id, full_name, email, avatar_url, role, commercial_role')
         .in('id', userIds);
 
       if (profiles) {
