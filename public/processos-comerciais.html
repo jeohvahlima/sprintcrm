@@ -1872,17 +1872,17 @@ Posso te mostrar em 10 minutos como funciona?
 <!-- SLASH MENU -->
 <!-- NEW PAGE MODAL -->
 <style>
-#newpage-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.6); z-index:500; align-items:center; justify-content:center; }
-.np-modal { width:580px; max-width:94vw; max-height:88vh; overflow-y:auto; background:var(--bg2); border:1px solid var(--border); border-radius:12px; padding:20px; box-shadow:0 20px 60px rgba(0,0,0,.5); }
+#newpage-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.88); backdrop-filter:blur(6px); z-index:500; align-items:center; justify-content:center; }
+.np-modal { width:580px; max-width:94vw; max-height:88vh; overflow-y:auto; background:#0f172a; border:1px solid rgba(148,163,184,.35); border-radius:12px; padding:20px; box-shadow:0 24px 80px rgba(0,0,0,.8); opacity:1; }
 .np-label { font-size:11px; font-weight:600; color:var(--text2); text-transform:uppercase; letter-spacing:.05em; margin:12px 0 5px; display:block; }
-.np-input { width:100%; background:var(--bg3); border:1px solid var(--border); border-radius:8px; padding:8px 10px; font-size:13px; color:var(--text0); outline:none; }
+.np-input { width:100%; background:#111827; border:1px solid rgba(148,163,184,.35); border-radius:8px; padding:8px 10px; font-size:13px; color:var(--text0); outline:none; }
 .np-input:focus { border-color:var(--accent, #22c55e); }
 .np-tabs { display:flex; gap:6px; margin-top:14px; }
-.np-tab { flex:1; text-align:center; padding:10px 8px; border:1px solid var(--border); border-radius:8px; background:var(--bg3); color:var(--text2); font-size:12px; cursor:pointer; user-select:none; transition:all .15s; }
+.np-tab { flex:1; text-align:center; padding:10px 8px; border:1px solid rgba(148,163,184,.35); border-radius:8px; background:#111827; color:var(--text2); font-size:12px; cursor:pointer; user-select:none; transition:all .15s; }
 .np-tab:hover { color:var(--text0); border-color:var(--text3); }
-.np-tab.np-tab-active { border-color:#22c55e; color:var(--text0); background:rgba(34,197,94,.08); }
+.np-tab.np-tab-active { border-color:#22c55e; color:var(--text0); background:rgba(34,197,94,.18); }
 .np-tab .np-tab-icon { font-size:18px; display:block; margin-bottom:4px; }
-#np-paste { width:100%; min-height:160px; resize:vertical; background:var(--bg3); border:1px solid var(--border); border-radius:8px; padding:10px; font-size:13px; color:var(--text0); outline:none; font-family:inherit; }
+#np-paste { width:100%; min-height:160px; resize:vertical; background:#111827; border:1px solid rgba(148,163,184,.35); border-radius:8px; padding:10px; font-size:13px; color:var(--text0); outline:none; font-family:inherit; }
 .np-hint { font-size:11px; color:var(--text3); margin-top:6px; }
 .np-footer { display:flex; justify-content:flex-end; gap:8px; margin-top:18px; }
 </style>
