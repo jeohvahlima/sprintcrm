@@ -472,8 +472,70 @@ body {
 .drawer-footer {
   padding: 16px 24px;
   border-top: 1px solid var(--border);
-  display: flex; gap: 8px;
+  display: flex; gap: 8px; flex-wrap: wrap;
 }
+
+/* ── TABS (Detalhes / Anotações / Tarefas) ── */
+.info-tabs {
+  display: flex; gap: 4px;
+  border-bottom: 1px solid var(--border);
+  padding: 0 16px;
+  background: var(--card);
+}
+.info-tab {
+  background: none; border: none; cursor: pointer;
+  padding: 10px 14px; font-size: 13px; font-weight: 600;
+  color: var(--muted); display: inline-flex; align-items: center; gap: 6px;
+  border-bottom: 2px solid transparent; margin-bottom: -1px;
+}
+.info-tab.active { color: var(--green); border-bottom-color: var(--green); }
+.mini-badge {
+  background: var(--green); color: #fff; font-size: 10px; font-weight: 700;
+  border-radius: 999px; padding: 1px 7px; min-width: 16px; text-align: center;
+}
+.quick-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+.quick-tag {
+  background: var(--surface); border: 1px solid var(--border);
+  color: var(--ink); font-size: 11px; font-weight: 600; cursor: pointer;
+  padding: 5px 10px; border-radius: 999px;
+}
+.quick-tag.active { background: var(--green); color: #fff; border-color: var(--green); }
+.notes-area {
+  width: 100%; min-height: 140px; resize: vertical;
+  border: 1px solid var(--border); border-radius: 10px;
+  padding: 10px 12px; font-family: inherit; font-size: 13px;
+  background: var(--surface); color: var(--ink);
+}
+.task-progress {
+  display: flex; align-items: center; justify-content: space-between;
+  font-size: 12px; color: var(--muted); margin-bottom: 6px;
+}
+.task-bar {
+  height: 6px; background: var(--border); border-radius: 999px; overflow: hidden; margin-bottom: 12px;
+}
+.task-bar > i { display: block; height: 100%; background: var(--green); transition: width .25s; }
+.task-add { display: flex; gap: 6px; margin-bottom: 10px; }
+.task-add input {
+  flex: 1; border: 1px solid var(--border); border-radius: 8px;
+  padding: 8px 10px; font-size: 13px; background: var(--surface); color: var(--ink);
+}
+.task-row {
+  display: grid; grid-template-columns: 24px 1fr 28px; gap: 8px; align-items: center;
+  padding: 8px 10px; border: 1px solid var(--border); border-radius: 10px; margin-bottom: 6px;
+  background: var(--card);
+}
+.task-row.done .task-title { text-decoration: line-through; color: var(--muted); }
+.task-check {
+  width: 22px; height: 22px; border-radius: 6px; border: 1.5px solid var(--border);
+  background: var(--surface); cursor: pointer; color: transparent; font-size: 14px;
+  display: flex; align-items: center; justify-content: center;
+}
+.task-row.done .task-check { background: var(--green); border-color: var(--green); color: #fff; }
+.task-title { font-size: 13px; font-weight: 600; }
+.task-del { background: none; border: none; cursor: pointer; color: var(--muted); }
+.task-del:hover { color: #ef4444; }
+.task-empty { text-align: center; color: var(--muted); font-size: 13px; padding: 16px; }
+
 
 /* ── DETALHES ── */
 .detail-group { margin-bottom: 20px; }
@@ -763,15 +825,15 @@ body {
 <!-- TOPBAR -->
 <header class="topbar">
   <div class="topbar-brand">
-    <div class="topbar-logo">📅</div>
+    <div class="topbar-logo" id="topbar-logo">📅</div>
     <div>
-      <div class="topbar-name">Dr. João Silva</div>
-      <div class="topbar-sub">Ortopedista · GROW OS</div>
+      <div class="topbar-name" id="topbar-name">Carregando…</div>
+      <div class="topbar-sub" id="topbar-sub">GROW OS</div>
     </div>
   </div>
   <div class="topbar-right">
     <div class="topbar-date" id="topbar-date"></div>
-    <div class="avatar" title="Perfil">JS</div>
+    <div class="avatar" id="topbar-avatar" title="Perfil">··</div>
   </div>
 </header>
 
@@ -818,7 +880,7 @@ body {
     <div class="view active" id="view-dashboard">
       <div class="section-header" style="margin-bottom:20px">
         <div>
-          <div class="section-title">Bom dia, Dr. João 👋</div>
+          <div class="section-title" id="dash-greeting">Bem-vindo 👋</div>
           <div class="section-sub" id="dash-date-sub"></div>
         </div>
         <button class="btn btn-primary" onclick="openNovoCompromisso()">
@@ -829,24 +891,24 @@ body {
       <div class="stats-row">
         <div class="stat-card green-card">
           <div class="stat-label">Hoje</div>
-          <div class="stat-value">5</div>
+          <div class="stat-value" id="stat-hoje">0</div>
           <div class="stat-sub">compromissos</div>
-          <div style="margin-top:10px"><div class="prog-bar"><div class="prog-fill" style="width:60%"></div></div></div>
-          <div style="font-size:10px;color:var(--muted);margin-top:3px">3 de 5 realizados</div>
+          <div style="margin-top:10px"><div class="prog-bar"><div class="prog-fill" id="stat-hoje-prog" style="width:0%"></div></div></div>
+          <div style="font-size:10px;color:var(--muted);margin-top:3px" id="stat-hoje-sub">0 de 0 realizados</div>
         </div>
         <div class="stat-card">
           <div class="stat-label">Esta semana</div>
-          <div class="stat-value">18</div>
+          <div class="stat-value" id="stat-semana">0</div>
           <div class="stat-sub">compromissos</div>
         </div>
         <div class="stat-card amber-card">
           <div class="stat-label">Aguardando</div>
-          <div class="stat-value">4</div>
+          <div class="stat-value" id="stat-aguardando">0</div>
           <div class="stat-sub">confirmação</div>
         </div>
         <div class="stat-card red-card">
           <div class="stat-label">Cancelados</div>
-          <div class="stat-value">2</div>
+          <div class="stat-value" id="stat-cancelados">0</div>
           <div class="stat-sub">este mês</div>
         </div>
       </div>
@@ -1232,16 +1294,7 @@ const fmtHour = d => `${pad(d.getHours())}:${pad(d.getMinutes())}`;
 const nomesStatus = { agendado:'Agendado', confirmado:'Confirmado', cancelado:'Cancelado', concluido:'Concluído' };
 const badgeStatus = { agendado:'badge-green', confirmado:'badge-blue', cancelado:'badge-red', concluido:'badge-gray' };
 
-const compromissos = [
-  { id:1, hora:'08:00', fim:'08:30', servico:'Consulta de Ortopedia', paciente:'Maria Silva', telefone:'(81) 99821-3344', status:'concluido', obs:'Dor no joelho direito. Encaminhar para fisioterapia.', lembretes:[] },
-  { id:2, hora:'08:30', fim:'09:00', servico:'Retorno — Coluna', paciente:'José Ferreira', telefone:'(81) 98855-1122', status:'concluido', obs:'Melhorou 70%. Manter medicação.', lembretes:[{horas:24}] },
-  { id:3, hora:'09:00', fim:'09:30', servico:'Consulta de Ortopedia', paciente:'Ana Paula Costa', telefone:'(81) 99100-5533', status:'confirmado', obs:'Primeira consulta. Dor no ombro há 3 meses.', lembretes:[{horas:2}] },
-  { id:4, hora:'10:00', fim:'10:30', servico:'Avaliação pré-cirúrgica', paciente:'Carlos Mendes', telefone:'(81) 97744-8899', status:'agendado', obs:'', lembretes:[] },
-  { id:5, hora:'10:30', fim:'11:00', servico:'Consulta de Ortopedia', paciente:'Fernanda Lima', telefone:'(81) 99234-6677', status:'agendado', obs:'Torção no tornozelo.', lembretes:[{horas:24}] },
-  { id:6, hora:'14:00', fim:'14:30', servico:'Retorno pós-op', paciente:'Roberto Santos', telefone:'(81) 98100-2211', status:'agendado', obs:'Verificar cicatrização. 30 dias de cirurgia.', lembretes:[] },
-  { id:7, hora:'15:00', fim:'15:30', servico:'Consulta de Ortopedia', paciente:'Lucia Gomes', telefone:'(81) 99800-4455', status:'cancelado', obs:'Paciente desmarcou.', lembretes:[] },
-  { id:8, hora:'16:00', fim:'16:30', servico:'Consulta de Ortopedia', paciente:'Paulo Alves', telefone:'(81) 97601-9988', status:'agendado', obs:'', lembretes:[{horas:1}] },
-];
+let compromissos = [];
 
 let currentFilter = 'todos';
 let currentDayOffset = 0;
@@ -1292,8 +1345,10 @@ function renderCard(c, showDate) {
       ${c.obs ? `<div class="comp-obs">${c.obs}</div>` : ''}
       <div class="comp-tags">
         <span class="badge ${badgeStatus[c.status]}"><span class="status-dot ${c.status}"></span>${nomesStatus[c.status]}</span>
-        ${c.lembretes.length ? `<span class="badge badge-amber">🔔 ${c.lembretes.length} lembrete${c.lembretes.length>1?'s':''}</span>` : ''}
+        ${c.lembretes && c.lembretes.length ? `<span class="badge badge-amber">🔔 ${c.lembretes.length} lembrete${c.lembretes.length>1?'s':''}</span>` : ''}
+        ${c.tarefas && c.tarefas.length ? `<span class="badge badge-blue">✓ ${c.tarefas.filter(t=>t.done).length}/${c.tarefas.length} tarefas</span>` : ''}
       </div>
+
     </div>
     <div class="comp-actions" onclick="event.stopPropagation()">
       ${c.status==='agendado' ? `<button class="btn btn-outline btn-sm btn-icon" title="Confirmar" onclick="quickConfirm(${c.id})">✔</button>` : ''}
@@ -1401,79 +1456,179 @@ function addBloqueio() {
 }
 
 // ── DRAWER ──
+const QUICK_NOTE_TAGS = ['Lead quente','Aguardando retorno','Enviar proposta','Cliente recorrente','Follow-up','Reagendar','Pagamento pendente','VIP'];
+let currentInfoTab = 'details';
+
+function escapeHTML(s){ return String(s||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+async function persistMeta(c){
+  if(!c || !c._real_id || !window.__agendaId) return;
+  try{
+    await fetch(window.__SB_URL + '/rest/v1/rpc/save_public_compromisso_meta', {
+      method:'POST',
+      headers:{ 'apikey':window.__SB_ANON, 'Authorization':'Bearer '+window.__SB_ANON, 'Content-Type':'application/json' },
+      body: JSON.stringify({
+        p_agenda_id: window.__agendaId,
+        p_compromisso_id: c._real_id,
+        p_notes: c.obs || '',
+        p_tags: c.tags || [],
+        p_tasks: c.tarefas || [],
+      })
+    });
+  }catch(e){ console.warn('save meta failed', e); }
+}
+
 function openDrawer(id) {
   selectedComp = compromissos.find(c => c.id===id);
   const c = selectedComp;
+  if(!c) return;
+  c.tags = c.tags || [];
+  c.tarefas = c.tarefas || [];
+
   document.getElementById('drawer-title').textContent = c.servico;
-  document.getElementById('drawer-sub').textContent = `Hoje · ${c.hora} – ${c.fim}`;
+  document.getElementById('drawer-sub').textContent = `${c.hora} – ${c.fim}`;
 
-  const leadInit = c.paciente.split(' ').slice(0,2).map(p=>p[0]).join('').toUpperCase();
+  const leadInit = (c.paciente||'?').split(' ').slice(0,2).map(p=>p[0]||'').join('').toUpperCase();
+  const dateText = c._iso_inicio ? new Date(c._iso_inicio).toLocaleDateString('pt-BR') : '';
+  const dur = (() => {
+    const [h1,m1] = c.hora.split(':').map(Number);
+    const [h2,m2] = c.fim.split(':').map(Number);
+    return (h2*60+m2)-(h1*60+m1);
+  })();
 
-  document.getElementById('drawer-body').innerHTML = `
+  const headerHTML = `
     <div class="lead-card">
       <div class="lead-avatar">${leadInit}</div>
-      <div>
-        <div class="lead-name">${c.paciente}</div>
-        <div class="lead-phone">${c.telefone}</div>
-        <div style="margin-top:6px;display:flex;gap:6px">
-          <a href="https://wa.me/55${c.telefone.replace(/\D/g,'')}" target="_blank" class="btn btn-outline btn-sm">💬 WhatsApp</a>
-          <a href="tel:${c.telefone}" class="btn btn-outline btn-sm">📞 Ligar</a>
+      <div style="flex:1;min-width:0">
+        <div class="lead-name">${escapeHTML(c.paciente)}</div>
+        <div class="lead-phone">${escapeHTML(c.telefone||'')}</div>
+        <div style="margin-top:6px;display:flex;gap:6px;flex-wrap:wrap">
+          ${c.telefone ? `<a href="https://wa.me/55${c.telefone.replace(/\\D/g,'')}" target="_blank" class="btn btn-outline btn-sm">💬 WhatsApp</a>` : ''}
+          ${c.telefone ? `<a href="tel:${c.telefone}" class="btn btn-outline btn-sm">📞 Ligar</a>` : ''}
         </div>
       </div>
     </div>
-
-    <div class="detail-group">
-      <div class="detail-label">Status atual</div>
-      <span class="badge ${badgeStatus[c.status]}" style="font-size:13px;padding:4px 12px">
-        <span class="status-dot ${c.status}"></span>${nomesStatus[c.status]}
-      </span>
+    <div class="info-tabs" style="margin:14px -24px 0">
+      <button class="info-tab ${currentInfoTab==='details'?'active':''}" onclick="switchInfoTab('details')">🗒 Detalhes</button>
+      <button class="info-tab ${currentInfoTab==='notes'?'active':''}" onclick="switchInfoTab('notes')">📝 Anotações</button>
+      <button class="info-tab ${currentInfoTab==='tasks'?'active':''}" onclick="switchInfoTab('tasks')">✓ Tarefas <span class="mini-badge" id="infoTaskBadge">${c.tarefas.length}</span></button>
     </div>
-
-    <div class="detail-group">
-      <div class="detail-label">Horário</div>
-      <div class="detail-value detail-block" style="font-family:'DM Mono',monospace">
-        ${c.hora} – ${c.fim}&nbsp;&nbsp;|&nbsp;&nbsp;30 minutos
-      </div>
-    </div>
-
-    ${c.lembretes.length ? `
-    <div class="detail-group">
-      <div class="detail-label">Lembretes ativos</div>
-      ${c.lembretes.map(l=>`<div class="lembrete-row"><span class="lembrete-icon">🔔</span>Lembrete ${l.horas}h antes — WhatsApp</div>`).join('')}
-    </div>` : ''}
-
-    <div class="detail-group">
-      <div class="detail-label">Anotações e observações</div>
-      <textarea class="obs-area" id="obs-input" placeholder="Adicione anotações sobre esta consulta…">${c.obs}</textarea>
-    </div>
-
-    <div class="detail-group">
-      <div class="detail-label">Histórico do paciente</div>
-      <div class="detail-block" style="font-size:13px;color:var(--muted)">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
-          <span>2 consultas anteriores</span>
-          <span class="badge badge-green">Ativo</span>
-        </div>
-        <div style="font-size:12px">Última consulta: 15/05/2025 · Retorno de coluna</div>
-      </div>
-    </div>
+    <div id="infoTabContent" style="padding-top:16px"></div>
   `;
+
+  document.getElementById('drawer-body').innerHTML = headerHTML;
+  renderInfoTab();
 
   document.getElementById('drawer-btn-cancel').style.display = (c.status==='cancelado'||c.status==='concluido')?'none':'inline-flex';
   document.getElementById('drawer-btn-confirm').style.display = (c.status==='agendado')?'inline-flex':'none';
+  document.getElementById('drawer-btn-save').textContent = 'Salvar e fechar';
 
   document.getElementById('drawer-overlay').classList.add('open');
   document.getElementById('drawer').classList.add('open');
+
+  function renderInfoTab(){
+    const box = document.getElementById('infoTabContent');
+    if(currentInfoTab === 'details'){
+      box.innerHTML = `
+        <div class="detail-group">
+          <div class="detail-label">Status atual</div>
+          <span class="badge ${badgeStatus[c.status]}" style="font-size:13px;padding:4px 12px">
+            <span class="status-dot ${c.status}"></span>${nomesStatus[c.status]}
+          </span>
+        </div>
+        <div class="detail-group">
+          <div class="detail-label">Data e horário</div>
+          <div class="detail-value detail-block" style="font-family:'DM Mono',monospace">
+            ${dateText} · ${c.hora} – ${c.fim}&nbsp;&nbsp;|&nbsp;&nbsp;${dur} minutos
+          </div>
+        </div>
+        ${c.lembretes && c.lembretes.length ? `
+        <div class="detail-group">
+          <div class="detail-label">Lembretes ativos</div>
+          ${c.lembretes.map(l=>`<div class="lembrete-row"><span class="lembrete-icon">🔔</span>Lembrete ${l.horas}h antes — WhatsApp</div>`).join('')}
+        </div>` : ''}
+        ${c.obs ? `<div class="detail-group">
+          <div class="detail-label">Observações</div>
+          <div class="detail-value detail-block">${escapeHTML(c.obs)}</div>
+        </div>` : ''}`;
+    } else if(currentInfoTab === 'notes'){
+      const selected = new Set(c.tags || []);
+      box.innerHTML = `
+        <div style="font-size:11px;font-weight:700;color:var(--muted2);margin-bottom:8px;text-transform:uppercase;letter-spacing:.07em">Tags rápidas</div>
+        <div class="quick-tags">
+          ${QUICK_NOTE_TAGS.map(t => `<button class="quick-tag ${selected.has(t)?'active':''}" onclick="toggleTag('${t.replace(/'/g,"\\'")}')">${escapeHTML(t)}</button>`).join('')}
+        </div>
+        <textarea class="notes-area" id="infoNotesArea" placeholder="Anotações sobre o compromisso...">${escapeHTML(c.obs||'')}</textarea>
+        <div style="font-size:11px;color:var(--muted);margin-top:8px">💡 Estas anotações ficam vinculadas ao compromisso no CRM.</div>`;
+      document.getElementById('infoNotesArea').addEventListener('input', e => {
+        c.obs = e.target.value;
+      });
+    } else {
+      const tasks = c.tarefas || [];
+      const done = tasks.filter(t=>t.done).length;
+      const pct = tasks.length ? Math.round(done/tasks.length*100) : 0;
+      box.innerHTML = `
+        <div class="task-progress"><span>${done} de ${tasks.length} tarefas concluídas</span><strong style="color:var(--green)">${pct}%</strong></div>
+        <div class="task-bar"><i style="width:${pct}%"></i></div>
+        <div class="task-add">
+          <input id="infoTaskInput" placeholder="Adicionar tarefa..." />
+          <button class="btn btn-primary btn-sm" onclick="addTask()">+ Adicionar</button>
+        </div>
+        <div>
+          ${tasks.length ? tasks.map(t => `
+            <div class="task-row ${t.done?'done':''}">
+              <button class="task-check" onclick="toggleTask('${t.id}')">✓</button>
+              <div><div class="task-title">${escapeHTML(t.title)}</div></div>
+              <button class="task-del" onclick="delTask('${t.id}')">🗑</button>
+            </div>`).join('') : '<div class="task-empty">Nenhuma tarefa criada.</div>'}
+        </div>`;
+      const inp = document.getElementById('infoTaskInput');
+      inp.addEventListener('keydown', e => { if(e.key === 'Enter') addTask(); });
+    }
+  }
+  window.__renderInfoTab = renderInfoTab;
 }
+function switchInfoTab(t){ currentInfoTab = t; window.__renderInfoTab && window.__renderInfoTab(); }
+function toggleTag(t){
+  if(!selectedComp) return;
+  const s = new Set(selectedComp.tags||[]);
+  s.has(t) ? s.delete(t) : s.add(t);
+  selectedComp.tags = Array.from(s);
+  window.__renderInfoTab && window.__renderInfoTab();
+}
+function addTask(){
+  const inp = document.getElementById('infoTaskInput');
+  const title = (inp.value||'').trim();
+  if(!title){ showToast('Digite a tarefa','error'); return; }
+  selectedComp.tarefas = [...(selectedComp.tarefas||[]), { id:'t_'+Date.now(), title, done:false }];
+  window.__renderInfoTab && window.__renderInfoTab();
+  document.getElementById('infoTaskBadge').textContent = selectedComp.tarefas.length;
+}
+function toggleTask(id){
+  selectedComp.tarefas = (selectedComp.tarefas||[]).map(t => t.id===id ? {...t, done:!t.done} : t);
+  window.__renderInfoTab && window.__renderInfoTab();
+}
+function delTask(id){
+  selectedComp.tarefas = (selectedComp.tarefas||[]).filter(t => t.id !== id);
+  window.__renderInfoTab && window.__renderInfoTab();
+  document.getElementById('infoTaskBadge').textContent = selectedComp.tarefas.length;
+}
+
 function closeDrawer() {
   document.getElementById('drawer-overlay').classList.remove('open');
   document.getElementById('drawer').classList.remove('open');
 }
-function salvarObs() {
-  if(selectedComp) { selectedComp.obs = document.getElementById('obs-input').value; }
-  showToast('Anotações salvas!','success');
+async function salvarObs() {
+  if(selectedComp){
+    const ta = document.getElementById('infoNotesArea');
+    if(ta) selectedComp.obs = ta.value;
+    await persistMeta(selectedComp);
+  }
+  showToast('Anotações e tarefas salvas!','success');
   renderDash(); renderAgenda();
+  closeDrawer();
 }
+
 function cancelarCompromisso() {
   if(!selectedComp) return;
   selectedComp.status = 'cancelado';
@@ -1567,6 +1722,155 @@ function showToast(msg, type='') {
 renderMiniCal();
 renderDash();
 renderAgenda();
+
+// ── REAL DATA LOADER (Supabase) ──
+(function loadRealAgenda(){
+  const SB_URL = 'https://dteppsfseusqixuppglh.supabase.co';
+  const SB_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR0ZXBwc2ZzZXVzcWl4dXBwZ2xoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA4MzY0OTgsImV4cCI6MjA3NjQxMjQ5OH0.eEz5cyfwi5chae1U9S0Yt1FBwglyuVnm_Fzg9HVrV_Q';
+  const params = new URLSearchParams(window.location.search);
+  const agendaId = params.get('agenda');
+  window.__SB_URL = SB_URL; window.__SB_ANON = SB_ANON; window.__agendaId = agendaId;
+
+  if(!agendaId) {
+    document.getElementById('topbar-name').textContent = 'Agenda não informada';
+    document.getElementById('topbar-sub').textContent = 'Adicione ?agenda=<id> na URL';
+    return;
+  }
+
+  function statusFromCompromisso(c){
+    if(c.status === 'cancelado') return 'cancelado';
+    if(c.status === 'concluido' || c.status === 'realizado') return 'concluido';
+    if(c.status_confirmacao === 'confirmado') return 'confirmado';
+    return 'agendado';
+  }
+
+  function fmtHM(iso){
+    const d = new Date(iso);
+    return pad(d.getHours()) + ':' + pad(d.getMinutes());
+  }
+
+  function initials(name){
+    if(!name) return '··';
+    return name.trim().split(/\s+/).slice(0,2).map(p=>p[0]||'').join('').toUpperCase();
+  }
+
+  function applyAgenda(data){
+    const ag = data.agenda || {};
+    const prof = data.profissional || {};
+    const nome = prof.nome || ag.nome || 'Profissional';
+    const esp = prof.especialidade || '';
+    document.getElementById('topbar-name').textContent = nome;
+    document.getElementById('topbar-sub').textContent = (esp ? esp + ' · ' : '') + 'GROW OS';
+    document.title = nome + ' — Agenda';
+    const ava = document.getElementById('topbar-avatar');
+    const avatarUrl = prof.avatar_url || ag.avatar_url;
+    if(avatarUrl){
+      ava.textContent = '';
+      ava.style.backgroundImage = 'url("' + avatarUrl + '")';
+      ava.style.backgroundSize = 'cover';
+      ava.style.backgroundPosition = 'center';
+    } else {
+      ava.textContent = initials(nome);
+    }
+    const greet = document.getElementById('dash-greeting');
+    const h = new Date().getHours();
+    const saudacao = h < 12 ? 'Bom dia' : (h < 18 ? 'Boa tarde' : 'Boa noite');
+    const primeiro = nome.split(' ')[0];
+    greet.textContent = `${saudacao}, ${primeiro} 👋`;
+
+    // Link público (se houver)
+    const slug = ag.slug || ag.id;
+    const linkEl = document.getElementById('public-link');
+    if(linkEl && slug){
+      linkEl.textContent = window.location.origin + '/agenda/' + slug;
+    }
+
+    // Compromissos
+    const list = (data.compromissos || []).map((c, idx) => {
+      const lembretes = Array.isArray(c.lembretes_config) ? c.lembretes_config :
+        (c.lembretes_config && typeof c.lembretes_config === 'object' ? (c.lembretes_config.itens || []) : []);
+      const tarefas = Array.isArray(c.tarefas) ? c.tarefas :
+        (c.tarefas && typeof c.tarefas === 'object' ? (c.tarefas.itens || []) : []);
+      const tags = Array.isArray(c.tags_rapidas) ? c.tags_rapidas :
+        (c.tags_rapidas && typeof c.tags_rapidas === 'object' ? (c.tags_rapidas.itens || []) : []);
+      return {
+        _real_id: c.id,
+        _iso_inicio: c.data_hora_inicio,
+        _iso_fim: c.data_hora_fim,
+        id: idx + 1,
+        hora: fmtHM(c.data_hora_inicio),
+        fim: fmtHM(c.data_hora_fim),
+        servico: c.titulo || c.tipo_servico || 'Compromisso',
+        paciente: c.paciente || '—',
+        telefone: c.telefone || '',
+        status: statusFromCompromisso(c),
+        obs: c.observacoes || '',
+        tags: tags,
+        tarefas: tarefas,
+        lembretes: (lembretes || []).map(l => ({ horas: l.horas || l.hours || l.h || 1 })),
+      };
+    });
+
+
+    compromissos.length = 0;
+    list.forEach(x => compromissos.push(x));
+
+    // Stats
+    const todayStr = new Date().toDateString();
+    const today = compromissos.filter(c => new Date(c._iso_inicio).toDateString() === todayStr);
+    const realizadosHoje = today.filter(c => c.status === 'concluido').length;
+    document.getElementById('stat-hoje').textContent = today.length;
+    document.getElementById('stat-hoje-sub').textContent = `${realizadosHoje} de ${today.length} realizados`;
+    document.getElementById('stat-hoje-prog').style.width = (today.length ? Math.round(realizadosHoje/today.length*100) : 0) + '%';
+
+    const now = new Date();
+    const startWeek = new Date(now); startWeek.setDate(now.getDate() - now.getDay()); startWeek.setHours(0,0,0,0);
+    const endWeek = new Date(startWeek); endWeek.setDate(startWeek.getDate() + 7);
+    document.getElementById('stat-semana').textContent = compromissos.filter(c => {
+      const d = new Date(c._iso_inicio); return d >= startWeek && d < endWeek;
+    }).length;
+
+    document.getElementById('stat-aguardando').textContent = compromissos.filter(c => c.status === 'agendado').length;
+
+    const m = now.getMonth(), y = now.getFullYear();
+    document.getElementById('stat-cancelados').textContent = compromissos.filter(c => {
+      const d = new Date(c._iso_inicio); return c.status === 'cancelado' && d.getMonth() === m && d.getFullYear() === y;
+    }).length;
+
+    // Nav badge
+    const badge = document.querySelector('.nav-item .nav-badge');
+    if(badge) badge.textContent = today.filter(c => c.status !== 'cancelado' && c.status !== 'concluido').length;
+
+    renderDash();
+    renderAgenda();
+    if(typeof renderWeek === 'function') renderWeek();
+  }
+
+  fetch(SB_URL + '/rest/v1/rpc/get_public_agenda_profissional', {
+    method: 'POST',
+    headers: {
+      'apikey': SB_ANON,
+      'Authorization': 'Bearer ' + SB_ANON,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ p_agenda_id: agendaId }),
+  })
+    .then(r => r.json())
+    .then(data => {
+      if(!data || data.ok === false){
+        document.getElementById('topbar-name').textContent = 'Agenda não encontrada';
+        document.getElementById('topbar-sub').textContent = '';
+        return;
+      }
+      applyAgenda(data);
+    })
+    .catch(err => {
+      console.error('Falha ao carregar agenda:', err);
+      document.getElementById('topbar-name').textContent = 'Erro ao carregar agenda';
+      document.getElementById('topbar-sub').textContent = String(err && err.message || err);
+    });
+})();
+
 </script>
 </body>
 </html>

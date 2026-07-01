@@ -13,7 +13,7 @@ interface RotineTask {
   description?: string;
   time: string;
   done: boolean;
-  category: "prospeccao" | "followup" | "reuniao" | "admin" | "meta";
+  category: string;
   priority: "alta" | "media" | "baixa";
 }
 
@@ -81,7 +81,27 @@ const DEFAULT_TEMPLATES: Record<ProfileKey, RotineTask[]> = {
 };
 
 // ─── Constants ────────────────────────────────────────────────────────────────
-const CATEGORY_CONFIG = {
+type CategoryConfig = {
+  label: string;
+  color: string;
+  bg: string;
+  text: string;
+  border: string;
+  dot: string;
+};
+
+const CATEGORY_STYLE_PRESETS: Omit<CategoryConfig, "label">[] = [
+  { color: "#6366f1", bg: "bg-indigo-500/15", text: "text-indigo-400", border: "border-indigo-500/30", dot: "bg-indigo-400" },
+  { color: "#f59e0b", bg: "bg-amber-500/15", text: "text-amber-400", border: "border-amber-500/30", dot: "bg-amber-400" },
+  { color: "#10b981", bg: "bg-emerald-500/15", text: "text-emerald-400", border: "border-emerald-500/30", dot: "bg-emerald-400" },
+  { color: "#8b5cf6", bg: "bg-violet-500/15", text: "text-violet-400", border: "border-violet-500/30", dot: "bg-violet-400" },
+  { color: "#ef4444", bg: "bg-rose-500/15", text: "text-rose-400", border: "border-rose-500/30", dot: "bg-rose-400" },
+  { color: "#06b6d4", bg: "bg-cyan-500/15", text: "text-cyan-400", border: "border-cyan-500/30", dot: "bg-cyan-400" },
+  { color: "#22c55e", bg: "bg-green-500/15", text: "text-green-400", border: "border-green-500/30", dot: "bg-green-400" },
+  { color: "#f97316", bg: "bg-orange-500/15", text: "text-orange-400", border: "border-orange-500/30", dot: "bg-orange-400" },
+];
+
+const DEFAULT_CATEGORY_CONFIG: Record<string, CategoryConfig> = {
   prospeccao: { label: "Prospecção", color: "#6366f1", bg: "bg-indigo-500/15", text: "text-indigo-400", border: "border-indigo-500/30", dot: "bg-indigo-400" },
   followup:   { label: "Follow-up",  color: "#f59e0b", bg: "bg-amber-500/15",  text: "text-amber-400",  border: "border-amber-500/30",  dot: "bg-amber-400"  },
   reuniao:    { label: "Reunião",    color: "#10b981", bg: "bg-emerald-500/15", text: "text-emerald-400", border: "border-emerald-500/30", dot: "bg-emerald-400" },
@@ -98,6 +118,7 @@ const PRIORITY_CONFIG = {
 // ─── Storage helpers (frontend persistence) ──────────────────────────────────
 const STORAGE_TASKS_KEY = "rotina-inteligente:tasks-v2";
 const STORAGE_ASSIGN_KEY = "rotina-inteligente:user-profile-map-v1";
+const STORAGE_CATEGORIES_KEY = "rotina-inteligente:categories-v1";
 
 function loadTasks(): Record<ProfileKey, RotineTask[]> {
   try {
@@ -115,6 +136,32 @@ function loadAssignments(): Record<string, ProfileKey> {
   try {
     return JSON.parse(localStorage.getItem(STORAGE_ASSIGN_KEY) || "{}");
   } catch { return {}; }
+}
+function loadCategories(): Record<string, CategoryConfig> {
+  try {
+    const raw = localStorage.getItem(STORAGE_CATEGORIES_KEY);
+    if (!raw) return DEFAULT_CATEGORY_CONFIG;
+    return { ...DEFAULT_CATEGORY_CONFIG, ...JSON.parse(raw) };
+  } catch {
+    return DEFAULT_CATEGORY_CONFIG;
+  }
+}
+
+function makeCategoryKey(label: string, existing: Record<string, CategoryConfig>) {
+  const base = label
+    .trim()
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/^_+|_+$/g, "") || "categoria";
+  let key = base;
+  let n = 2;
+  while (existing[key]) {
+    key = `${base}_${n}`;
+    n += 1;
+  }
+  return key;
 }
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
@@ -139,10 +186,10 @@ function ProfileCard({ profile, count, active, onClick }: {
   );
 }
 
-function TaskItem({ task, onToggle, onDelete, onEdit }: {
-  task: RotineTask; onToggle: (id: string) => void; onDelete: (id: string) => void; onEdit: (task: RotineTask) => void;
+function TaskItem({ task, categories, onToggle, onDelete, onEdit }: {
+  task: RotineTask; categories: Record<string, CategoryConfig>; onToggle: (id: string) => void; onDelete: (id: string) => void; onEdit: (task: RotineTask) => void;
 }) {
-  const cat = CATEGORY_CONFIG[task.category];
+  const cat = categories[task.category] || DEFAULT_CATEGORY_CONFIG.prospeccao;
   const pri = PRIORITY_CONFIG[task.priority];
   const nowHHMM = new Date().toTimeString().slice(0, 5);
   const isOverdue = !task.done && task.time < nowHHMM;
@@ -188,19 +235,23 @@ export default function RotinaInteligente() {
 
   const [tasksByProfile, setTasksByProfile] = useState<Record<ProfileKey, RotineTask[]>>(loadTasks);
   const [assignments, setAssignments] = useState<Record<string, ProfileKey>>(loadAssignments);
+  const [categories, setCategories] = useState<Record<string, CategoryConfig>>(loadCategories);
   const [selectedProfile, setSelectedProfile] = useState<ProfileKey>("sdr");
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [showAssignDialog, setShowAssignDialog] = useState(false);
-  const [newTask, setNewTask] = useState({ title: "", description: "", time: "09:00", category: "prospeccao" as RotineTask["category"], priority: "media" as RotineTask["priority"] });
+  const [newCategoryLabel, setNewCategoryLabel] = useState("");
+  const [editingCategoryKey, setEditingCategoryKey] = useState<string | null>(null);
+  const [newTask, setNewTask] = useState({ title: "", description: "", time: "09:00", category: "prospeccao", priority: "media" as RotineTask["priority"] });
   const [statusFilter, setStatusFilter] = useState<"todas" | "pendentes" | "atrasadas" | "concluidas">("todas");
-  const [categoryFilter, setCategoryFilter] = useState<"todas" | RotineTask["category"]>("todas");
+  const [categoryFilter, setCategoryFilter] = useState<string>("todas");
   const [viewMode, setViewMode] = useState<"diaria" | "semanal" | "mensal">("diaria");
   const [refDate, setRefDate] = useState<Date>(new Date());
 
   // Persist
   useEffect(() => { localStorage.setItem(STORAGE_TASKS_KEY, JSON.stringify(tasksByProfile)); }, [tasksByProfile]);
   useEffect(() => { localStorage.setItem(STORAGE_ASSIGN_KEY, JSON.stringify(assignments)); }, [assignments]);
+  useEffect(() => { localStorage.setItem(STORAGE_CATEGORIES_KEY, JSON.stringify(categories)); }, [categories]);
 
   const tasks = tasksByProfile[selectedProfile] || [];
   const nowHHMM = new Date().toTimeString().slice(0, 5);
@@ -231,17 +282,18 @@ export default function RotinaInteligente() {
   const deleteTask = (id: string) => updateTasks(p => p.filter(t => t.id !== id));
 
   const resetForm = () => {
-    setNewTask({ title: "", description: "", time: "09:00", category: "prospeccao", priority: "media" });
+    setNewTask({ title: "", description: "", time: "09:00", category: Object.keys(categories)[0] || "prospeccao", priority: "media" });
     setEditingId(null);
     setShowAddForm(false);
   };
 
   const saveTask = () => {
     if (!newTask.title.trim()) return;
+    const safeTask = { ...newTask, category: categories[newTask.category] ? newTask.category : Object.keys(categories)[0] || "prospeccao" };
     if (editingId) {
-      updateTasks(p => p.map(t => t.id === editingId ? { ...t, ...newTask } : t));
+      updateTasks(p => p.map(t => t.id === editingId ? { ...t, ...safeTask } : t));
     } else {
-      updateTasks(p => [...p, { id: Date.now().toString(), ...newTask, done: false }]);
+      updateTasks(p => [...p, { id: Date.now().toString(), ...safeTask, done: false }]);
     }
     resetForm();
   };
@@ -252,12 +304,57 @@ export default function RotinaInteligente() {
       title: task.title,
       description: task.description || "",
       time: task.time,
-      category: task.category,
+      category: categories[task.category] ? task.category : Object.keys(categories)[0] || "prospeccao",
       priority: task.priority,
     });
     setShowAddForm(true);
   };
 
+
+  const saveCategory = () => {
+    const label = newCategoryLabel.trim();
+    if (!label) return;
+    if (editingCategoryKey) {
+      setCategories(prev => ({ ...prev, [editingCategoryKey]: { ...prev[editingCategoryKey], label } }));
+      setEditingCategoryKey(null);
+    } else {
+      setCategories(prev => {
+        const key = makeCategoryKey(label, prev);
+        const preset = CATEGORY_STYLE_PRESETS[Object.keys(prev).length % CATEGORY_STYLE_PRESETS.length];
+        return { ...prev, [key]: { label, ...preset } };
+      });
+    }
+    setNewCategoryLabel("");
+  };
+
+  const startEditCategory = (key: string) => {
+    setEditingCategoryKey(key);
+    setNewCategoryLabel(categories[key]?.label || "");
+  };
+
+  const deleteCategory = (key: string) => {
+    const entries = Object.keys(categories);
+    if (entries.length <= 1) return;
+    const fallback = entries.find(k => k !== key) || "prospeccao";
+    setCategories(prev => {
+      const next = { ...prev };
+      delete next[key];
+      return next;
+    });
+    setTasksByProfile(prev => {
+      const next = { ...prev };
+      PROFILES.forEach(profile => {
+        next[profile.key] = (next[profile.key] || []).map(task => task.category === key ? { ...task, category: fallback } : task);
+      });
+      return next;
+    });
+    if (newTask.category === key) setNewTask(p => ({ ...p, category: fallback }));
+    if (categoryFilter === key) setCategoryFilter("todas");
+    if (editingCategoryKey === key) {
+      setEditingCategoryKey(null);
+      setNewCategoryLabel("");
+    }
+  };
   const assignUser = (userId: string, profile: ProfileKey | "") => {
     setAssignments(prev => {
       const next = { ...prev };
@@ -487,7 +584,7 @@ export default function RotinaInteligente() {
                 onChange={(e) => setCategoryFilter(e.target.value as any)}
               >
                 <option value="todas">Todas categorias</option>
-                {Object.entries(CATEGORY_CONFIG).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
+                {Object.entries(categories).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
               </select>
             </div>
             <button
@@ -527,11 +624,47 @@ export default function RotinaInteligente() {
                 <select
                   className="bg-slate-900 border border-slate-600 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-emerald-500"
                   value={newTask.category}
-                  onChange={e => setNewTask(p => ({ ...p, category: e.target.value as RotineTask["category"] }))}
+                  onChange={e => setNewTask(p => ({ ...p, category: e.target.value }))}
                 >
-                  {Object.entries(CATEGORY_CONFIG).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
+                  {Object.entries(categories).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
                 </select>
-                <select
+                <div className="col-span-full rounded-xl border border-slate-700/70 bg-slate-900/50 p-3 space-y-3">
+                  <div className="flex flex-col sm:flex-row gap-2">
+                    <input
+                      className="flex-1 bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500"
+                      placeholder="Nome da categoria..."
+                      value={newCategoryLabel}
+                      onChange={e => setNewCategoryLabel(e.target.value)}
+                      onKeyDown={e => e.key === "Enter" && saveCategory()}
+                    />
+                    <button
+                      type="button"
+                      onClick={saveCategory}
+                      className="px-3 py-2 bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-300 border border-emerald-500/40 rounded-lg text-xs font-bold"
+                    >{editingCategoryKey ? "Salvar categoria" : "+ Criar categoria"}</button>
+                    {editingCategoryKey && (
+                      <button
+                        type="button"
+                        onClick={() => { setEditingCategoryKey(null); setNewCategoryLabel(""); }}
+                        className="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-xs font-bold"
+                      >Cancelar</button>
+                    )}
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {Object.entries(categories).map(([key, cat]) => (
+                      <span key={key} className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-semibold ${cat.bg} ${cat.text} ${cat.border}`}>
+                        <span className={`h-2 w-2 rounded-full ${cat.dot}`} />
+                        {cat.label}
+                        <button type="button" onClick={() => startEditCategory(key)} className="ml-1 text-slate-300 hover:text-white" title="Editar categoria">
+                          <Pencil className="h-3 w-3" />
+                        </button>
+                        <button type="button" onClick={() => deleteCategory(key)} className="text-slate-300 hover:text-rose-300" title="Excluir categoria">
+                          <X className="h-3 w-3" />
+                        </button>
+                      </span>
+                    ))}
+                  </div>
+                </div>                <select
                   className="col-span-full bg-slate-900 border border-slate-600 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-emerald-500"
                   value={newTask.priority}
                   onChange={e => setNewTask(p => ({ ...p, priority: e.target.value as RotineTask["priority"] }))}
@@ -590,7 +723,7 @@ export default function RotinaInteligente() {
                         <div className="text-center text-xs text-slate-600 py-6">Nenhuma atividade</div>
                       ) : (
                         col.list.slice().sort((a, b) => a.time.localeCompare(b.time)).map(task => (
-                          <TaskItem key={task.id} task={task} onToggle={toggleTask} onDelete={deleteTask} onEdit={startEdit} />
+                          <TaskItem key={task.id} task={task} categories={categories} onToggle={toggleTask} onDelete={deleteTask} onEdit={startEdit} />
                         ))
                       )}
                     </div>
@@ -634,7 +767,7 @@ export default function RotinaInteligente() {
                     {sortedTasks.length === 0 ? (
                       <div className="text-center text-[11px] text-slate-600 py-6">Sem rotina</div>
                     ) : sortedTasks.map(t => {
-                      const cat = CATEGORY_CONFIG[t.category];
+                      const cat = categories[t.category] || DEFAULT_CATEGORY_CONFIG.prospeccao;
                       const showDone = isToday && t.done;
                       return (
                         <div key={t.id} className={`flex items-center gap-2 px-2 py-1.5 rounded-lg border text-[11px] ${
@@ -712,7 +845,7 @@ export default function RotinaInteligente() {
                       </div>
                       <div className="flex flex-wrap gap-0.5">
                         {tasks.slice(0, 8).map(t => (
-                          <span key={t.id} title={`${t.time} ${t.title}`} className={`w-1.5 h-1.5 rounded-full ${CATEGORY_CONFIG[t.category].dot}`} />
+                          <span key={t.id} title={`${t.time} ${t.title}`} className={`w-1.5 h-1.5 rounded-full ${(categories[t.category] || DEFAULT_CATEGORY_CONFIG.prospeccao).dot}`} />
                         ))}
                         {tasks.length > 8 && <span className="text-[9px] text-slate-500">+{tasks.length - 8}</span>}
                       </div>
@@ -723,7 +856,7 @@ export default function RotinaInteligente() {
             </div>
             <div className="flex flex-wrap items-center gap-3 text-[11px] text-slate-400">
               <span className="font-bold uppercase tracking-wider text-slate-500">Legenda:</span>
-              {Object.entries(CATEGORY_CONFIG).map(([k, v]) => (
+              {Object.entries(categories).map(([k, v]) => (
                 <span key={k} className="inline-flex items-center gap-1.5">
                   <span className={`w-2 h-2 rounded-full ${v.dot}`} /> {v.label}
                 </span>
@@ -784,3 +917,5 @@ export default function RotinaInteligente() {
     </div>
   );
 }
+
+

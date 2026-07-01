@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Plano de Ação — Máquina de Vendas (Preview)</title>
+<style>
+  :root{
+    --green:#22C55E; --greenDark:#16A34A; --greenBg:#F0FDF4; --greenBorder:#BBF7D0;
+    --red:#EF4444; --redBg:#FEF2F2;
+    --amber:#F59E0B; --amberBg:#FFFBEB; --amberBorder:#FDE68A;
+    --blue:#3B82F6; --blueBg:#EFF6FF;
+    --purple:#8B5CF6; --purpleBg:#F5F3FF; --purpleDark:#764BA2;
+    --gray:#6B7280; --grayBg:#F9FAFB; --border:#E5E7EB;
+    --white:#FFFFFF; --text:#111827; --textSub:#6B7280;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; padding:0; background:transparent;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    color:var(--text);
+  }
+  .wrap{ max-width:none; margin:0; }
+  .notice{
+    background:#111827; color:#fff; border-radius:12px; padding:12px 16px; margin-bottom:16px;
+    font-size:12.5px; line-height:1.5; display:flex; gap:10px; align-items:flex-start;
+  }
+  .notice b{color:#FDE68A;}
+  .card{ background:var(--white); border:none; border-radius:0; overflow:visible; }
+  .headerbar{
+    background:linear-gradient(135deg,#667EEA,var(--purpleDark)); padding:20px 24px;
+    display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px;
+  }
+  .headerbar h1{ font-size:16px; font-weight:800; color:#fff; margin:0; display:flex; align-items:center; gap:8px; }
+  .headerbar p{ font-size:12px; color:rgba(255,255,255,.75); margin:3px 0 0; }
+  .fasebadge{ background:rgba(255,255,255,.2); color:#fff; font-size:12px; font-weight:700; padding:5px 14px; border-radius:99px; }
+  .progressline{ height:5px; background:#E9D8FD; }
+  .progressline > div{ height:100%; width:60%; background:linear-gradient(90deg,#667EEA,var(--purpleDark)); }
+  .steps{ display:flex; border-bottom:1.5px solid var(--border); overflow-x:auto; }
+  .steps button{
+    flex:1; min-width:110px; padding:12px 6px; border:none; background:transparent; cursor:default;
+    display:flex; flex-direction:column; align-items:center; gap:4px; font-family:inherit; font-size:12px; color:var(--textSub);
+  }
+  .steps button.active{ background:var(--purpleBg); color:var(--purpleDark); font-weight:700; border-bottom:3px solid var(--purpleDark); }
+  .steps button .ico{ font-size:18px; }
+  .steps button.done{ color:var(--green); }
+  .content{ padding:24px; }
+  h2.title{ font-size:16px; font-weight:800; margin:0 0 4px; }
+  p.sub{ font-size:13px; color:var(--textSub); margin:0 0 16px; }
+  .ctx-grid{ display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-bottom:6px; }
+  @media (max-width:640px){ .ctx-grid{ grid-template-columns:repeat(2,1fr);} }
+  .ctx-card{ border:1.5px solid var(--border); border-radius:12px; padding:10px 12px; background:var(--grayBg); }
+  .ctx-card label{ font-size:10px; font-weight:700; color:var(--textSub); text-transform:uppercase; display:block; margin-bottom:4px; }
+  .ctx-card input, .ctx-card select{
+    width:100%; border:none; background:transparent; font-size:16px; font-weight:800; color:var(--text);
+    font-family:inherit; padding:0;
+  }
+  .hint{ font-size:11px; color:var(--textSub); margin-bottom:20px; }
+  .reco-box{ background:var(--blueBg); border:1.5px solid #BFDBFE; border-radius:12px; padding:14px 16px; margin-bottom:24px; }
+  .reco-box .reco-title{ font-size:12px; font-weight:700; color:#1E40AF; margin-bottom:8px; }
+  .reco-row{ display:flex; align-items:center; justify-content:space-between; gap:10px; font-size:12px; color:#1E40AF; padding:4px 0; }
+  .reco-row span{ flex:1; }
+  .reco-row button{
+    flex-shrink:0; background:#1E40AF; color:#fff; border:none; border-radius:8px; padding:4px 10px;
+    font-size:11px; font-weight:700; cursor:pointer; font-family:inherit; white-space:nowrap;
+  }
+  .reco-row button.added{ background:var(--border); color:var(--textSub); cursor:default; }
+  .section-title{ font-size:13px; font-weight:700; color:var(--text); margin:0 0 10px; display:flex; align-items:center; gap:6px; }
+  .engine-box{ border:1.5px solid var(--border); border-radius:16px; padding:16px; margin-bottom:24px; background:#fff; }
+  .engine-grid{ display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:16px; }
+  @media (max-width:640px){ .engine-grid{ grid-template-columns:1fr; } }
+  .field label{ font-size:11px; font-weight:700; color:var(--textSub); text-transform:uppercase; letter-spacing:.5px; margin-bottom:5px; display:block; }
+  .field input, .field select{
+    width:100%; border:1.5px solid var(--border); border-radius:10px; padding:9px 12px; font-size:13px;
+    font-family:inherit; background:var(--white); color:var(--text);
+  }
+  .funnel{ display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin:16px 0; }
+  @media (max-width:760px){ .funnel{ grid-template-columns:repeat(2,1fr);} }
+  .funnel-step{ border:1.5px solid var(--border); border-radius:12px; padding:12px; text-align:center; background:var(--grayBg); }
+  .funnel-step .lbl{ font-size:10px; text-transform:uppercase; color:var(--textSub); font-weight:700; }
+  .funnel-step .val{ font-size:20px; font-weight:800; color:var(--purpleDark); margin-top:4px; }
+  .cap-grid{ display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:12px; }
+  @media (max-width:640px){ .cap-grid{ grid-template-columns:1fr;} }
+  .cap-card{ border:1.5px solid var(--border); border-radius:12px; padding:12px; }
+  .cap-card .top{ display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; }
+  .cap-card .top span{ font-size:11px; font-weight:700; color:var(--textSub); text-transform:uppercase; }
+  .badge{ font-size:10px; font-weight:700; padding:2px 8px; border-radius:99px; }
+  .badge.ok{ background:var(--greenBg); color:var(--greenDark); }
+  .badge.warn{ background:var(--amberBg); color:#B45309; }
+  .badge.bad{ background:var(--redBg); color:var(--red); }
+  .bar{ height:8px; background:var(--border); border-radius:99px; overflow:hidden; margin-top:6px; }
+  .bar > div{ height:100%; border-radius:99px; }
+  .cap-card .num{ font-size:22px; font-weight:800; margin-top:2px; }
+  table.offers{ width:100%; border-collapse:collapse; margin-bottom:10px; font-size:12px; }
+  table.offers thead th{
+    text-align:left; font-size:11px; font-weight:700; color:var(--textSub); text-transform:uppercase;
+    letter-spacing:.4px; background:var(--grayBg); padding:8px 10px; border-bottom:1px solid var(--border);
+  }
+  table.offers td{ padding:6px 10px; border-bottom:1px solid var(--border); vertical-align:middle; }
+  table.offers input, table.offers select{ width:100%; border:1px solid var(--border); border-radius:8px; padding:5px 6px; font-size:12px; font-family:inherit; }
+  .icon-btn{ background:none; border:none; color:var(--red); cursor:pointer; font-size:16px; }
+  .dashed{
+    border:2px dashed var(--border); border-radius:14px; padding:20px; text-align:center; color:var(--textSub); font-size:13px; margin-bottom:14px;
+  }
+  .btn{ border:none; border-radius:10px; font-weight:700; cursor:pointer; font-family:inherit; }
+  .btn-green{ background:var(--green); color:#fff; padding:8px 18px; font-size:13px; }
+  .btn-outline-green{ background:var(--white); color:var(--greenDark); border:1.5px solid var(--green); padding:8px 18px; font-size:13px; }
+  .btn-outline-purple{ background:var(--white); color:var(--purple); border:1.5px solid var(--purple); padding:8px 20px; font-size:13px; }
+  .btn-ghost{ background:none; color:var(--textSub); border:1.5px solid var(--border); padding:11px 20px; font-size:13px; }
+  .btn-primary{ background:linear-gradient(135deg,#667EEA,var(--purpleDark)); color:#fff; padding:11px 24px; font-size:14px; }
+  .totals-row{ display:flex; justify-content:flex-end; gap:16px; font-size:12px; color:var(--textSub); margin-bottom:8px; flex-wrap:wrap; }
+  .totals-row b{ color:var(--greenDark); }
+  .plano-header{ display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; flex-wrap:wrap; gap:8px; }
+  .progress-mini{ display:flex; align-items:center; gap:8px; }
+  .progress-mini .track{ width:80px; background:var(--border); border-radius:99px; height:6px; }
+  .progress-mini .fill{ height:100%; background:var(--green); border-radius:99px; }
+  table.acoes{ width:100%; border-collapse:collapse; margin-bottom:12px; font-size:12px; }
+  table.acoes thead th{
+    text-align:left; font-size:11px; font-weight:700; color:var(--textSub); text-transform:uppercase;
+    letter-spacing:.4px; background:var(--grayBg); padding:8px 10px; border-bottom:1px solid var(--border);
+  }
+  table.acoes td{ padding:6px 10px; border-bottom:1px solid var(--border); vertical-align:middle; }
+  table.acoes input[type=text], table.acoes input[type=date], table.acoes select{
+    width:100%; border:1px solid var(--border); border-radius:8px; padding:5px 6px; font-size:11px; font-family:inherit;
+  }
+  table.acoes input.titulo{ border:none; background:transparent; font-weight:600; font-size:12px; padding:5px 0; }
+  .newbox{ border:2px solid var(--green); border-radius:14px; padding:14px; margin-bottom:20px; background:var(--greenBg); }
+  .newbox .newbox-title{ font-size:12px; font-weight:700; color:var(--greenDark); margin-bottom:10px; }
+  .newbox .grid3{ display:grid; grid-template-columns:2fr 1fr 1fr; gap:10px; margin-bottom:10px; }
+  .newbox .grid2{ display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:10px; }
+  @media (max-width:640px){ .newbox .grid3, .newbox .grid2{ grid-template-columns:1fr; } }
+  .newbox .actions{ display:flex; gap:8px; justify-content:flex-end; }
+  .footer-nav{ display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-top:8px; }
+  .footer-nav .right{ display:flex; gap:8px; flex-wrap:wrap; }
+  .toast{
+    position:fixed; bottom:20px; right:20px; background:var(--text); color:#fff; padding:10px 16px; border-radius:10px;
+    font-size:13px; opacity:0; transform:translateY(10px); transition:all .25s; pointer-events:none; z-index:50;
+  }
+  .toast.show{ opacity:1; transform:translateY(0); }
+</style>
+</head>
+<body>
+<div class="wrap">
+<div class="card">
+<div class="content">
+      <h2 class="title">🚀 Como vamos chegar lá?</h2>
+      <p class="sub">Diagnóstico estratégico, motor de receita por oferta e o plano de ações concretas para bater a meta.</p>
+
+      <!-- Contexto -->
+      <div class="ctx-grid">
+        <div class="ctx-card"><label>Meta mensal (R$)</label><input id="ctxMeta" type="number" value="60000" /></div>
+        <div class="ctx-card"><label>Prazo (meses)</label><input id="ctxPrazo" type="number" value="1" /></div>
+        <div class="ctx-card"><label>SDRs hoje</label><input id="ctxSdrs" type="number" value="1" /></div>
+        <div class="ctx-card"><label>Closers hoje</label><input id="ctxClosers" type="number" value="1" /></div>
+      </div>
+      <div class="hint">Precisa ajustar meta, prazo ou estrutura? Na versão real, volte para as fases 1 e 2 — os valores aqui são só referência (e nesta demo, editáveis para você testar os cálculos).</div>
+
+      <!-- Recomendações -->
+      <div class="reco-box">
+        <div class="reco-title">💡 Recomendações com base no diagnóstico</div>
+        <div id="recoList"></div>
+      </div>
+
+      <!-- Motor de receita -->
+      <div class="section-title">⚙️ Motor de Receita — dimensionamento por oferta</div>
+      <p class="hint" style="margin-bottom:12px;">Configure ticket médio, taxas de conversão e capacidade do time: o sistema calcula leads, reuniões e vendas necessários, e compara com a capacidade atual.</p>
+      <div class="engine-box">
+        <div class="engine-grid">
+          <div class="field"><label>Ticket médio (R$)</label><input id="engTicket" type="number" value="3999" /></div>
+          <div class="field"><label>Win rate (%)</label><input id="engWin" type="number" value="25" /></div>
+          <div class="field"><label>Show-up (%)</label><input id="engShow" type="number" value="70" /></div>
+          <div class="field"><label>Lead → Reunião (%)</label><input id="engLead" type="number" value="15" /></div>
+          <div class="field"><label>Capacidade SDR (leads/dia)</label><input id="engCapSdr" type="number" value="30" /></div>
+          <div class="field"><label>Capacidade Closer (vendas/dia)</label><input id="engCapCloser" type="number" value="4" /></div>
+        </div>
+
+        <div class="funnel" id="funnelBoxes"></div>
+
+        <div class="cap-grid">
+          <div class="cap-card">
+            <div class="top"><span>SDRs necessários</span><span id="badgeSdr" class="badge ok">0%</span></div>
+            <div class="num" id="numSdr">0</div>
+            <div class="bar"><div id="barSdr" style="width:0%;background:var(--green);"></div></div>
+            <div class="hint" style="margin:6px 0 0;">Você tem <span id="txtSdrAtual"></span> — <span id="txtSdrGap"></span></div>
+          </div>
+          <div class="cap-card">
+            <div class="top"><span>Closers necessários</span><span id="badgeCloser" class="badge ok">0%</span></div>
+            <div class="num" id="numCloser">0</div>
+            <div class="bar"><div id="barCloser" style="width:0%;background:var(--green);"></div></div>
+            <div class="hint" style="margin:6px 0 0;">Você tem <span id="txtCloserAtual"></span> — <span id="txtCloserGap"></span></div>
+          </div>
+        </div>
+
+        <div class="section-title" style="margin-top:20px;">📦 Portfólio de Ofertas</div>
+        <table class="offers">
+          <thead><tr><th>Oferta</th><th>Ticket</th><th>Vendas/mês</th><th>Receita</th><th></th></tr></thead>
+          <tbody id="offersBody"></tbody>
+        </table>
+        <div class="totals-row">Receita projetada: <b id="offersReceita">R$ 0</b>&nbsp;&nbsp;·&nbsp;&nbsp;Meta: <b id="offersMetaPct">0%</b></div>
+        <button class="btn btn-outline-green" onclick="addOffer()">+ Adicionar oferta</button>
+      </div>
+
+      <!-- Plano de ações -->
+      <div class="plano-header">
+        <div class="section-title" style="margin:0;">📋 Plano de Ações Estratégicas</div>
+        <div class="progress-mini" id="planoProgressWrap" style="display:none;">
+          <div class="track"><div class="fill" id="planoProgressFill" style="width:0%;"></div></div>
+          <span id="planoProgressText" style="font-size:11px;color:var(--textSub);font-weight:600;"></span>
+        </div>
+      </div>
+      <p class="hint" style="margin-bottom:12px;">Ações concretas — quem faz o quê e até quando. Categorize por Pessoas, Processo, Canal ou Oferta.</p>
+
+      <div id="acoesEmpty" class="dashed">
+        <div style="font-size:28px;margin-bottom:6px;">🗒️</div>
+        Nenhuma ação cadastrada ainda. Adicione uma recomendação acima ou crie a sua própria.
+      </div>
+
+      <table class="acoes" id="acoesTable" style="display:none;">
+        <thead><tr><th>O quê</th><th>Categoria</th><th>Responsável</th><th>Prazo</th><th>Status</th><th></th></tr></thead>
+        <tbody id="acoesBody"></tbody>
+      </table>
+
+      <div id="newAcaoBox" style="display:none;" class="newbox">
+        <div class="newbox-title">Nova ação</div>
+        <div class="grid3">
+          <div class="field"><label>O quê</label><input id="newTitulo" type="text" placeholder="Ex: Contratar 1 SDR" /></div>
+          <div class="field"><label>Categoria</label>
+            <select id="newCategoria">
+              <option value="pessoas">👥 Pessoas</option>
+              <option value="processo" selected>⚙️ Processo</option>
+              <option value="canal">📣 Canal</option>
+              <option value="oferta">📦 Oferta</option>
+              <option value="outro">📌 Outro</option>
+            </select>
+          </div>
+          <div class="field"><label>Prioridade</label>
+            <select id="newPrioridade">
+              <option value="alta">Alta</option>
+              <option value="media" selected>Média</option>
+              <option value="baixa">Baixa</option>
+            </select>
+          </div>
+        </div>
+        <div class="grid2">
+          <div class="field"><label>Responsável</label><input id="newResponsavel" type="text" placeholder="Nome" /></div>
+          <div class="field"><label>Prazo</label><input id="newPrazo" type="date" /></div>
+        </div>
+        <div class="actions">
+          <button class="btn" style="background:#fff;color:var(--textSub);border:1.5px solid var(--border);padding:7px 16px;font-size:12px;" onclick="cancelNewAcao()">Cancelar</button>
+          <button class="btn btn-green" style="padding:7px 18px;font-size:12px;" onclick="saveNewAcao()">Adicionar ação</button>
+        </div>
+      </div>
+      <div id="addAcaoBtnWrap" style="margin-bottom:20px;">
+        <button class="btn btn-outline-purple" onclick="openNewAcao()">+ Nova ação</button>
+      </div>
+    </div>
+</div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  const fmt = n => Number(n||0).toLocaleString('pt-BR');
+  const fmtR = n => 'R$ ' + fmt(Math.round(n||0));
+
+  let offers = [
+    { nome: 'Consultoria mensal', ticket: 3999, vendas: 5 },
+    { nome: 'Implementação (setup)', ticket: 1500, vendas: 3 },
+  ];
+  let acoes = [];
+
+  function showToast(msg){
+    const t = document.getElementById('toast');
+    t.textContent = msg; t.classList.add('show');
+    clearTimeout(window._toastTimer);
+    window._toastTimer = setTimeout(()=>t.classList.remove('show'), 2200);
+  }
+
+  function ctx(){
+    return {
+      meta: +document.getElementById('ctxMeta').value || 0,
+      prazo: +document.getElementById('ctxPrazo').value || 1,
+      sdrs: +document.getElementById('ctxSdrs').value || 0,
+      closers: +document.getElementById('ctxClosers').value || 0,
+      ticket: +document.getElementById('engTicket').value || 0,
+      win: +document.getElementById('engWin').value || 0,
+      show: +document.getElementById('engShow').value || 0,
+      lead: +document.getElementById('engLead').value || 0,
+      capSdr: +document.getElementById('engCapSdr').value || 0,
+      capCloser: +document.getElementById('engCapCloser').value || 0,
+    };
+  }
+
+  function renderReco(){
+    const c = ctx();
+    // faturamento atual assumido como referência fixa de demo (poderia vir da fase 1)
+    const faturamentoAtual = 3000;
+    const gap = c.meta - faturamentoAtual;
+    const cresc = faturamentoAtual > 0 ? Math.round(gap / faturamentoAtual * 100) : 0;
+
+    const out = [];
+    if (cresc > 80) out.push(`Crescimento de ${cresc}% é muito agressivo para o prazo definido — considere expandir o time comercial.`);
+    if (cresc > 50 && c.sdrs < 2) out.push('Contratar pelo menos +1 SDR para sustentar o volume de leads necessário.');
+    if (cresc > 50 && c.closers < 2) out.push('Contratar +1 Closer para absorver o aumento de reuniões geradas.');
+    if (c.win > 0 && c.win < 20) out.push(`Win rate atual (${c.win}%) está abaixo do saudável — treinar o time em fechamento.`);
+    if (c.show > 0 && c.show < 50) out.push(`No-show alto (show-up de ${c.show}%) — implementar confirmação e lembretes antes da reunião.`);
+    if (c.lead > 0 && c.lead < 8) out.push(`Conversão Lead→Reunião baixa (${c.lead}%) — revisar qualificação e ICP.`);
+    if (c.prazo <= 3 && cresc > 30) out.push('Prazo curto + meta agressiva: reforce canais pagos/inbound para acelerar geração de leads.');
+    if (out.length === 0) out.push('Estrutura coerente com a meta definida — o foco agora é execução e disciplina diária.');
+
+    const wrap = document.getElementById('recoList');
+    wrap.innerHTML = '';
+    out.forEach(texto => {
+      const jaAdicionada = acoes.some(a => a.titulo === texto);
+      const row = document.createElement('div');
+      row.className = 'reco-row';
+      row.innerHTML = `<span>→ ${texto}</span>
+        <button class="${jaAdicionada ? 'added' : ''}" ${jaAdicionada ? 'disabled' : ''}>${jaAdicionada ? '✓ No plano' : '+ Adicionar ao plano'}</button>`;
+      row.querySelector('button').onclick = () => { addAcaoFromSugestao(texto); };
+      wrap.appendChild(row);
+    });
+  }
+
+  function renderEngine(){
+    const c = ctx();
+    const totalVendas = offers.reduce((s,o)=>s+(+o.vendas||0),0);
+    const totalReceita = offers.reduce((s,o)=>s+(+o.vendas||0)*(+o.ticket||0),0);
+
+    const winRate = Math.max(c.win,0.0001)/100;
+    const showRate = Math.max(c.show,0.0001)/100;
+    const leadRate = Math.max(c.lead,0.0001)/100;
+
+    const reunioesRealizadas = totalVendas / winRate;
+    const reunioesAgendadas = reunioesRealizadas / showRate;
+    const leads = reunioesAgendadas / leadRate;
+
+    document.getElementById('funnelBoxes').innerHTML = `
+      <div class="funnel-step"><div class="lbl">Leads necessários</div><div class="val">${fmt(leads)}</div></div>
+      <div class="funnel-step"><div class="lbl">Reuniões agendadas</div><div class="val">${fmt(reunioesAgendadas)}</div></div>
+      <div class="funnel-step"><div class="lbl">Reuniões realizadas</div><div class="val">${fmt(reunioesRealizadas)}</div></div>
+      <div class="funnel-step"><div class="lbl">Vendas fechadas</div><div class="val">${fmt(totalVendas)}</div></div>
+    `;
+
+    const cicloDias = 22;
+    const capSdrCiclo = c.capSdr * cicloDias;
+    const capCloserCiclo = c.capCloser * cicloDias;
+    const sdrsNecessarios = capSdrCiclo > 0 ? leads / capSdrCiclo : 0;
+    const closersNecessarios = capCloserCiclo > 0 ? reunioesAgendadas / capCloserCiclo : 0;
+
+    function fillCap(numId, barId, badgeId, necessario, atual, txtAtualId, txtGapId, label){
+      document.getElementById(numId).textContent = Math.ceil(necessario);
+      const util = atual > 0 ? (necessario/atual)*100 : (necessario>0?999:0);
+      const pct = Math.min(util,100);
+      const bar = document.getElementById(barId);
+      bar.style.width = pct + '%';
+      const badge = document.getElementById(badgeId);
+      let cls='ok', txt=util.toFixed(0)+'%';
+      if(util>100){cls='bad';} else if(util>80){cls='warn';}
+      badge.className = 'badge '+cls; badge.textContent = txt+' utilização';
+      bar.style.background = cls==='bad'?'var(--red)':cls==='warn'?'var(--amber)':'var(--green)';
+      document.getElementById(txtAtualId).textContent = atual + ' ' + label;
+      const gap = Math.ceil(necessario) - atual;
+      document.getElementById(txtGapId).textContent = gap > 0 ? `faltam ${gap}` : 'capacidade suficiente ✓';
+    }
+    fillCap('numSdr','barSdr','badgeSdr', sdrsNecessarios, c.sdrs, 'txtSdrAtual','txtSdrGap','SDR(s)');
+    fillCap('numCloser','barCloser','badgeCloser', closersNecessarios, c.closers, 'txtCloserAtual','txtCloserGap','Closer(s)');
+
+    document.getElementById('offersReceita').textContent = fmtR(totalReceita);
+    document.getElementById('offersMetaPct').textContent = (c.meta>0 ? Math.round(totalReceita/c.meta*100) : 0) + '%';
+  }
+
+  function renderOffers(){
+    const body = document.getElementById('offersBody');
+    body.innerHTML = '';
+    offers.forEach((o,i)=>{
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td><input type="text" value="${o.nome}" data-i="${i}" data-f="nome"/></td>
+        <td><input type="number" value="${o.ticket}" data-i="${i}" data-f="ticket"/></td>
+        <td><input type="number" value="${o.vendas}" data-i="${i}" data-f="vendas"/></td>
+        <td>${fmtR(o.ticket*o.vendas)}</td>
+        <td><button class="icon-btn" onclick="removeOffer(${i})">×</button></td>
+      `;
+      body.appendChild(tr);
+    });
+    body.querySelectorAll('input').forEach(inp=>{
+      inp.addEventListener('input', e=>{
+        const i = +e.target.dataset.i, f = e.target.dataset.f;
+        offers[i][f] = f==='nome' ? e.target.value : (+e.target.value||0);
+        renderAll();
+      });
+    });
+  }
+  function addOffer(){ offers.push({nome:'Nova oferta', ticket:1000, vendas:1}); renderAll(); }
+  function removeOffer(i){ offers.splice(i,1); renderAll(); }
+
+  const CATS = { pessoas:{l:'👥 Pessoas',c:'#8B5CF6'}, processo:{l:'⚙️ Processo',c:'#3B82F6'}, canal:{l:'📣 Canal',c:'#F59E0B'}, oferta:{l:'📦 Oferta',c:'#16A34A'}, outro:{l:'📌 Outro',c:'#6B7280'} };
+  const STATUS = { pendente:{l:'Pendente',c:'#6B7280',bg:'#F9FAFB'}, andamento:{l:'Em andamento',c:'#B45309',bg:'#FFFBEB'}, concluida:{l:'Concluída',c:'#16A34A',bg:'#F0FDF4'} };
+
+  function renderAcoes(){
+    const empty = document.getElementById('acoesEmpty');
+    const table = document.getElementById('acoesTable');
+    const body = document.getElementById('acoesBody');
+    const progWrap = document.getElementById('planoProgressWrap');
+
+    if(acoes.length===0){ empty.style.display='block'; table.style.display='none'; progWrap.style.display='none'; return; }
+    empty.style.display='none'; table.style.display='table'; progWrap.style.display='flex';
+
+    const concluidas = acoes.filter(a=>a.status==='concluida').length;
+    const pct = Math.round(concluidas/acoes.length*100);
+    document.getElementById('planoProgressFill').style.width = pct+'%';
+    document.getElementById('planoProgressText').textContent = `${concluidas}/${acoes.length} concluídas`;
+
+    body.innerHTML = '';
+    acoes.forEach((a,i)=>{
+      const catOpts = Object.entries(CATS).map(([k,v])=>`<option value="${k}" ${a.categoria===k?'selected':''}>${v.l}</option>`).join('');
+      const stOpts = Object.entries(STATUS).map(([k,v])=>`<option value="${k}" ${a.status===k?'selected':''}>${v.l}</option>`).join('');
+      const st = STATUS[a.status]||STATUS.pendente;
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td><input class="titulo" type="text" value="${a.titulo}" data-i="${i}" data-f="titulo" style="${a.status==='concluida'?'text-decoration:line-through;opacity:.6;':''}"/></td>
+        <td><select data-i="${i}" data-f="categoria">${catOpts}</select></td>
+        <td><input type="text" placeholder="Quem?" value="${a.responsavel||''}" data-i="${i}" data-f="responsavel"/></td>
+        <td><input type="date" value="${a.prazo||''}" data-i="${i}" data-f="prazo"/></td>
+        <td><select data-i="${i}" data-f="status" style="color:${st.c};background:${st.bg};font-weight:700;">${stOpts}</select></td>
+        <td><button class="icon-btn" onclick="removeAcao(${i})">×</button></td>
+      `;
+      body.appendChild(tr);
+    });
+    body.querySelectorAll('input,select').forEach(el=>{
+      el.addEventListener('input', e=>{
+        const i = +e.target.dataset.i, f = e.target.dataset.f;
+        acoes[i][f] = e.target.value;
+        renderAll();
+      });
+    });
+  }
+
+  function addAcaoFromSugestao(texto){
+    if(acoes.some(a=>a.titulo===texto)){ showToast('Essa recomendação já está no plano de ações'); return; }
+    acoes.push({ titulo: texto, status:'pendente', categoria:'processo', prioridade:'media' });
+    showToast('Recomendação adicionada ao plano de ações');
+    renderAll();
+  }
+  function removeAcao(i){ acoes.splice(i,1); renderAll(); }
+
+  function openNewAcao(){
+    document.getElementById('newAcaoBox').style.display='block';
+    document.getElementById('addAcaoBtnWrap').style.display='none';
+    document.getElementById('newTitulo').value='';
+    document.getElementById('newResponsavel').value='';
+    document.getElementById('newPrazo').value='';
+  }
+  function cancelNewAcao(){
+    document.getElementById('newAcaoBox').style.display='none';
+    document.getElementById('addAcaoBtnWrap').style.display='block';
+  }
+  function saveNewAcao(){
+    const titulo = document.getElementById('newTitulo').value.trim();
+    if(!titulo){ showToast('Informe o que precisa ser feito'); return; }
+    acoes.push({
+      titulo,
+      categoria: document.getElementById('newCategoria').value,
+      prioridade: document.getElementById('newPrioridade').value,
+      responsavel: document.getElementById('newResponsavel').value,
+      prazo: document.getElementById('newPrazo').value,
+      status: 'pendente',
+    });
+    cancelNewAcao();
+    renderAll();
+  }
+
+  function renderAll(){
+    renderReco();
+    renderEngine();
+    renderOffers();
+    renderAcoes();
+  }
+
+  document.querySelectorAll('.ctx-card input, .engine-box input').forEach(el=>{
+    el.addEventListener('input', renderAll);
+  });
+
+  renderAll();
+</script>
+</body>
+</html>
