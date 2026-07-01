@@ -1965,7 +1965,7 @@ function buildCardEl(t) {
   const dueLbl = t.due_date ? `<span class="date-badge ${due.className}"><i class="ti ti-${due.icon}"></i>${escapeHtml(due.text)}</span>` : '';
   const tagsHtml = (t.tags || []).slice(0, 3).map(tg => `<span class="tag tag-blue">${escapeHtml(tg)}</span>`).join('');
   const assName = t.assignee?.full_name || '';
-  const initials = assName ? assName.split(' ').map(s => s[0]).slice(0, 2).join('').toUpperCase() : '?';
+  const assInitials = assName ? assName.split(' ').map(s => s[0]).slice(0, 2).join('').toUpperCase() : '?';
   div.innerHTML = `
     <div class="card-top-stripe" style="background:${color}"></div>
     <div class="card-body">
