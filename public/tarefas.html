@@ -2554,7 +2554,11 @@ function applyFilters() {
     const t = tasks.find(x => x.id === id);
     if (!t) return;
     let show = true;
-    if (meu && session?.user?.id && t.assignee_id !== session.user.id) show = false;
+    if (meu && session?.user?.id) {
+      const uid = session.user.id;
+      const resp = Array.isArray(t.responsaveis) ? t.responsaveis : [];
+      if (t.assignee_id !== uid && !resp.includes(uid) && t.owner_id !== uid) show = false;
+    }
     if (alta && !(t.priority === 'alta' || t.priority === 'urgente')) show = false;
     if (hoje && t.due_date) { const d = new Date(t.due_date); const today = new Date(); show = show && d.toDateString() === today.toDateString(); }
     else if (hoje) show = false;
