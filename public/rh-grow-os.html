@@ -1,0 +1,1019 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RH Comercial | GROW OS</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
+:root{
+  --bg:#0d0f12; --bg2:#13161b; --bg3:#191d24; --bg4:#1f242d;
+  --border:#1e232c; --border2:#252b36;
+  --t1:#e8edf3; --t2:#8b95a6; --t3:#526070; --t4:#333d4d;
+  --green:#22c55e; --green2:#4ade80; --green3:rgba(34,197,94,0.12); --green4:rgba(34,197,94,0.06);
+  --green-accent:#16a34a;
+  --pink:#ec4899; --pink2:#f472b6; --pink3:rgba(236,72,153,0.12);
+  --amber:#f59e0b; --amber2:#fbbf24; --amber3:rgba(245,158,11,0.12); --amber4:rgba(245,158,11,0.06);
+  --red:#ef4444; --red2:#f87171; --red3:rgba(239,68,68,0.12); --red4:rgba(239,68,68,0.06);
+  --blue:#3b82f6; --blue2:#60a5fa; --blue3:rgba(59,130,246,0.12);
+  --purple:#8b5cf6; --purple2:#a78bfa; --purple3:rgba(139,92,246,0.12);
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg); color:var(--t1); font-family:'Inter',sans-serif; font-size:14px; -webkit-font-smoothing:antialiased; min-height:100vh;}
+.mono{font-family:'JetBrains Mono',monospace;}
+button{cursor:pointer; font-family:inherit;}
+input,textarea,select{font-family:inherit; color:var(--t1); background:var(--bg3); border:1px solid var(--border2); border-radius:8px; padding:10px 13px; font-size:13.5px; outline:none; transition:border-color .15s, box-shadow .15s; width:100%;}
+input:focus,textarea:focus,select:focus{border-color:var(--green); box-shadow:0 0 0 3px rgba(34,197,94,0.1);}
+select option{background:var(--bg3);}
+textarea{resize:vertical; line-height:1.6;}
+::-webkit-scrollbar{width:5px;}
+::-webkit-scrollbar-thumb{background:#252b36; border-radius:3px;}
+
+/* ======= PAGE SHELL ======= */
+.page{max-width:1400px; margin:0 auto; padding:28px 32px 80px;}
+
+/* ======= BREADCRUMB ======= */
+.breadcrumb{display:flex; align-items:center; gap:6px; font-size:13px; color:var(--green); font-weight:600; margin-bottom:16px;}
+.breadcrumb svg{width:15px; height:15px; flex-shrink:0;}
+
+/* ======= PAGE HEADER ======= */
+.page-title{font-size:28px; font-weight:800; letter-spacing:-0.02em; margin-bottom:6px;}
+.page-desc{font-size:13.5px; color:var(--t2); margin-bottom:24px;}
+
+/* ======= PLAYBOOK BANNER ======= */
+.pb-banner{background:var(--bg2); border:1px solid var(--border); border-radius:12px; padding:16px 20px; display:flex; align-items:center; gap:14px; margin-bottom:24px;}
+.pb-icon{width:38px; height:38px; border-radius:10px; background:var(--pink3); border:1px solid rgba(236,72,153,0.2); display:flex; align-items:center; justify-content:center; font-size:17px; flex-shrink:0;}
+.pb-text strong{display:block; font-size:14px; font-weight:700;}
+.pb-text span{font-size:12px; color:var(--t2);}
+
+/* ======= ALERT BANNER ======= */
+.alert-bar{display:flex; align-items:center; gap:10px; background:var(--red4); border:1px solid rgba(239,68,68,0.25); border-radius:10px; padding:12px 16px; margin-bottom:18px; cursor:pointer;}
+.alert-bar .aic{font-size:14px; flex-shrink:0;}
+.alert-bar p{font-size:13px; color:var(--t1);}
+.alert-bar p strong{color:var(--red2);}
+.alert-bar .act{margin-left:auto; font-size:12px; font-weight:700; color:var(--red2); white-space:nowrap; flex-shrink:0;}
+.alert-bar.amber{background:var(--amber4); border-color:rgba(245,158,11,0.25);}
+.alert-bar.amber .act{color:var(--amber2);}
+.alert-bar.green{background:var(--green4); border-color:rgba(34,197,94,0.2);}
+.alert-bar.green .act{color:var(--green2);}
+
+/* ======= TABS ======= */
+.tabs-row{display:flex; gap:3px; margin-bottom:20px; overflow-x:auto; padding-bottom:2px;}
+.tab{display:inline-flex; align-items:center; gap:7px; padding:9px 16px; border-radius:9px; font-size:13px; font-weight:600; background:none; border:1px solid var(--border); color:var(--t2); cursor:pointer; transition:all .15s; white-space:nowrap;}
+.tab:hover{background:var(--bg3); color:var(--t1);}
+.tab.active{background:var(--bg3); border-color:var(--green); color:var(--green2);}
+.tab .ic{font-size:13px;}
+
+/* ======= TAB PANELS ======= */
+.panel{display:none; animation:fin .2s ease;}
+.panel.show{display:block;}
+@keyframes fin{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+
+/* ======= SECTION CARD ======= */
+.scard{background:var(--bg2); border:1px solid var(--border); border-radius:14px; padding:24px; margin-bottom:18px;}
+.scard-head{display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:20px; flex-wrap:wrap; gap:10px;}
+.scard-head h3{font-size:15px; font-weight:700; display:flex; align-items:center; gap:8px;}
+.scard-head .sub{font-size:12px; color:var(--t3); margin-top:3px;}
+.scard-divider{height:1px; background:var(--border); margin:18px 0;}
+
+/* ======= KPI ROW ======= */
+.kpi-row{display:grid; grid-template-columns:repeat(5,1fr); gap:12px; margin-bottom:18px;}
+.kpi{background:var(--bg3); border:1px solid var(--border2); border-radius:12px; padding:16px 18px;}
+.kpi .top{display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;}
+.kpi .ic{font-size:14px;}
+.kpi .trend{font-size:11px; font-weight:700; padding:2px 7px; border-radius:5px; font-family:'JetBrains Mono',monospace;}
+.kpi .trend.up{color:var(--green2); background:var(--green4);}
+.kpi .trend.dn{color:var(--red2); background:var(--red4);}
+.kpi .trend.nu{color:var(--t3); background:var(--bg4);}
+.kpi .val{font-size:22px; font-weight:800; font-family:'JetBrains Mono',monospace; letter-spacing:-0.02em; line-height:1;}
+.kpi .lbl{font-size:11px; color:var(--t3); margin-top:5px; font-weight:600; text-transform:uppercase; letter-spacing:0.03em;}
+.kpi .sub{font-size:11px; color:var(--t4); margin-top:2px;}
+
+/* ======= FIELD ======= */
+.field{margin-bottom:16px;}
+.field label{display:block; font-size:12.5px; font-weight:600; color:var(--t2); margin-bottom:7px;}
+.field-note{font-size:11px; color:var(--t4); margin-top:5px;}
+.g2{display:grid; grid-template-columns:1fr 1fr; gap:16px;}
+.g3{display:grid; grid-template-columns:repeat(3,1fr); gap:16px;}
+.g4{display:grid; grid-template-columns:repeat(4,1fr); gap:12px;}
+
+/* ======= SAVE BTN ======= */
+.save-bar{position:sticky; bottom:0; left:0; right:0; background:linear-gradient(to top, var(--bg) 80%, transparent); padding:20px 0 0; margin-top:28px;}
+.save-btn{width:100%; padding:14px; border-radius:11px; background:linear-gradient(135deg,#22c55e,#16a34a); border:none; color:white; font-size:15px; font-weight:700; display:flex; align-items:center; justify-content:center; gap:9px; letter-spacing:0.01em; box-shadow:0 4px 20px rgba(34,197,94,0.3); transition:all .2s; cursor:pointer;}
+.save-btn:hover{box-shadow:0 6px 28px rgba(34,197,94,0.45); transform:translateY(-1px);}
+
+/* ======= BUTTON ======= */
+.btn{display:inline-flex; align-items:center; gap:7px; padding:9px 16px; border-radius:9px; font-size:13px; font-weight:600; border:1px solid var(--border2); background:var(--bg3); color:var(--t1); cursor:pointer; transition:all .15s; white-space:nowrap;}
+.btn:hover{background:var(--bg4);}
+.btn-green{background:linear-gradient(135deg,#22c55e,#16a34a); border:none; color:white; box-shadow:0 2px 8px rgba(34,197,94,0.3);}
+.btn-green:hover{box-shadow:0 4px 16px rgba(34,197,94,0.4); transform:translateY(-1px);}
+.btn-sm{padding:6px 12px; font-size:12px;}
+.btn-danger{color:var(--red2); border-color:rgba(239,68,68,0.2); background:var(--red4);}
+.btn-ghost{background:none; border:none; color:var(--t2);}
+
+/* ======= TABLE ======= */
+.tbl-wrap{border-radius:12px; border:1px solid var(--border); overflow:hidden;}
+table{width:100%; border-collapse:collapse; background:var(--bg2);}
+thead tr{border-bottom:1px solid var(--border);}
+th{padding:11px 15px; font-size:10.5px; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; color:var(--t3); text-align:left; white-space:nowrap;}
+td{padding:13px 15px; font-size:13px; border-bottom:1px solid var(--border); vertical-align:middle;}
+tbody tr:last-child td{border-bottom:none;}
+tbody tr:hover{background:rgba(255,255,255,0.012);}
+
+/* ======= PERSON ======= */
+.person{display:flex; align-items:center; gap:10px;}
+.av{width:33px; height:33px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:800; color:white; flex-shrink:0;}
+.pname{font-weight:600; font-size:13px;}
+.prole{font-size:11px; color:var(--t3); margin-top:1px;}
+
+/* ======= BADGES ======= */
+.bdg{display:inline-flex; align-items:center; gap:4px; font-size:11px; font-weight:700; padding:4px 9px; border-radius:100px; white-space:nowrap;}
+.bdg .dot{width:5px; height:5px; border-radius:50%; background:currentColor; flex-shrink:0;}
+.bg{background:var(--green3); color:var(--green2);}
+.ba{background:var(--amber3); color:var(--amber2);}
+.br{background:var(--red3); color:var(--red2);}
+.bb{background:var(--blue3); color:var(--blue2);}
+.bp{background:var(--purple3); color:var(--purple2);}
+.bpk{background:var(--pink3); color:var(--pink2);}
+.bn{background:var(--bg3); color:var(--t2); border:1px solid var(--border2);}
+
+/* ======= PROGRESS ======= */
+.prog{width:100%; height:5px; background:var(--bg4); border-radius:100px; overflow:hidden; margin-top:5px;}
+.prog .fill{height:100%; border-radius:100px;}
+.fill-green{background:linear-gradient(90deg,#22c55e,#4ade80);}
+.fill-pink{background:linear-gradient(90deg,#ec4899,#f472b6);}
+.fill-amber{background:linear-gradient(90deg,#f59e0b,#fbbf24);}
+.fill-red{background:linear-gradient(90deg,#ef4444,#f87171);}
+
+/* ======= ALERTS ======= */
+.alert{display:flex; gap:11px; padding:13px 15px; border-radius:10px; margin-bottom:10px; align-items:flex-start;}
+.alert:last-child{margin-bottom:0;}
+.alert .aic{font-size:15px; flex-shrink:0; margin-top:1px;}
+.alert h5{font-size:13px; font-weight:700; margin-bottom:2px;}
+.alert p{font-size:12px; color:var(--t2); line-height:1.5;}
+.alert-r{background:var(--red4); border:1px solid rgba(239,68,68,0.2);}
+.alert-a{background:var(--amber4); border:1px solid rgba(245,158,11,0.18);}
+.alert-g{background:var(--green4); border:1px solid rgba(34,197,94,0.18);}
+.alert-b{background:var(--blue3); border:1px solid rgba(59,130,246,0.2);}
+
+/* ======= KANBAN ======= */
+.kanban{display:grid; grid-template-columns:repeat(5,1fr); gap:11px;}
+.kcol{background:var(--bg3); border-radius:11px; padding:11px; min-height:350px;}
+.kcol-h{display:flex; align-items:center; justify-content:space-between; margin-bottom:11px;}
+.kcol-h h5{font-size:11.5px; font-weight:700; color:var(--t2);}
+.kcol-h .kn{font-size:11px; background:var(--bg4); color:var(--t3); padding:2px 7px; border-radius:100px; font-weight:700;}
+.kcard{background:var(--bg2); border:1px solid var(--border); border-radius:9px; padding:12px; margin-bottom:7px; cursor:pointer; transition:all .14s;}
+.kcard:hover{border-color:var(--border2); transform:translateY(-1px);}
+.kcard h6{font-size:12.5px; font-weight:700; margin-bottom:3px;}
+.kcard .ksub{font-size:11px; color:var(--t3); margin-bottom:9px;}
+.kcard .kft{display:flex; justify-content:space-between; align-items:center;}
+.kdays{font-size:10px; color:var(--t4); font-family:'JetBrains Mono',monospace;}
+
+/* ======= RAMP CARD ======= */
+.ramp-card{background:var(--bg2); border:1px solid var(--border); border-radius:14px; padding:22px; margin-bottom:14px;}
+.ramp-phases{display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin:16px 0;}
+.rphase{border-radius:10px; padding:15px; border:1px solid var(--border); background:var(--bg3); position:relative;}
+.rphase.done{background:var(--green4); border-color:rgba(34,197,94,0.25);}
+.rphase.current{background:rgba(34,197,94,0.06); border-color:rgba(34,197,94,0.4); box-shadow:0 0 0 1px rgba(34,197,94,0.12);}
+.rphase.locked{opacity:.42;}
+.rphase .phn{font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:var(--t4); margin-bottom:5px;}
+.rphase.done .phn{color:var(--green2);}
+.rphase.current .phn{color:var(--green2);}
+.rphase .pht{font-size:13px; font-weight:700; margin-bottom:5px;}
+.rphase .phd{font-size:11.5px; color:var(--t2); line-height:1.5;}
+.rphase .phck{position:absolute; top:12px; right:12px;}
+.checkpoints{display:flex; flex-direction:column; gap:8px;}
+.chk{display:flex; align-items:center; gap:9px; font-size:12.5px;}
+.chk .box{width:18px; height:18px; border-radius:5px; border:1.5px solid var(--border2); display:flex; align-items:center; justify-content:center; flex-shrink:0; cursor:pointer; font-size:10px; transition:all .15s;}
+.chk.done .box{background:var(--green); border-color:var(--green); color:white;}
+.chk.done span{color:var(--t3); text-decoration:line-through;}
+
+/* ======= CAREER ======= */
+.career{display:flex; align-items:flex-start; overflow-x:auto; padding-bottom:8px; margin:18px 0;}
+.cnode{flex:1; min-width:120px; text-align:center; position:relative; padding:0 6px;}
+.cnode::before{content:''; position:absolute; top:27px; left:-50%; width:100%; height:2px; background:var(--border2); z-index:0;}
+.cnode:first-child::before{display:none;}
+.cnode.done::before{background:linear-gradient(90deg,var(--green),var(--green2));}
+.cnode.cur::before{background:linear-gradient(90deg,var(--green),var(--green2));}
+.ccirc{width:54px; height:54px; border-radius:50%; border:2px solid var(--border2); background:var(--bg3); display:flex; align-items:center; justify-content:center; font-size:18px; position:relative; z-index:1; margin:0 auto 10px; transition:all .2s;}
+.cnode.done .ccirc{border-color:var(--green); background:var(--green3);}
+.cnode.cur .ccirc{border-color:var(--green); background:var(--green3); box-shadow:0 0 0 4px rgba(34,197,94,0.12);}
+.clbl{font-size:12px; font-weight:700; margin-bottom:3px;}
+.cnode.done .clbl, .cnode.cur .clbl{color:var(--green2);}
+.ccrit{font-size:10.5px; color:var(--t3); line-height:1.4;}
+
+/* ======= SIM RESULT ======= */
+.sim-result{background:var(--bg3); border:1px solid var(--border2); border-radius:12px; padding:20px;}
+.sim-row{display:flex; justify-content:space-between; align-items:center; padding:10px 0; border-bottom:1px solid var(--border);}
+.sim-row:last-child{border-bottom:none; padding-bottom:0;}
+.sim-row .lbl{font-size:13px; color:var(--t2);}
+.sim-row .val{font-size:14px; font-weight:700; font-family:'JetBrains Mono',monospace;}
+.sim-total-row{background:var(--green3); border:1px solid rgba(34,197,94,0.2); border-radius:10px; padding:14px 16px; display:flex; justify-content:space-between; align-items:center; margin-top:14px;}
+.sim-total-row .lbl{font-size:13px; font-weight:700; color:var(--green2);}
+.sim-total-row .val{font-size:20px; font-weight:800; font-family:'JetBrains Mono',monospace; color:var(--green2);}
+
+/* ======= BENCHMARK ======= */
+.bench{display:flex; flex-direction:column; gap:0;}
+.bench-row{display:flex; align-items:center; justify-content:space-between; padding:13px 0; border-bottom:1px solid var(--border);}
+.bench-row:last-child{border-bottom:none;}
+.bench-row .cargo{font-size:13px; font-weight:600;}
+.bench-vals{display:flex; gap:8px;}
+.bench-tag{font-size:11.5px; background:var(--bg3); border:1px solid var(--border2); border-radius:7px; padding:4px 10px; font-weight:600; font-family:'JetBrains Mono',monospace;}
+
+/* ======= ENPS ======= */
+.enps-bar{height:24px; border-radius:7px; display:flex; overflow:hidden; gap:3px; margin:12px 0;}
+.enps-seg{height:100%; border-radius:5px; display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:800; color:white; transition:flex .4s;}
+
+/* ======= CHART BOX ======= */
+.chart-box{position:relative; height:200px;}
+
+/* ======= MODAL ======= */
+.ov{position:fixed; inset:0; background:rgba(0,0,0,.65); backdrop-filter:blur(4px); display:none; align-items:center; justify-content:center; z-index:200; padding:20px;}
+.ov.show{display:flex;}
+.modal{background:var(--bg2); border:1px solid var(--border2); border-radius:16px; width:500px; max-width:92vw; max-height:88vh; overflow-y:auto; box-shadow:0 24px 64px rgba(0,0,0,.6);}
+.mhead{padding:22px 24px 0; display:flex; align-items:center; justify-content:space-between; margin-bottom:20px;}
+.mhead h3{font-size:16px; font-weight:800;}
+.mclose{background:none; border:none; color:var(--t3); font-size:20px; cursor:pointer; width:32px; height:32px; border-radius:8px; display:flex; align-items:center; justify-content:center;}
+.mclose:hover{background:var(--bg3); color:var(--t1);}
+.mbody{padding:0 24px;}
+.mfoot{padding:16px 24px; border-top:1px solid var(--border); display:flex; gap:10px; justify-content:flex-end; margin-top:16px;}
+
+/* ======= TOAST ======= */
+.toasts{position:fixed; bottom:24px; right:24px; z-index:400; display:flex; flex-direction:column; gap:8px; pointer-events:none;}
+.toast{background:var(--bg2); border:1px solid var(--border2); border-left:3px solid var(--green); border-radius:11px; padding:13px 18px; font-size:13px; font-weight:600; box-shadow:0 8px 32px rgba(0,0,0,.5); animation:ts .25s ease; pointer-events:all;}
+.toast.tr{border-left-color:var(--red);}
+.toast.ta{border-left-color:var(--amber);}
+@keyframes ts{from{transform:translateX(20px);opacity:0}to{transform:translateX(0);opacity:1}}
+
+@media(max-width:900px){
+  .kpi-row{grid-template-columns:repeat(2,1fr);}
+  .g2,.g3,.g4{grid-template-columns:1fr;}
+  .kanban{grid-template-columns:repeat(2,1fr); overflow-x:auto;}
+  .ramp-phases{grid-template-columns:1fr;}
+  .career{flex-wrap:wrap;}
+}
+</style>
+</head>
+<body>
+<div class="page">
+
+<!-- BREADCRUMB -->
+<div class="breadcrumb">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+  BPO Comercial
+</div>
+
+<!-- PAGE HEADER -->
+<h1 class="page-title">RH Comercial</h1>
+<p class="page-desc">Atração, formação, remuneração e retenção do time comercial.</p>
+
+<!-- PLAYBOOK BANNER -->
+<div class="pb-banner">
+  <div class="pb-icon">👥</div>
+  <div class="pb-text">
+    <strong>RH Comercial</strong>
+    <span>Capítulo 11 do Playbook GROW: atração, formação, remuneração e retenção.</span>
+  </div>
+</div>
+
+<!-- ALERT BARS -->
+<div class="alert-bar" onclick="switchTab('retencao')">
+  <span class="aic">⚠️</span>
+  <p><strong>Risco de churn crítico:</strong> Marina Souza — score 78%. Performance em queda há 3 meses.</p>
+  <span class="act">Agir agora →</span>
+</div>
+<div class="alert-bar amber" onclick="switchTab('rampup')">
+  <span class="aic">⏱️</span>
+  <p><strong>Ramp-up travado:</strong> Pedro Lima está há 38 dias na fase de 30 dias sem completar checkpoints.</p>
+  <span class="act">Ver ramp-up →</span>
+</div>
+<div class="alert-bar green" onclick="switchTab('comissoes')">
+  <span class="aic">🎉</span>
+  <p><strong>Acelerador ativado:</strong> Carla Mendes atingiu 118% da meta — acelerador de +20% disponível para aprovar.</p>
+  <span class="act">Aprovar →</span>
+</div>
+
+<!-- TABS -->
+<div class="tabs-row">
+  <button class="tab active" data-tab="overview" onclick="switchTab('overview')"><span class="ic">📊</span>Visão Geral</button>
+  <button class="tab" data-tab="colaboradores" onclick="switchTab('colaboradores')"><span class="ic">👥</span>Colaboradores</button>
+  <button class="tab" data-tab="funil" onclick="switchTab('funil')"><span class="ic">🎓</span>Funil de Seleção</button>
+  <button class="tab" data-tab="rampup" onclick="switchTab('rampup')"><span class="ic">⚡</span>Ramp-up 30/60/90</button>
+  <button class="tab" data-tab="performance" onclick="switchTab('performance')"><span class="ic">📈</span>Performance</button>
+  <button class="tab" data-tab="remuneracao" onclick="switchTab('remuneracao')"><span class="ic">🧮</span>Remuneração</button>
+  <button class="tab" data-tab="simulador" onclick="switchTab('simulador')"><span class="ic">📉</span>Simulador</button>
+  <button class="tab" data-tab="comissoes" onclick="switchTab('comissoes')"><span class="ic">💰</span>Comissões</button>
+  <button class="tab" data-tab="carreira" onclick="switchTab('carreira')"><span class="ic">🪜</span>Plano de Carreira</button>
+  <button class="tab" data-tab="retencao" onclick="switchTab('retencao')"><span class="ic">💗</span>Retenção</button>
+  <button class="tab" data-tab="ats" onclick="switchTab('ats')"><span class="ic">🎯</span>Contratação (ATS)</button>
+</div>
+
+<!-- ================== OVERVIEW ================== -->
+<div id="panel-overview" class="panel show">
+  <div class="kpi-row">
+    <div class="kpi"><div class="top"><span class="ic">👥</span><span class="trend up">+2</span></div><div class="val" id="kpi-total">7</div><div class="lbl">Colaboradores</div><div class="sub">2 em ramp-up</div></div>
+    <div class="kpi"><div class="top"><span class="ic">💰</span><span class="trend up">+12%</span></div><div class="val">R$84k</div><div class="lbl">Folha de comissão</div><div class="sub">Projeção do mês</div></div>
+    <div class="kpi"><div class="top"><span class="ic">📉</span><span class="trend dn">↑1.2pp</span></div><div class="val">8,4%</div><div class="lbl">Turnover mensal</div><div class="sub">Meta: &lt;6%</div></div>
+    <div class="kpi"><div class="top"><span class="ic">💗</span><span class="trend up">+4pts</span></div><div class="val" style="color:var(--green2)">71</div><div class="lbl">eNPS interno</div><div class="sub">Excelente</div></div>
+    <div class="kpi"><div class="top"><span class="ic">🚨</span><span class="trend dn">Atenção</span></div><div class="val" style="color:var(--red2)">1</div><div class="lbl">Em risco churn</div><div class="sub">Score &gt;70%</div></div>
+  </div>
+
+  <div class="g2">
+    <div>
+      <div class="scard">
+        <div class="scard-head"><h3>🏆 Ranking do Time — Junho 2026</h3><button class="btn btn-sm" onclick="switchTab('performance')">Ver detalhes →</button></div>
+        <table>
+          <thead><tr><th>#</th><th>Vendedor</th><th>Vendas</th><th>Receita</th><th>% Meta</th></tr></thead>
+          <tbody id="tbl-rank"></tbody>
+        </table>
+      </div>
+      <div class="scard" style="margin-bottom:0">
+        <div class="scard-head"><h3>📊 Receita por Cargo</h3></div>
+        <div class="chart-box"><canvas id="chart-cargo"></canvas></div>
+      </div>
+    </div>
+    <div>
+      <div class="scard">
+        <div class="scard-head"><h3>🚨 Alertas Ativos</h3><span class="bdg br">3 alertas</span></div>
+        <div class="alert alert-r"><span class="aic">⚠️</span><div><h5>Risco de churn — Marina Souza</h5><p>Score 78%. Performance em queda há 3 meses + 14 meses sem promoção.</p><div style="margin-top:8px;"><button class="btn btn-sm btn-danger">Agendar 1:1</button></div></div></div>
+        <div class="alert alert-a"><span class="aic">⏱️</span><div><h5>Ramp-up travado — Pedro Lima</h5><p>38 dias na fase de 30 dias. Ainda não concluiu 1ª venda.</p></div></div>
+        <div class="alert alert-g"><span class="aic">🎉</span><div><h5>Acelerador — Carla Mendes</h5><p>118% da meta. Acelerador de +20% elegível. Aprovação pendente.</p></div></div>
+      </div>
+      <div class="scard" style="margin-bottom:0">
+        <div class="scard-head"><h3>👥 Distribuição do Time</h3></div>
+        <div id="dist" style="display:flex; flex-direction:column; gap:12px;"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ================== COLABORADORES ================== -->
+<div id="panel-colaboradores" class="panel">
+  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+    <div class="g4" style="flex:1; margin-bottom:0; margin-right:16px;">
+      <div class="kpi"><div class="top"><span>👥</span><span class="trend nu">Total</span></div><div class="val" id="kc-t">7</div><div class="lbl">Colaboradores</div></div>
+      <div class="kpi"><div class="top"><span>⚡</span><span class="trend nu">Onboard</span></div><div class="val" id="kc-r">2</div><div class="lbl">Em ramp-up</div></div>
+      <div class="kpi"><div class="top"><span>✅</span><span class="trend up">Ativos</span></div><div class="val" id="kc-a">5</div><div class="lbl">Plenos</div></div>
+      <div class="kpi"><div class="top"><span>🎯</span><span class="trend nu">Média</span></div><div class="val" id="kc-m">9.4</div><div class="lbl">Meta média</div></div>
+    </div>
+    <button class="btn btn-green" onclick="openM('m-pessoa')" style="flex-shrink:0;">+ Novo Colaborador</button>
+  </div>
+  <div class="tbl-wrap">
+    <table><thead><tr><th>Colaborador</th><th>Cargo</th><th>Entrada</th><th>Meta/mês</th><th>Fixo</th><th>Status</th><th>Risco churn</th><th>Ações</th></tr></thead>
+    <tbody id="tbl-colab"></tbody></table>
+  </div>
+</div>
+
+<!-- ================== FUNIL DE SELEÇÃO ================== -->
+<div id="panel-funil" class="panel">
+  <div class="scard">
+    <div class="scard-head"><h3>🎓 Funil de Seleção</h3></div>
+    <div class="field"><label>Etapas do funil de seleção</label>
+      <textarea id="funil-etapas" rows="4" placeholder="Ex: Triagem currículo → Teste de perfil → Entrevista RH → Role-play → Decisão"></textarea>
+      <div class="field-note">Descreva cada etapa do processo seletivo em ordem.</div>
+    </div>
+    <div class="g2">
+      <div class="field"><label>Taxa de aprovação alvo</label><input id="funil-taxa" placeholder="Ex: 5% dos candidatos"></div>
+      <div class="field"><label>Tempo médio do processo (dias)</label><input type="number" id="funil-tempo" placeholder="0" min="0"></div>
+    </div>
+  </div>
+
+  <div class="scard">
+    <div class="scard-head"><h3>📋 Pipeline de Contratação — ATS</h3><button class="btn btn-sm" onclick="switchTab('ats')">Abrir ATS completo →</button></div>
+    <div class="kanban">
+      <div class="kcol"><div class="kcol-h"><h5>📄 Triagem CV</h5><span class="kn">4</span></div>
+        <div class="kcard"><h6>Juliana Alves</h6><div class="ksub">Closer Sênior</div><div class="kft"><span class="kdays">2 dias</span><span class="bdg bn">Novo</span></div></div>
+        <div class="kcard"><h6>Diego Ramos</h6><div class="ksub">Closer Sênior</div><div class="kft"><span class="kdays">1 dia</span><span class="bdg bn">Novo</span></div></div>
+        <div class="kcard"><h6>Patrícia Lima</h6><div class="ksub">Closer Sênior</div><div class="kft"><span class="kdays">3 dias</span><span class="bdg bn">Novo</span></div></div>
+        <div class="kcard"><h6>Felipe Costa</h6><div class="ksub">Closer Sênior</div><div class="kft"><span class="kdays">1 dia</span><span class="bdg bn">Novo</span></div></div>
+      </div>
+      <div class="kcol"><div class="kcol-h"><h5>🧠 Teste Perfil</h5><span class="kn">2</span></div>
+        <div class="kcard"><h6>André Nogueira</h6><div class="ksub">Closer Sênior</div><div class="kft"><span class="kdays">5 dias</span><span class="bdg ba">Em teste</span></div></div>
+        <div class="kcard"><h6>Camila Duarte</h6><div class="ksub">Closer Sênior</div><div class="kft"><span class="kdays">4 dias</span><span class="bdg ba">Em teste</span></div></div>
+      </div>
+      <div class="kcol"><div class="kcol-h"><h5>🎤 Entrevista RH</h5><span class="kn">1</span></div>
+        <div class="kcard"><h6>Vinícius Prado</h6><div class="ksub">Closer Sênior</div><div class="kft"><span class="kdays">7 dias</span><span class="bdg bp">Agendada</span></div></div>
+      </div>
+      <div class="kcol"><div class="kcol-h"><h5>🎭 Role-play</h5><span class="kn">1</span></div>
+        <div class="kcard"><h6>Letícia Bastos</h6><div class="ksub">Closer Sênior</div><div class="kft"><span class="kdays">9 dias</span><span class="bdg bb">Avaliando</span></div></div>
+      </div>
+      <div class="kcol"><div class="kcol-h"><h5>✅ Decisão</h5><span class="kn">1</span></div>
+        <div class="kcard"><h6>Thiago Marques</h6><div class="ksub">Closer Sênior</div><div class="kft"><span class="kdays">12 dias</span><span class="bdg bg">Aprovado</span></div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="save-bar"><button class="save-btn" onclick="save()">💾 &nbsp;Salvar RH Comercial</button></div>
+</div>
+
+<!-- ================== RAMP-UP ================== -->
+<div id="panel-rampup" class="panel">
+  <div class="scard" style="margin-bottom:18px;">
+    <div class="scard-head"><h3>📋 Plano Padrão 30/60/90</h3><button class="btn btn-sm" onclick="openM('m-ramp-cfg')">⚙️ Editar plano</button></div>
+    <div class="g3">
+      <div><div class="bdg bb" style="margin-bottom:8px;">30 dias — Aprendizado</div><p style="font-size:12.5px; color:var(--t2); line-height:1.6;">Dominar produto, discurso e CRM. Realizar 1ª venda assistida.</p></div>
+      <div><div class="bdg bp" style="margin-bottom:8px;">60 dias — Execução assistida</div><p style="font-size:12.5px; color:var(--t2); line-height:1.6;">Atingir 60% da meta com acompanhamento do gestor.</p></div>
+      <div><div class="bdg bpk" style="margin-bottom:8px;">90 dias — Performance plena</div><p style="font-size:12.5px; color:var(--t2); line-height:1.6;">100% da meta de forma independente. Aprovação final.</p></div>
+    </div>
+  </div>
+  <div id="ramp-list"></div>
+  <div class="save-bar"><button class="save-btn" onclick="save()">💾 &nbsp;Salvar RH Comercial</button></div>
+</div>
+
+<!-- ================== PERFORMANCE ================== -->
+<div id="panel-performance" class="panel">
+  <div class="scard" style="margin-bottom:18px; padding:0; overflow:hidden;">
+    <table><thead><tr><th>Vendedor</th><th>Leads</th><th>Reuniões</th><th>Propostas</th><th>Vendas</th><th>Taxa conv.</th><th>Receita</th><th>% Meta</th></tr></thead>
+    <tbody id="tbl-perf"></tbody></table>
+  </div>
+  <div class="scard">
+    <div class="scard-head"><h3>🔍 Diagnóstico IA — Gargalos por Vendedor</h3><div class="sub">Análise automática baseada nos dados do funil de vendas conectado</div></div>
+    <div class="alert alert-r"><span class="aic">📉</span><div><h5>Marina Souza — gargalo em Proposta → Fechamento</h5><p>Taxa de conversão 41% abaixo da média do time nesta etapa. Sugestão: role-play de quebra de objeção + revisão do pitch de preço.</p></div></div>
+    <div class="alert alert-a"><span class="aic">⏳</span><div><h5>Bruno Santos — ciclo de venda 35% mais longo que a média</h5><p>Tempo até fechamento acima da média. Provável causa: qualificação fraca na entrada do funil. Revisar critérios de SQL.</p></div></div>
+    <div class="alert alert-g"><span class="aic">🎯</span><div><h5>Carla Mendes — padrão de excelência</h5><p>Ciclo de venda 22% menor + taxa de conversão 1.8x acima da média. Recomendada como mentora interna para novos Closers.</p></div></div>
+  </div>
+  <div class="scard" style="margin-bottom:0">
+    <div class="scard-head"><h3>📊 Receita por Vendedor — Junho 2026</h3></div>
+    <div class="chart-box"><canvas id="chart-perf"></canvas></div>
+  </div>
+</div>
+
+<!-- ================== REMUNERAÇÃO ================== -->
+<div id="panel-remuneracao" class="panel">
+  <div class="g2">
+    <div class="scard">
+      <div class="scard-head"><h3>Estrutura — Closer</h3></div>
+      <div class="field"><label>Salário fixo (R$)</label><input type="number" id="rem-fixo-c" value="3500" oninput="updRem()"></div>
+      <div class="field"><label>Variável a 100% da meta (R$)</label><input type="number" id="rem-var-c" value="2500" oninput="updRem()"></div>
+      <div class="field"><label>Comissão (% sobre venda)</label><input type="number" step="0.1" id="rem-com-c" value="3.5" oninput="updRem()"></div>
+      <div class="field"><label>Aceleradores</label><input id="rem-acc-c" value="110% meta = +20% | 130% meta = +40% | 150% meta = +60%"></div>
+      <div class="scard-divider"></div>
+      <div style="background:var(--green3); border:1px solid rgba(34,197,94,0.2); border-radius:10px; padding:14px;">
+        <div style="font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.04em; color:var(--green2); margin-bottom:5px;">OTE a 100% da meta</div>
+        <div style="font-size:24px; font-weight:800; font-family:'JetBrains Mono',monospace; color:var(--green2);" id="ote-c">R$ 6.000</div>
+      </div>
+    </div>
+    <div class="scard">
+      <div class="scard-head"><h3>Estrutura — SDR</h3></div>
+      <div class="field"><label>Salário fixo (R$)</label><input type="number" id="rem-fixo-s" value="2200" oninput="updRem()"></div>
+      <div class="field"><label>Variável a 100% da meta (R$)</label><input type="number" id="rem-var-s" value="1800" oninput="updRem()"></div>
+      <div class="field"><label>Comissão por reunião agendada (R$)</label><input type="number" id="rem-com-s" value="45"></div>
+      <div class="field"><label>Meta de reuniões/mês</label><input type="number" id="rem-met-s" value="30"></div>
+      <div class="field"><label>Aceleradores</label><input id="rem-acc-s" value="110% meta = +15% | 130% meta = +30%"></div>
+      <div class="scard-divider"></div>
+      <div style="background:var(--blue3); border:1px solid rgba(59,130,246,0.2); border-radius:10px; padding:14px;">
+        <div style="font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.04em; color:var(--blue2); margin-bottom:5px;">OTE a 100% da meta</div>
+        <div style="font-size:24px; font-weight:800; font-family:'JetBrains Mono',monospace; color:var(--blue2);" id="ote-s">R$ 4.000</div>
+      </div>
+    </div>
+  </div>
+  <div class="save-bar"><button class="save-btn" onclick="save()">💾 &nbsp;Salvar RH Comercial</button></div>
+</div>
+
+<!-- ================== SIMULADOR ================== -->
+<div id="panel-simulador" class="panel">
+  <div class="scard">
+    <div class="scard-head"><h3>📉 Simulador de Remuneração</h3><div class="sub">Curva de remuneração por atingimento de meta</div></div>
+    <div class="g4" style="margin-bottom:18px;">
+      <div class="field" style="margin:0"><label>Salário fixo (R$)</label><input type="number" id="sim-fixo" value="3500" oninput="runSim()"></div>
+      <div class="field" style="margin:0"><label>Variável a 100% (R$)</label><input type="number" id="sim-var" value="2500" oninput="runSim()"></div>
+      <div class="field" style="margin:0"><label>Acelerador 101-120% (+%)</label><input type="number" id="sim-acc1" value="20" oninput="runSim()"></div>
+      <div class="field" style="margin:0"><label>Super acelerador &gt;120% (+%)</label><input type="number" id="sim-acc2" value="50" oninput="runSim()"></div>
+    </div>
+    <div style="font-size:12px; font-weight:700; color:var(--t3); margin-bottom:10px; text-align:right;">100% meta = <span id="sim-ote" style="color:var(--green2);">R$ 6.000</span></div>
+    <div class="chart-box" style="height:220px;"><canvas id="chart-sim"></canvas></div>
+  </div>
+
+  <div class="g2">
+    <div class="scard">
+      <div class="scard-head"><h3>🎯 Simulador por Vendedor</h3></div>
+      <div class="field"><label>Vendedor</label>
+        <select id="sim-vend" onchange="runSimVend()">
+          <option>Carla Mendes (Closer)</option><option>Rafael Torres (Closer)</option>
+          <option>Bruno Santos (Closer)</option><option>Marina Souza (Closer)</option>
+          <option>Pedro Lima (SDR)</option><option>Ana Beatriz (SDR)</option>
+        </select>
+      </div>
+      <div class="g2">
+        <div class="field"><label>Vendas realizadas</label><input type="number" id="svend-v" value="14" oninput="runSimVend()"></div>
+        <div class="field"><label>Meta de vendas</label><input type="number" id="svend-m" value="12" oninput="runSimVend()"></div>
+      </div>
+      <div class="field"><label>Receita gerada (R$)</label><input type="number" id="svend-r" value="71400" oninput="runSimVend()"></div>
+    </div>
+    <div class="scard">
+      <div class="scard-head"><h3>Resultado do Mês</h3></div>
+      <div class="sim-result">
+        <div class="sim-row"><span class="lbl">% da meta atingida</span><span class="val" id="svr-pct" style="color:var(--amber2);">117%</span></div>
+        <div class="sim-row"><span class="lbl">Acelerador aplicado</span><span class="val" id="svr-acc" style="color:var(--purple2);">+20%</span></div>
+        <div class="sim-row"><span class="lbl">Salário fixo</span><span class="val" id="svr-fixo">R$ 3.500</span></div>
+        <div class="sim-row"><span class="lbl">Variável + acelerador</span><span class="val" id="svr-var" style="color:var(--green2);">R$ 3.000</span></div>
+        <div class="sim-row"><span class="lbl">Comissão sobre vendas</span><span class="val" id="svr-com">R$ 2.499</span></div>
+      </div>
+      <div class="sim-total-row"><span class="lbl">Total a pagar</span><span class="val" id="svr-tot">R$ 8.999</span></div>
+      <div style="margin-top:12px; display:flex; justify-content:space-between; font-size:12px; color:var(--t3);">
+        <span>Custo por venda (CAC parcial)</span><strong id="svr-cac" style="color:var(--green2);">R$ 642</strong>
+      </div>
+    </div>
+  </div>
+
+  <div class="scard" style="margin-bottom:0">
+    <div class="scard-head"><h3>📊 Benchmark de mercado (referência)</h3><div class="sub">Valores médios nacionais · use como referência, não como regra</div></div>
+    <div class="bench">
+      <div class="bench-row"><span class="cargo">SDR 1 — Lista fria (outbound puro)</span><div class="bench-vals"><span class="bench-tag">Fixo R$ 2.200</span><span class="bench-tag" style="color:var(--green2);">100% R$ 3.500</span></div></div>
+      <div class="bench-row"><span class="cargo">SDR 2 — Inbound</span><div class="bench-vals"><span class="bench-tag">Fixo R$ 2.800</span><span class="bench-tag" style="color:var(--green2);">100% R$ 4.500</span></div></div>
+      <div class="bench-row"><span class="cargo">SDR 3 — Outbound especializado</span><div class="bench-vals"><span class="bench-tag">Fixo R$ 3.500</span><span class="bench-tag" style="color:var(--green2);">100% R$ 6.000</span></div></div>
+      <div class="bench-row"><span class="cargo">Closer (Pleno)</span><div class="bench-vals"><span class="bench-tag">Fixo R$ 4.500</span><span class="bench-tag" style="color:var(--green2);">100% R$ 9.000</span></div></div>
+      <div class="bench-row"><span class="cargo">Gerente Comercial</span><div class="bench-vals"><span class="bench-tag">Fixo R$ 8.000</span><span class="bench-tag" style="color:var(--green2);">100% R$ 16.000</span></div></div>
+    </div>
+  </div>
+  <div class="save-bar"><button class="save-btn" onclick="save()">💾 &nbsp;Salvar RH Comercial</button></div>
+</div>
+
+<!-- ================== COMISSÕES ================== -->
+<div id="panel-comissoes" class="panel">
+  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+    <div class="kpi-row" style="flex:1; margin-right:16px; margin-bottom:0;">
+      <div class="kpi"><div class="top"><span>💰</span><span class="trend up">Mês</span></div><div class="val">R$84k</div><div class="lbl">Total folha</div></div>
+      <div class="kpi"><div class="top"><span>📈</span><span class="trend up">+18%</span></div><div class="val">R$41k</div><div class="lbl">Variável</div></div>
+      <div class="kpi"><div class="top"><span>🧮</span><span class="trend nu">Fixo</span></div><div class="val">R$19k</div><div class="lbl">Total fixo</div></div>
+      <div class="kpi"><div class="top"><span>🎯</span><span class="trend up">Bonus</span></div><div class="val">R$24k</div><div class="lbl">Comissão</div></div>
+    </div>
+    <button class="btn btn-green" onclick="toast('Folha exportada: Comissoes_Jun26.xlsx','g')" style="flex-shrink:0;">⬇️ Exportar Excel</button>
+  </div>
+  <div class="tbl-wrap" style="margin-bottom:16px;">
+    <table><thead><tr><th>Colaborador</th><th>Vendas</th><th>Receita</th><th>Fixo</th><th>Variável</th><th>Comissão</th><th>Acelerador</th><th>Total</th><th>Status</th></tr></thead>
+    <tbody id="tbl-com"></tbody></table>
+  </div>
+  <div style="background:var(--green3); border:1px solid rgba(34,197,94,0.2); border-radius:10px; padding:14px 18px; display:flex; justify-content:space-between; align-items:center;">
+    <span style="font-size:13px; font-weight:700; color:var(--green2);">✅ Folha fechada — 30/06/2026 · Aprovação do gestor pendente</span>
+    <button class="btn btn-green btn-sm" onclick="toast('Folha aprovada e enviada ao financeiro','g')">Aprovar folha</button>
+  </div>
+</div>
+
+<!-- ================== PLANO DE CARREIRA ================== -->
+<div id="panel-carreira" class="panel">
+  <div class="scard">
+    <div class="scard-head"><h3>🪜 Trilha Comercial — SDR a Gerente</h3><button class="btn btn-sm" onclick="openM('m-career-ed')">✏️ Editar trilha</button></div>
+    <div class="career">
+      <div class="cnode done"><div class="ccirc">🌱</div><div class="clbl">SDR Jr</div><div class="ccrit">0–3 meses · onboarding</div></div>
+      <div class="cnode done"><div class="ccirc">⚡</div><div class="clbl">SDR Sr</div><div class="ccrit">Meta por 3 meses seguidos</div></div>
+      <div class="cnode cur"><div class="ccirc">🎯</div><div class="clbl">Closer</div><div class="ccrit">Role-play + 6 meses</div></div>
+      <div class="cnode"><div class="ccirc">🚀</div><div class="clbl">Closer Sr</div><div class="ccrit">120% meta · 6m seguidos</div></div>
+      <div class="cnode"><div class="ccirc">👑</div><div class="clbl">Coordenador</div><div class="ccrit">Liderança + indicação</div></div>
+      <div class="cnode"><div class="ccirc">🏆</div><div class="clbl">Gerente</div><div class="ccrit">P&L próprio + 2 anos</div></div>
+    </div>
+    <p style="font-size:11.5px; color:var(--t3); margin-top:4px;">⬤ Em verde: níveis já alcançados pelo time. Destaque: nível com maior concentração atual.</p>
+  </div>
+  <div class="tbl-wrap">
+    <table><thead><tr><th>Colaborador</th><th>Cargo</th><th>Nível atual</th><th>Tempo no nível</th><th>Próximo nível</th><th>Progresso</th><th>Elegível?</th></tr></thead>
+    <tbody id="tbl-career"></tbody></table>
+  </div>
+  <div class="save-bar"><button class="save-btn" onclick="save()">💾 &nbsp;Salvar RH Comercial</button></div>
+</div>
+
+<!-- ================== RETENÇÃO ================== -->
+<div id="panel-retencao" class="panel">
+  <div class="g3" style="margin-bottom:18px;">
+    <div class="scard" style="margin-bottom:0">
+      <div class="scard-head"><h3>📉 Turnover mensal (%)</h3></div>
+      <div class="field" style="margin-bottom:10px;"><input type="number" id="ret-turn" value="8.4" placeholder="0" step="0.1"></div>
+      <div style="font-size:20px; font-weight:800; font-family:'JetBrains Mono',monospace; color:var(--red2); margin:8px 0;">8,4%</div>
+      <div class="prog"><div class="fill fill-red" style="width:84%"></div></div>
+      <div style="font-size:11px; color:var(--t3); margin-top:6px;">Meta: &lt;6% · Crítico: &gt;12%</div>
+    </div>
+    <div class="scard" style="margin-bottom:0">
+      <div class="scard-head"><h3>💗 NPS Interno (eNPS)</h3></div>
+      <div class="field" style="margin-bottom:10px;"><input type="number" id="ret-enps" value="71" placeholder="0" min="-100" max="100"></div>
+      <div style="font-size:20px; font-weight:800; font-family:'JetBrains Mono',monospace; color:var(--green2); margin:8px 0;">71</div>
+      <div class="enps-bar">
+        <div class="enps-seg" style="flex:7; background:var(--green);">Promotores 70%</div>
+        <div class="enps-seg" style="flex:2; background:var(--amber);">20%</div>
+        <div class="enps-seg" style="flex:1; background:var(--red); font-size:9px;">10%</div>
+      </div>
+      <div style="display:flex; justify-content:space-between; font-size:10.5px; color:var(--t3);"><span>Promotores (9-10)</span><span>Neutros (7-8)</span><span>Detratores</span></div>
+    </div>
+    <div class="scard" style="margin-bottom:0">
+      <div class="scard-head"><h3>📝 Plano de carreira</h3></div>
+      <div class="field" style="margin-bottom:0;"><textarea id="ret-carreira" rows="4" placeholder="Trilha de evolução: SDR → SDR Sr → Closer → Coordenador...">SDR Jr → SDR Sr (3m de meta batida) → Closer (role-play + 6m) → Closer Sr (120% por 6m) → Coordenador</textarea></div>
+    </div>
+  </div>
+
+  <div class="scard">
+    <div class="scard-head">
+      <h3>⚠️ Score de Risco de Churn por Colaborador</h3>
+      <button class="btn btn-green btn-sm" onclick="toast('Pesquisa eNPS enviada ao time','g')">📧 Enviar pesquisa eNPS</button>
+    </div>
+    <div class="tbl-wrap">
+      <table><thead><tr><th>Colaborador</th><th>Tempo de casa</th><th>Perf. (3m)</th><th>Sem promoção</th><th>eNPS individual</th><th>Score de risco</th><th>Ação</th></tr></thead>
+      <tbody id="tbl-ret"></tbody></table>
+    </div>
+  </div>
+
+  <div class="save-bar"><button class="save-btn" onclick="save()">💾 &nbsp;Salvar RH Comercial</button></div>
+</div>
+
+<!-- ================== ATS ================== -->
+<div id="panel-ats" class="panel">
+  <div class="scard" style="margin-bottom:18px;">
+    <div class="scard-head">
+      <div>
+        <h3>🎯 Pipeline de Contratação — Closer Sênior</h3>
+        <div class="sub">Aberta em 02/06/2026 · Taxa alvo: 5% · Tempo médio: 12 dias</div>
+      </div>
+      <div style="display:flex; gap:10px; align-items:center;">
+        <button class="btn btn-sm" onclick="openM('m-candidato')">+ Candidato</button>
+        <button class="btn btn-green btn-sm" onclick="openM('m-vaga')">+ Nova Vaga</button>
+      </div>
+    </div>
+    <div class="kanban">
+      <div class="kcol"><div class="kcol-h"><h5>📄 Triagem CV</h5><span class="kn">4</span></div>
+        <div class="kcard"><h6>Juliana Alves</h6><div class="ksub">Closer Sênior</div><div class="kft"><span class="kdays">2 dias</span><span class="bdg bn">Novo</span></div></div>
+        <div class="kcard"><h6>Diego Ramos</h6><div class="ksub">Closer Sênior</div><div class="kft"><span class="kdays">1 dia</span><span class="bdg bn">Novo</span></div></div>
+        <div class="kcard"><h6>Patrícia Lima</h6><div class="ksub">Closer Sênior</div><div class="kft"><span class="kdays">3 dias</span><span class="bdg bn">Novo</span></div></div>
+        <div class="kcard"><h6>Felipe Costa</h6><div class="ksub">Closer Sênior</div><div class="kft"><span class="kdays">1 dia</span><span class="bdg bn">Novo</span></div></div>
+      </div>
+      <div class="kcol"><div class="kcol-h"><h5>🧠 Teste Perfil</h5><span class="kn">2</span></div>
+        <div class="kcard"><h6>André Nogueira</h6><div class="ksub">Closer Sênior</div><div class="kft"><span class="kdays">5 dias</span><span class="bdg ba">Em teste</span></div></div>
+        <div class="kcard"><h6>Camila Duarte</h6><div class="ksub">Closer Sênior</div><div class="kft"><span class="kdays">4 dias</span><span class="bdg ba">Em teste</span></div></div>
+      </div>
+      <div class="kcol"><div class="kcol-h"><h5>🎤 Entrevista RH</h5><span class="kn">1</span></div>
+        <div class="kcard"><h6>Vinícius Prado</h6><div class="ksub">Closer Sênior</div><div class="kft"><span class="kdays">7 dias</span><span class="bdg bp">Agendada</span></div></div>
+      </div>
+      <div class="kcol"><div class="kcol-h"><h5>🎭 Role-play</h5><span class="kn">1</span></div>
+        <div class="kcard"><h6>Letícia Bastos</h6><div class="ksub">Closer Sênior</div><div class="kft"><span class="kdays">9 dias</span><span class="bdg bb">Avaliando</span></div></div>
+      </div>
+      <div class="kcol"><div class="kcol-h"><h5>✅ Decisão</h5><span class="kn">1</span></div>
+        <div class="kcard"><h6>Thiago Marques</h6><div class="ksub">Closer Sênior</div><div class="kft"><span class="kdays">12 dias</span><span class="bdg bg">Aprovado</span></div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="scard" style="margin-bottom:0">
+    <div class="scard-head"><h3>🤖 ICP de Vendedor — Perfil Ideal (IA)</h3><div class="sub">Gerado com base nos 3 melhores performers do time</div></div>
+    <div class="g3">
+      <div class="alert alert-g" style="flex-direction:column; gap:6px;"><div><h5>Perfil comportamental</h5><p>Alta resiliência a rejeição, comunicação assertiva, orientação a metas e alto senso de urgência.</p></div></div>
+      <div class="alert alert-b" style="flex-direction:column; gap:6px;"><div><h5>Experiência mínima</h5><p>2+ anos em vendas B2B consultivas. Ticket médio acima de R$ 3.000. Histórico mensurável.</p></div></div>
+      <div class="alert alert-r" style="flex-direction:column; gap:6px;"><div><h5>Red flags detectados</h5><p>Menos de 6 meses por empresa, sem métricas de resultado, foco apenas em produto técnico.</p></div></div>
+    </div>
+    <button class="btn btn-green" style="margin-top:14px;" onclick="toast('Job description gerado e copiado para a área de trabalho','g')">🤖 Gerar Job Description com IA</button>
+  </div>
+</div>
+
+</div><!-- /page -->
+
+<!-- ===== MODAIS ===== -->
+<div class="ov" id="m-pessoa">
+  <div class="modal">
+    <div class="mhead"><h3>+ Novo Colaborador</h3><button class="mclose" onclick="closeM('m-pessoa')">✕</button></div>
+    <div class="mbody">
+      <div class="g2"><div class="field"><label>Nome completo</label><input id="np-n" placeholder="Ex: João Pereira"></div><div class="field"><label>Cargo</label><select id="np-c"><option>SDR</option><option>Closer</option><option>Coordenador</option></select></div></div>
+      <div class="g2"><div class="field"><label>Data de entrada</label><input type="date" id="np-d"></div><div class="field"><label>Status</label><select id="np-s"><option>Em ramp-up</option><option>Ativo</option></select></div></div>
+      <div class="g2"><div class="field"><label>Meta mensal (vendas)</label><input type="number" id="np-m" placeholder="10"></div><div class="field"><label>Salário fixo (R$)</label><input type="number" id="np-f" placeholder="3500"></div></div>
+    </div>
+    <div class="mfoot"><button class="btn" onclick="closeM('m-pessoa')">Cancelar</button><button class="btn btn-green" onclick="addPessoa()">Salvar</button></div>
+  </div>
+</div>
+
+<div class="ov" id="m-ramp-cfg">
+  <div class="modal">
+    <div class="mhead"><h3>⚙️ Plano Padrão 30/60/90</h3><button class="mclose" onclick="closeM('m-ramp-cfg')">✕</button></div>
+    <div class="mbody">
+      <div class="field"><label>30 dias — Aprendizado</label><textarea rows="3">Dominar produto, discurso e CRM. Realizar 1ª venda assistida pelo gestor.</textarea></div>
+      <div class="field"><label>60 dias — Execução assistida</label><textarea rows="3">Atingir 60% da meta individual com acompanhamento próximo do líder.</textarea></div>
+      <div class="field"><label>90 dias — Performance plena</label><textarea rows="3">100% da meta de forma independente. Aprovação final de ramp-up.</textarea></div>
+    </div>
+    <div class="mfoot"><button class="btn" onclick="closeM('m-ramp-cfg')">Cancelar</button><button class="btn btn-green" onclick="closeM('m-ramp-cfg'); toast('Plano padrão atualizado','g')">Salvar Plano</button></div>
+  </div>
+</div>
+
+<div class="ov" id="m-candidato">
+  <div class="modal">
+    <div class="mhead"><h3>+ Novo Candidato</h3><button class="mclose" onclick="closeM('m-candidato')">✕</button></div>
+    <div class="mbody">
+      <div class="g2"><div class="field"><label>Nome</label><input placeholder="Ex: Mariana Castro"></div><div class="field"><label>Vaga</label><select><option>Closer Sênior</option><option>SDR</option></select></div></div>
+      <div class="field"><label>Etapa inicial</label><select><option>Triagem CV</option><option>Teste de Perfil</option><option>Entrevista RH</option></select></div>
+      <div class="field"><label>LinkedIn / Currículo</label><input placeholder="Cole o link aqui..."></div>
+    </div>
+    <div class="mfoot"><button class="btn" onclick="closeM('m-candidato')">Cancelar</button><button class="btn btn-green" onclick="closeM('m-candidato'); toast('Candidato adicionado ao funil','g')">Adicionar ao Funil</button></div>
+  </div>
+</div>
+
+<div class="ov" id="m-vaga">
+  <div class="modal">
+    <div class="mhead"><h3>+ Nova Vaga</h3><button class="mclose" onclick="closeM('m-vaga')">✕</button></div>
+    <div class="mbody">
+      <div class="field"><label>Título da vaga</label><input placeholder="Ex: Closer Sênior"></div>
+      <div class="g2"><div class="field"><label>Cargo</label><select><option>Closer</option><option>SDR</option><option>Coordenador</option></select></div><div class="field"><label>Data de abertura</label><input type="date"></div></div>
+      <div class="g2"><div class="field"><label>Taxa de aprovação alvo (%)</label><input type="number" placeholder="5"></div><div class="field"><label>Tempo estimado (dias)</label><input type="number" placeholder="12"></div></div>
+    </div>
+    <div class="mfoot"><button class="btn" onclick="closeM('m-vaga')">Cancelar</button><button class="btn btn-green" onclick="closeM('m-vaga'); toast('Vaga criada com sucesso','g')">Criar Vaga</button></div>
+  </div>
+</div>
+
+<div class="ov" id="m-career-ed">
+  <div class="modal">
+    <div class="mhead"><h3>✏️ Editar Trilha de Carreira</h3><button class="mclose" onclick="closeM('m-career-ed')">✕</button></div>
+    <div class="mbody">
+      <div class="field"><label>Nível 1 — SDR Jr</label><input value="SDR Jr — 0 a 3 meses, onboarding completo"></div>
+      <div class="field"><label>Nível 2 — SDR Sr</label><input value="SDR Sr — Meta batida por 3 meses consecutivos"></div>
+      <div class="field"><label>Nível 3 — Closer</label><input value="Closer — Role-play aprovado + 6 meses na empresa"></div>
+      <div class="field"><label>Nível 4 — Closer Sr</label><input value="Closer Sr — 120% da meta por 6 meses seguidos"></div>
+      <div class="field"><label>Nível 5 — Coordenador</label><input value="Coordenador — Liderança comprovada + indicação do gestor"></div>
+      <div class="field"><label>Nível 6 — Gerente</label><input value="Gerente Comercial — P&L próprio + 2 anos de empresa"></div>
+    </div>
+    <div class="mfoot"><button class="btn" onclick="closeM('m-career-ed')">Cancelar</button><button class="btn btn-green" onclick="closeM('m-career-ed'); toast('Trilha atualizada','g')">Salvar Trilha</button></div>
+  </div>
+</div>
+
+<div class="toasts" id="toasts"></div>
+
+<script>
+// ====== DATA ======
+let pessoas=[
+  {id:1,nome:"Carla Mendes",  cargo:"Closer",entrada:"2024-02-10",meta:12,fixo:3500,status:"Ativo",     vendas:14,receita:71400,risco:12,nivel:"Closer Sr",  tempo:"7 meses",  rampDia:null,meses:6},
+  {id:2,nome:"Rafael Torres", cargo:"Closer",entrada:"2024-05-22",meta:10,fixo:3500,status:"Ativo",     vendas:11,receita:58200,risco:18,nivel:"Closer",     tempo:"4 meses",  rampDia:null,meses:4},
+  {id:3,nome:"Bruno Santos",  cargo:"Closer",entrada:"2024-08-01",meta:10,fixo:3500,status:"Ativo",     vendas:9, receita:46800,risco:31,nivel:"Closer",     tempo:"3 meses",  rampDia:null,meses:3},
+  {id:4,nome:"Marina Souza",  cargo:"Closer",entrada:"2023-09-15",meta:10,fixo:3500,status:"Ativo",     vendas:5, receita:24100,risco:78,nivel:"Closer Sr",  tempo:"14 meses", rampDia:null,meses:1},
+  {id:5,nome:"Pedro Lima",    cargo:"SDR",   entrada:"2026-05-25",meta:6, fixo:2200,status:"Em ramp-up",vendas:2, receita:9800, risco:22,nivel:"SDR Jr",    tempo:"1 mês",    rampDia:38,  meses:0},
+  {id:6,nome:"Ana Beatriz",   cargo:"SDR",   entrada:"2026-06-10",meta:6, fixo:2200,status:"Em ramp-up",vendas:4, receita:16200,risco:9, nivel:"SDR Jr",    tempo:"20 dias",  rampDia:19,  meses:0},
+  {id:7,nome:"Diego Faria",   cargo:"SDR",   entrada:"2024-11-03",meta:6, fixo:2200,status:"Ativo",     vendas:6, receita:21600,risco:14,nivel:"SDR Sr",    tempo:"8 meses",  rampDia:null,meses:2},
+];
+let nId=8;
+const CORES=["#ec4899","#3b82f6","#8b5cf6","#ef4444","#22c55e","#f59e0b","#06b6d4"];
+const ini=n=>n.split(" ").map(w=>w[0]).slice(0,2).join("").toUpperCase();
+const cor=i=>CORES[i%CORES.length];
+const fmtR=v=>"R$ "+Math.round(v).toLocaleString("pt-BR");
+const fmtD=d=>new Date(d).toLocaleDateString("pt-BR");
+
+// ====== TABS ======
+function switchTab(id){
+  document.querySelectorAll(".panel").forEach(p=>p.classList.remove("show"));
+  document.querySelectorAll(".tab").forEach(t=>t.classList.toggle("active",t.dataset.tab===id));
+  document.getElementById("panel-"+id).classList.add("show");
+  if(id==="overview"){ setTimeout(buildCharts,80); }
+  if(id==="simulador"){ setTimeout(buildSimChart,80); }
+  if(id==="performance"){ setTimeout(buildPerfChart,80); }
+}
+
+// ====== RENDER ======
+function render(){
+  renderRank(); renderColab(); renderRampup(); renderPerf(); renderCom(); renderCareer(); renderRet(); updKPIs();
+}
+function updKPIs(){
+  const s=id=>document.getElementById(id);
+  const atv=pessoas.filter(p=>p.status==="Ativo").length;
+  const rmp=pessoas.filter(p=>p.status==="Em ramp-up").length;
+  const avg=(pessoas.reduce((a,p)=>a+p.meta,0)/pessoas.length).toFixed(1);
+  if(s("kpi-total"))s("kpi-total").textContent=pessoas.length;
+  if(s("kc-t"))s("kc-t").textContent=pessoas.length;
+  if(s("kc-r"))s("kc-r").textContent=rmp;
+  if(s("kc-a"))s("kc-a").textContent=atv;
+  if(s("kc-m"))s("kc-m").textContent=avg;
+  renderDist();
+}
+function renderDist(){
+  const el=document.getElementById("dist"); if(!el) return;
+  const map={Closer:0,SDR:0};
+  pessoas.forEach(p=>{if(map[p.cargo]!==undefined)map[p.cargo]++;});
+  el.innerHTML=Object.entries(map).map(([c,n])=>`
+    <div style="display:flex;align-items:center;gap:10px;">
+      <span style="font-size:13px;font-weight:600;width:80px;">${c}</span>
+      <div class="prog" style="flex:1;margin:0;"><div class="fill fill-green" style="width:${Math.round(n/pessoas.length*100)}%"></div></div>
+      <span class="mono" style="font-size:12px;color:var(--t2);">${n}</span>
+    </div>`).join("");
+}
+function renderRank(){
+  const el=document.getElementById("tbl-rank"); if(!el) return;
+  const sorted=[...pessoas].sort((a,b)=>b.receita-a.receita).slice(0,5);
+  const medals=["🥇","🥈","🥉","4","5"];
+  el.innerHTML=sorted.map((p,i)=>{
+    const pct=Math.round(p.vendas/p.meta*100);
+    const bc=pct>=100?"bg":pct>=70?"ba":"br";
+    return `<tr><td>${medals[i]}</td>
+    <td><div class="person"><div class="av" style="background:${cor(pessoas.indexOf(p))}">${ini(p.nome)}</div><div><div class="pname">${p.nome}</div><div class="prole">${p.cargo}</div></div></div></td>
+    <td>${p.vendas}</td><td class="mono">${fmtR(p.receita)}</td>
+    <td><span class="bdg ${bc}">${pct}%</span></td></tr>`;
+  }).join("");
+}
+function renderColab(){
+  const el=document.getElementById("tbl-colab"); if(!el) return;
+  el.innerHTML=pessoas.map((p,i)=>{
+    const st=p.status==="Ativo"?`<span class="bdg bg"><span class="dot"></span>Ativo</span>`:`<span class="bdg ba"><span class="dot"></span>Em ramp-up</span>`;
+    const rc=p.risco>=60?`<span class="bdg br">${p.risco}%</span>`:p.risco>=30?`<span class="bdg ba">${p.risco}%</span>`:`<span class="bdg bg">${p.risco}%</span>`;
+    return `<tr><td><div class="person"><div class="av" style="background:${cor(i)}">${ini(p.nome)}</div><div><div class="pname">${p.nome}</div><div class="prole">${p.cargo}</div></div></div></td>
+    <td><span class="bdg bn">${p.cargo}</span></td>
+    <td class="mono" style="font-size:12px;color:var(--t2)">${fmtD(p.entrada)}</td>
+    <td>${p.meta} vendas</td><td class="mono">${fmtR(p.fixo)}</td>
+    <td>${st}</td><td>${rc}</td>
+    <td><button class="btn btn-sm" style="padding:4px 10px;font-size:11px;" onclick="rmP(${p.id})">Remover</button></td></tr>`;
+  }).join("");
+}
+function renderRampup(){
+  const el=document.getElementById("ramp-list"); if(!el) return;
+  const em=pessoas.filter(p=>p.status==="Em ramp-up");
+  if(!em.length){el.innerHTML=`<div style="text-align:center;padding:48px 20px;"><div style="font-size:32px;margin-bottom:12px;">⚡</div><p style="color:var(--t3);">Nenhum colaborador em ramp-up no momento.</p></div>`;return;}
+  const CHKS=[
+    ["Treinamento de produto concluído","Fez 3 shadow calls com gestor","Realizou 1ª venda assistida","Domina o CRM e o processo"],
+    ["Atingiu 60% da meta individual","Conduziu 5 calls sem assistência","Feedback positivo do gestor"],
+    ["Atingiu 100% da meta sozinho","Aprovação formal do gestor direto"],
+  ];
+  el.innerHTML=em.map(p=>{
+    const idx=pessoas.indexOf(p);
+    const d=p.rampDia||1;
+    const fase=d<=30?0:d<=60?1:2;
+    const atrasado=d>30&&fase===0;
+    const faseNm=["30 dias","60 dias","90 dias"];
+    const faseDesc=["Aprendizado","Execução assistida","Performance plena"];
+    const faseObj=["Dominar produto, CRM e discurso. Realizar 1ª venda assistida.","Conduzir calls com autonomia e fechar metas assistidas.","100% da meta de forma completamente independente."];
+    const phs=[0,1,2].map(f=>{
+      const st=f<fase?"done":f===fase?"current":"locked";
+      return `<div class="rphase ${st}">
+        <div class="phn">${faseNm[f]} — ${faseDesc[f]}</div>
+        <div class="pht">${["Aprender e praticar","Executar com suporte","Performance autônoma"][f]}</div>
+        <div class="phd">${faseObj[f]}</div>
+        ${f<fase?`<div class="phck">✅</div>`:""}
+      </div>`;
+    }).join("");
+    const chks=(CHKS[fase]||[]).map((c,ci)=>{
+      const done=ci<(fase===0?2:fase===1?1:0);
+      return `<div class="chk ${done?"done":""}"><div class="box">${done?"✓":""}</div><span>${c}</span></div>`;
+    }).join("");
+    return `<div class="ramp-card">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:14px;">
+        <div class="person">
+          <div class="av" style="background:${cor(idx)};width:40px;height:40px;font-size:13px;">${ini(p.nome)}</div>
+          <div><div class="pname" style="font-size:15px;">${p.nome}</div><div class="prole">${p.cargo} · Fase ${fase+1}/3</div></div>
+        </div>
+        <div style="text-align:right;">
+          <div class="mono" style="font-size:12px;color:var(--t3);">Dia ${d} de 90</div>
+          <div class="prog" style="width:160px;margin-top:5px;"><div class="fill fill-green" style="width:${Math.min(100,Math.round(d/90*100))}%"></div></div>
+          ${atrasado?`<span class="bdg br" style="margin-top:6px;display:inline-flex;">⚠️ Atrasado ${d-30}d</span>`:""}
+        </div>
+      </div>
+      <div class="ramp-phases">${phs}</div>
+      <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--t3);margin-bottom:9px;">Checkpoints — fase atual</div>
+      <div class="checkpoints">${chks}</div>
+      ${atrasado?`<div class="alert alert-r" style="margin-top:14px;"><span class="aic">🚨</span><div><h5>Ramp-up travado</h5><p>${d} dias na fase de 30 dias. Revise o plano de treinamento imediatamente.</p></div></div>`:""}
+    </div>`;
+  }).join("");
+}
+function renderPerf(){
+  const el=document.getElementById("tbl-perf"); if(!el) return;
+  el.innerHTML=pessoas.map((p,i)=>{
+    const leads=Math.round(p.vendas*6+15);
+    const reun=Math.round(p.vendas*2.1+3);
+    const prop=Math.round(p.vendas*1.4+2);
+    const taxa=((p.vendas/reun)*100).toFixed(0);
+    const pct=Math.round(p.vendas/p.meta*100);
+    const bc=pct>=100?"bg":pct>=70?"ba":"br";
+    return `<tr><td><div class="person"><div class="av" style="background:${cor(i)}">${ini(p.nome)}</div><div><div class="pname">${p.nome}</div><div class="prole">${p.cargo}</div></div></div></td>
+    <td>${leads}</td><td>${reun}</td><td>${prop}</td><td style="font-weight:700">${p.vendas}</td>
+    <td>${taxa}%</td><td class="mono">${fmtR(p.receita)}</td>
+    <td><span class="bdg ${bc}">${pct}%</span></td></tr>`;
+  }).join("");
+}
+function renderCom(){
+  const el=document.getElementById("tbl-com"); if(!el) return;
+  el.innerHTML=pessoas.map((p,i)=>{
+    const pct=p.vendas/p.meta;
+    const varBase=p.cargo==="SDR"?1800:2500;
+    const acc=pct>=1.3?0.4:pct>=1.1?0.2:0;
+    const variavel=varBase*Math.min(1.0,pct)*(1+acc);
+    const comissao=p.receita*0.035;
+    const total=p.fixo+variavel+comissao;
+    const accLbl=acc>0?`<span class="bdg bg">+${Math.round(acc*100)}%</span>`:`<span class="bdg bn">—</span>`;
+    return `<tr><td><div class="person"><div class="av" style="background:${cor(i)}">${ini(p.nome)}</div><span class="pname">${p.nome}</span></div></td>
+    <td>${p.vendas}</td><td class="mono">${fmtR(p.receita)}</td>
+    <td class="mono">${fmtR(p.fixo)}</td><td class="mono">${fmtR(variavel)}</td><td class="mono">${fmtR(comissao)}</td>
+    <td>${accLbl}</td>
+    <td class="mono" style="font-weight:800;color:var(--green2)">${fmtR(total)}</td>
+    <td><span class="bdg ba">Aguardando</span></td></tr>`;
+  }).join("");
+}
+function renderCareer(){
+  const el=document.getElementById("tbl-career"); if(!el) return;
+  const NEXT={"SDR Jr":"SDR Sr","SDR Sr":"Closer","Closer":"Closer Sr","Closer Sr":"Coordenador","Coordenador":"Gerente","Gerente":"—"};
+  el.innerHTML=pessoas.map((p,i)=>{
+    const pct=Math.min(98,Math.round(p.vendas/p.meta*65+p.meses*4+10));
+    const elig=pct>=80;
+    return `<tr><td><div class="person"><div class="av" style="background:${cor(i)}">${ini(p.nome)}</div><span class="pname">${p.nome}</span></div></td>
+    <td><span class="bdg bn">${p.cargo}</span></td>
+    <td><span class="bdg bp">${p.nivel}</span></td>
+    <td>${p.tempo}</td>
+    <td style="font-size:12px;color:var(--t2)">${NEXT[p.nivel]||"—"}</td>
+    <td><div class="prog"><div class="fill ${elig?"fill-green":"fill-pink"}" style="width:${pct}%"></div></div><span style="font-size:11px;color:var(--t3);">${pct}%</span></td>
+    <td>${elig?`<span class="bdg bg">✓ Elegível</span>`:`<span class="bdg bn">Em progresso</span>`}</td></tr>`;
+  }).join("");
+}
+function renderRet(){
+  const el=document.getElementById("tbl-ret"); if(!el) return;
+  el.innerHTML=pessoas.map((p,i)=>{
+    const perf=Math.round(p.vendas/p.meta*100);
+    const bc=perf>=90?"bg":perf>=60?"ba":"br";
+    const rc=p.risco>=60?"br":p.risco>=30?"ba":"bg";
+    const enpsI=Math.max(20,90-p.risco);
+    return `<tr><td><div class="person"><div class="av" style="background:${cor(i)}">${ini(p.nome)}</div><span class="pname">${p.nome}</span></div></td>
+    <td>${p.tempo}</td>
+    <td><span class="bdg ${bc}">${perf}%</span></td>
+    <td>${p.nivel==="Closer Sr"&&p.meses<=2?"14 meses":p.tempo}</td>
+    <td class="mono" style="color:var(--green2)">${enpsI}</td>
+    <td><div style="display:flex;align-items:center;gap:8px;"><div class="prog" style="width:70px;"><div class="fill ${p.risco>=60?"fill-red":p.risco>=30?"fill-amber":"fill-green"}" style="width:${p.risco}%"></div></div><span class="bdg ${rc}">${p.risco}%</span></div></td>
+    <td>${p.risco>=60?`<button class="btn btn-sm btn-danger" onclick="toast('1:1 agendado com '+\`${p.nome}\`,'g')">Agendar 1:1</button>`:p.risco>=30?`<button class="btn btn-sm" onclick="toast('Perfil aberto','g')">Ver perfil</button>`:`<span style="font-size:12px;color:var(--t3)">✓ Saudável</span>`}</td></tr>`;
+  }).join("");
+}
+
+// ====== CHARTS ======
+let cCargo=null,cPerf=null,cSim=null;
+function buildCharts(){
+  const ctx=document.getElementById("chart-cargo"); if(!ctx) return;
+  if(cCargo) cCargo.destroy();
+  const map={Closer:0,SDR:0};
+  pessoas.forEach(p=>{if(map[p.cargo]!==undefined)map[p.cargo]+=p.receita;});
+  cCargo=new Chart(ctx,{type:"doughnut",data:{labels:Object.keys(map),datasets:[{data:Object.values(map),backgroundColor:["#ec4899","#3b82f6"],borderColor:"transparent",borderWidth:0,hoverOffset:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:"bottom",labels:{color:"#8b95a6",font:{size:11},padding:12}},tooltip:{callbacks:{label:c=>" "+fmtR(c.raw)}}}}});
+}
+function buildPerfChart(){
+  const ctx=document.getElementById("chart-perf"); if(!ctx) return;
+  if(cPerf) cPerf.destroy();
+  cPerf=new Chart(ctx,{type:"bar",data:{labels:pessoas.map(p=>p.nome.split(" ")[0]),datasets:[{label:"Receita",data:pessoas.map(p=>p.receita),backgroundColor:"rgba(34,197,94,.7)",borderRadius:6},{label:"Meta (est.)",data:pessoas.map(p=>p.meta*5100),backgroundColor:"rgba(59,130,246,.25)",borderRadius:6}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:"#8b95a6",font:{size:11}}}},scales:{x:{ticks:{color:"#526070",font:{size:11}},grid:{display:false}},y:{ticks:{color:"#526070",font:{size:11},callback:v=>"R$"+Math.round(v/1000)+"k"},grid:{color:"rgba(255,255,255,.04)"}}}}});
+}
+function buildSimChart(){
+  const ctx=document.getElementById("chart-sim"); if(!ctx) return;
+  if(cSim) cSim.destroy();
+  const fx=+(document.getElementById("sim-fixo")||{value:3500}).value||3500;
+  const vr=+(document.getElementById("sim-var")||{value:2500}).value||2500;
+  const a1=+(document.getElementById("sim-acc1")||{value:20}).value/100||0.2;
+  const a2=+(document.getElementById("sim-acc2")||{value:50}).value/100||0.5;
+  const pts=[60,70,80,90,100,110,120,130,140,150];
+  const vals=pts.map(p=>{
+    const pf=p/100;
+    let v=vr*Math.min(1,pf);
+    if(pf>1.2)v=vr*(1+a2);
+    else if(pf>1)v=vr*(1+a1*((pf-1)/0.2));
+    return fx+v;
+  });
+  document.getElementById("sim-ote").textContent=fmtR(fx+vr);
+  cSim=new Chart(ctx,{type:"line",data:{labels:pts.map(p=>p+"%"),datasets:[{label:"Remuneração total",data:vals,borderColor:"#22c55e",backgroundColor:"rgba(34,197,94,.08)",borderWidth:2.5,pointBackgroundColor:"#22c55e",pointRadius:5,tension:.35,fill:true}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>" "+fmtR(c.raw)}}},scales:{x:{ticks:{color:"#526070",font:{size:11}},grid:{color:"rgba(255,255,255,.03)"}},y:{ticks:{color:"#526070",font:{size:11},callback:v=>"R$"+Math.round(v/1000)+"k"},grid:{color:"rgba(255,255,255,.04)"}}}}});
+}
+function runSim(){ buildSimChart(); }
+
+// ====== SIMULADOR VENDEDOR ======
+function updRem(){
+  const fc=+(document.getElementById("rem-fixo-c")||{value:3500}).value||0;
+  const vc=+(document.getElementById("rem-var-c")||{value:2500}).value||0;
+  const fs=+(document.getElementById("rem-fixo-s")||{value:2200}).value||0;
+  const vs=+(document.getElementById("rem-var-s")||{value:1800}).value||0;
+  const oc=document.getElementById("ote-c"); if(oc) oc.textContent=fmtR(fc+vc);
+  const os=document.getElementById("ote-s"); if(os) os.textContent=fmtR(fs+vs);
+}
+function runSimVend(){
+  const v=+(document.getElementById("svend-v")||{value:14}).value||0;
+  const m=+(document.getElementById("svend-m")||{value:12}).value||1;
+  const r=+(document.getElementById("svend-r")||{value:71400}).value||0;
+  const pct=v/m; const fx=3500; const vb=2500;
+  const acc=pct>=1.3?0.4:pct>=1.1?0.2:0;
+  const vr=vb*Math.min(1,pct)*(1+acc);
+  const com=r*0.035; const tot=fx+vr+com;
+  const set=(id,val)=>{const e=document.getElementById(id);if(e)e.textContent=val;};
+  set("svr-pct",Math.round(pct*100)+"%");
+  set("svr-acc",acc>0?"+"+Math.round(acc*100)+"%":"Nenhum");
+  set("svr-fixo",fmtR(fx));
+  set("svr-var",fmtR(vr));
+  set("svr-com",fmtR(com));
+  set("svr-tot",fmtR(tot));
+  set("svr-cac",v>0?fmtR(tot/v)+"/venda":"—");
+}
+
+// ====== CRUD ======
+function addPessoa(){
+  const nome=document.getElementById("np-n").value.trim();
+  if(!nome){toast("Informe o nome do colaborador","r");return;}
+  const cargo=document.getElementById("np-c").value;
+  const status=document.getElementById("np-s").value;
+  pessoas.push({id:nId++,nome,cargo,entrada:document.getElementById("np-d").value||new Date().toISOString().slice(0,10),
+    meta:+document.getElementById("np-m").value||8,fixo:+document.getElementById("np-f").value||(cargo==="SDR"?2200:3500),
+    status,vendas:0,receita:0,risco:10,nivel:cargo+" Jr",tempo:"0 dias",rampDia:status==="Em ramp-up"?1:null,meses:0});
+  closeM("m-pessoa"); document.getElementById("np-n").value="";
+  render(); toast("Colaborador adicionado com sucesso","g");
+}
+function rmP(id){pessoas=pessoas.filter(p=>p.id!==id); render(); toast("Colaborador removido","a");}
+function save(){toast("RH Comercial salvo com sucesso ✓","g");}
+
+// ====== MODAL / TOAST ======
+function openM(id){document.getElementById(id).classList.add("show");}
+function closeM(id){document.getElementById(id).classList.remove("show");}
+document.querySelectorAll(".ov").forEach(o=>o.addEventListener("click",e=>{if(e.target===o)o.classList.remove("show");}));
+function toast(msg,type="g"){
+  const w=document.getElementById("toasts");
+  const t=document.createElement("div");
+  t.className=`toast t${type}`; t.textContent=(type==="g"?"✓ ":type==="r"?"✕ ":"⚠ ")+msg;
+  w.appendChild(t);
+  setTimeout(()=>{t.style.transition="opacity .3s";t.style.opacity="0";setTimeout(()=>t.remove(),300);},3000);
+}
+
+// ====== INIT ======
+render();
+setTimeout(buildCharts,100);
+</script>
+</body>
+</html>
