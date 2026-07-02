@@ -7382,6 +7382,51 @@ export type Database = {
           },
         ]
       }
+      planos_acao: {
+        Row: {
+          acoes: Json
+          closers: number | null
+          company_id: string | null
+          created_at: string
+          engine: Json
+          id: string
+          meta_mensal: number | null
+          offers: Json
+          prazo_meses: number | null
+          sdrs: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          acoes?: Json
+          closers?: number | null
+          company_id?: string | null
+          created_at?: string
+          engine?: Json
+          id?: string
+          meta_mensal?: number | null
+          offers?: Json
+          prazo_meses?: number | null
+          sdrs?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          acoes?: Json
+          closers?: number | null
+          company_id?: string | null
+          created_at?: string
+          engine?: Json
+          id?: string
+          meta_mensal?: number | null
+          offers?: Json
+          prazo_meses?: number | null
+          sdrs?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       playbook_adoption: {
         Row: {
           applied_count: number
