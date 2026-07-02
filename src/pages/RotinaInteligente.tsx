@@ -388,18 +388,55 @@ export default function RotinaInteligente() {
   };
 
 
-  const saveCategory = () => {
+  const saveCategory = async () => {
     const label = newCategoryLabel.trim();
     if (!label) return;
     if (editingCategoryKey) {
-      setCategories(prev => ({ ...prev, [editingCategoryKey]: { ...prev[editingCategoryKey], label } }));
+      const key = editingCategoryKey;
+      setCategories(prev => ({ ...prev, [key]: { ...prev[key], label } }));
       setEditingCategoryKey(null);
+      if (companyId) {
+        try {
+          const rowId = categoryIds[key];
+          if (rowId) {
+            await (supabase as any).from("rotina_categorias").update({ label }).eq("id", rowId);
+          } else {
+            const presetIdx = categoryPresetIdx[key] ?? 0;
+            const { data, error } = await (supabase as any)
+              .from("rotina_categorias")
+              .insert({ company_id: companyId, key, label, preset_index: presetIdx })
+              .select("id")
+              .single();
+            if (error) throw error;
+            if (data?.id) setCategoryIds(prev => ({ ...prev, [key]: data.id }));
+          }
+        } catch (err: any) {
+          console.error(err);
+          toast.error("Falha ao salvar categoria no banco");
+        }
+      }
     } else {
-      setCategories(prev => {
-        const key = makeCategoryKey(label, prev);
-        const preset = CATEGORY_STYLE_PRESETS[Object.keys(prev).length % CATEGORY_STYLE_PRESETS.length];
-        return { ...prev, [key]: { label, ...preset } };
-      });
+      const existing = categories;
+      const key = makeCategoryKey(label, existing);
+      const presetIdx = Object.keys(existing).length % CATEGORY_STYLE_PRESETS.length;
+      const preset = CATEGORY_STYLE_PRESETS[presetIdx];
+      setCategories(prev => ({ ...prev, [key]: { label, ...preset } }));
+      setCategoryPresetIdx(prev => ({ ...prev, [key]: presetIdx }));
+      if (companyId) {
+        try {
+          const { data, error } = await (supabase as any)
+            .from("rotina_categorias")
+            .insert({ company_id: companyId, key, label, preset_index: presetIdx })
+            .select("id")
+            .single();
+          if (error) throw error;
+          if (data?.id) setCategoryIds(prev => ({ ...prev, [key]: data.id }));
+          toast.success("Categoria salva");
+        } catch (err: any) {
+          console.error(err);
+          toast.error("Categoria criada localmente, mas não foi salva no banco");
+        }
+      }
     }
     setNewCategoryLabel("");
   };
@@ -409,7 +446,7 @@ export default function RotinaInteligente() {
     setNewCategoryLabel(categories[key]?.label || "");
   };
 
-  const deleteCategory = (key: string) => {
+  const deleteCategory = async (key: string) => {
     const entries = Object.keys(categories);
     if (entries.length <= 1) return;
     const fallback = entries.find(k => k !== key) || "prospeccao";
@@ -430,6 +467,15 @@ export default function RotinaInteligente() {
     if (editingCategoryKey === key) {
       setEditingCategoryKey(null);
       setNewCategoryLabel("");
+    }
+    const rowId = categoryIds[key];
+    if (rowId) {
+      try {
+        await (supabase as any).from("rotina_categorias").delete().eq("id", rowId);
+        setCategoryIds(prev => { const n = { ...prev }; delete n[key]; return n; });
+      } catch (err) {
+        console.error("Falha ao excluir categoria:", err);
+      }
     }
   };
   const assignUser = (userId: string, profile: ProfileKey | "") => {
