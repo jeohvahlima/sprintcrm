@@ -483,7 +483,118 @@
     el.addEventListener('input', renderAll);
   });
 
+  // ============ Persistência no banco ============
+  const SB_URL = 'https://dteppsfseusqixuppglh.supabase.co';
+  const SB_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR0ZXBwc2ZzZXVzcWl4dXBwZ2xoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA4MzY0OTgsImV4cCI6MjA3NjQxMjQ5OH0.eEz5cyfwi5chae1U9S0Yt1FBwglyuVnm_Fzg9HVrV_Q';
+
+  function getAccessToken(){
+    try {
+      // tenta pegar da localStorage (mesma origem)
+      const parentStorage = (window.parent && window.parent !== window) ? window.parent.localStorage : localStorage;
+      for (let i=0; i<parentStorage.length; i++){
+        const k = parentStorage.key(i);
+        if (k && k.startsWith('sb-') && k.endsWith('-auth-token')){
+          const raw = parentStorage.getItem(k);
+          if (!raw) continue;
+          const parsed = JSON.parse(raw);
+          return parsed.access_token || (parsed.currentSession && parsed.currentSession.access_token) || null;
+        }
+      }
+    } catch(e){ console.warn('token read fail', e); }
+    return null;
+  }
+
+  async function sbFetch(path, opts={}){
+    const token = getAccessToken();
+    if (!token) throw new Error('Sessão expirada — recarregue a página');
+    const res = await fetch(SB_URL + '/rest/v1/' + path, {
+      ...opts,
+      headers: {
+        apikey: SB_ANON,
+        Authorization: 'Bearer ' + token,
+        'Content-Type': 'application/json',
+        Prefer: 'return=representation',
+        ...(opts.headers||{}),
+      },
+    });
+    if (!res.ok){
+      const txt = await res.text();
+      throw new Error(txt || ('HTTP '+res.status));
+    }
+    return res.json();
+  }
+
+  function setStatus(msg, ok){
+    const s = document.getElementById('planoSaveStatus');
+    s.textContent = msg;
+    s.style.color = ok===false ? 'var(--red)' : ok===true ? 'var(--greenDark)' : 'var(--textSub)';
+  }
+
+  async function salvarPlano(){
+    const btn = document.getElementById('btnSalvarPlano');
+    const c = ctx();
+    const payload = {
+      meta_mensal: c.meta,
+      prazo_meses: c.prazo,
+      sdrs: c.sdrs,
+      closers: c.closers,
+      engine: { ticket:c.ticket, win:c.win, show:c.show, lead:c.lead, capSdr:c.capSdr, capCloser:c.capCloser },
+      offers,
+      acoes,
+    };
+    try {
+      btn.disabled = true; setStatus('Salvando…');
+      const token = getAccessToken();
+      if (!token) throw new Error('Faça login novamente');
+      // pega user id via /auth/v1/user
+      const uRes = await fetch(SB_URL + '/auth/v1/user', { headers:{ apikey:SB_ANON, Authorization:'Bearer '+token }});
+      const user = await uRes.json();
+      if (!user || !user.id) throw new Error('Usuário não identificado');
+      payload.user_id = user.id;
+      await sbFetch('planos_acao?on_conflict=user_id', {
+        method:'POST',
+        headers:{ Prefer:'return=representation,resolution=merge-duplicates' },
+        body: JSON.stringify(payload),
+      });
+      showToast('Plano salvo com sucesso ✓');
+      setStatus('Salvo em ' + new Date().toLocaleTimeString('pt-BR'), true);
+    } catch(e){
+      console.error(e);
+      showToast('Erro ao salvar: ' + e.message);
+      setStatus('Erro: ' + e.message, false);
+    } finally {
+      btn.disabled = false;
+    }
+  }
+
+  async function carregarPlano(){
+    try {
+      const token = getAccessToken();
+      if (!token) return;
+      const rows = await sbFetch('planos_acao?select=*&limit=1');
+      if (!rows || !rows.length) return;
+      const p = rows[0];
+      if (p.meta_mensal != null) document.getElementById('ctxMeta').value = p.meta_mensal;
+      if (p.prazo_meses != null) document.getElementById('ctxPrazo').value = p.prazo_meses;
+      if (p.sdrs != null) document.getElementById('ctxSdrs').value = p.sdrs;
+      if (p.closers != null) document.getElementById('ctxClosers').value = p.closers;
+      const e = p.engine || {};
+      if (e.ticket != null) document.getElementById('engTicket').value = e.ticket;
+      if (e.win != null) document.getElementById('engWin').value = e.win;
+      if (e.show != null) document.getElementById('engShow').value = e.show;
+      if (e.lead != null) document.getElementById('engLead').value = e.lead;
+      if (e.capSdr != null) document.getElementById('engCapSdr').value = e.capSdr;
+      if (e.capCloser != null) document.getElementById('engCapCloser').value = e.capCloser;
+      if (Array.isArray(p.offers) && p.offers.length) offers = p.offers;
+      if (Array.isArray(p.acoes)) acoes = p.acoes;
+      setStatus('Última atualização: ' + new Date(p.updated_at).toLocaleString('pt-BR'));
+      renderAll();
+    } catch(e){ console.warn('load plano fail', e); }
+  }
+
   renderAll();
+  carregarPlano();
+
 </script>
 </body>
 </html>
