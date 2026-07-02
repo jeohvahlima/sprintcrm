@@ -3,6 +3,8 @@ import { Phone, Briefcase, MessageSquare, CalendarDays, Trophy, Users, Check, X,
 import { useTeamMembers } from "@/hooks/useTeamMembers";
 import MyGoalsPanel from "@/components/rotina/MyGoalsPanel";
 import { useMyGoals } from "@/hooks/useMyGoals";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 type ProfileKey = "sdr" | "vendedor_close" | "atendente" | "secretaria" | "gerente";
