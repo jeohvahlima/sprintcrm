@@ -9156,6 +9156,39 @@ export type Database = {
           },
         ]
       }
+      rotina_categorias: {
+        Row: {
+          company_id: string
+          created_at: string
+          created_by: string | null
+          id: string
+          key: string
+          label: string
+          preset_index: number
+          updated_at: string
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          key: string
+          label: string
+          preset_index?: number
+          updated_at?: string
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          key?: string
+          label?: string
+          preset_index?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       sales_machine_configs: {
         Row: {
           closer_capacity_per_day: number

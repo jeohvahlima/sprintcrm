@@ -48,11 +48,11 @@ export const useTeamMembers = () => {
       // Get profiles for these users
       const { data: profiles } = await supabase
         .from('profiles')
-        .select('id, full_name, email, avatar_url, role, commercial_role')
+        .select('id, full_name, email, avatar_url, role')
         .in('id', userIds);
 
       if (profiles) {
-        setMembers(profiles);
+        setMembers(profiles as any);
       }
     } catch (error) {
       console.error('Error loading team members:', error);
