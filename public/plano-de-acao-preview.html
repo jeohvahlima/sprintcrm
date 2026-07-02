@@ -250,8 +250,10 @@
           <button class="btn btn-green" style="padding:7px 18px;font-size:12px;" onclick="saveNewAcao()">Adicionar ação</button>
         </div>
       </div>
-      <div id="addAcaoBtnWrap" style="margin-bottom:20px;">
+      <div id="addAcaoBtnWrap" style="margin-bottom:20px; display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
         <button class="btn btn-outline-purple" onclick="openNewAcao()">+ Nova ação</button>
+        <button id="btnSalvarPlano" class="btn btn-green" style="padding:10px 22px;" onclick="salvarPlano()">💾 Salvar plano no banco</button>
+        <span id="planoSaveStatus" style="font-size:11px;color:var(--textSub);"></span>
       </div>
     </div>
 </div>
