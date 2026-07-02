@@ -728,6 +728,13 @@ html, body { height: 100%; background: var(--bg0); color: var(--text0); font-siz
 .mm-toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
 @keyframes spin { to { transform:rotate(360deg); } }
 .mm-spin { width:13px; height:13px; border:2px solid rgba(167,139,250,0.3); border-top-color:var(--purple); border-radius:50%; animation:spin 0.7s linear infinite; display:inline-block; }
+body.embed-mode .topbar,
+body.embed-mode #sidebar,
+body.embed-mode .tabbar { display: none !important; }
+body.embed-mode .body { height: 100vh; }
+body.embed-mode .main { flex: 1; min-height: 0; }
+body.embed-mode .content { height: 100%; }
+body.embed-mode #view-scripts { display: flex !important; flex: 1; min-height: 0; }
 </style>
 </head>
 <body>
@@ -3344,6 +3351,16 @@ function mmCanvasMove(e)   { window._mm.canvasMove(e); }
 function mmCanvasUp(e)     { window._mm.canvasUp(e); }
 function mmCanvasWheel(e)  { window._mm.canvasWheel(e); }
 function mmCanvasDbl(e)    { window._mm.canvasDbl(e); }
+
+(function applyEmbedMode() {
+  try {
+    var params = new URLSearchParams(window.location.search);
+    if (params.get('embed') !== '1') return;
+    document.body.classList.add('embed-mode');
+    var tab = params.get('tab') || 'scripts';
+    if (typeof setTab === 'function') setTab(tab);
+  } catch (e) {}
+})();
 </script>
 </body>
 </html>

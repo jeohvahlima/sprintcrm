@@ -81,6 +81,140 @@ const deleteColumnSchema = z.object({
   column_id: z.string().uuid('ID de coluna inválido')
 });
 
+type TaskActivity = {
+  id: string;
+  type: string;
+  user_id: string | null;
+  user_name: string;
+  text: string;
+  created_at: string;
+};
+
+const PRIO_LABELS: Record<string, string> = {
+  baixa: 'Baixa',
+  media: 'Média',
+  alta: 'Alta',
+  urgente: 'Urgente',
+};
+
+async function getProfileName(supabase: ReturnType<typeof createClient>, userId: string | null | undefined): Promise<string> {
+  if (!userId) return 'Sistema';
+  const { data } = await supabase.from('profiles').select('full_name').eq('id', userId).maybeSingle();
+  return data?.full_name || 'Usuário';
+}
+
+async function getColumnName(supabase: ReturnType<typeof createClient>, columnId: string | null | undefined): Promise<string> {
+  if (!columnId) return '—';
+  const { data } = await supabase.from('task_columns').select('nome').eq('id', columnId).maybeSingle();
+  return data?.nome || '—';
+}
+
+function newActivity(type: string, userId: string | null, userName: string, text: string): TaskActivity {
+  return {
+    id: crypto.randomUUID(),
+    type,
+    user_id: userId,
+    user_name: userName,
+    text,
+    created_at: new Date().toISOString(),
+  };
+}
+
+function mergeActivityLog(existing: unknown, entries: TaskActivity[]): TaskActivity[] {
+  const prev = Array.isArray(existing) ? (existing as TaskActivity[]) : [];
+  return [...prev, ...entries].slice(-100);
+}
+
+function formatDueDateBR(iso: string | null | undefined): string {
+  if (!iso) return 'sem prazo';
+  try {
+    return new Date(iso).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' });
+  } catch {
+    return '—';
+  }
+}
+
+async function buildEditActivities(
+  supabase: ReturnType<typeof createClient>,
+  existing: Record<string, unknown>,
+  validated: z.infer<typeof editTaskSchema>,
+  userId: string,
+  userName: string,
+): Promise<TaskActivity[]> {
+  const acts: TaskActivity[] = [];
+
+  if (validated.title !== undefined && existing.title !== validated.title) {
+    acts.push(newActivity('title', userId, userName, 'alterou o título da tarefa'));
+  }
+  if (validated.description !== undefined && (existing.description || '') !== (validated.description || '')) {
+    acts.push(newActivity('description', userId, userName, 'atualizou a descrição'));
+  }
+  if (validated.due_date !== undefined && (existing.due_date || null) !== (validated.due_date || null)) {
+    acts.push(newActivity('due_date', userId, userName, `alterou o prazo para ${formatDueDateBR(validated.due_date)}`));
+  }
+  if (validated.priority !== undefined && existing.priority !== validated.priority) {
+    acts.push(newActivity('priority', userId, userName, `alterou a prioridade para ${PRIO_LABELS[validated.priority] || validated.priority}`));
+  }
+  if (validated.status !== undefined && existing.status !== validated.status) {
+    if (validated.status === 'concluido') {
+      acts.push(newActivity('completed', userId, userName, 'marcou a tarefa como concluída'));
+    } else {
+      acts.push(newActivity('status', userId, userName, `alterou o status para ${validated.status}`));
+    }
+  }
+  if (validated.column_id !== undefined && existing.column_id !== validated.column_id) {
+    const fromName = await getColumnName(supabase, existing.column_id as string | null);
+    const toName = await getColumnName(supabase, validated.column_id);
+    acts.push(newActivity('column_move', userId, userName, `moveu de ${fromName} → ${toName}`));
+  }
+  if (validated.assignee_id !== undefined && existing.assignee_id !== validated.assignee_id) {
+    const assigneeName = validated.assignee_id
+      ? await getProfileName(supabase, validated.assignee_id)
+      : 'ninguém';
+    acts.push(newActivity('assignee', userId, userName, `atribuiu a tarefa para ${assigneeName}`));
+  }
+  if (validated.checklist !== undefined) {
+    const oldList = Array.isArray(existing.checklist) ? existing.checklist as { done?: boolean }[] : [];
+    const newList = Array.isArray(validated.checklist) ? validated.checklist : [];
+    const oldDone = oldList.filter((x) => x.done).length;
+    const newDone = newList.filter((x) => x.done).length;
+    if (newDone > oldDone) {
+      const n = newDone - oldDone;
+      acts.push(newActivity('checklist', userId, userName, `marcou ${n} item${n > 1 ? 's' : ''} do checklist como concluído${n > 1 ? 's' : ''}`));
+    } else if (newList.length > oldList.length) {
+      acts.push(newActivity('checklist', userId, userName, 'adicionou itens ao checklist'));
+    } else if (newList.length < oldList.length) {
+      acts.push(newActivity('checklist', userId, userName, 'removeu itens do checklist'));
+    }
+  }
+  if (validated.comments !== undefined) {
+    const oldComments = Array.isArray(existing.comments) ? existing.comments : [];
+    const newComments = Array.isArray(validated.comments) ? validated.comments : [];
+    if (newComments.length > oldComments.length) {
+      acts.push(newActivity('comment', userId, userName, 'adicionou um comentário'));
+    }
+  }
+  if (validated.attachments !== undefined) {
+    const oldAtt = Array.isArray(existing.attachments) ? existing.attachments : [];
+    const newAtt = Array.isArray(validated.attachments) ? validated.attachments : [];
+    if (newAtt.length > oldAtt.length) {
+      const n = newAtt.length - oldAtt.length;
+      acts.push(newActivity('attachment', userId, userName, `anexou ${n} arquivo${n > 1 ? 's' : ''}`));
+    } else if (newAtt.length < oldAtt.length) {
+      acts.push(newActivity('attachment', userId, userName, 'removeu um anexo'));
+    }
+  }
+  if (validated.tags !== undefined) {
+    const oldTags = Array.isArray(existing.tags) ? existing.tags : [];
+    const newTags = Array.isArray(validated.tags) ? validated.tags : [];
+    if (JSON.stringify(oldTags) !== JSON.stringify(newTags)) {
+      acts.push(newActivity('tags', userId, userName, 'atualizou as tags'));
+    }
+  }
+
+  return acts;
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -303,6 +437,9 @@ serve(async (req) => {
 
         console.log('📝 [API-TAREFAS] Inserindo tarefa com dados:', JSON.stringify(taskInsert, null, 2));
 
+        const creatorName = await getProfileName(supabase, user.id);
+        taskInsert.activity_log = [newActivity('created', user.id, creatorName, 'criou a tarefa')];
+
         let task, error;
         const result = await supabase
           .from("tasks")
@@ -370,7 +507,7 @@ serve(async (req) => {
         // ✅ SEGURANÇA: Verificar se a tarefa pertence à mesma company_id
         const { data: existingTask, error: fetchError } = await supabase
           .from("tasks")
-          .select("id, company_id, checklist")
+          .select("id, company_id, column_id, checklist, activity_log")
           .eq("id", validatedData.task_id)
           .single();
 
@@ -430,6 +567,14 @@ serve(async (req) => {
           // Se não tem checklist, apenas marcar status como concluído
           updateData.status = 'concluido';
         }
+
+        const moverName = await getProfileName(supabase, user.id);
+        const fromColName = await getColumnName(supabase, existingTask.column_id);
+        const toColName = column.nome || await getColumnName(supabase, validatedData.nova_coluna_id);
+        updateData.activity_log = mergeActivityLog(
+          existingTask.activity_log,
+          [newActivity('column_move', user.id, moverName, `moveu de ${fromColName} → ${toColName}`)],
+        );
 
         console.log('📝 [API-TAREFAS] Movendo tarefa:', { 
           task_id: validatedData.task_id, 
@@ -520,7 +665,7 @@ serve(async (req) => {
         // ✅ SEGURANÇA: Verificar se a tarefa pertence à mesma company_id
         const { data: existingTask, error: fetchError } = await supabase
           .from("tasks")
-          .select("id, company_id")
+          .select("id, company_id, title, description, due_date, priority, status, column_id, assignee_id, checklist, comments, attachments, tags, activity_log")
           .eq("id", validatedData.task_id)
           .single();
 
@@ -553,6 +698,12 @@ serve(async (req) => {
         if (validatedData.checklist !== undefined) updateData.checklist = validatedData.checklist;
         if (validatedData.comments !== undefined) updateData.comments = validatedData.comments;
         if (validatedData.attachments !== undefined) updateData.attachments = validatedData.attachments;
+
+        const editorName = await getProfileName(supabase, user.id);
+        const newActivities = await buildEditActivities(supabase, existingTask, validatedData, user.id, editorName);
+        if (newActivities.length > 0) {
+          updateData.activity_log = mergeActivityLog(existingTask.activity_log, newActivities);
+        }
 
         const { data: task, error } = await supabase
           .from("tasks")

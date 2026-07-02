@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { parseEdgeFunctionError } from "@/utils/edgeFunctionError";
 import { useTagsManager } from "@/hooks/useTagsManager";
 import { AgendaModal } from "@/components/agenda/AgendaModal";
 
@@ -589,9 +590,12 @@ export function CoachIAFloatingButton({
           learnings,
         },
       });
-      if (err) throw err;
+      if (err) throw new Error(await parseEdgeFunctionError(err, "Erro ao analisar conversa"));
       if ((data as any)?.error) throw new Error((data as any).error);
       const nr = (data as any)?.report as CoachReport | null;
+      if ((data as any)?.fallback && (data as any)?.warning && !silent) {
+        toast.warning((data as any).warning, { duration: 8000 });
+      }
       // Alerta de delta de risco (>15pts)
       if (nr && lastRiskRef.current != null) {
         const delta = (nr.risco_de_perda ?? 0) - lastRiskRef.current;
@@ -655,7 +659,7 @@ export function CoachIAFloatingButton({
                   etapa_funil: report?.estagio_percebido,
                 },
               });
-              if (err) throw err;
+              if (err) throw new Error(await parseEdgeFunctionError(err, "Falha no modo autônomo"));
               const reply = (data as any)?.reply as string | undefined;
               if (reply) {
                 onSendSuggested(reply);

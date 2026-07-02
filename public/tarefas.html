@@ -1144,36 +1144,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
         </div>
 
         <!-- ACTIVITY TAB -->
-        <div id="pActivity" style="display:none">
-          <div class="act-item">
-            <div class="act-dot" style="background:var(--blue)"></div>
-            <div>
-              <div class="act-text"><strong>Rafael Costa</strong> moveu de <strong>Backlog → A Fazer</strong></div>
-              <div class="act-time">hoje às 09:14</div>
-            </div>
-          </div>
-          <div class="act-item">
-            <div class="act-dot" style="background:var(--green)"></div>
-            <div>
-              <div class="act-text"><strong>Ana Martins</strong> marcou 2 itens do checklist como concluídos</div>
-              <div class="act-time">hoje às 10:32</div>
-            </div>
-          </div>
-          <div class="act-item">
-            <div class="act-dot" style="background:var(--amber)"></div>
-            <div>
-              <div class="act-text">Prazo alterado para <strong>10 Jun</strong></div>
-              <div class="act-time">ontem às 16:48</div>
-            </div>
-          </div>
-          <div class="act-item">
-            <div class="act-dot" style="background:var(--purple)"></div>
-            <div>
-              <div class="act-text"><strong>Rafael Costa</strong> criou a tarefa</div>
-              <div class="act-time">05 Jun às 08:22</div>
-            </div>
-          </div>
-        </div>
+        <div id="pActivity" style="display:none"></div>
 
       </div><!-- /panel-body -->
       <div class="panel-footer">
@@ -2005,6 +1976,104 @@ function getTaskLead(t) {
   return { ...(linked || {}), ...(t?.lead || {}) };
 }
 
+const ACTIVITY_COLORS = {
+  created: 'var(--purple)',
+  column_move: 'var(--blue)',
+  checklist: 'var(--green)',
+  due_date: 'var(--amber)',
+  comment: 'var(--blue)',
+  description: 'var(--text3)',
+  priority: 'var(--amber)',
+  assignee: 'var(--blue)',
+  status: 'var(--blue)',
+  completed: 'var(--green)',
+  attachment: 'var(--blue)',
+  tags: 'var(--purple)',
+  title: 'var(--blue)',
+};
+
+function resolveProfileName(userId, fallback) {
+  if (fallback) return fallback;
+  if (!userId) return 'Sistema';
+  const u = users.find(x => x.id === userId);
+  return u?.full_name || 'Usuário';
+}
+
+function formatActivityTime(iso) {
+  if (!iso) return '';
+  try {
+    const d = new Date(iso);
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const day = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+    const diff = Math.round((today - day) / 86400000);
+    const time = d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+    if (diff === 0) return `hoje às ${time}`;
+    if (diff === 1) return `ontem às ${time}`;
+    return `${d.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })} às ${time}`;
+  } catch { return ''; }
+}
+
+function buildTaskActivityFeed(t) {
+  let items = Array.isArray(t.activity_log) ? [...t.activity_log] : [];
+
+  if (items.length === 0) {
+    if (t.created_at) {
+      items.push({
+        type: 'created',
+        user_id: t.owner_id,
+        user_name: resolveProfileName(t.owner_id, null),
+        text: 'criou a tarefa',
+        created_at: t.created_at,
+      });
+    }
+    (Array.isArray(t.comments) ? t.comments : []).forEach(c => {
+      items.push({
+        type: 'comment',
+        user_id: c.author_id,
+        user_name: c.author_name || resolveProfileName(c.author_id, null),
+        text: 'adicionou um comentário',
+        created_at: c.created_at || t.updated_at || t.created_at,
+      });
+    });
+  }
+
+  return items.sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
+}
+
+function renderActivityHtml(items) {
+  if (!items.length) {
+    return '<div style="font-size:12px;color:var(--text3);text-align:center;padding:20px">Nenhuma atividade registrada</div>';
+  }
+  return items.map(a => {
+    const color = ACTIVITY_COLORS[a.type] || 'var(--text3)';
+    const name = escapeHtml(a.user_name || resolveProfileName(a.user_id, null));
+    const text = escapeHtml(a.text || '');
+    const showUser = name && name !== 'Sistema';
+    const body = showUser ? `<strong>${name}</strong> ${text}` : text;
+    return `
+      <div class="act-item">
+        <div class="act-dot" style="background:${color}"></div>
+        <div>
+          <div class="act-text">${body}</div>
+          <div class="act-time">${formatActivityTime(a.created_at)}</div>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function syncTaskFromApiResponse(res, taskId) {
+  const updated = res?.data;
+  if (!updated?.id) return;
+  const idx = tasks.findIndex(x => x.id === (taskId || updated.id));
+  if (idx >= 0) tasks[idx] = { ...tasks[idx], ...updated };
+  if (window._currentTask?.id === updated.id) {
+    Object.assign(window._currentTask, updated);
+    const actEl = document.getElementById('pActivity');
+    if (actEl) actEl.innerHTML = renderActivityHtml(buildTaskActivityFeed(window._currentTask));
+  }
+}
+
 // ── Side panel (edição rápida) ─────────────────────────────────────────────
 function initials(name) {
   if (!name) return '?';
@@ -2072,6 +2141,14 @@ function openTaskPanel(t) {
 
     details.innerHTML = `
       <div class="panel-section">
+        <div class="panel-label" style="display:flex;justify-content:space-between;align-items:center;gap:8px">
+          <span>Descrição / Informações</span>
+          <span id="taskDescStatus" style="font-size:10px;color:var(--text3);font-weight:400"></span>
+        </div>
+        <textarea class="field-textarea" id="taskDescriptionInput" placeholder="Adicione informações sobre esta tarefa..." style="min-height:90px">${escapeHtml(t.description || '')}</textarea>
+        <div style="font-size:10px;color:var(--text3);margin-top:4px">Salva automaticamente ao sair do campo</div>
+      </div>
+      <div class="panel-section">
         <div class="meta-grid">
           <div class="meta-item">
             <div class="panel-label">Prioridade</div>
@@ -2105,7 +2182,6 @@ function openTaskPanel(t) {
           </div>
         </div>
       </div>
-      ${t.description ? `<div class="panel-section"><div class="panel-label">Descrição</div><div style="font-size:12px;color:var(--text2);white-space:pre-wrap">${escapeHtml(t.description)}</div></div>` : ''}
       <div class="panel-section">
         <div class="panel-label">Tags</div>
         <div style="display:flex;flex-wrap:wrap;gap:5px">${tagsHtml}</div>
@@ -2148,6 +2224,14 @@ function openTaskPanel(t) {
         </div>
       </div>
     `;
+
+    const descInput = document.getElementById('taskDescriptionInput');
+    if (descInput) {
+      descInput.onblur = () => window.saveTaskDescription?.();
+      descInput.onkeydown = (e) => {
+        if (e.ctrlKey && e.key === 'Enter') window.saveTaskDescription?.();
+      };
+    }
   }
 
   // Checklist tab
@@ -2208,6 +2292,13 @@ function openTaskPanel(t) {
     `;
   }
 
+  // Activity tab
+  const actEl = $('pActivity');
+  if (actEl) {
+    const feed = buildTaskActivityFeed(t);
+    actEl.innerHTML = renderActivityHtml(feed);
+  }
+
   // Reset to details tab
   document.querySelectorAll('.panel-tab').forEach((tab, i) => tab.classList.toggle('active', i === 0));
   ['pDetails','pChecklist','pComments','pActivity'].forEach((id, i) => {
@@ -2223,6 +2314,31 @@ window.openPanel = (id) => {
 };
 
 // ── Persistência de checklist/comentários/ações do painel ─────────────────
+window.saveTaskDescription = async function () {
+  const t = window._currentTask; if (!t || !sb) return;
+  const inp = document.getElementById('taskDescriptionInput');
+  if (!inp) return;
+  const desc = inp.value.trim();
+  const prev = (t.description || '').trim();
+  if (prev === desc) return;
+  const status = document.getElementById('taskDescStatus');
+  if (status) { status.textContent = 'Salvando...'; status.style.color = 'var(--text3)'; }
+  t.description = desc || null;
+  try {
+    const res = await callApi('editar_tarefa', { task_id: t.id, description: desc || null });
+    syncTaskFromApiResponse(res, t.id);
+    if (status) {
+      status.textContent = 'Salvo';
+      status.style.color = 'var(--green)';
+      setTimeout(() => { status.textContent = ''; status.style.color = ''; }, 2000);
+    }
+  } catch (e) {
+    console.error('[description save]', e);
+    t.description = prev || null;
+    if (status) { status.textContent = 'Erro ao salvar'; status.style.color = 'var(--red)'; }
+  }
+};
+
 window.persistChecklistFromDOM = async function () {
   const t = window._currentTask; if (!t || !sb) return;
   const items = Array.from(document.querySelectorAll('#checklistItems .cl-item')).map(el => ({
@@ -2231,7 +2347,8 @@ window.persistChecklistFromDOM = async function () {
   })).filter(it => it.text);
   t.checklist = items;
   try {
-    await callApi('editar_tarefa', { task_id: t.id, checklist: items });
+    const res = await callApi('editar_tarefa', { task_id: t.id, checklist: items });
+    syncTaskFromApiResponse(res, t.id);
   } catch (e) { console.error('[checklist save]', e); }
 };
 
@@ -2278,8 +2395,10 @@ window.persistNewComment = async function () {
   if (tabs[2]) { tabs.forEach((x,i)=>x.classList.toggle('active', i===2));
     ['pDetails','pChecklist','pComments','pActivity'].forEach((id,i)=>{ const el=document.getElementById(id); if(el) el.style.display=i===2?'block':'none'; });
   }
-  try { await callApi('editar_tarefa', { task_id: t.id, comments: t.comments }); }
-  catch (e) { console.error('[comment save]', e); }
+  try {
+    const res = await callApi('editar_tarefa', { task_id: t.id, comments: t.comments });
+    syncTaskFromApiResponse(res, t.id);
+  } catch (e) { console.error('[comment save]', e); }
 };
 
 window.concluirCurrentTask = async function () {
@@ -2310,6 +2429,7 @@ window.onTaskAttachPicked = async function (input) {
     const att = { name: file.name, url: pub.publicUrl, mime: file.type || '', size: file.size || 0 };
     const newList = Array.isArray(t.attachments) ? [...t.attachments, att] : [att];
     const res = await callApi('editar_tarefa', { task_id: t.id, attachments: newList.map(a => ({ name: a.name, url: a.url })) });
+    syncTaskFromApiResponse(res, t.id);
     if (res?.error) throw new Error(res.error);
     t.attachments = newList;
     // sync in main tasks array
@@ -2330,7 +2450,8 @@ window.removeTaskAttachment = async function (idx) {
   const list = Array.isArray(t.attachments) ? [...t.attachments] : [];
   list.splice(idx, 1);
   try {
-    await callApi('editar_tarefa', { task_id: t.id, attachments: list });
+    const res = await callApi('editar_tarefa', { task_id: t.id, attachments: list });
+    syncTaskFromApiResponse(res, t.id);
     t.attachments = list;
     const i = tasks.findIndex(x => x.id === t.id);
     if (i >= 0) tasks[i].attachments = list;
@@ -2379,15 +2500,18 @@ window.duplicateCurrentTask = async function () {
 
 window.openWhatsAppForCurrentTask = function () {
   const t = window._currentTask; if (!t) return;
-  const lead = leads.find(l => l.id === t.lead_id) || t.lead;
-  const raw = lead?.phone || lead?.telefone || '';
+  const lead = getTaskLead(t);
+  const raw = lead?.phone || lead?.telefone || t?.lead?.phone || t?.lead?.telefone || '';
   const phone = String(raw).replace(/\D/g, '');
   if (!phone) { alert('Lead sem telefone cadastrado.'); return; }
-  // Abre Conversas do CRM com o telefone (parent decide rota)
-  try {
-    window.parent.postMessage({ type: 'tarefas-open-whatsapp', phone, leadId: t.lead_id, leadName: lead?.name }, '*');
-  } catch {}
-  // Fallback: WhatsApp Web
+  const leadId = t.lead_id || lead?.id || t?.lead?.id || '';
+  const leadName = lead?.name || t?.lead?.name || 'Contato';
+  // Dentro do iframe: abre o ConversaPopup do CRM (React parent)
+  if (window.parent && window.parent !== window) {
+    window.parent.postMessage({ type: 'tarefas-open-whatsapp', phone, leadId, leadName }, '*');
+    return;
+  }
+  // Fallback standalone (fora do CRM)
   window.open(`https://wa.me/${phone.startsWith('55') ? phone : '55' + phone}`, '_blank', 'noopener');
 };
 

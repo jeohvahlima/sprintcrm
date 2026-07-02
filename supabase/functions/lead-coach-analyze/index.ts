@@ -54,7 +54,7 @@ function extractJson(text: string) {
     const start = clean.indexOf("{");
     const end = clean.lastIndexOf("}");
     if (start >= 0 && end > start) return JSON.parse(clean.slice(start, end + 1));
-    throw new Error("Claude nao retornou JSON valido.");
+    throw new Error("IA nao retornou JSON valido.");
   }
 }
 
@@ -97,6 +97,189 @@ function normalizeReport(raw: any) {
   };
 }
 
+function detectObjecoes(texto: string): string[] {
+  const lower = texto.toLowerCase();
+  const patterns: [RegExp, string][] = [
+    [/caro|preço|preco|budget|orçamento|orcamento/, "Objeção de preço"],
+    [/pensar|depois|retorno|retornar/, "Pediu para pensar / retornar depois"],
+    [/sócio|socio|decisor|chefe|diretor/, "Precisa falar com decisor"],
+    [/não tenho|nao tenho|sem tempo/, "Falta de tempo ou prioridade"],
+    [/concorrent|outra empresa|já tenho|ja tenho/, "Já usa solução alternativa"],
+  ];
+  return patterns.filter(([re]) => re.test(lower)).map(([, label]) => label);
+}
+
+function fallbackReport(
+  mensagens: any[],
+  leadName: string,
+  motivo: string,
+) {
+  const fromLead = mensagens.filter((m) => !(m.fromme === true || m.fromme === "true"));
+  const fromVendor = mensagens.filter((m) => m.fromme === true || m.fromme === "true");
+  const allText = mensagens.map((m) => String(m.mensagem || "")).join(" ");
+  const objecoes = detectObjecoes(allText);
+  const semRespostaLead = fromLead.length === 0;
+  const risco = semRespostaLead ? 72 : objecoes.length > 0 ? 58 : fromLead.length >= 2 ? 35 : 48;
+  const nome = leadName || "o contato";
+
+  return normalizeReport({
+    situacao: semRespostaLead
+      ? ["📵 Lead ainda não respondeu", "⏳ Aguardando retorno"]
+      : objecoes.length > 0
+        ? ["⚠️ Objeções detectadas", "🔄 Negociação em andamento"]
+        : ["💬 Conversa ativa", "✅ Engajamento presente"],
+    risco,
+    script: semRespostaLead
+      ? `Olá ${nome}, passando para retomar nossa conversa. Faz sentido conversarmos 5 minutos ainda hoje?`
+      : `Entendo seu ponto, ${nome}. Posso te mostrar em 2 minutos como isso se aplica ao seu cenário — faz sentido?`,
+    scripts_alternativos: [
+      `Oi ${nome}! Vi que ficamos sem retorno — ainda faz sentido avançarmos?`,
+      `${nome}, preparei um resumo rápido do que conversamos. Quer que eu envie?`,
+    ],
+    proximos_passos: semRespostaLead
+      ? ["Enviar follow-up em 24h", "Tentar ligação no horário comercial", "Registrar tentativa no CRM", "Revisar abordagem inicial"]
+      : ["Responder objeção com case/ROI", "Propor próximo passo concreto", "Agendar call de 15 min", "Atualizar etapa no funil"],
+    resumo: semRespostaLead
+      ? `Ainda não há resposta de ${nome}. ${fromVendor.length} mensagem(ns) enviada(s) pelo time.`
+      : `Conversa com ${fromLead.length} mensagem(ns) do lead e ${fromVendor.length} do vendedor. ${objecoes.length ? "Objeções identificadas." : "Sem objeção clara ainda."}`,
+    o_que_foi_bem: fromVendor.length > 0 ? ["Houve tentativa de contato"] : [],
+    onde_perdeu: semRespostaLead ? ["Lead não respondeu ainda"] : objecoes.length ? ["Objeções não tratadas"] : [],
+    objecoes,
+    engajamento: semRespostaLead ? 15 : Math.min(85, 30 + fromLead.length * 15),
+    intencao: semRespostaLead ? 20 : Math.min(80, 25 + fromLead.length * 12),
+    fit: 50,
+    temperatura: risco > 60 ? "frio" : risco >= 40 ? "morno" : "quente",
+    estagio: semRespostaLead ? "primeiro_contato" : objecoes.length ? "objecao" : "qualificacao",
+    acoes_nao_fechou: risco >= 55 ? [{
+      tipo: "follow",
+      id: "follow-d1",
+      titulo: "Follow-up D+1",
+      descricao: `Retomar ${nome} com mensagem curta e CTA claro.`,
+      prioridade: "alta",
+    }] : [],
+    cadencia: [],
+    kb_usadas: [],
+    _fallback_motivo: motivo,
+  });
+}
+
+async function callLovableAI(userContent: string): Promise<string> {
+  const apiKey = Deno.env.get("LOVABLE_API_KEY");
+  if (!apiKey) throw new Error("LOVABLE_API_KEY ausente");
+
+  let resp: Response | null = null;
+  let lastErr = "";
+  for (let attempt = 1; attempt <= 3; attempt += 1) {
+    resp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: Deno.env.get("LOVABLE_MODEL") || "google/gemini-2.5-flash",
+        temperature: 0.2,
+        max_tokens: 1200,
+        messages: [
+          { role: "system", content: SYSTEM },
+          { role: "user", content: userContent },
+        ],
+      }),
+    });
+
+    if (resp.ok) break;
+    lastErr = await resp.text().catch(() => "");
+    if (resp.status === 429 || resp.status >= 500) {
+      await new Promise((resolve) => setTimeout(resolve, 700 * attempt));
+      continue;
+    }
+    throw new Error(`Lovable AI indisponivel (${resp.status}): ${lastErr.slice(0, 180)}`);
+  }
+
+  if (!resp?.ok) {
+    throw new Error(`Lovable AI indisponivel: ${lastErr.slice(0, 180)}`);
+  }
+
+  const data = await resp.json();
+  const text = data?.choices?.[0]?.message?.content;
+  if (!text || typeof text !== "string") {
+    throw new Error("Lovable AI nao retornou analise.");
+  }
+  return text.trim();
+}
+
+async function callAnthropicAI(userContent: string): Promise<string> {
+  const apiKey = Deno.env.get("ANTHROPIC_API_KEY");
+  if (!apiKey) throw new Error("ANTHROPIC_API_KEY ausente");
+
+  let resp: Response | null = null;
+  let lastErr = "";
+  for (let attempt = 1; attempt <= 3; attempt += 1) {
+    resp = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: {
+        "x-api-key": apiKey,
+        "anthropic-version": "2023-06-01",
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: Deno.env.get("ANTHROPIC_MODEL") || "claude-sonnet-4-20250514",
+        max_tokens: 1200,
+        temperature: 0.2,
+        system: SYSTEM,
+        messages: [{ role: "user", content: userContent }],
+      }),
+    });
+
+    if (resp.ok) break;
+    lastErr = await resp.text().catch(() => "");
+    if (resp.status === 429 || resp.status >= 500) {
+      await new Promise((resolve) => setTimeout(resolve, 700 * attempt));
+      continue;
+    }
+    throw new Error(`Claude indisponivel (${resp.status}): ${lastErr.slice(0, 180)}`);
+  }
+
+  if (!resp?.ok) throw new Error(`Claude indisponivel: ${lastErr.slice(0, 180)}`);
+
+  const data = await resp.json();
+  const text = (data.content || [])
+    .filter((part: any) => part?.type === "text")
+    .map((part: any) => part.text || "")
+    .join("\n")
+    .trim();
+
+  if (!text) throw new Error("Claude nao retornou analise.");
+  return text;
+}
+
+async function analyzeWithAI(userContent: string): Promise<{ text: string; provider: string }> {
+  const hasLovable = Boolean(Deno.env.get("LOVABLE_API_KEY"));
+  const hasAnthropic = Boolean(Deno.env.get("ANTHROPIC_API_KEY"));
+
+  if (hasLovable) {
+    try {
+      return { text: await callLovableAI(userContent), provider: "lovable" };
+    } catch (e) {
+      console.warn("[lead-coach-analyze] Lovable falhou:", e);
+      if (!hasAnthropic) throw e;
+    }
+  }
+
+  if (hasAnthropic) {
+    return { text: await callAnthropicAI(userContent), provider: "anthropic" };
+  }
+
+  throw new Error("Nenhuma chave de IA configurada (LOVABLE_API_KEY ou ANTHROPIC_API_KEY).");
+}
+
+function jsonResponse(payload: Record<string, unknown>, status = 200) {
+  return new Response(JSON.stringify(payload), {
+    status,
+    headers: { ...corsHeaders, "Content-Type": "application/json" },
+  });
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
@@ -105,10 +288,7 @@ Deno.serve(async (req) => {
     const { lead_id, phone, company_id, lead_name, contact_name, knowledge_base } = body || {};
 
     if (!company_id || (!lead_id && !phone)) {
-      return new Response(JSON.stringify({ error: "company_id e (lead_id ou phone) sao obrigatorios" }), {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return jsonResponse({ error: "company_id e (lead_id ou phone) sao obrigatorios" });
     }
 
     const supabase = createClient(
@@ -135,6 +315,7 @@ Deno.serve(async (req) => {
     }
 
     let leadCtx = "";
+    const displayName = lead_name || contact_name || "Contato";
     if (lead_id) {
       const { data: lead } = await supabase
         .from("leads")
@@ -183,7 +364,7 @@ Deno.serve(async (req) => {
       "Historico da conversa:",
       transcricao,
       "",
-      `Dados do lead: ${leadCtx || `Nome: ${lead_name || contact_name || "-"}`}`,
+      `Dados do lead: ${leadCtx || `Nome: ${displayName}`}`,
       "",
       "Base de conhecimento:",
       kbBlock || "(sem base cadastrada)",
@@ -191,74 +372,22 @@ Deno.serve(async (req) => {
       "Detecte tambem estes padroes de risco: vou pensar, deixa eu ver, preciso falar com, esta muito caro, nao tenho budget, vou retornar, silencio apos proposta e objecao repetida.",
     ].join("\n");
 
-    const apiKey = Deno.env.get("ANTHROPIC_API_KEY");
-    if (!apiKey) {
-      return new Response(JSON.stringify({ error: "ANTHROPIC_API_KEY ausente" }), {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    let resp: Response | null = null;
-    let lastErr = "";
-    for (let attempt = 1; attempt <= 3; attempt += 1) {
-      resp = await fetch("https://api.anthropic.com/v1/messages", {
-        method: "POST",
-        headers: {
-          "x-api-key": apiKey,
-          "anthropic-version": "2023-06-01",
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          model: Deno.env.get("ANTHROPIC_MODEL") || "claude-sonnet-4-6",
-          max_tokens: 1000,
-          temperature: 0.2,
-          system: SYSTEM,
-          messages: [{ role: "user", content: userContent }],
-        }),
-      });
-
-      if (resp.ok) break;
-      lastErr = await resp.text().catch(() => "");
-      if (resp.status === 429 || resp.status >= 500) {
-        await new Promise((resolve) => setTimeout(resolve, 700 * attempt));
-        continue;
-      }
-      break;
-    }
-
-    if (!resp || !resp.ok) {
-      return new Response(JSON.stringify({ error: `Claude indisponivel: ${resp?.status ?? "?"} ${lastErr.slice(0, 200)}` }), {
-        status: 502,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    const data = await resp.json();
-    const text = (data.content || [])
-      .filter((part: any) => part?.type === "text")
-      .map((part: any) => part.text || "")
-      .join("\n")
-      .trim();
-
-    if (!text) {
-      return new Response(JSON.stringify({ error: "Claude nao retornou analise estruturada." }), {
-        status: 502,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
     let report: any;
+    let fallback = false;
+    let warning: string | undefined;
+
     try {
+      const { text, provider } = await analyzeWithAI(userContent);
       report = normalizeReport(extractJson(text));
-    } catch (e) {
-      return new Response(JSON.stringify({ error: e instanceof Error ? e.message : "JSON malformado retornado pela IA." }), {
-        status: 502,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      console.log(`[lead-coach-analyze] OK via ${provider}, msgs=${mensagens.length}`);
+    } catch (aiErr) {
+      const motivo = aiErr instanceof Error ? aiErr.message : "IA indisponivel";
+      console.warn("[lead-coach-analyze] fallback local:", motivo);
+      report = fallbackReport(mensagens, displayName, motivo);
+      fallback = true;
+      warning = `Analise basica gerada localmente (${motivo}). Configure LOVABLE_API_KEY no Supabase para analise completa.`;
     }
 
-    // Salvar no cache para o follow-inteligente-engine usar
     if (lead_id) {
       try {
         await supabase.from("lead_coach_cache").upsert(
@@ -286,15 +415,10 @@ Deno.serve(async (req) => {
       }
     }
 
-    return new Response(JSON.stringify({ report, total_mensagens: mensagens.length }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    return jsonResponse({ report, total_mensagens: mensagens.length, fallback, warning });
   } catch (e) {
     const msg = e instanceof Error ? e.message : "Erro desconhecido";
     console.error("[lead-coach-analyze]", msg);
-    return new Response(JSON.stringify({ error: msg }), {
-      status: 500,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    return jsonResponse({ error: msg });
   }
 });

@@ -6,6 +6,77 @@ const corsHeaders = {
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
+function jsonResponse(payload: Record<string, unknown>) {
+  return new Response(JSON.stringify(payload), {
+    status: 200,
+    headers: { ...corsHeaders, "Content-Type": "application/json" },
+  });
+}
+
+async function generateReply(system: string, userPrompt: string): Promise<string> {
+  const lovableKey = Deno.env.get("LOVABLE_API_KEY");
+  if (lovableKey) {
+    const resp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${lovableKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: Deno.env.get("LOVABLE_MODEL") || "google/gemini-2.5-flash",
+        temperature: 0.7,
+        max_tokens: 500,
+        messages: [
+          { role: "system", content: system },
+          { role: "user", content: userPrompt },
+        ],
+      }),
+    });
+    if (resp.ok) {
+      const data = await resp.json();
+      const reply = String(data?.choices?.[0]?.message?.content || "").trim();
+      if (reply) return reply.replace(/^Resposta:\s*/i, "");
+    }
+  }
+
+  const anthropicKey = Deno.env.get("ANTHROPIC_API_KEY");
+  if (!anthropicKey) {
+    throw new Error("Nenhuma chave de IA configurada (LOVABLE_API_KEY ou ANTHROPIC_API_KEY).");
+  }
+
+  const resp = await fetch("https://api.anthropic.com/v1/messages", {
+    method: "POST",
+    headers: {
+      "x-api-key": anthropicKey,
+      "anthropic-version": "2023-06-01",
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      model: Deno.env.get("ANTHROPIC_MODEL") || "claude-sonnet-4-20250514",
+      max_tokens: 500,
+      temperature: 0.7,
+      system,
+      messages: [{ role: "user", content: userPrompt }],
+    }),
+  });
+
+  if (!resp.ok) {
+    const text = await resp.text().catch(() => "");
+    throw new Error(`IA indisponivel (${resp.status}): ${text.slice(0, 180)}`);
+  }
+
+  const data = await resp.json();
+  const reply = (data.content || [])
+    .filter((part: any) => part?.type === "text")
+    .map((part: any) => part.text || "")
+    .join("\n")
+    .trim()
+    .replace(/^Resposta:\s*/i, "");
+
+  if (!reply) throw new Error("IA nao gerou resposta.");
+  return reply;
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
@@ -14,10 +85,7 @@ Deno.serve(async (req) => {
     const { company_id, phone, lead_id, lead_name, contact_name, knowledge_base, etapa_funil } = body || {};
 
     if (!company_id || (!lead_id && !phone)) {
-      return new Response(JSON.stringify({ error: "company_id e (lead_id ou phone) sao obrigatorios" }), {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return jsonResponse({ error: "company_id e (lead_id ou phone) sao obrigatorios" });
     }
 
     const supabase = createClient(
@@ -64,64 +132,13 @@ Base de conhecimento: ${baseConhecimento || "(sem base cadastrada)"}
 Etapa do funil: ${etapa_funil || "-"}
 Historico: ${historico || "(sem historico)"}`;
 
-    const apiKey = Deno.env.get("ANTHROPIC_API_KEY");
-    if (!apiKey) {
-      return new Response(JSON.stringify({ error: "ANTHROPIC_API_KEY ausente" }), {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
+    const userPrompt = `Nome do lead: ${lead_name || contact_name || "cliente"}\nResponda agora a ultima mensagem do lead.`;
+    const reply = await generateReply(system, userPrompt);
 
-    const resp = await fetch("https://api.anthropic.com/v1/messages", {
-      method: "POST",
-      headers: {
-        "x-api-key": apiKey,
-        "anthropic-version": "2023-06-01",
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: Deno.env.get("ANTHROPIC_MODEL") || "claude-sonnet-4-6",
-        max_tokens: 500,
-        temperature: 0.7,
-        system,
-        messages: [{
-          role: "user",
-          content: `Nome do lead: ${lead_name || contact_name || "cliente"}\nResponda agora a ultima mensagem do lead.`,
-        }],
-      }),
-    });
-
-    if (!resp.ok) {
-      const text = await resp.text().catch(() => "");
-      return new Response(JSON.stringify({ error: `Claude indisponivel: ${resp.status} ${text.slice(0, 180)}` }), {
-        status: 502,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    const data = await resp.json();
-    const reply = (data.content || [])
-      .filter((part: any) => part?.type === "text")
-      .map((part: any) => part.text || "")
-      .join("\n")
-      .trim()
-      .replace(/^Resposta:\s*/i, "");
-
-    if (!reply) {
-      return new Response(JSON.stringify({ error: "Claude nao gerou resposta." }), {
-        status: 502,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    return new Response(JSON.stringify({ reply }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    return jsonResponse({ reply });
   } catch (e) {
     const msg = e instanceof Error ? e.message : "Erro desconhecido";
-    return new Response(JSON.stringify({ error: msg }), {
-      status: 500,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    console.error("[coach-auto-reply]", msg);
+    return jsonResponse({ error: msg });
   }
 });

@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useRef, useState } from 'react';
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useWebphoneSIP } from '@/hooks/useWebphoneSIP';
 import { IncomingCallPopup } from './IncomingCallPopup';
@@ -8,6 +8,8 @@ type Ctx = ReturnType<typeof useWebphoneSIP> & {
   configured: boolean;
   sipNumber: string;
   reload: (forceRegister?: boolean) => Promise<void>;
+  waitUntilRegistered: (timeoutMs?: number) => Promise<boolean>;
+  isWebphoneReady: () => boolean;
 };
 
 const WebphoneCtx = createContext<Ctx | null>(null);
@@ -24,6 +26,45 @@ export const WebphoneProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const [configured, setConfigured] = useState(false);
   const [sipNumber, setSipNumber] = useState('');
   const lastRegisterKey = useRef<string>('');
+  const modeRef = useRef<Ctx['mode']>(null);
+  const configuredRef = useRef(false);
+  const regStatusRef = useRef(webphone.regStatus);
+
+  useEffect(() => {
+    regStatusRef.current = webphone.regStatus;
+  }, [webphone.regStatus]);
+
+  useEffect(() => {
+    modeRef.current = mode;
+    configuredRef.current = configured;
+  }, [mode, configured]);
+
+  const waitUntilRegistered = useCallback((timeoutMs = 12000) => {
+    return new Promise<boolean>((resolve) => {
+      if (regStatusRef.current === 'registered') {
+        resolve(true);
+        return;
+      }
+      const started = Date.now();
+      const tick = () => {
+        if (regStatusRef.current === 'registered') {
+          resolve(true);
+          return;
+        }
+        if (regStatusRef.current === 'error' || Date.now() - started >= timeoutMs) {
+          resolve(false);
+          return;
+        }
+        window.setTimeout(tick, 150);
+      };
+      tick();
+    });
+  }, []);
+
+  const isWebphoneReady = useCallback(
+    () => modeRef.current === 'webphone' && configuredRef.current && regStatusRef.current === 'registered',
+    []
+  );
 
   const load = async (forceRegister = false) => {
     try {
@@ -107,7 +148,18 @@ export const WebphoneProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const value: Ctx = { ...webphone, mode, configured, sipNumber, reload: load };
+  const value: Ctx = useMemo(
+    () => ({
+      ...webphone,
+      mode,
+      configured,
+      sipNumber,
+      reload: load,
+      waitUntilRegistered,
+      isWebphoneReady,
+    }),
+    [webphone, mode, configured, sipNumber, waitUntilRegistered, isWebphoneReady]
+  );
 
   return (
     <WebphoneCtx.Provider value={value}>

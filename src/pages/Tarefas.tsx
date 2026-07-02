@@ -45,13 +45,40 @@ const Tarefas = () => {
     const onMsg = (ev: MessageEvent) => {
       if (ev.data?.type === "tarefas-ready") sendSession();
       if (ev.data?.type === "tarefas-open-whatsapp") {
-        const { phone, leadId, leadName } = ev.data;
-        setWhatsappPopup({
-          open: true,
-          leadId: leadId ? String(leadId) : "",
-          leadName: leadName ? String(leadName) : "Contato",
-          leadPhone: phone ? String(phone) : undefined,
-        });
+        void (async () => {
+          const { phone, leadId, leadName } = ev.data;
+          const cleanPhone = phone ? String(phone).replace(/\D/g, "") : "";
+          if (!cleanPhone) return;
+
+          let resolvedLeadId = leadId ? String(leadId) : "";
+          if (!resolvedLeadId) {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (user) {
+              const { data: role } = await supabase
+                .from("user_roles")
+                .select("company_id")
+                .eq("user_id", user.id)
+                .maybeSingle();
+              if (role?.company_id) {
+                const tail = cleanPhone.slice(-9);
+                const { data: rows } = await supabase
+                  .from("leads")
+                  .select("id")
+                  .eq("company_id", role.company_id)
+                  .or(`phone.ilike.%${tail}%,telefone.ilike.%${tail}%`)
+                  .limit(1);
+                if (rows?.[0]?.id) resolvedLeadId = rows[0].id;
+              }
+            }
+          }
+
+          setWhatsappPopup({
+            open: true,
+            leadId: resolvedLeadId,
+            leadName: leadName ? String(leadName) : "Contato",
+            leadPhone: cleanPhone,
+          });
+        })();
       }
     };
     window.addEventListener("message", onMsg);
@@ -83,6 +110,7 @@ const Tarefas = () => {
         leadId={whatsappPopup.leadId}
         leadName={whatsappPopup.leadName}
         leadPhone={whatsappPopup.leadPhone}
+        key={`${whatsappPopup.leadId}-${whatsappPopup.leadPhone}-${whatsappPopup.open}`}
       />
     </div>
   );

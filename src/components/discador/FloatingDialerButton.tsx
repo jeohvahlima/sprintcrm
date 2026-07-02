@@ -95,23 +95,23 @@ export const FloatingDialerButton = () => {
       toast.error('Número inválido');
       return;
     }
-    if (webphone.mode !== 'webphone' || !webphone.configured) {
-      await webphone.reload();
+    if (!webphone.isWebphoneReady()) {
+      await webphone.reload(webphone.regStatus === 'error');
+      const ready = await webphone.waitUntilRegistered();
+      if (!ready) {
+        toast.error('Configure a Conta Telefônica no modo Webphone NVOIP e aguarde o status Conectado.');
+        return;
+      }
     }
-    if (webphone.mode !== 'webphone' || !webphone.configured) {
-      toast.error('Configure a Conta Telefônica no modo Webphone NVOIP para ligar direto pelo CRM.');
-      return;
+    try {
+      await webphone.call(cleanNumber, 'Ligação Manual');
+      setPhoneNumber('');
+    } catch (e: any) {
+      toast.error(e?.message || 'Não foi possível iniciar a chamada');
     }
-    if (webphone.regStatus !== 'registered') {
-      toast.error('Aguarde o Webphone SIP conectar antes de ligar.');
-      return;
-    }
-    webphone.call(cleanNumber, 'Ligação Manual');
-    setPhoneNumber('');
   };
 
-  // Show notes dialog when call finishes
-  const isCallActive = ['outgoing', 'ringing', 'active'].includes(webphone.callState);
+  const isCallActive = ['outgoing', 'ringing', 'active'].includes(webphone.callState) || webphone.callState === 'failed';
 
   const formatDuration = (seconds: number) => {
     const mins = Math.floor(seconds / 60);

@@ -33,10 +33,10 @@ export const WebphoneDialer: React.FC<{ onOpenContacts?: () => void }> = ({ onOp
   const wp = useWebphone();
   const [number, setNumber] = useState('');
 
-  const inCall = ['outgoing', 'ringing', 'active'].includes(wp.callState);
+  const inCall = ['outgoing', 'ringing', 'active', 'failed'].includes(wp.callState);
 
-  const handleCall = () => {
-    if (wp.regStatus !== 'registered') {
+  const handleCall = async () => {
+    if (!wp.isWebphoneReady()) {
       toast.error('Aguarde o SIP conectar antes de discar.');
       return;
     }
@@ -46,7 +46,7 @@ export const WebphoneDialer: React.FC<{ onOpenContacts?: () => void }> = ({ onOp
       return;
     }
     try {
-      wp.call(number);
+      await wp.call(number);
     } catch (e: any) {
       toast.error(e.message || 'Não foi possível iniciar a chamada');
     }
@@ -110,7 +110,7 @@ export const WebphoneDialer: React.FC<{ onOpenContacts?: () => void }> = ({ onOp
             <Button
               className="flex-1 bg-green-600 hover:bg-green-700"
               onClick={handleCall}
-              disabled={inCall || wp.regStatus !== 'registered'}
+              disabled={inCall || !wp.isWebphoneReady()}
             >
               <Phone className="w-4 h-4 mr-2" /> Ligar
             </Button>

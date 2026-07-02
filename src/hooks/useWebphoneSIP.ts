@@ -3,7 +3,7 @@ import * as JsSIP from 'jssip';
 import { supabase } from '@/integrations/supabase/client';
 
 export type SipRegStatus = 'idle' | 'connecting' | 'registered' | 'unregistered' | 'error';
-export type SipCallState = 'idle' | 'outgoing' | 'incoming' | 'ringing' | 'active' | 'ended';
+export type SipCallState = 'idle' | 'outgoing' | 'incoming' | 'ringing' | 'active' | 'ended' | 'failed';
 
 export interface WebphoneConfig {
   number_sip: string;
@@ -17,12 +17,18 @@ interface UseWebphoneState {
   regStatus: SipRegStatus;
   regError: string | null;
   callState: SipCallState;
+  callError: string | null;
   remoteNumber: string;
   remoteName: string;
   duration: number;
   muted: boolean;
   direction: 'in' | 'out' | null;
 }
+
+const ICE_SERVERS: RTCIceServer[] = [
+  { urls: 'stun:stun.l.google.com:19302' },
+  { urls: 'stun:stun1.l.google.com:19302' },
+];
 
 function sanitizeNumber(raw: string): string {
   let digits = String(raw || '').replace(/\D/g, '');
@@ -39,17 +45,28 @@ export function useWebphoneSIP() {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const timerRef = useRef<number | null>(null);
   const cfgRef = useRef<WebphoneConfig | null>(null);
+  const regStatusRef = useRef<SipRegStatus>('idle');
 
   const [state, setState] = useState<UseWebphoneState>({
     regStatus: 'idle',
     regError: null,
     callState: 'idle',
+    callError: null,
     remoteNumber: '',
     remoteName: '',
     duration: 0,
     muted: false,
     direction: null,
   });
+
+  const patchState = useCallback((patch: Partial<UseWebphoneState> | ((prev: UseWebphoneState) => Partial<UseWebphoneState>)) => {
+    setState((prev) => {
+      const nextPatch = typeof patch === 'function' ? patch(prev) : patch;
+      const next = { ...prev, ...nextPatch };
+      if (nextPatch.regStatus) regStatusRef.current = nextPatch.regStatus;
+      return next;
+    });
+  }, []);
 
   // Ensure a single global <audio> element to play remote stream
   useEffect(() => {
@@ -74,9 +91,35 @@ export function useWebphoneSIP() {
   const startTimer = () => {
     stopTimer();
     timerRef.current = window.setInterval(() => {
-      setState((s) => ({ ...s, duration: s.duration + 1 }));
+      patchState((s) => ({ duration: s.duration + 1 }));
     }, 1000);
   };
+
+  const ensureMicrophoneAccess = useCallback(async () => {
+    if (!navigator.mediaDevices?.getUserMedia) {
+      throw new Error('Microfone indisponível neste navegador.');
+    }
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true,
+        },
+        video: false,
+      });
+      stream.getTracks().forEach((track) => track.stop());
+    } catch (e: any) {
+      const name = e?.name || '';
+      if (name === 'NotFoundError' || /device not found/i.test(String(e?.message || ''))) {
+        throw new Error('Nenhum microfone encontrado. Conecte um headset/microfone ou habilite o dispositivo de áudio do Windows.');
+      }
+      if (name === 'NotAllowedError' || name === 'PermissionDeniedError') {
+        throw new Error('Permissão de microfone negada. Clique no cadeado do navegador e permita o microfone.');
+      }
+      throw new Error(e?.message || 'Não foi possível acessar o microfone.');
+    }
+  }, []);
 
   const attachRemoteStream = useCallback((session: any) => {
     try {
@@ -102,27 +145,35 @@ export function useWebphoneSIP() {
   const wireSession = useCallback((session: any, direction: 'in' | 'out') => {
     sessionRef.current = session;
 
-    session.on('progress', () => {
-      setState((s) => ({ ...s, callState: direction === 'out' ? 'outgoing' : 'ringing' }));
+    session.on('progress', (e: any) => {
+      const response = e?.response;
+      const isRinging = response?.status_code === 180 || response?.status_code === 183;
+      patchState({
+        callState: direction === 'out'
+          ? (isRinging ? 'ringing' : 'outgoing')
+          : 'ringing',
+        callError: null,
+      });
     });
     session.on('accepted', () => {
-      setState((s) => ({ ...s, callState: 'active' }));
+      patchState({ callState: 'active', callError: null });
       startTimer();
     });
     session.on('confirmed', () => {
-      setState((s) => ({ ...s, callState: 'active' }));
+      patchState({ callState: 'active', callError: null });
       startTimer();
       attachRemoteStream(session);
     });
     session.on('ended', () => {
       stopTimer();
-      setState((s) => ({ ...s, callState: 'ended' }));
+      patchState({ callState: 'ended', callError: null });
       sessionRef.current = null;
     });
     session.on('failed', (e: any) => {
       stopTimer();
-      console.warn('[Webphone] session failed', e?.cause);
-      setState((s) => ({ ...s, callState: 'ended' }));
+      const cause = e?.cause || 'Falha na ligação SIP';
+      console.warn('[Webphone] session failed', cause, e?.message);
+      patchState({ callState: 'failed', callError: String(cause) });
       sessionRef.current = null;
     });
     session.on('peerconnection', () => attachRemoteStream(session));
@@ -134,7 +185,7 @@ export function useWebphoneSIP() {
       uaRef.current = null;
     }
     cfgRef.current = cfg;
-    setState((s) => ({ ...s, regStatus: 'connecting', regError: null }));
+    patchState({ regStatus: 'connecting', regError: null });
 
     try {
       const socket = new JsSIP.WebSocketInterface(cfg.sip_ws_uri);
@@ -148,14 +199,14 @@ export function useWebphoneSIP() {
         register: true,
       });
 
-      ua.on('connecting', () => setState((s) => ({ ...s, regStatus: 'connecting' })));
-      ua.on('connected', () => setState((s) => ({ ...s, regStatus: 'connecting' })));
-      ua.on('disconnected', () => setState((s) => ({ ...s, regStatus: 'unregistered' })));
-      ua.on('registered', () => setState((s) => ({ ...s, regStatus: 'registered', regError: null })));
-      ua.on('unregistered', () => setState((s) => ({ ...s, regStatus: 'unregistered' })));
+      ua.on('connecting', () => patchState({ regStatus: 'connecting' }));
+      ua.on('connected', () => patchState({ regStatus: 'connecting' }));
+      ua.on('disconnected', () => patchState({ regStatus: 'unregistered' }));
+      ua.on('registered', () => patchState({ regStatus: 'registered', regError: null }));
+      ua.on('unregistered', () => patchState({ regStatus: 'unregistered' }));
       ua.on('registrationFailed', (e: any) => {
         console.error('[Webphone] registrationFailed', e);
-        setState((s) => ({ ...s, regStatus: 'error', regError: e?.cause || 'Falha no registro SIP' }));
+        patchState({ regStatus: 'error', regError: e?.cause || 'Falha no registro SIP' });
       });
 
       ua.on('newRTCSession', (data: any) => {
@@ -165,15 +216,15 @@ export function useWebphoneSIP() {
           const fromUri = request?.from?.uri;
           const remoteNumber = fromUri?.user || '';
           const remoteName = request?.from?.display_name || remoteNumber;
-          setState((s) => ({
-            ...s,
+          patchState({
             callState: 'incoming',
+            callError: null,
             remoteNumber,
             remoteName,
             duration: 0,
             muted: false,
             direction: 'in',
-          }));
+          });
           wireSession(session, 'in');
         } else {
           // Outgoing - already wired in call()
@@ -184,18 +235,20 @@ export function useWebphoneSIP() {
       uaRef.current = ua;
     } catch (err: any) {
       console.error('[Webphone] register error', err);
-      setState((s) => ({ ...s, regStatus: 'error', regError: err?.message || 'Erro ao iniciar SIP' }));
+      patchState({ regStatus: 'error', regError: err?.message || 'Erro ao iniciar SIP' });
     }
-  }, [wireSession]);
+  }, [patchState, wireSession]);
 
   const unregister = useCallback(() => {
     try { uaRef.current?.stop(); } catch {}
     uaRef.current = null;
     stopTimer();
+    regStatusRef.current = 'idle';
     setState({
       regStatus: 'idle',
       regError: null,
       callState: 'idle',
+      callError: null,
       remoteNumber: '',
       remoteName: '',
       duration: 0,
@@ -204,38 +257,52 @@ export function useWebphoneSIP() {
     });
   }, []);
 
-  const call = useCallback((rawNumber: string, displayName?: string) => {
+  const call = useCallback(async (rawNumber: string, displayName?: string) => {
     const ua = uaRef.current;
     const cfg = cfgRef.current;
     if (!ua || !cfg) throw new Error('Webphone não registrado');
-    if (state.regStatus !== 'registered') throw new Error('SIP não registrado. Aguarde o status "Conectado".');
+    if (regStatusRef.current !== 'registered') {
+      throw new Error('SIP não registrado. Aguarde o status "Conectado".');
+    }
 
     const digits = sanitizeNumber(rawNumber);
+    if (digits.length < 10 || digits.length > 11) {
+      throw new Error('Número inválido. Use DDD + número do contato.');
+    }
+
+    if (sessionRef.current) {
+      try { sessionRef.current.terminate(); } catch {}
+      sessionRef.current = null;
+    }
+
+    await ensureMicrophoneAccess();
+
     const target = `sip:${digits}@${cfg.sip_domain}`;
-    setState((s) => ({
-      ...s,
+    patchState({
       callState: 'outgoing',
+      callError: null,
       remoteNumber: digits,
       remoteName: displayName || digits,
       duration: 0,
       muted: false,
       direction: 'out',
-    }));
+    });
 
     const session = ua.call(target, {
       mediaConstraints: { audio: true, video: false },
       rtcOfferConstraints: { offerToReceiveAudio: true, offerToReceiveVideo: false },
-      pcConfig: { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] },
+      pcConfig: { iceServers: ICE_SERVERS },
     });
+    if (!session) throw new Error('Não foi possível iniciar a sessão SIP.');
     wireSession(session, 'out');
-  }, [state.regStatus, wireSession]);
+  }, [ensureMicrophoneAccess, patchState, wireSession]);
 
   const answer = useCallback(() => {
     const session = sessionRef.current;
     if (!session) return;
     session.answer({
       mediaConstraints: { audio: true, video: false },
-      pcConfig: { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] },
+      pcConfig: { iceServers: ICE_SERVERS },
     });
   }, []);
 
@@ -259,24 +326,26 @@ export function useWebphoneSIP() {
         nextMuted = !sender.track.enabled;
       }
     });
-    setState((s) => ({ ...s, muted: nextMuted }));
-  }, []);
+    patchState({ muted: nextMuted });
+  }, [patchState]);
 
   const resetCall = useCallback(() => {
-    setState((s) => ({
-      ...s,
+    patchState({
       callState: 'idle',
+      callError: null,
       remoteNumber: '',
       remoteName: '',
       duration: 0,
       muted: false,
       direction: null,
-    }));
-  }, []);
+    });
+  }, [patchState]);
+
+  const isRegistered = useCallback(() => regStatusRef.current === 'registered', []);
 
   // Log call to history when ended
   useEffect(() => {
-    if (state.callState !== 'ended') return;
+    if (!['ended', 'failed'].includes(state.callState)) return;
     const direction = state.direction;
     const duration = state.duration;
     const phone = state.remoteNumber;
@@ -323,5 +392,6 @@ export function useWebphoneSIP() {
     hangup,
     toggleMute,
     resetCall,
+    isRegistered,
   };
 }

@@ -1,4 +1,5 @@
 import { type CSSProperties, useCallback, useEffect, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import NvoipAccountPanel from "@/components/discador/NvoipAccountPanel";
@@ -17,7 +18,72 @@ interface CallCenterLead {
   source: string | null;
   tags: string[] | null;
   value: number | null;
+  coldCallState?: ColdCallState | null;
 }
+
+type AttemptType =
+  | "primeiro_contato" | "nao_atendeu" | "caixa_postal" | "ocupado"
+  | "numero_invalido" | "follow_up" | "whatsapp_enviado" | "retornar_depois";
+
+type Outcome =
+  | "pendente" | "prospectado" | "sem_resposta" | "oportunidade"
+  | "agendamento" | "follow_up" | "ganho" | "descartado";
+
+interface ColdCallAttempt {
+  at: string;
+  type: AttemptType;
+  user_id?: string | null;
+  user_name?: string | null;
+}
+
+interface ColdCallState {
+  attempts: ColdCallAttempt[];
+  outcome: Outcome | string | null;
+}
+
+type HunterStage =
+  | "novo"
+  | "tentativa_contato"
+  | "follow_up"
+  | "contato_realizado"
+  | "buscando_decisor"
+  | "conversa_decisor"
+  | "oportunidade"
+  | "descartado";
+
+interface PipelineItem {
+  id: string;
+  lead_id: string | null;
+  stage: HunterStage;
+  substatus: string | null;
+  attempts: number;
+  last_action_at: string | null;
+  lead_name: string | null;
+  lead_phone: string | null;
+  lead_company: string | null;
+}
+
+const ATTEMPT_LABELS: Record<AttemptType, string> = {
+  primeiro_contato: "Primeiro contato",
+  nao_atendeu: "Não atendeu",
+  caixa_postal: "Caixa postal",
+  ocupado: "Ocupado",
+  numero_invalido: "Número inválido",
+  follow_up: "Follow-up",
+  whatsapp_enviado: "WhatsApp enviado",
+  retornar_depois: "Retornar depois",
+};
+
+const OUTCOME_LABELS: Record<Outcome, string> = {
+  pendente: "Pendente",
+  prospectado: "Prospectado",
+  sem_resposta: "Sem resposta",
+  oportunidade: "Oportunidade",
+  agendamento: "Retornar / Responsável",
+  follow_up: "Follow-up",
+  ganho: "Ganho",
+  descartado: "Descartado",
+};
 
 const nvoipDialogTheme = {
   "--background": "225 28% 7%",
@@ -50,16 +116,379 @@ function normalizePhoneForNvoip(raw: string): string {
   return digits;
 }
 
+function formatRoleLabel(role: string | null | undefined): string {
+  if (!role) return "";
+  const map: Record<string, string> = {
+    admin: "Administrador",
+    manager: "Gestor",
+    gestor: "Gestor",
+    user: "Usuário",
+    sdr: "SDR",
+    hunter: "Hunter SDR",
+    vendedor: "Vendedor",
+    owner: "Proprietário",
+  };
+  return map[role.toLowerCase()] || role;
+}
+
 const CallCenterPreview = () => {
+  const navigate = useNavigate();
   const iframeRef = useRef<HTMLIFrameElement>(null);
+  const companyIdRef = useRef<string | null>(null);
   const apiCallRef = useRef<ApiCallRef>({ callId: null, recordId: null, startedAt: null });
+  const prevCallStateRef = useRef<string>("idle");
   const [nvoipOpen, setNvoipOpen] = useState(false);
   const [dialerOpen, setDialerOpen] = useState(false);
   const [dialerNumber, setDialerNumber] = useState("");
+  const [callSessionOpen, setCallSessionOpen] = useState(false);
   const webphone = useWebphone();
-  const webphoneCallOpen = ["outgoing", "ringing", "active"].includes(webphone.callState);
-  const webphoneReady = webphone.mode === "webphone" && webphone.configured && webphone.regStatus === "registered";
+  const webphoneRef = useRef(webphone);
+  webphoneRef.current = webphone;
+
+  const webphoneReady = webphone.isWebphoneReady();
+  const webphoneCallOpen = callSessionOpen;
   const webphoneStatusLabel = webphoneReady ? "Pronto" : webphone.regStatus === "connecting" ? "Conectando" : "Offline";
+
+  const notifyCallEnded = useCallback(() => {
+    iframeRef.current?.contentWindow?.postMessage({ type: "call-center-call-ended" }, "*");
+  }, []);
+
+  const postRegistrationResult = useCallback((payload: Record<string, unknown>) => {
+    iframeRef.current?.contentWindow?.postMessage({ type: "call-center-registration-result", ...payload }, "*");
+  }, []);
+
+  const postPipelineData = useCallback((items: PipelineItem[]) => {
+    iframeRef.current?.contentWindow?.postMessage({ type: "call-center-pipeline-data", items }, "*");
+  }, []);
+
+  const postPipelineMoveResult = useCallback((payload: Record<string, unknown>) => {
+    iframeRef.current?.contentWindow?.postMessage({ type: "call-center-pipeline-move-result", ...payload }, "*");
+  }, []);
+
+  const loadHunterPipeline = useCallback(async (companyId: string): Promise<PipelineItem[]> => {
+    const all: PipelineItem[] = [];
+    const PAGE = 500;
+    let from = 0;
+
+    while (true) {
+      const { data, error } = await supabase
+        .from("hunter_pipeline_leads" as any)
+        .select("id, lead_id, stage, substatus, attempts, last_action_at, lead:lead_id(name, phone, company)")
+        .eq("company_id", companyId)
+        .order("updated_at", { ascending: false })
+        .range(from, from + PAGE - 1);
+
+      if (error) throw error;
+      if (!data?.length) break;
+
+      data.forEach((row: any) => {
+        all.push({
+          id: row.id,
+          lead_id: row.lead_id,
+          stage: row.stage,
+          substatus: row.substatus,
+          attempts: row.attempts ?? 0,
+          last_action_at: row.last_action_at,
+          lead_name: row.lead?.name ?? null,
+          lead_phone: row.lead?.phone ?? null,
+          lead_company: row.lead?.company ?? null,
+        });
+      });
+
+      if (data.length < PAGE) break;
+      from += PAGE;
+    }
+
+    return all;
+  }, []);
+
+  const syncPipelineLeads = useCallback(async (companyId: string) => {
+    const existing = await loadHunterPipeline(companyId);
+    const existingIds = new Set(existing.map((item) => item.lead_id).filter(Boolean));
+
+    const { data: candidates, error } = await supabase
+      .from("leads")
+      .select("id")
+      .eq("company_id", companyId)
+      .not("phone", "is", null)
+      .limit(300);
+
+    if (error) throw error;
+
+    const toImport = (candidates || []).filter((lead: any) => !existingIds.has(lead.id));
+    if (!toImport.length) return existing;
+
+    const { data: { user } } = await supabase.auth.getUser();
+    const rows = toImport.map((lead: any) => ({
+      company_id: companyId,
+      lead_id: lead.id,
+      assigned_to: user?.id ?? null,
+      stage: "novo" as HunterStage,
+    }));
+
+    const { error: upsertError } = await supabase
+      .from("hunter_pipeline_leads" as any)
+      .upsert(rows, { onConflict: "company_id,lead_id", ignoreDuplicates: true });
+
+    if (upsertError) throw upsertError;
+    return loadHunterPipeline(companyId);
+  }, [loadHunterPipeline]);
+
+  const sendPipelineData = useCallback(async (sync = false) => {
+    const companyId = companyIdRef.current;
+    if (!companyId) return;
+
+    try {
+      const items = sync ? await syncPipelineLeads(companyId) : await loadHunterPipeline(companyId);
+      postPipelineData(items);
+      if (sync) {
+        toast.success(items.length ? `${items.length} lead(s) no pipeline` : "Pipeline atualizado");
+      }
+    } catch (error: any) {
+      console.error("Erro ao carregar pipeline:", error);
+      toast.error(error?.message || "Erro ao carregar pipeline");
+      postPipelineData([]);
+    }
+  }, [loadHunterPipeline, postPipelineData, syncPipelineLeads]);
+
+  const movePipelineStage = useCallback(async (pipelineId: string, toStage: HunterStage) => {
+    const { data: current, error: fetchError } = await supabase
+      .from("hunter_pipeline_leads" as any)
+      .select("id, company_id, stage")
+      .eq("id", pipelineId)
+      .maybeSingle();
+
+    if (fetchError) throw fetchError;
+    if (!current) throw new Error("Lead do pipeline não encontrado");
+
+    const fromStage = (current as any).stage as HunterStage;
+    if (fromStage === toStage) return;
+
+    const { error } = await supabase
+      .from("hunter_pipeline_leads" as any)
+      .update({
+        stage: toStage,
+        last_action_at: new Date().toISOString(),
+      })
+      .eq("id", pipelineId);
+
+    if (error) throw error;
+
+    const { data: { user } } = await supabase.auth.getUser();
+    let eventType = "stage_moved";
+    if (toStage === "contato_realizado") eventType = "contact_made";
+    else if (toStage === "conversa_decisor") eventType = "reached_decisor";
+    else if (toStage === "oportunidade") eventType = "opportunity";
+
+    await supabase.from("hunter_pipeline_events" as any).insert({
+      company_id: (current as any).company_id,
+      lead_pipeline_id: pipelineId,
+      user_id: user?.id ?? null,
+      event_type: eventType,
+      from_stage: fromStage,
+      to_stage: toStage,
+      payload: {},
+    });
+  }, []);
+
+  const resolveRowKey = useCallback(async (companyId: string, leadId: string) => {
+    const { data } = await supabase
+      .from("pre_sdr_analyses" as any)
+      .select("row_key")
+      .eq("company_id", companyId)
+      .eq("lead_id", leadId)
+      .order("last_attempt_at", { ascending: false, nullsFirst: false })
+      .order("updated_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    return (data as any)?.row_key || `lead:${leadId}`;
+  }, []);
+
+  const ensureColdCallRow = useCallback(async (
+    companyId: string,
+    userId: string,
+    leadId: string,
+    leadName: string,
+    phone: string,
+    rowKey: string,
+  ) => {
+    await supabase.from("pre_sdr_analyses" as any).upsert({
+      company_id: companyId,
+      row_key: rowKey,
+      empresa_nome: leadName || null,
+      telefone: phone || null,
+      raw_row: { lead_id: leadId, name: leadName, telefone: phone },
+      lead_id: leadId,
+      status: "done",
+      user_id: userId,
+    } as any, { onConflict: "company_id,row_key" });
+  }, []);
+
+  const loadColdCallStates = useCallback(async (companyId: string, leadIds: string[]) => {
+    const map = new Map<string, ColdCallState>();
+    if (!leadIds.length) return map;
+
+    const chunkSize = 200;
+    for (let i = 0; i < leadIds.length; i += chunkSize) {
+      const chunk = leadIds.slice(i, i + chunkSize);
+      const { data, error } = await supabase
+        .from("pre_sdr_analyses" as any)
+        .select("lead_id, attempts, outcome")
+        .eq("company_id", companyId)
+        .in("lead_id", chunk);
+
+      if (error) {
+        console.error("Erro ao carregar tentativas do Call Center:", error);
+        continue;
+      }
+
+      (data || []).forEach((row: any) => {
+        if (!row.lead_id) return;
+        const attempts = Array.isArray(row.attempts) ? row.attempts : [];
+        const existing = map.get(row.lead_id);
+        if (!existing || attempts.length >= existing.attempts.length) {
+          map.set(row.lead_id, {
+            attempts,
+            outcome: row.outcome || "pendente",
+          });
+        }
+      });
+    }
+
+    return map;
+  }, []);
+
+  const registerAttempt = useCallback(async (
+    leadId: string,
+    attemptType: AttemptType,
+    leadName?: string,
+    phone?: string,
+  ) => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error("Usuário não autenticado.");
+
+    const { data: role } = await supabase
+      .from("user_roles")
+      .select("company_id")
+      .eq("user_id", user.id)
+      .maybeSingle();
+    if (!role?.company_id) throw new Error("Empresa não encontrada.");
+
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("full_name")
+      .eq("id", user.id)
+      .maybeSingle();
+
+    const rowKey = await resolveRowKey(role.company_id, leadId);
+    await ensureColdCallRow(
+      role.company_id,
+      user.id,
+      leadId,
+      leadName || "Contato",
+      phone || "",
+      rowKey,
+    );
+
+    const { data: current } = await supabase
+      .from("pre_sdr_analyses" as any)
+      .select("attempts")
+      .eq("company_id", role.company_id)
+      .eq("row_key", rowKey)
+      .maybeSingle();
+
+    const attempts = Array.isArray((current as any)?.attempts) ? (current as any).attempts : [];
+    const at = new Date().toISOString();
+    const nextAttempt: ColdCallAttempt = {
+      at,
+      type: attemptType,
+      user_id: user.id,
+      user_name: (profile as any)?.full_name || user.email?.split("@")[0] || "Usuário",
+    };
+    const newAttempts = [...attempts, nextAttempt];
+
+    const { error } = await supabase
+      .from("pre_sdr_analyses" as any)
+      .update({
+        attempts: newAttempts,
+        attempts_count: newAttempts.length,
+        last_attempt_at: at,
+      } as any)
+      .eq("company_id", role.company_id)
+      .eq("row_key", rowKey);
+
+    if (error) throw error;
+
+    const { data: rowAfter } = await supabase
+      .from("pre_sdr_analyses" as any)
+      .select("attempts, outcome")
+      .eq("company_id", role.company_id)
+      .eq("row_key", rowKey)
+      .maybeSingle();
+
+    return {
+      attempts: Array.isArray((rowAfter as any)?.attempts) ? (rowAfter as any).attempts : newAttempts,
+      outcome: ((rowAfter as any)?.outcome as Outcome) || "pendente",
+      label: ATTEMPT_LABELS[attemptType],
+    };
+  }, [ensureColdCallRow, resolveRowKey]);
+
+  const registerOutcome = useCallback(async (
+    leadId: string,
+    outcome: Outcome,
+    leadName?: string,
+    phone?: string,
+  ) => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error("Usuário não autenticado.");
+
+    const { data: role } = await supabase
+      .from("user_roles")
+      .select("company_id")
+      .eq("user_id", user.id)
+      .maybeSingle();
+    if (!role?.company_id) throw new Error("Empresa não encontrada.");
+
+    const rowKey = await resolveRowKey(role.company_id, leadId);
+    await ensureColdCallRow(
+      role.company_id,
+      user.id,
+      leadId,
+      leadName || "Contato",
+      phone || "",
+      rowKey,
+    );
+
+    const { error } = await supabase
+      .from("pre_sdr_analyses" as any)
+      .update({
+        outcome,
+        outcome_at: new Date().toISOString(),
+      } as any)
+      .eq("company_id", role.company_id)
+      .eq("row_key", rowKey);
+
+    if (error) throw error;
+
+    const { data: rowAfter } = await supabase
+      .from("pre_sdr_analyses" as any)
+      .select("attempts, outcome")
+      .eq("company_id", role.company_id)
+      .eq("row_key", rowKey)
+      .maybeSingle();
+
+    return {
+      attempts: Array.isArray((rowAfter as any)?.attempts) ? (rowAfter as any).attempts : [],
+      outcome,
+      label: OUTCOME_LABELS[outcome],
+    };
+  }, [ensureColdCallRow, resolveRowKey]);
+
+  const closeCallSession = useCallback(() => {
+    setCallSessionOpen(false);
+    webphoneRef.current.resetCall();
+    notifyCallEnded();
+  }, [notifyCallEnded]);
 
   const sendLeads = useCallback(async () => {
     const iframe = iframeRef.current;
@@ -70,26 +499,63 @@ const CallCenterPreview = () => {
 
     const { data: role } = await supabase
       .from("user_roles")
-      .select("company_id")
+      .select("company_id, role")
       .eq("user_id", user.id)
       .maybeSingle();
 
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("full_name, avatar_url, role")
+      .eq("id", user.id)
+      .maybeSingle();
+
+    const roleKey = role?.role || profile?.role || null;
+    iframe.contentWindow.postMessage({
+      type: "call-center-user",
+      user: {
+        name: profile?.full_name || user.email || "Usuário",
+        avatarUrl: profile?.avatar_url || null,
+        role: roleKey,
+        roleLabel: formatRoleLabel(roleKey),
+      },
+    }, "*");
+
     if (!role?.company_id) return;
+    companyIdRef.current = role.company_id;
 
-    const { data, error } = await supabase
-      .from("leads")
-      .select("id, name, phone, telefone, email, stage, source, tags, value")
-      .eq("company_id", role.company_id)
-      .order("name", { ascending: true });
+    const pageSize = 1000;
+    let from = 0;
+    const allLeads: CallCenterLead[] = [];
 
-    if (error) {
-      console.error("Erro ao carregar contatos do Call Center:", error);
-      return;
+    while (true) {
+      const { data, error } = await supabase
+        .from("leads")
+        .select("id, name, phone, telefone, email, stage, source, tags, value")
+        .eq("company_id", role.company_id)
+        .order("name", { ascending: true })
+        .range(from, from + pageSize - 1);
+
+      if (error) {
+        console.error("Erro ao carregar contatos do Call Center:", error);
+        return;
+      }
+
+      if (!data?.length) break;
+      allLeads.push(...(data as CallCenterLead[]));
+      if (data.length < pageSize) break;
+      from += pageSize;
     }
 
-    const leads = ((data || []) as CallCenterLead[]).filter((lead) => lead.phone || lead.telefone);
-    iframe.contentWindow.postMessage({ type: "call-center-leads", leads }, "*");
-  }, []);
+    const leads = allLeads.filter((lead) => lead.phone || lead.telefone);
+    const leadIds = leads.map((lead) => lead.id);
+    const coldCallMap = await loadColdCallStates(role.company_id, leadIds);
+    const leadsWithState = leads.map((lead) => ({
+      ...lead,
+      coldCallState: coldCallMap.get(lead.id) || { attempts: [], outcome: "pendente" },
+    }));
+
+    iframe.contentWindow.postMessage({ type: "call-center-leads", leads: leadsWithState }, "*");
+  }, [loadColdCallStates]);
 
   const startNvoipApiCall = useCallback(async (rawNumber: string, leadName: string, leadId?: string | null) => {
     const cleanPhone = normalizePhoneForNvoip(rawNumber);
@@ -147,6 +613,28 @@ const CallCenterPreview = () => {
     toast.success("Ligacao iniciada pela Nvoip.");
   }, []);
 
+  const placeCall = useCallback(async (rawNumber: string, leadName: string, leadId?: string | null) => {
+    const wp = webphoneRef.current;
+    const cleanPhone = normalizePhoneForNvoip(rawNumber);
+    if (cleanPhone.length < 10 || cleanPhone.length > 11) {
+      throw new Error("Numero invalido para ligacao. Use DDD + numero do contato.");
+    }
+
+    if (!wp.isWebphoneReady()) {
+      await wp.reload(wp.regStatus === "error");
+      const registered = await wp.waitUntilRegistered();
+      if (registered) {
+        await wp.call(cleanPhone, leadName);
+        return "webphone" as const;
+      }
+      await startNvoipApiCall(cleanPhone, leadName, leadId || null);
+      return "api" as const;
+    }
+
+    await wp.call(cleanPhone, leadName);
+    return "webphone" as const;
+  }, [startNvoipApiCall]);
+
   const finishNvoipApiCall = useCallback(async () => {
     const current = apiCallRef.current;
     apiCallRef.current = { callId: null, recordId: null, startedAt: null };
@@ -180,6 +668,10 @@ const CallCenterPreview = () => {
   useEffect(() => {
     const onMsg = async (event: MessageEvent) => {
       if (event.data?.type === "call-center-ready") sendLeads();
+      if (event.data?.type === "call-center-navigate") {
+        const path = event.data?.path;
+        if (typeof path === "string" && path.startsWith("/")) navigate(path);
+      }
       if (event.data?.type === "call-center-open-nvoip") setNvoipOpen(true);
       if (event.data?.type === "call-center-open-dialer") setDialerOpen(true);
       if (event.data?.type === "call-center-start-call") {
@@ -189,15 +681,8 @@ const CallCenterPreview = () => {
         let ok = false;
 
         try {
-          if (!webphoneReady && (webphone.mode !== "webphone" || !webphone.configured || webphone.regStatus === "error")) {
-            await webphone.reload(webphone.regStatus === "error");
-          }
-
-          if (webphoneReady) {
-            webphone.call(number, name);
-          } else {
-            await startNvoipApiCall(number, name, leadId || null);
-          }
+          const mode = await placeCall(number, name, leadId || null);
+          if (mode === "webphone") setCallSessionOpen(true);
           ok = true;
         } catch (error: any) {
           const message = error?.message || "Nao foi possivel iniciar a ligacao pela Nvoip.";
@@ -215,13 +700,74 @@ const CallCenterPreview = () => {
         }, "*");
       }
       if (event.data?.type === "call-center-end-call") {
-        webphone.hangup();
+        webphoneRef.current.hangup();
         await finishNvoipApiCall();
+        closeCallSession();
+      }
+      if (event.data?.type === "call-center-register-attempt") {
+        const { leadId, leadName, phone, key } = event.data;
+        if (!leadId || !key) return;
+        try {
+          const result = await registerAttempt(String(leadId), key as AttemptType, String(leadName || ""), String(phone || ""));
+          toast.success(`Tentativa registrada: ${result.label}`, {
+            description: `Total: ${result.attempts.length}`,
+          });
+          postRegistrationResult({
+            ok: true,
+            leadId,
+            kind: "attempt",
+            label: result.label,
+            attempts: result.attempts,
+            outcome: result.outcome,
+          });
+        } catch (error: any) {
+          const message = error?.message || "Não foi possível registrar a tentativa.";
+          toast.error(message);
+          postRegistrationResult({ ok: false, leadId, error: message });
+        }
+      }
+      if (event.data?.type === "call-center-register-outcome") {
+        const { leadId, leadName, phone, key } = event.data;
+        if (!leadId || !key) return;
+        try {
+          const result = await registerOutcome(String(leadId), key as Outcome, String(leadName || ""), String(phone || ""));
+          toast.success(`Resultado salvo: ${result.label}`);
+          postRegistrationResult({
+            ok: true,
+            leadId,
+            kind: "outcome",
+            label: result.label,
+            attempts: result.attempts,
+            outcome: result.outcome,
+          });
+        } catch (error: any) {
+          const message = error?.message || "Não foi possível salvar o resultado.";
+          toast.error(message);
+          postRegistrationResult({ ok: false, leadId, error: message });
+        }
+      }
+      if (event.data?.type === "call-center-pipeline-request") {
+        await sendPipelineData(false);
+      }
+      if (event.data?.type === "call-center-pipeline-sync") {
+        await sendPipelineData(true);
+      }
+      if (event.data?.type === "call-center-pipeline-move") {
+        const { pipelineId, toStage } = event.data;
+        if (!pipelineId || !toStage) return;
+        try {
+          await movePipelineStage(String(pipelineId), toStage as HunterStage);
+          toast.success("Lead movido no pipeline");
+          postPipelineMoveResult({ ok: true, pipelineId, toStage });
+        } catch (error: any) {
+          const message = error?.message || "Não foi possível mover o lead.";
+          toast.error(message);
+          postPipelineMoveResult({ ok: false, pipelineId, error: message });
+        }
       }
     };
 
     window.addEventListener("message", onMsg);
-    sendLeads();
 
     const iframe = iframeRef.current;
     iframe?.addEventListener("load", sendLeads);
@@ -229,12 +775,30 @@ const CallCenterPreview = () => {
       window.removeEventListener("message", onMsg);
       iframe?.removeEventListener("load", sendLeads);
     };
-  }, [finishNvoipApiCall, sendLeads, startNvoipApiCall, webphone, webphoneReady]);
+  }, [closeCallSession, finishNvoipApiCall, movePipelineStage, navigate, placeCall, postPipelineMoveResult, postRegistrationResult, registerAttempt, registerOutcome, sendLeads, sendPipelineData]);
+
   useEffect(() => {
-    if (webphone.callState === "ended" || webphone.callState === "idle") {
-      iframeRef.current?.contentWindow?.postMessage({ type: "call-center-call-ended" }, "*");
+    sendLeads();
+  }, [sendLeads]);
+
+  useEffect(() => {
+    const prev = prevCallStateRef.current;
+    prevCallStateRef.current = webphone.callState;
+    const wasLive = ["outgoing", "ringing", "active", "incoming"].includes(prev);
+    const endedNow = ["ended", "failed"].includes(webphone.callState);
+
+    if (!callSessionOpen || !wasLive || !endedNow) return;
+
+    if (webphone.callState === "failed") {
+      toast.error(webphone.callError || "Ligacao encerrada antes de conectar. Verifique microfone e credenciais SIP.");
     }
-  }, [webphone.callState]);
+
+    const delay = webphone.duration > 0 ? 400 : 1800;
+    const timer = window.setTimeout(() => {
+      closeCallSession();
+    }, delay);
+    return () => window.clearTimeout(timer);
+  }, [callSessionOpen, closeCallSession, webphone.callError, webphone.callState, webphone.duration]);
 
   const formatDuration = (seconds: number) => {
     const minutes = Math.floor(seconds / 60).toString().padStart(2, "0");
@@ -243,8 +807,12 @@ const CallCenterPreview = () => {
   };
 
   const webphoneStatusText = (() => {
+    if (webphone.callState === "failed") {
+      return webphone.callError ? `Falha: ${webphone.callError}` : "Falha na ligação";
+    }
     if (webphone.callState === "active") return `Conectado - ${formatDuration(webphone.duration)}`;
     if (webphone.callState === "ringing" || webphone.callState === "outgoing") return "☎ Tocando...";
+    if (webphone.callState === "ended") return "Ligação encerrada";
     return "☎ Chamando...";
   })();
 
@@ -256,15 +824,8 @@ const CallCenterPreview = () => {
     }
 
     try {
-      if (!webphoneReady && (webphone.mode !== "webphone" || !webphone.configured || webphone.regStatus === "error")) {
-        await webphone.reload(webphone.regStatus === "error");
-      }
-
-      if (webphoneReady) {
-        webphone.call(number, number);
-      } else {
-        await startNvoipApiCall(number, number, null);
-      }
+      const mode = await placeCall(number, number, null);
+      if (mode === "webphone") setCallSessionOpen(true);
       setDialerOpen(false);
     } catch (error: any) {
       const message = error?.message || "Nao foi possivel iniciar a ligacao pela Nvoip.";
@@ -403,18 +964,28 @@ const CallCenterPreview = () => {
               <div className="hidden text-sm font-medium text-blue-300">
                 {webphone.callState === "active" && `Conectado · ${formatDuration(webphone.duration)}`}
               </div>
-              <div className="text-sm font-medium text-blue-300">{webphoneStatusText}</div>
+              <div className={`text-sm font-medium ${webphone.callState === "failed" ? "text-red-400" : "text-blue-300"}`}>
+                {webphoneStatusText}
+              </div>
             </div>
             <div className="grid w-full grid-cols-2 gap-2 pt-1">
               <Button
                 variant={webphone.muted ? "default" : "outline"}
                 className="h-9 border-slate-600 bg-transparent text-slate-50 hover:bg-slate-800"
                 onClick={() => webphone.toggleMute()}
+                disabled={webphone.callState !== "active"}
               >
                 {webphone.muted ? <MicOff className="mr-2 h-4 w-4" /> : <Mic className="mr-2 h-4 w-4" />}
                 {webphone.muted ? "Silenciado" : "Microfone"}
               </Button>
-              <Button className="h-9 bg-red-600 text-white hover:bg-red-700" onClick={() => webphone.hangup()}>
+              <Button
+                className="h-9 bg-red-600 text-white hover:bg-red-700"
+                onClick={() => {
+                  webphone.hangup();
+                  finishNvoipApiCall();
+                  closeCallSession();
+                }}
+              >
                 <PhoneOff className="mr-2 h-4 w-4" />
                 Encerrar
               </Button>

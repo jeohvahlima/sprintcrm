@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Cold Call — GrowSOS Call Center Inteligente</title>
+<title>Call Center</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
@@ -44,6 +44,8 @@ code { font-family: 'JetBrains Mono', monospace; font-size: 11px; }
 .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
 .topbar { height: 52px; background: var(--bg2); border-bottom: 1px solid var(--border); display: flex; align-items: center; padding: 0 16px; gap: 12px; flex-shrink: 0; }
 .content { flex: 1; overflow-y: auto; display: flex; gap: 0; }
+#tab-rotina, #tab-scripts, #tab-kanban { flex: 1; flex-direction: column; min-width: 0; min-height: 0; background: #0b0d11; }
+#rotinaEmbedFrame, #scriptsEmbedFrame, #kanbanEmbedFrame { flex: 1; width: 100%; border: 0; min-height: calc(100vh - 56px); background: #0b0d11; }
 .left-panel { flex: 1; padding: 16px; display: flex; flex-direction: column; gap: 12px; min-width: 0; }
 .right-panel { width: 320px; background: var(--bg2); border-left: 1px solid var(--border); display: flex; flex-direction: column; flex-shrink: 0; overflow-y: auto; }
 
@@ -171,8 +173,18 @@ code { font-family: 'JetBrains Mono', monospace; font-size: 11px; }
 .reg-section { font-size: 10px; font-weight: 600; color: var(--text3); text-transform: uppercase; letter-spacing: 0.06em; padding: 4px 8px 2px; }
 .reg-item { display: flex; align-items: center; gap: 8px; padding: 7px 8px; border-radius: var(--radius-sm); cursor: pointer; color: var(--text2); font-size: 12px; transition: all 0.1s; }
 .reg-item:hover { background: var(--bg4); color: var(--text); }
+.reg-item.reg-busy { opacity: 0.5; pointer-events: none; }
 .reg-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
 .rel-drop { position: relative; }
+.lead-reg-meta { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; margin-top: 4px; }
+.lead-attempt-badge { font-size: 10px; padding: 1px 6px; border-radius: 20px; border: 1px solid var(--border2); color: var(--text2); background: var(--bg3); }
+.lead-outcome-tag { font-size: 10px; padding: 1px 6px; border-radius: 20px; font-weight: 500; }
+.lead-outcome-tag.outcome-prospectado { color: var(--teal); background: var(--teal-dim); }
+.lead-outcome-tag.outcome-sem_resposta { color: var(--text2); background: var(--bg4); }
+.lead-outcome-tag.outcome-oportunidade { color: var(--amber); background: var(--amber-dim); }
+.lead-outcome-tag.outcome-agendamento, .lead-outcome-tag.outcome-follow_up { color: var(--purple); background: var(--purple-dim); }
+.lead-outcome-tag.outcome-ganho { color: var(--green); background: var(--green-dim); }
+.lead-outcome-tag.outcome-descartado { color: var(--red); background: var(--red-dim); }
 
 /* ─── PIPELINE KANBAN ─── */
 .kanban-wrap { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 8px; }
@@ -181,8 +193,16 @@ code { font-family: 'JetBrains Mono', monospace; font-size: 11px; }
 .kanban-title { font-size: 12px; font-weight: 500; }
 .kanban-count { font-size: 11px; font-weight: 600; padding: 1px 7px; border-radius: 20px; }
 .kanban-body { padding: 8px; display: flex; flex-direction: column; gap: 6px; min-height: 120px; }
-.kcard { background: var(--bg3); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 9px 10px; cursor: pointer; transition: all 0.12s; }
+.kcard { background: var(--bg3); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 9px 10px; cursor: grab; transition: all 0.12s; }
+.kcard:active { cursor: grabbing; }
 .kcard:hover { border-color: var(--border2); }
+.kcard.kcard-dragging { opacity: 0.45; }
+.kanban-body.kanban-drop-over { background: rgba(77,159,255,0.06); outline: 1px dashed rgba(77,159,255,0.35); border-radius: var(--radius-sm); }
+.pipeline-empty { font-size: 11px; color: var(--text3); text-align: center; padding: 24px 8px; width: 100%; }
+.pipeline-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 10px; }
+.pipeline-sync-btn { font-size: 11px; padding: 5px 10px; border-radius: var(--radius-sm); border: 1px solid var(--border2); background: var(--bg3); color: var(--text2); cursor: pointer; }
+.pipeline-sync-btn:hover { background: var(--bg4); color: var(--text); }
+.pipeline-loading { font-size: 12px; color: var(--text3); padding: 24px; text-align: center; }
 .kcard-name { font-size: 11px; font-weight: 500; margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .kcard-sub { font-size: 10px; color: var(--text2); margin-bottom: 5px; }
 .kcard-meta { display: flex; align-items: center; justify-content: space-between; }
@@ -321,15 +341,6 @@ code { font-family: 'JetBrains Mono', monospace; font-size: 11px; }
 
 <!-- SIDEBAR -->
 <aside class="sidebar">
-  <div class="logo">
-    <div class="logo-mark">
-      <svg viewBox="0 0 16 16" fill="none"><path d="M3 8l4 4 6-7" stroke="#0d1f18" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-    </div>
-    <div>
-      <div class="logo-text">GrowSOS</div>
-      <div class="logo-sub">Máquina de Vendas</div>
-    </div>
-  </div>
   <nav class="nav">
     <div class="nav-section">Prospecção</div>
     <div class="nav-item active" data-channel="coldcall" onclick="selectChannel(this)">
@@ -345,54 +356,42 @@ code { font-family: 'JetBrains Mono', monospace; font-size: 11px; }
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M22 7l-10 7L2 7"/></svg>
       E-mail
     </div>
-    <div class="nav-item" data-channel="instagram" onclick="selectChannel(this)">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="2" width="20" height="20" rx="5"/><path d="M16 11.37A4 4 0 1112.63 8 4 4 0 0116 11.37zM17.5 6.5h.01"/></svg>
-      Instagram
-    </div>
     <div class="nav-section">Pipeline</div>
-    <div class="nav-item">
+    <div class="nav-item" data-nav="kanban" onclick="openSidebarNav('kanban', this)">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
       Funil / Kanban
     </div>
-    <div class="nav-item">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="4"/><path d="M6 20v-2a4 4 0 014-4h4a4 4 0 014 4v2"/></svg>
-      Leads Qualificados
-    </div>
     <div class="nav-section">Inteligência</div>
-    <div class="nav-item">
+    <div class="nav-item" data-nav="presdr" onclick="openSidebarNav('presdr', this)">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9.5 2A2.5 2.5 0 0112 4.5v15a2.5 2.5 0 01-4.96-.46 2.5 2.5 0 01-1.07-4.31A3 3 0 015 12a3 3 0 013-3V8.5A2.5 2.5 0 019.5 2z"/><path d="M14.5 2A2.5 2.5 0 0112 4.5v1A3 3 0 0115 8a3 3 0 01-1.03 2.27 2.5 2.5 0 01-1.07 4.31 2.5 2.5 0 01-4.96-.46V4.5A2.5 2.5 0 0114.5 2z"/></svg>
       IA Pré-SDR
       <span class="nav-badge">82</span>
     </div>
-    <div class="nav-item">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M18 20V10M12 20V4M6 20v-6"/></svg>
-      Analytics
-    </div>
-    <div class="nav-item">
+    <div class="nav-item" data-nav="rotina" onclick="openSidebarNav('rotina', this)">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg>
       Rotina Inteligente
     </div>
-    <div class="nav-item">
+    <div class="nav-item" data-nav="scripts" onclick="openSidebarNav('scripts', this)">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 3h18v18H3zM9 9h6M9 12h6M9 15h4"/></svg>
       Scripts
     </div>
     <div class="nav-section">Gestão</div>
-    <div class="nav-item" onclick="openNvoipCredentials()">
+    <div class="nav-item" data-nav="gestor" onclick="openNvoipCredentials()">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 12h6M12 9v6M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
       Painel do Gestor
       <span class="nav-badge amber">!</span>
     </div>
-    <div class="nav-item">
+    <div class="nav-item" data-nav="minha_fila" onclick="openSidebarNav('minha_fila', this)">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
       Minha Fila
     </div>
   </nav>
   <div class="sidebar-footer">
     <div class="user-row">
-      <div class="avatar">RS</div>
+      <div class="avatar" id="sidebarUserAvatar">—</div>
       <div>
-        <div class="user-name">Rafael SDR</div>
-        <div class="user-role">Hunter SDR · Nível 8 ⚡</div>
+        <div class="user-name" id="sidebarUserName">Carregando...</div>
+        <div class="user-role" id="sidebarUserRole"></div>
       </div>
     </div>
   </div>
@@ -768,29 +767,6 @@ code { font-family: 'JetBrains Mono', monospace; font-size: 11px; }
             </div>
           </div>
 
-          <!-- Lead 6 — Instagram -->
-          <div class="lead-card" data-channel="instagram" data-status="pendente minha_fila">
-            <svg style="width:13px;height:13px;color:var(--text3);flex-shrink:0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-            <div class="lead-score score-med">65</div>
-            <div class="lead-info">
-              <div class="lead-name">@studio.beleza.rj</div>
-              <div class="lead-meta">
-                <span class="lead-meta-item">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:11px;height:11px"><rect x="2" y="2" width="20" height="20" rx="5"/><path d="M16 11.37A4 4 0 1112.63 8 4 4 0 0116 11.37z"/></svg>
-                  12.4k seguidores · Beauty
-                </span>
-              </div>
-              <div class="lead-tags">
-                <span class="tag tag-purple">Instagram DM</span>
-                <span class="lead-pipeline-stage">novo</span>
-              </div>
-            </div>
-            <div class="lead-actions">
-              <button class="btn-call"><svg style="width:13px;height:13px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8"/></svg>Conversar</button>
-              <button class="btn-action"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12h6M12 9v6M21 12a9 9 0 11-18 0"/></svg></button>
-            </div>
-          </div>
-
           <div class="lead-empty" id="leadEmpty" style="display:none;text-align:center;padding:40px 16px;color:var(--text3);font-size:12px">
             Nenhum contato corresponde a este filtro.
           </div>
@@ -801,52 +777,18 @@ code { font-family: 'JetBrains Mono', monospace; font-size: 11px; }
 
       <!-- ===== PIPELINE TAB ===== -->
       <div id="tab-pipeline" style="display:none">
-        <div class="sec-label">Pipeline Hunter — visão kanban</div>
-        <div class="kpi-row" style="margin-bottom:12px">
-          <div class="kpi-card"><div class="kpi-label">No pipeline</div><div class="kpi-val" style="color:var(--blue)">200</div><div class="kpi-sub">leads ativos</div></div>
-          <div class="kpi-card"><div class="kpi-label">Taxa conexão</div><div class="kpi-val" style="color:var(--green)">10%</div><div class="kpi-trend trend-up">↑ +2% semana</div></div>
-          <div class="kpi-card"><div class="kpi-label">Taxa decisor</div><div class="kpi-val" style="color:var(--amber)">100%</div><div class="kpi-sub">2 alcançados</div></div>
-          <div class="kpi-card"><div class="kpi-label">Oportunidades</div><div class="kpi-val" style="color:var(--purple)">8</div><div class="kpi-trend trend-up">↑ +3 esta semana</div></div>
+        <div class="pipeline-toolbar">
+          <div class="sec-label" style="margin:0">Pipeline Hunter — visão kanban</div>
+          <button type="button" class="pipeline-sync-btn" onclick="requestPipelineSync()">Sincronizar leads</button>
         </div>
-        <div class="kanban-wrap">
-          <div class="kanban-col">
-            <div class="kanban-header"><div class="kanban-title" style="color:var(--blue)">Leads novos</div><div class="kanban-count" style="background:var(--blue-dim);color:var(--blue)">190</div></div>
-            <div class="kanban-body">
-              <div class="kcard"><div class="kcard-name">5511933905087</div><div class="kcard-sub">Aguardando análise IA</div><div class="kcard-meta"><div class="kcard-att"><div class="att-dot att-empty"></div><div class="att-dot att-empty"></div></div><div class="kcard-score" style="color:var(--text3)">—</div></div></div>
-              <div class="kcard"><div class="kcard-name">Dra Paula Tomas</div><div class="kcard-sub">Saúde · São Paulo</div><div class="kcard-meta"><div class="kcard-att"><div class="att-dot att-empty"></div></div><div class="kcard-score" style="color:var(--text3)">—</div></div></div>
-              <div class="kcard" style="border-color:rgba(77,159,255,0.3)"><div class="kcard-name">Lead 67</div><div class="kcard-sub">+ Adicionar título</div><div class="kcard-meta"><div class="kcard-att"><div class="att-dot att-empty"></div></div><div class="kcard-score" style="color:var(--text3)">—</div></div></div>
-            </div>
-          </div>
-          <div class="kanban-col">
-            <div class="kanban-header"><div class="kanban-title" style="color:var(--amber)">Tentativa contato</div><div class="kanban-count" style="background:var(--amber-dim);color:var(--amber)">7</div></div>
-            <div class="kanban-body">
-              <div class="kcard"><div class="kcard-name">Lead 36</div><div class="kcard-sub">ocupado · Parado</div><div class="kcard-meta"><div class="kcard-att"><div class="att-dot att-na"></div><div class="att-dot att-cp"></div></div><div class="kcard-score" style="color:var(--amber)">55</div></div></div>
-              <div class="kcard"><div class="kcard-name">553199240047</div><div class="kcard-sub">primeiro_contato</div><div class="kcard-meta"><div class="kcard-att"><div class="att-dot att-ok"></div></div><div class="kcard-score" style="color:var(--green)">71</div></div></div>
-              <div class="kcard"><div class="kcard-name">Consultório — Dra...</div><div class="kcard-sub">primeiro_contato</div><div class="kcard-meta"><div class="kcard-att"><div class="att-dot att-ok"></div></div><div class="kcard-score" style="color:var(--green)">66</div></div></div>
-            </div>
-          </div>
-          <div class="kanban-col">
-            <div class="kanban-header"><div class="kanban-title" style="color:var(--teal)">Follow-up</div><div class="kanban-count" style="background:var(--teal-dim);color:var(--teal)">2</div></div>
-            <div class="kanban-body">
-              <div class="kcard"><div class="kcard-name">5511958898782</div><div class="kcard-sub">nao_atendeu · Parado</div><div class="kcard-meta"><div class="kcard-att"><div class="att-dot att-na"></div><div class="att-dot att-na"></div><div class="att-dot att-cp"></div></div><div class="kcard-score" style="color:var(--amber)">48</div></div></div>
-              <div class="kcard"><div class="kcard-name">Marcelo</div><div class="kcard-sub">primeiro_contato</div><div class="kcard-meta"><div class="kcard-att"><div class="att-dot att-ok"></div><div class="att-dot att-ok"></div><div class="att-dot att-ok"></div></div><div class="kcard-score" style="color:var(--green)">74</div></div></div>
-            </div>
-          </div>
-          <div class="kanban-col">
-            <div class="kanban-header"><div class="kanban-title" style="color:var(--text2)">Contato realizado</div><div class="kanban-count" style="background:var(--bg4);color:var(--text2)">0</div></div>
-            <div class="kanban-body" style="align-items:center;justify-content:center"><span style="font-size:11px;color:var(--text3)">Vazio</span></div>
-          </div>
-          <div class="kanban-col">
-            <div class="kanban-header"><div class="kanban-title" style="color:var(--purple)">Buscando decisor</div><div class="kanban-count" style="background:var(--purple-dim);color:var(--purple)">0</div></div>
-            <div class="kanban-body" style="align-items:center;justify-content:center"><span style="font-size:11px;color:var(--text3)">Vazio</span></div>
-          </div>
-          <div class="kanban-col">
-            <div class="kanban-header"><div class="kanban-title" style="color:var(--green)">Oportunidade</div><div class="kanban-count" style="background:var(--green-dim);color:var(--green)">8</div></div>
-            <div class="kanban-body">
-              <div class="kcard" style="border-color:rgba(0,214,143,0.3)"><div class="kcard-name">Grupo Nexus Log.</div><div class="kcard-sub">Reunião agendada 15/06</div><div class="kcard-meta"><div class="kcard-att"><div class="att-dot att-ok"></div><div class="att-dot att-ok"></div><div class="att-dot att-ok"></div></div><div class="kcard-score" style="color:var(--green)">88</div></div></div>
-              <div class="kcard" style="border-color:rgba(0,214,143,0.3)"><div class="kcard-name">FastTech Soluções</div><div class="kcard-sub">Proposta enviada</div><div class="kcard-meta"><div class="kcard-att"><div class="att-dot att-ok"></div><div class="att-dot att-ok"></div></div><div class="kcard-score" style="color:var(--green)">81</div></div></div>
-            </div>
-          </div>
+        <div class="kpi-row" id="pipelineKpis" style="margin-bottom:12px">
+          <div class="kpi-card"><div class="kpi-label">No pipeline</div><div class="kpi-val" id="kpiPipelineTotal" style="color:var(--blue)">—</div><div class="kpi-sub">leads ativos</div></div>
+          <div class="kpi-card"><div class="kpi-label">Taxa conexão</div><div class="kpi-val" id="kpiPipelineConexao" style="color:var(--green)">—</div><div class="kpi-sub" id="kpiPipelineConexaoSub">—</div></div>
+          <div class="kpi-card"><div class="kpi-label">Taxa decisor</div><div class="kpi-val" id="kpiPipelineDecisor" style="color:var(--amber)">—</div><div class="kpi-sub" id="kpiPipelineDecisorSub">—</div></div>
+          <div class="kpi-card"><div class="kpi-label">Oportunidades</div><div class="kpi-val" id="kpiPipelineOpps" style="color:var(--purple)">—</div><div class="kpi-sub" id="kpiPipelineOppsSub">—</div></div>
+        </div>
+        <div id="pipelineKanban" class="kanban-wrap">
+          <div class="pipeline-loading">Carregando pipeline…</div>
         </div>
       </div>
 
@@ -1072,8 +1014,20 @@ code { font-family: 'JetBrains Mono', monospace; font-size: 11px; }
 
     </div><!-- /left-panel -->
 
+    <div id="tab-rotina" style="display:none">
+      <iframe id="rotinaEmbedFrame" title="Rotina Inteligente" loading="lazy"></iframe>
+    </div>
+
+    <div id="tab-scripts" style="display:none">
+      <iframe id="scriptsEmbedFrame" title="Scripts Comerciais" loading="lazy"></iframe>
+    </div>
+
+    <div id="tab-kanban" style="display:none">
+      <iframe id="kanbanEmbedFrame" title="Funil de Vendas" loading="lazy"></iframe>
+    </div>
+
     <!-- RIGHT PANEL — IA BRIEF -->
-    <div class="right-panel">
+    <div class="right-panel" id="callCenterRightPanel">
       <div class="panel-header">
         <div class="topbar-icon" style="width:26px;height:26px">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:13px;height:13px;color:var(--green)"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg>
@@ -1149,7 +1103,7 @@ code { font-family: 'JetBrains Mono', monospace; font-size: 11px; }
           <div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px">
             <div style="font-size:11px;color:var(--text2);margin-bottom:6px;font-style:italic">Última ligação · 02:34 min</div>
             <div class="transcript-box">
-              SDR: "Falo com Carlos Mendes?" — Gatekeeper: "Carlos saiu, posso anotar recado?" — SDR: "Claro, pode passar que sou da GrowSOS sobre estruturação comercial?" — Gatekeeper: "Sim, mas ele retorna somente na parte da tarde."
+              SDR: "Falo com Carlos Mendes?" — Gatekeeper: "Carlos saiu, posso anotar recado?" — SDR: "Claro, pode passar que ligo sobre estruturação comercial?" — Gatekeeper: "Sim, mas ele retorna somente na parte da tarde."
               <div class="transcript-fade"></div>
             </div>
             <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px">
@@ -1186,34 +1140,199 @@ code { font-family: 'JetBrains Mono', monospace; font-size: 11px; }
 
 <script>
 // Tab switching
-function showTab(name, el) {
-  ['lista','pipeline','cadencia','funil','presdr'].forEach(t => {
-    document.getElementById('tab-'+t).style.display = t === name ? 'block' : 'none';
+var EMBED_VIEWS = {
+  rotina: {
+    panelId: 'tab-rotina',
+    frameId: 'rotinaEmbedFrame',
+    src: '/rotina?embed=1',
+    title: 'Rotina Inteligente',
+    sub: 'Atividades e metas do seu perfil',
+  },
+  scripts: {
+    panelId: 'tab-scripts',
+    frameId: 'scriptsEmbedFrame',
+    src: '/processos-comerciais.html?embed=1&tab=scripts',
+    title: 'Scripts',
+    sub: 'Scripts comerciais e objeções',
+  },
+  kanban: {
+    panelId: 'tab-kanban',
+    frameId: 'kanbanEmbedFrame',
+    src: '/kanban?embed=1',
+    title: 'Funil / Kanban',
+    sub: 'Funil de vendas e pipeline',
+  },
+};
+
+function ensureEmbedFrame(name) {
+  var cfg = EMBED_VIEWS[name];
+  if (!cfg) return;
+  var frame = document.getElementById(cfg.frameId);
+  if (!frame || frame.src) return;
+  frame.src = cfg.src;
+}
+
+function setEmbedLayout(activeName) {
+  Object.keys(EMBED_VIEWS).forEach(function(name) {
+    var panel = document.getElementById(EMBED_VIEWS[name].panelId);
+    if (panel) panel.style.display = activeName === name ? 'flex' : 'none';
   });
-  document.querySelectorAll('.ttab').forEach(t => t.classList.remove('active'));
-  el.classList.add('active');
+  var leftPanel = document.querySelector('.left-panel');
+  var rightPanel = document.getElementById('callCenterRightPanel');
+  var filterBar = document.querySelector('.filter-bar');
+  var hideMain = !!activeName;
+  if (leftPanel) leftPanel.style.display = hideMain ? 'none' : '';
+  if (rightPanel) rightPanel.style.display = hideMain ? 'none' : '';
+  if (filterBar) filterBar.style.display = hideMain ? 'none' : '';
+}
+
+function showTab(name, el) {
+  var embedCfg = EMBED_VIEWS[name];
+  setEmbedLayout(embedCfg ? name : null);
+  if (embedCfg) {
+    ensureEmbedFrame(name);
+    document.querySelectorAll('.ttab').forEach(function(t) { t.classList.remove('active'); });
+    var titleEl = document.querySelector('.title-text');
+    var subEl = document.querySelector('.title-sub');
+    if (titleEl) titleEl.textContent = embedCfg.title;
+    if (subEl) subEl.textContent = embedCfg.sub;
+    return;
+  }
+  ['lista','pipeline','cadencia','funil','presdr'].forEach(function(t) {
+    var tab = document.getElementById('tab-'+t);
+    if (tab) tab.style.display = t === name ? 'block' : 'none';
+  });
+  document.querySelectorAll('.ttab').forEach(function(t) { t.classList.remove('active'); });
+  if (el) el.classList.add('active');
+  if (name === 'pipeline') requestPipelineData();
+  updateBadges();
+}
+
+function findTopTab(name) {
+  if (EMBED_VIEWS[name]) return null;
+  var tabs = document.querySelectorAll('.topbar-tabs .ttab');
+  for (var i = 0; i < tabs.length; i++) {
+    var onclick = tabs[i].getAttribute('onclick') || '';
+    if (onclick.indexOf("'" + name + "'") !== -1) return tabs[i];
+  }
+  return tabs[0] || null;
+}
+
+function openCallCenterTab(name) {
+  showTab(name, findTopTab(name));
+}
+
+function navigateFromCallCenter(path) {
+  try { window.parent.postMessage({ type: 'call-center-navigate', path: path }, '*'); } catch (e) {}
+}
+
+function setSidebarNavActive(el) {
+  document.querySelectorAll('.nav-item[data-nav]').forEach(function(n) { n.classList.remove('active'); });
+  if (el) el.classList.add('active');
+}
+
+function openSidebarNav(action, el) {
+  setSidebarNavActive(el);
+
+  if (action === 'presdr') {
+    openCallCenterTab('presdr');
+    return;
+  }
+  if (action === 'pipeline') {
+    openCallCenterTab('pipeline');
+    return;
+  }
+  if (action === 'funil') {
+    openCallCenterTab('funil');
+    return;
+  }
+  if (action === 'cadencia') {
+    openCallCenterTab('cadencia');
+    return;
+  }
+  if (action === 'kanban') {
+    openCallCenterTab('kanban');
+    return;
+  }
+  if (action === 'rotina') {
+    openCallCenterTab('rotina');
+    return;
+  }
+  if (action === 'scripts') {
+    openCallCenterTab('scripts');
+    return;
+  }
+  if (action === 'minha_fila') {
+    var coldEl = document.querySelector('.nav-item[data-channel="coldcall"]');
+    if (coldEl) {
+      document.querySelectorAll('.nav-item[data-channel]').forEach(function(n) { n.classList.remove('active'); });
+      coldEl.classList.add('active');
+      currentChannel = 'coldcall';
+      var meta = CHANNEL_META.coldcall;
+      var titleEl = document.querySelector('.title-text');
+      if (titleEl) titleEl.textContent = meta.title;
+    }
+    currentFilter = 'minha_fila';
+    document.querySelectorAll('.fchip[data-filter]').forEach(function(c) {
+      c.classList.toggle('active', c.getAttribute('data-filter') === 'minha_fila');
+    });
+    openCallCenterTab('lista');
+    if (loadedCrmLeads.length) updateFilterCounts(loadedCrmLeads);
+    applyLeadFilters();
+  }
 }
 
 // Conteúdo padrão completo do menu "Registrar tentativa" (alinhado com os filtros)
-var REG_MENU_HTML = ''
-  + '<div class="reg-section">Primeira abordagem</div>'
-  + '<div class="reg-item"><div class="reg-dot" style="background:var(--blue)"></div>Primeiro contato</div>'
-  + '<div class="reg-item"><div class="reg-dot" style="background:var(--red)"></div>Não atendeu</div>'
-  + '<div class="reg-item"><div class="reg-dot" style="background:var(--amber)"></div>Caixa postal</div>'
-  + '<div class="reg-item"><div class="reg-dot" style="background:var(--amber)"></div>Ocupado</div>'
-  + '<div class="reg-item"><div class="reg-dot" style="background:var(--text3)"></div>Número inválido</div>'
-  + '<div class="reg-item"><div class="reg-dot" style="background:var(--blue)"></div>Follow-up</div>'
-  + '<div class="reg-item"><div class="reg-dot" style="background:var(--green)"></div>WhatsApp enviado</div>'
-  + '<div class="reg-item"><div class="reg-dot" style="background:var(--purple)"></div>Retornar depois</div>'
-  + '<div class="reg-section" style="margin-top:4px">Resultado</div>'
-  + '<div class="reg-item"><div class="reg-dot" style="background:var(--text3)"></div>Pendente</div>'
-  + '<div class="reg-item"><div class="reg-dot" style="background:var(--teal)"></div>Prospectado</div>'
-  + '<div class="reg-item"><div class="reg-dot" style="background:var(--text3)"></div>Sem resposta</div>'
-  + '<div class="reg-item"><div class="reg-dot" style="background:var(--amber)"></div>Oportunidade</div>'
-  + '<div class="reg-item"><div class="reg-dot" style="background:var(--purple)"></div>Retornar / Responsável</div>'
-  + '<div class="reg-item"><div class="reg-dot" style="background:var(--blue)"></div>Follow-up</div>'
-  + '<div class="reg-item"><div class="reg-dot" style="background:var(--green)"></div>Ganho</div>'
-  + '<div class="reg-item"><div class="reg-dot" style="background:var(--red)"></div>Descartado</div>';
+var ATTEMPT_LABELS = {
+  primeiro_contato: 'Primeiro contato',
+  nao_atendeu: 'Não atendeu',
+  caixa_postal: 'Caixa postal',
+  ocupado: 'Ocupado',
+  numero_invalido: 'Número inválido',
+  follow_up: 'Follow-up',
+  whatsapp_enviado: 'WhatsApp enviado',
+  retornar_depois: 'Retornar depois',
+};
+var OUTCOME_LABELS = {
+  pendente: 'Pendente',
+  prospectado: 'Prospectado',
+  sem_resposta: 'Sem resposta',
+  oportunidade: 'Oportunidade',
+  agendamento: 'Retornar / Responsável',
+  follow_up: 'Follow-up',
+  ganho: 'Ganho',
+  descartado: 'Descartado',
+};
+function buildRegMenuHtml() {
+  var items = [
+    { section: 'Primeira abordagem' },
+    { kind: 'attempt', key: 'primeiro_contato', label: 'Primeiro contato', color: 'var(--blue)' },
+    { kind: 'attempt', key: 'nao_atendeu', label: 'Não atendeu', color: 'var(--red)' },
+    { kind: 'attempt', key: 'caixa_postal', label: 'Caixa postal', color: 'var(--amber)' },
+    { kind: 'attempt', key: 'ocupado', label: 'Ocupado', color: 'var(--amber)' },
+    { kind: 'attempt', key: 'numero_invalido', label: 'Número inválido', color: 'var(--text3)' },
+    { kind: 'attempt', key: 'follow_up', label: 'Follow-up', color: 'var(--blue)' },
+    { kind: 'attempt', key: 'whatsapp_enviado', label: 'WhatsApp enviado', color: 'var(--green)' },
+    { kind: 'attempt', key: 'retornar_depois', label: 'Retornar depois', color: 'var(--purple)' },
+    { section: 'Resultado', marginTop: true },
+    { kind: 'outcome', key: 'pendente', label: 'Pendente', color: 'var(--text3)' },
+    { kind: 'outcome', key: 'prospectado', label: 'Prospectado', color: 'var(--teal)' },
+    { kind: 'outcome', key: 'sem_resposta', label: 'Sem resposta', color: 'var(--text3)' },
+    { kind: 'outcome', key: 'oportunidade', label: 'Oportunidade', color: 'var(--amber)' },
+    { kind: 'outcome', key: 'agendamento', label: 'Retornar / Responsável', color: 'var(--purple)' },
+    { kind: 'outcome', key: 'follow_up', label: 'Follow-up', color: 'var(--blue)' },
+    { kind: 'outcome', key: 'ganho', label: 'Ganho', color: 'var(--green)' },
+    { kind: 'outcome', key: 'descartado', label: 'Descartado', color: 'var(--red)' },
+  ];
+  return items.map(function(item) {
+    if (item.section) {
+      return '<div class="reg-section"' + (item.marginTop ? ' style="margin-top:4px"' : '') + '>' + item.section + '</div>';
+    }
+    return '<div class="reg-item" data-reg-kind="' + item.kind + '" data-reg-key="' + item.key + '">'
+      + '<div class="reg-dot" style="background:' + item.color + '"></div>' + item.label + '</div>';
+  }).join('');
+}
+var REG_MENU_HTML = buildRegMenuHtml();
 
 function ensureRegMenu(card) {
   var actions = card.querySelector('.lead-actions');
@@ -1248,6 +1367,30 @@ document.addEventListener('click', function(e) {
     document.querySelectorAll('.reg-menu').forEach(m => m.style.display='none');
   }
 });
+document.addEventListener('click', function(e) {
+  var item = e.target.closest('.reg-item[data-reg-key]');
+  if (!item) return;
+  var card = item.closest('.lead-card');
+  if (!card) return;
+  var leadId = card.getAttribute('data-lead-id');
+  if (!leadId) return;
+  e.stopPropagation();
+  var kind = item.getAttribute('data-reg-kind');
+  var key = item.getAttribute('data-reg-key');
+  var menu = item.closest('.reg-menu');
+  if (menu) menu.style.display = 'none';
+  item.classList.add('reg-busy');
+  card.setAttribute('data-reg-pending', '1');
+  try {
+    window.parent.postMessage({
+      type: kind === 'outcome' ? 'call-center-register-outcome' : 'call-center-register-attempt',
+      leadId: leadId,
+      leadName: card.querySelector('.lead-name')?.textContent?.trim() || '',
+      phone: card.getAttribute('data-phone') || '',
+      key: key,
+    }, '*');
+  } catch {}
+});
 // Aplica o menu completo a todos os cards no carregamento
 document.addEventListener('DOMContentLoaded', normalizeAllRegMenus);
 setTimeout(normalizeAllRegMenus, 0);
@@ -1263,7 +1406,7 @@ function setCallButtonState(btn, calling) {
   btn.classList.toggle('calling', calling);
   var card = btn.closest('.lead-card');
   var channel = card?.getAttribute('data-channel') || 'coldcall';
-  var idleLabel = channel === 'instagram' ? 'Conversar' : (channel === 'email' ? 'E-mail' : (channel === 'whatsapp' ? 'WhatsApp' : 'Ligar'));
+  var idleLabel = channel === 'email' ? 'E-mail' : (channel === 'whatsapp' ? 'WhatsApp' : 'Ligar');
   btn.innerHTML = callIconSvg + (calling ? 'Ligando…' : idleLabel);
   btn.disabled = false;
 }
@@ -1346,12 +1489,27 @@ function endCall() {
 // ===== Filtros de chip + canal (sidebar) =====
 var currentChannel = 'coldcall';
 var currentFilter  = 'all';
+var loadedCrmLeads = [];
+
+var FILTER_LABELS = {
+  all: 'Todos',
+  minha_fila: 'Minha Fila',
+  contactados_hoje: 'Contactados hoje',
+  abordados: 'Já abordados',
+  pendente: 'Pendente sem tentativa',
+  prospectado: 'Prospectado OK',
+  sem_resposta: 'Sem resposta',
+  oportunidade: 'Oportunidade',
+  retornar: 'Retornar Call',
+  follow_up: 'Follow-up',
+  ganho: 'Ganho',
+  descartado: 'Descartado',
+};
 
 var CHANNEL_META = {
   coldcall:  { title: 'Cold Call',  sub: '1578 contatos · 0 prospectados hoje' },
   whatsapp:  { title: 'WhatsApp',   sub: '— prospecção via mensagem' },
   email:     { title: 'E-mail',     sub: '— prospecção via e-mail' },
-  instagram: { title: 'Instagram',  sub: '— prospecção via DM' }
 };
 
 // Gera leads de demonstração para popular a lista (mantém os cards estáticos existentes)
@@ -1366,19 +1524,17 @@ var CHANNEL_META = {
     ['Imobiliária Horizonte','(85) 99812-3344','whatsapp','follow_up abordados contactados_hoje','Imóveis · CE'],
     ['Logística Cargo Express','(81) 3127-5500','email','prospectado abordados','Logística · PE'],
     ['Clínica Vida Plena','(62) 99880-1122','coldcall','pendente','Saúde · GO'],
-    ['@boutique.luxo.sp','22.1k seguidores','instagram','pendente minha_fila','Moda · SP'],
     ['Padaria Forno Real','(19) 3251-9090','coldcall','abordados sem_resposta retornar','Alimentos · SP'],
     ['Escola Saber+','(48) 3025-1414','email','pendente minha_fila','Educação · SC'],
     ['Construtora Líder Sul','(51) 3221-7788','coldcall','oportunidade abordados contactados_hoje','Construção · RS'],
     ['Pet Shop Amigo Fiel','(11) 4422-9091','whatsapp','ganho abordados','Pet · SP'],
     ['Tech Solutions BR','(11) 3344-1010','email','descartado abordados','Tecnologia · SP'],
-    ['@cafe.aroma.rj','8.7k seguidores','instagram','follow_up abordados','Gastronomia · RJ'],
     ['Distribuidora Norte+','(91) 3211-4040','coldcall','pendente','Atacado · PA'],
     ['Academia Movimento','(31) 99777-2020','whatsapp','pendente minha_fila','Fitness · MG']
   ];
   var html = nomes.map(function(n){
     var score = 40 + Math.floor(Math.random()*55);
-    var btn = n[2]==='instagram' ? 'Conversar' : (n[2]==='email' ? 'E-mail' : (n[2]==='whatsapp' ? 'WhatsApp' : 'Ligar'));
+    var btn = n[2]==='email' ? 'E-mail' : (n[2]==='whatsapp' ? 'WhatsApp' : 'Ligar');
     return '<div class="lead-card" data-channel="'+n[2]+'" data-status="'+n[3]+'">'
       + '<svg style="width:13px;height:13px;color:var(--text3);flex-shrink:0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>'
       + '<div class="lead-score '+(score>=70?'score-high':'score-med')+'">'+score+'</div>'
@@ -1414,17 +1570,62 @@ function formatPhone(value) {
 
 function inferChannel(lead) {
   var source = String(lead.source || '').toLowerCase();
-  if (source.includes('instagram') || source.includes('ig')) return 'instagram';
   if (source.includes('email') || source.includes('e-mail')) return 'email';
   if (source.includes('whatsapp') || source.includes('wpp')) return 'whatsapp';
   return 'coldcall';
 }
 
 function statusFromLead(lead) {
+  var coldCall = lead.coldCallState || null;
   var status = ['pendente', 'minha_fila'];
+  if (coldCall && Array.isArray(coldCall.attempts) && coldCall.attempts.length) {
+    status.push('abordados', 'contactados_hoje');
+  }
+  var outcome = coldCall && coldCall.outcome ? String(coldCall.outcome) : '';
+  if (outcome && outcome !== 'pendente') {
+    status.push(outcome);
+    if (outcome === 'agendamento') status.push('retornar');
+  }
   var stage = String(lead.stage || '').toLowerCase().replace(/\s+/g, '_');
   if (stage) status.push(stage);
-  return status.join(' ');
+  return status.filter(function(v, i, arr) { return arr.indexOf(v) === i; }).join(' ');
+}
+
+function renderLeadRegMeta(coldCall) {
+  if (!coldCall) return '';
+  var attempts = Array.isArray(coldCall.attempts) ? coldCall.attempts : [];
+  var html = '';
+  if (attempts.length) {
+    var last = attempts[attempts.length - 1];
+    var lastLabel = ATTEMPT_LABELS[last.type] || last.type || 'Tentativa';
+    html += '<span class="lead-attempt-badge" title="Histórico de tentativas">' + attempts.length + ' · ' + escapeHtml(lastLabel) + '</span>';
+  }
+  var outcome = coldCall.outcome || 'pendente';
+  if (outcome && outcome !== 'pendente') {
+    html += '<span class="lead-outcome-tag outcome-' + escapeHtml(outcome) + '">' + escapeHtml(OUTCOME_LABELS[outcome] || outcome) + '</span>';
+  }
+  return html ? '<div class="lead-reg-meta">' + html + '</div>' : '';
+}
+
+function updateLeadRegistrationUI(card, payload) {
+  if (!card || !payload) return;
+  card.removeAttribute('data-reg-pending');
+  card.querySelectorAll('.reg-item.reg-busy').forEach(function(el) { el.classList.remove('reg-busy'); });
+  var coldCall = { attempts: payload.attempts || [], outcome: payload.outcome || 'pendente' };
+  card.setAttribute('data-cold-call', JSON.stringify(coldCall));
+  var lead = loadedCrmLeads.find(function(l) { return l.id === payload.leadId; });
+  if (lead) {
+    lead.coldCallState = coldCall;
+    card.setAttribute('data-status', statusFromLead(lead));
+  }
+  var info = card.querySelector('.lead-info');
+  if (info) {
+    var meta = info.querySelector('.lead-reg-meta');
+    var next = renderLeadRegMeta(coldCall);
+    if (meta) meta.remove();
+    if (next) info.insertAdjacentHTML('beforeend', next);
+  }
+  if (loadedCrmLeads.length) updateFilterCounts(loadedCrmLeads);
 }
 
 function scoreFromLead(lead) {
@@ -1434,20 +1635,57 @@ function scoreFromLead(lead) {
   return 55 + (Math.abs(hash) % 40);
 }
 
+function leadsForChannel(leads, channel) {
+  var list = Array.isArray(leads) ? leads : [];
+  if (channel === 'coldcall') return list;
+  return list.filter(function(lead) { return inferChannel(lead) === channel; });
+}
+
+function countLeadsForFilter(leads, channel, filterName) {
+  var channelLeads = leadsForChannel(leads, channel);
+  if (filterName === 'all') return channelLeads.length;
+  return channelLeads.filter(function(lead) {
+    return statusFromLead(lead).split(/\s+/).indexOf(filterName) !== -1;
+  }).length;
+}
+
+function updateFilterCounts(leads) {
+  document.querySelectorAll('.fchip[data-filter]').forEach(function(chip) {
+    var filter = chip.getAttribute('data-filter') || 'all';
+    var label = FILTER_LABELS[filter] || filter;
+    var count = countLeadsForFilter(leads, currentChannel, filter);
+    chip.textContent = label + ' (' + count + ')';
+  });
+
+  var coldCount = leadsForChannel(leads, 'coldcall').length;
+  var ccBadge = document.querySelector('.nav-item[data-channel="coldcall"] .nav-badge');
+  if (ccBadge) ccBadge.textContent = String(coldCount);
+
+  ['whatsapp', 'email'].forEach(function(ch) {
+    var badge = document.querySelector('.nav-item[data-channel="' + ch + '"] .nav-badge');
+    if (!badge) return;
+    var n = leadsForChannel(leads, ch).length;
+    badge.textContent = String(n);
+    badge.style.display = n > 0 ? '' : 'none';
+  });
+}
+
 function renderLeadCard(lead) {
   var channel = inferChannel(lead);
   var score = scoreFromLead(lead);
   var phone = lead.telefone || lead.phone || '';
   var tags = Array.isArray(lead.tags) ? lead.tags : [];
-  var btn = channel === 'instagram' ? 'Conversar' : (channel === 'email' ? 'E-mail' : (channel === 'whatsapp' ? 'WhatsApp' : 'Ligar'));
+  var btn = channel === 'email' ? 'E-mail' : (channel === 'whatsapp' ? 'WhatsApp' : 'Ligar');
   var stage = lead.stage || 'pendente';
   var meta = [formatPhone(phone), lead.email || lead.source || ''].filter(Boolean);
+  var coldCall = lead.coldCallState || null;
   return '<div class="lead-card real-lead" data-channel="' + channel + '" data-status="' + escapeHtml(statusFromLead(lead)) + '" data-phone="' + escapeHtml(phone) + '" data-lead-id="' + escapeHtml(lead.id) + '">'
     + '<svg style="width:13px;height:13px;color:var(--text3);flex-shrink:0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>'
     + '<div class="lead-score ' + (score >= 70 ? 'score-high' : 'score-med') + '">' + score + '</div>'
     + '<div class="lead-info"><div class="lead-name">' + escapeHtml(lead.name || 'Contato sem nome') + '</div>'
     + '<div class="lead-meta">' + meta.map(function(item){ return '<span class="lead-meta-item">' + escapeHtml(item) + '</span>'; }).join('') + '</div>'
     + '<div class="lead-tags"><span class="tag tag-gray">' + escapeHtml(stage) + '</span>' + tags.slice(0, 3).map(function(tag){ return '<span class="tag tag-blue">' + escapeHtml(tag) + '</span>'; }).join('') + '</div>'
+    + renderLeadRegMeta(coldCall)
     + '</div>'
     + '<div class="lead-actions"><button class="btn-call" onclick="startCall(this)">' + callIconSvg + escapeHtml(btn) + '</button></div>'
     + '</div>';
@@ -1459,16 +1697,44 @@ function renderRealLeads(leads) {
   var anchor = document.getElementById('leadEmpty');
   list.querySelectorAll('.real-lead').forEach(function(card){ card.remove(); });
   var cleanLeads = (Array.isArray(leads) ? leads : []).filter(function(lead){ return lead.phone || lead.telefone; });
+  loadedCrmLeads = cleanLeads;
+  list.querySelectorAll('.lead-card:not(.real-lead)').forEach(function(card){ card.style.display = 'none'; });
   var html = cleanLeads.map(renderLeadCard).join('');
   if (anchor) anchor.insertAdjacentHTML('beforebegin', html);
   else list.insertAdjacentHTML('beforeend', html);
   normalizeAllRegMenus();
-  CHANNEL_META.coldcall.sub = cleanLeads.length + ' contatos · CRM';
+  var coldCount = leadsForChannel(cleanLeads, 'coldcall').length;
+  CHANNEL_META.coldcall.sub = coldCount + ' contatos · CRM';
+  updateFilterCounts(cleanLeads);
   applyLeadFilters();
+}
+
+function userInitials(name) {
+  return String(name || '?').trim().split(/\s+/).filter(Boolean).slice(0, 2).map(function(s) {
+    return (s[0] || '').toUpperCase();
+  }).join('') || '?';
+}
+
+function renderSidebarUser(user) {
+  if (!user) return;
+  var name = user.name || 'Usuário';
+  var nameEl = document.getElementById('sidebarUserName');
+  var roleEl = document.getElementById('sidebarUserRole');
+  var avEl = document.getElementById('sidebarUserAvatar');
+  if (nameEl) nameEl.textContent = name;
+  if (roleEl) roleEl.textContent = user.roleLabel || user.role || '';
+  if (avEl) {
+    if (user.avatarUrl) {
+      avEl.innerHTML = '<img src="' + escapeHtml(user.avatarUrl) + '" alt="" style="width:100%;height:100%;border-radius:50%;object-fit:cover" onerror="this.remove();this.parentElement.textContent=\'' + escapeHtml(userInitials(name)) + '\'">';
+    } else {
+      avEl.textContent = userInitials(name);
+    }
+  }
 }
 
 window.addEventListener('message', function(ev) {
   if (ev.data?.type === 'call-center-leads') renderRealLeads(ev.data.leads || []);
+  if (ev.data?.type === 'call-center-user') renderSidebarUser(ev.data.user);
   if (ev.data?.type === 'call-center-call-started') {
     var btn = pendingCallButton;
     if (!btn) return;
@@ -1492,6 +1758,22 @@ window.addEventListener('message', function(ev) {
     document.querySelectorAll('.btn-call.calling').forEach(b => setCallButtonState(b, false));
     pendingCallButton = null;
     activeCallButton = null;
+  }
+  if (ev.data?.type === 'call-center-registration-result') {
+    var regCard = document.querySelector('.lead-card[data-lead-id="' + ev.data.leadId + '"]');
+    if (regCard) {
+      if (ev.data.ok) updateLeadRegistrationUI(regCard, ev.data);
+      else {
+        regCard.removeAttribute('data-reg-pending');
+        regCard.querySelectorAll('.reg-item.reg-busy').forEach(function(el) { el.classList.remove('reg-busy'); });
+      }
+    }
+  }
+  if (ev.data?.type === 'call-center-pipeline-data') {
+    renderPipelineKanban(ev.data.items || []);
+  }
+  if (ev.data?.type === 'call-center-pipeline-move-result') {
+    if (!ev.data.ok) requestPipelineData();
   }
 });
 try { window.parent.postMessage({ type: 'call-center-ready' }, '*'); } catch {}
@@ -1521,7 +1803,7 @@ function applyLeadFilters() {
   cards.forEach(function(card){
     var ch = card.getAttribute('data-channel') || 'coldcall';
     var st = (card.getAttribute('data-status') || '').split(/\s+/);
-    var matchChannel = (ch === currentChannel);
+    var matchChannel = (currentChannel === 'coldcall') ? true : (ch === currentChannel);
     var matchFilter  = (currentFilter === 'all') || (st.indexOf(currentFilter) !== -1);
     var show = matchChannel && matchFilter;
     card.style.display = show ? '' : 'none';
@@ -1533,7 +1815,8 @@ function applyLeadFilters() {
 }
 
 function selectChannel(el) {
-  document.querySelectorAll('.nav-item').forEach(function(n){ n.classList.remove('active'); });
+  document.querySelectorAll('.nav-item[data-channel]').forEach(function(n){ n.classList.remove('active'); });
+  document.querySelectorAll('.nav-item[data-nav]').forEach(function(n){ n.classList.remove('active'); });
   el.classList.add('active');
   currentChannel = el.getAttribute('data-channel') || 'coldcall';
   var meta = CHANNEL_META[currentChannel] || CHANNEL_META.coldcall;
@@ -1546,6 +1829,7 @@ function selectChannel(el) {
   });
   var listaTab = document.querySelector('.ttab');
   if (listaTab && typeof showTab === 'function') showTab('lista', listaTab);
+  if (loadedCrmLeads.length) updateFilterCounts(loadedCrmLeads);
   applyLeadFilters();
 }
 
@@ -1562,6 +1846,174 @@ document.querySelectorAll('.fchip[data-filter]').forEach(function(chip){
 
 // Estado inicial
 applyLeadFilters();
+
+// ===== Pipeline Hunter (kanban dinâmico) =====
+var pipelineItems = [];
+var draggedPipelineId = null;
+
+var PIPELINE_COLUMNS = [
+  { id: 'novo', label: 'Leads novos', color: 'var(--blue)', countBg: 'var(--blue-dim)' },
+  { id: 'tentativa_contato', label: 'Tentativa contato', color: 'var(--amber)', countBg: 'var(--amber-dim)' },
+  { id: 'follow_up', label: 'Follow-up', color: 'var(--teal)', countBg: 'var(--teal-dim)' },
+  { id: 'contato_realizado', label: 'Contato realizado', color: 'var(--text2)', countBg: 'var(--bg4)' },
+  { id: 'buscando_decisor', label: 'Buscando decisor', color: 'var(--purple)', countBg: 'var(--purple-dim)' },
+  { id: 'conversa_decisor', label: 'Conversa decisor', color: 'var(--purple)', countBg: 'var(--purple-dim)' },
+  { id: 'oportunidade', label: 'Oportunidade', color: 'var(--green)', countBg: 'var(--green-dim)' },
+  { id: 'descartado', label: 'Descartado', color: 'var(--red)', countBg: 'var(--red-dim)' },
+];
+
+function requestPipelineData() {
+  try { window.parent.postMessage({ type: 'call-center-pipeline-request' }, '*'); } catch {}
+}
+
+function requestPipelineSync() {
+  try { window.parent.postMessage({ type: 'call-center-pipeline-sync' }, '*'); } catch {}
+}
+
+function isPipelineStale(iso) {
+  if (!iso) return false;
+  return Date.now() - new Date(iso).getTime() > 24 * 60 * 60 * 1000;
+}
+
+function pipelineScore(item) {
+  var raw = String(item.lead_id || item.id || item.lead_name || '');
+  var hash = 0;
+  for (var i = 0; i < raw.length; i++) hash = ((hash << 5) - hash) + raw.charCodeAt(i);
+  return 40 + (Math.abs(hash) % 55);
+}
+
+function pipelineAttemptDots(count) {
+  var dots = '';
+  var max = Math.min(count || 0, 4);
+  for (var i = 0; i < max; i++) {
+    var cls = i === max - 1 && count >= 3 ? 'att-na' : 'att-ok';
+    dots += '<div class="att-dot ' + cls + '"></div>';
+  }
+  if (!max) dots = '<div class="att-dot att-empty"></div>';
+  return dots;
+}
+
+function renderPipelineCard(item) {
+  var name = item.lead_company || item.lead_name || item.lead_phone || 'Lead';
+  var subParts = [];
+  if (item.substatus) subParts.push(item.substatus.replace(/_/g, ' '));
+  if (isPipelineStale(item.last_action_at)) subParts.push('Parado');
+  if (!subParts.length) {
+    if (item.lead_company && item.lead_name) subParts.push(item.lead_name);
+    else subParts.push('Aguardando análise IA');
+  }
+  var score = pipelineScore(item);
+  var scoreColor = score >= 70 ? 'var(--green)' : (score >= 55 ? 'var(--amber)' : 'var(--text3)');
+  var border = item.stage === 'oportunidade' ? ' style="border-color:rgba(0,214,143,0.3)"' : '';
+  return '<div class="kcard"' + border + ' draggable="true" data-pipeline-id="' + escapeHtml(item.id) + '" data-stage="' + escapeHtml(item.stage) + '">'
+    + '<div class="kcard-name">' + escapeHtml(name) + '</div>'
+    + '<div class="kcard-sub">' + escapeHtml(subParts.join(' · ')) + '</div>'
+    + '<div class="kcard-meta"><div class="kcard-att">' + pipelineAttemptDots(item.attempts || 0) + '</div>'
+    + '<div class="kcard-score" style="color:' + scoreColor + '">' + score + '</div></div></div>';
+}
+
+function updatePipelineKpis(items) {
+  var total = items.length;
+  var contacted = items.filter(function(i) {
+    return ['contato_realizado', 'buscando_decisor', 'conversa_decisor', 'oportunidade'].indexOf(i.stage) !== -1;
+  }).length;
+  var decisor = items.filter(function(i) {
+    return ['conversa_decisor', 'oportunidade'].indexOf(i.stage) !== -1;
+  }).length;
+  var opps = items.filter(function(i) { return i.stage === 'oportunidade'; }).length;
+  var totalCalls = items.reduce(function(a, i) { return a + (i.attempts || 0); }, 0);
+  var conexaoRate = totalCalls ? Math.round((contacted / totalCalls) * 100) : 0;
+  var decisorRate = contacted ? Math.round((decisor / contacted) * 100) : 0;
+
+  var elTotal = document.getElementById('kpiPipelineTotal');
+  var elConexao = document.getElementById('kpiPipelineConexao');
+  var elConexaoSub = document.getElementById('kpiPipelineConexaoSub');
+  var elDecisor = document.getElementById('kpiPipelineDecisor');
+  var elDecisorSub = document.getElementById('kpiPipelineDecisorSub');
+  var elOpps = document.getElementById('kpiPipelineOpps');
+  var elOppsSub = document.getElementById('kpiPipelineOppsSub');
+
+  if (elTotal) elTotal.textContent = String(total);
+  if (elConexao) elConexao.textContent = conexaoRate + '%';
+  if (elConexaoSub) elConexaoSub.textContent = contacted + ' contatos realizados';
+  if (elDecisor) elDecisor.textContent = decisorRate + '%';
+  if (elDecisorSub) elDecisorSub.textContent = decisor + ' alcançados';
+  if (elOpps) elOpps.textContent = String(opps);
+  if (elOppsSub) elOppsSub.textContent = opps ? opps + ' ativas' : '—';
+}
+
+function initPipelineDragDrop() {
+  document.querySelectorAll('#pipelineKanban .kcard[draggable]').forEach(function(card) {
+    card.addEventListener('dragstart', function(e) {
+      draggedPipelineId = card.getAttribute('data-pipeline-id');
+      card.classList.add('kcard-dragging');
+      if (e.dataTransfer) {
+        e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.setData('text/plain', draggedPipelineId || '');
+      }
+    });
+    card.addEventListener('dragend', function() {
+      card.classList.remove('kcard-dragging');
+      draggedPipelineId = null;
+      document.querySelectorAll('#pipelineKanban .kanban-body.kanban-drop-over').forEach(function(b) {
+        b.classList.remove('kanban-drop-over');
+      });
+    });
+  });
+
+  document.querySelectorAll('#pipelineKanban .kanban-body[data-drop-stage]').forEach(function(body) {
+    body.addEventListener('dragover', function(e) {
+      e.preventDefault();
+      if (e.dataTransfer) e.dataTransfer.dropEffect = 'move';
+      body.classList.add('kanban-drop-over');
+    });
+    body.addEventListener('dragleave', function() {
+      body.classList.remove('kanban-drop-over');
+    });
+    body.addEventListener('drop', function(e) {
+      e.preventDefault();
+      body.classList.remove('kanban-drop-over');
+      var toStage = body.getAttribute('data-drop-stage');
+      if (!draggedPipelineId || !toStage) return;
+      var item = pipelineItems.find(function(i) { return i.id === draggedPipelineId; });
+      if (!item || item.stage === toStage) return;
+      item.stage = toStage;
+      renderPipelineKanban(pipelineItems);
+      try {
+        window.parent.postMessage({
+          type: 'call-center-pipeline-move',
+          pipelineId: draggedPipelineId,
+          toStage: toStage,
+        }, '*');
+      } catch {}
+    });
+  });
+}
+
+function renderPipelineKanban(items) {
+  pipelineItems = Array.isArray(items) ? items.slice() : [];
+  var wrap = document.getElementById('pipelineKanban');
+  if (!wrap) return;
+
+  if (!pipelineItems.length) {
+    wrap.innerHTML = '<div class="pipeline-loading">Nenhum lead no pipeline. Clique em <strong>Sincronizar leads</strong> para importar contatos do CRM.</div>';
+    updatePipelineKpis([]);
+    return;
+  }
+
+  wrap.innerHTML = PIPELINE_COLUMNS.map(function(col) {
+    var colItems = pipelineItems.filter(function(i) { return i.stage === col.id; });
+    return '<div class="kanban-col" data-stage="' + col.id + '">'
+      + '<div class="kanban-header"><div class="kanban-title" style="color:' + col.color + '">' + col.label + '</div>'
+      + '<div class="kanban-count" style="background:' + col.countBg + ';color:' + col.color + '">' + colItems.length + '</div></div>'
+      + '<div class="kanban-body" data-drop-stage="' + col.id + '">'
+      + (colItems.length ? colItems.map(renderPipelineCard).join('') : '<span class="pipeline-empty">Vazio</span>')
+      + '</div></div>';
+  }).join('');
+
+  updatePipelineKpis(pipelineItems);
+  initPipelineDragDrop();
+}
 
 </script>
 </body>
