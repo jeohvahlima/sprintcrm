@@ -283,11 +283,52 @@ export default function RotinaInteligente() {
   const [categoryFilter, setCategoryFilter] = useState<string>("todas");
   const [viewMode, setViewMode] = useState<"diaria" | "semanal" | "mensal">("diaria");
   const [refDate, setRefDate] = useState<Date>(new Date());
+  const [companyId, setCompanyId] = useState<string | null>(null);
+  const [categoryIds, setCategoryIds] = useState<Record<string, string>>({}); // key -> row id
+  const [categoryPresetIdx, setCategoryPresetIdx] = useState<Record<string, number>>({}); // key -> preset index
 
   // Persist
   useEffect(() => { localStorage.setItem(STORAGE_TASKS_KEY, JSON.stringify(tasksByProfile)); }, [tasksByProfile]);
   useEffect(() => { localStorage.setItem(STORAGE_ASSIGN_KEY, JSON.stringify(assignments)); }, [assignments]);
   useEffect(() => { localStorage.setItem(STORAGE_CATEGORIES_KEY, JSON.stringify(categories)); }, [categories]);
+
+  // Load categories from database
+  useEffect(() => {
+    (async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+        const { data: ur } = await supabase
+          .from("user_roles")
+          .select("company_id")
+          .eq("user_id", user.id)
+          .maybeSingle();
+        if (!ur?.company_id) return;
+        setCompanyId(ur.company_id);
+        const { data: rows } = await (supabase as any)
+          .from("rotina_categorias")
+          .select("id, key, label, preset_index")
+          .eq("company_id", ur.company_id);
+        if (rows && rows.length > 0) {
+          const ids: Record<string, string> = {};
+          const presets: Record<string, number> = {};
+          const cats: Record<string, CategoryConfig> = { ...DEFAULT_CATEGORY_CONFIG };
+          rows.forEach((r: any) => {
+            ids[r.key] = r.id;
+            presets[r.key] = r.preset_index ?? 0;
+            const preset = CATEGORY_STYLE_PRESETS[(r.preset_index ?? 0) % CATEGORY_STYLE_PRESETS.length];
+            cats[r.key] = { label: r.label, ...preset };
+          });
+          setCategoryIds(ids);
+          setCategoryPresetIdx(presets);
+          setCategories(cats);
+        }
+      } catch (err) {
+        console.error("Erro carregando categorias da rotina:", err);
+      }
+    })();
+  }, []);
+
 
   const tasks = tasksByProfile[selectedProfile] || [];
   const nowHHMM = new Date().toTimeString().slice(0, 5);
